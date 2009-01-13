@@ -1012,9 +1012,9 @@ char* implode(char* buf, char* s[], int cnt) {
         }
         for (i = 1; i < cnt; i++) {        
             if (s[i] != NULL) {
-                sprintf(buf, "%s, %s", buf, s[i]);
+                sprintf(buf + strlen(buf), ", %s", s[i]);
             } else {
-                sprintf(buf, "%s, %s", buf, BLANK_TEXT);
+                sprintf(buf + strlen(buf), ", %s", BLANK_TEXT);
             }
         }
     } else {
