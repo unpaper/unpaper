@@ -1,0 +1,246 @@
+<!-- 
+
+    This file describes testcases for testing unpaper on an abstract level.
+    In order to run the tests, 2 files are dynamically generated from this
+    via the XSLT scripts generate-perform-tests.xslt and
+    generate-index-html.xslt:
+      - _tests.xml: An ANT-build script which will run the tests.
+                    Called from the overall ANT-test script make-test.xml.
+      - index.html: An HTML file containing the protocol of the results of
+                    the test cases.
+
+ -->
+
+<test-environment>
+
+    <testcase id="A1" title="Single-Page Template Layout, Black+White, Full Processing">
+        <input-file name="test001.pbm"/>
+        <output-file name="resultA1.pbm"/>
+        <description>
+            The default template '--layout single' takes effect.
+        </description>
+        <options>test001.pbm resultA1.pbm</options>
+    </testcase>
+
+    <!--
+    <testcase id="B1" title="2-Page Template Layout, Black+White, Full Processing">
+        <input-file name="testB11.pbm"/>
+        <input-file name="testB12.pbm"/>
+        <output-file name="resultB1.pbm"/>
+        <description>
+        
+        </description>
+        <options>
+        
+        </options>
+    </testcase>
+    -->
+
+    <!--
+    <testcase id="A2" title="Single-Page Template Layout, Grayscale, Full Processing">
+        <input-file name="testA2.pgm"/>
+        <output-file name="resultA2.pgm"/>
+        <description>
+        
+        </description>
+        <options>
+        
+        </options>
+    </testcase>
+    -->
+
+    <!--
+    <testcase id="A3" title="Single-Page Template Layout, Color, Full Processing">
+        <input-file name="testA3.pnm"/>
+        <output-file name="resultA.pnm"/>
+        <description>
+            Testing of color mode. Mind that grayscale detection might react more aggressive when
+            applied to color images, so it might sometimes be useful to adjust - -gray or even use
+            - -no-grayfilter.
+        </description>
+        <options>
+        
+        </options>
+    </testcase>
+    -->
+
+    <!--
+    <testcase id="B2" title="2-Page Template Layout, Mixed Color and Black+White, Full Processing">
+        <input-file name="testB21.pbm"/>
+        <input-file name="testB22.pbm"/>
+        <output-file name="resultB2.pbm"/>
+        <description>
+            The result should be a whole color-typed image, with the black+white part appearing just like displayed as b/w-image.
+        
+        </description>
+        <options>
+        
+        </options>
+    </testcase>
+    -->
+
+    <!--
+    <testcase id="B3" title="2-Page Template Layout, Mixed Grayscale and Color, Full Processing">
+        <input-file name="testB31.pbm"/>
+        <input-file name="testB32.pbm"/>
+        <output-file name="resultB3.pbm"/>
+        <description>
+            The result should be a whole color-typed image, with the grayscale part appearing just like displayed as grayscale-image.
+        </description>
+        <options>
+        
+        </options>
+    </testcase>
+    -->
+
+    <!--
+    <testcase id="C" title="4-Tile Layout, Black+White, Full Processing">
+        <input-file name="testC1.pbm"/>
+        <input-file name="testC2.pbm"/>
+        <input-file name="testC3.pbm"/>
+        <input-file name="testC4.pbm"/>
+        <output-file name="resultC.pbm"/>
+        <description>
+        
+        </description>
+        <options>
+        
+        </options>
+    </testcase>
+    -->
+
+    <testcase id="B1" title="Combined Color/Gray, No Processing">
+        <input-file name="test003.ppm"/>
+        <input-file name="test004.pgm"/>
+        <output-file name="resultB1.ppm"/>
+        <description>
+            Two images of different color-formats are joined together on one sheet. The output color-format will automatically
+            be adjusted in order to capture the more complex color-format.
+        </description>
+        <options>
+            -n --input-pages 2 --input-file-sequence test003.ppm test004.pgm --output-file-sequence resultB1.ppm
+        </options>
+    </testcase>
+
+    <testcase id="B2" title="Combined Color/Black+White, No Processing">
+        <input-file name="test003.ppm"/>
+        <input-file name="test005.pbm"/>
+        <output-file name="resultB2.ppm"/>
+        <description>
+            Two images of different color-formats are joined together on one sheet. The output color-format will automatically
+            be adjusted in order to capture the more complex color-format.
+        </description>
+        <options>
+            -n --input-pages 2 --input-file-sequence test003.ppm test005.pbm --output-file-sequence resultB2.ppm
+        </options>
+    </testcase>
+
+    <testcase id="B3" title="Combined Gray/Black+White, No Processing">
+        <input-file name="test004.pgm"/>
+        <input-file name="test005.pbm"/>
+        <output-file name="resultB3.pgm"/>
+        <description>
+            Two images of different color-formats are joined together on one sheet. The output color-format will automatically
+            be adjusted in order to capture the more complex color-format.
+        </description>
+        <options>
+            -n --input-pages 2 --input-file-sequence test004.pgm test005.pbm --output-file-sequence resultB3.pgm
+        </options>
+    </testcase>
+
+    <testcase id="C1" title="Black sheet background color">
+        <input-file name="test002.pbm"/>
+        <output-file name="resultC1.pbm"/>
+        <description>
+            The source file is smaller than the sheet size a4.
+        </description>
+        <options>
+            -n --sheet-size a4 --sheet-background black test002.pbm resultC1.pbm
+        </options>
+    </testcase>
+
+    <testcase id="C2" title="Explicit shifting.">
+        <input-file name="test002.pbm"/>
+        <output-file name="resultC2.pbm"/>
+        <description>
+        </description>
+        <options>
+            -n --sheet-size a4 --pre-shift -5cm,9cm test002.pbm resultC2.pbm
+        </options>
+    </testcase>
+
+    <testcase id="D1" title="Crop to sheet size">
+        <input-file name="test003.ppm"/>
+        <output-file name="resultD1.ppm"/>
+        <description>
+            (The input file has greater height and smaller width than the sheet size.)
+        </description>
+        <options>
+            -n --sheet-size 20cm,10cm test003.ppm resultD1.ppm
+        </options>
+    </testcase>
+
+    <testcase id="D2" title="Fit to sheet size">
+        <input-file name="test003.ppm"/>
+        <output-file name="resultD2.ppm"/>
+        <description>
+            (The input file has greater height and smaller width than the sheet size.)
+        </description>
+        <options>
+            -n --size 20cm,10cm test003.ppm resultD2.ppm
+        </options>
+    </testcase>
+
+    <testcase id="D3" title="Stretch to sheet size">
+        <input-file name="test003.ppm"/>
+        <output-file name="resultD3.ppm"/>
+        <description>
+            (The input file has greater height and smaller width than the sheet size.)
+        </description>
+        <options>
+            -n --stretch 20cm,10cm test003.ppm resultD3.ppm
+        </options>
+    </testcase>
+
+
+    <testcase id="E" title="Splitting 2-page layout into seperate output pages">
+        <input-file name="testE001.pbm"/>
+        <input-file name="testE002.pbm"/>
+        <input-file name="testE003.pbm"/>
+        <output-file name="resultE001.pbm"/>
+        <output-file name="resultE002.pbm"/>
+        <output-file name="resultE003.pbm"/>
+        <output-file name="resultE004.pbm"/>
+        <output-file name="resultE005.pbm"/>
+        <output-file name="resultE006.pbm"/>
+        <description>
+        
+        </description>
+        <options>
+            --layout double --output-pages 2 testE%03d.pbm resultE%03d.pbm
+        </options>
+    </testcase>
+
+    <!--
+    <testcase id="E" title="Using Manually Set Masks">
+        <description>
+        
+        </description>
+        <options>
+        
+        </options>
+    </testcase>
+    -->
+
+    <!--
+    <testcase id="F" title="Extreme Grayfilter Settings">
+        <description>
+        
+        </description>
+        <options>
+        
+        </options>
+    </testcase>
+    -->
+
+</test-environment>

@@ -1,0 +1,123 @@
+Release 0.3, 2007-12-31:
+- Moved history-information to CHANGELOG-file.
+- Two distribution archives become part of the release, one source-only
+  variant, and one binary-distribution for i386/Linux. Archive
+  unpaper-bin-0.3.tar.gz contains everything in unpaper-0.3.tar.gz, plus a
+  binary executable file in folder bin/.
+- The final distribution packages are now created with a standard-tar via
+  shell execution. Older versions were tarred and gzipped by ANT 1.6.5's tar-
+  task, which had shown incompatibities on some systems.
+- Included a simple makefile make.sh. It runs with minimum requirements to the
+  compiler, while being configurable for particular optimizations via $CFLAGS.
+- Common style distribution package naming and content-layout, following the
+  conventional patterns 'unpaper-0.x.tar.gz' for the archive file, which
+  contains a root folder 'unpaper-0.x' and files 'unpaper-0.x/*' (request/bug
+  #10793).
+- Added --sheet-background option.
+- Added --pre-shift and --post-shift options.
+- Removed modes 'single-rotated' and 'double-rotated' for parameter --layout.
+  (The documentation was ambiguous and the functionaity can better be achieved
+  using --pre-rotate in combination with --layout single or --layout double.)
+  The default layout mode is 'single' now, the old behaviour, when no --layout
+  option was specified, can be achieved using --layout none.
+- Corrected some language flaws in the docmentation. Thanks to Martin Collins.
+- Renamed Readme.txt and License.txt to more common README and LICENSE.
+- Fixed bug #11294: leading zeros in width/height values of pnm-files no longer
+  cause problems.
+- Fixed bug #9495: resizing/stretching of color-images now works.
+- Fixed bug #7882: --pre-mirror h,v now correct when vertical resolution is odd
+
+Release 0.2, 2006-05-09:
+- Version number fallback to 0.2 (instead of counting up to 1.2). This better
+  reflects the current development status and appears more suitable in an
+  open-source context.
+- User documentation with several explaining diagrams added, see file 
+  'doc/index.html'.
+- Color support added. Files of type PPM can be read, processed and written
+  now. By default, unpaper uses the same image format for the output file as
+  has been read from an input file, i.e. if your input is PPM, the output will
+  be PPM automatically, if the input is PGM, the output will be PGM etc. Use
+  parameter --type pbm|pgm|ppm to force an output file format independently
+  from the input file format.
+- Better image rotation implementation. Auto-rotation of pages is now done
+  much faster. 
+- The --cache option became obsolete (due to new image rotation 
+  implementation).
+- The compiler-switch -DNOSINCOS became obsolete (due to new image rotation
+  implementation). It is no longer needed for compilation on some platforms.
+- Changed to gcc version 4.1 for creating the Linux binary included in the
+  distribution archive. gcc 4.1's executable appears to be about 20% faster
+  than the one created with gcc 3.3.6.
+- Added '-fomit-frame-pointer' and '-ftree-vectorize' to compiler options.
+  (Thanks to Olaf Marzocchi for the hint about -ftree-vectorize.)
+- Fix: the first pixel of an image is now correctly read (was read wrong in
+  previous versions).
+- Minor fixes.
+
+Release 1.1, 2005-08-27:
+- Single-page input sheets can now be joined to make 2-page output sheets.
+  See options --input-pages [1|2] and --output-pages [1|2].
+- Multiple input and output filename patterns can now be specified using the
+  options --input-file-sequence and --output-file-sequence.
+- Blank pages or sheets can be inserted into the sequence of input sheets
+  using --insert-blank and/or --replace-blanks,  
+- Zooming and stretching are now supported, see --stretch, --zoom and 
+  --post-stretch, --post-zoom. 
+- The sheet size can be set while keeping the content's aspect ratio (and
+  centering it with best-fitting on the sheet) using --size and --post-size.
+  For changing the sheet size without performing any stretching/zooming of
+  content use --sheet-size.
+- Faster rotation when deskewing images. The rotating algorithm has been
+  optimized to run up to 4 times faster than before. Additional speedup 
+  may be achieved by caching intermediate results of trigonometric calculations
+  when processing multiple page. This caching uses a lot of memory, it
+  can be enabled using the --cache switch.
+- Rotation detection can now be configured to start at individual edges
+  of the area to process. The parameter --deskew-scan-direction no longer
+  takes v[ertical],h[orizontal] as values, but now l[eft],t[op],r[ight],
+  b[ottom]. The default is 'l,r', which matches the previous version's
+  default 'horizontal'.
+- The behaviour of the 'double' template, used with the --layout parameter
+  by specifying "--layout double", has been changed slightly. The input
+  images are no longer assumed to be rotated by 90 degrees, as they would
+  be when scanned from paper with a usual ADF-scanner. 
+  That means, "--layout double" no longer implies "--pre-rotate 90" and
+  "--post-rotate 90". To get the layout-template behaving as in earlier
+  versions, use "--layout double-rotated", this behaves like the old 
+  "--layout double".
+- --border-align --border-margin allow to align page content heading towards
+  one edge, but keeping a specified distance margin.
+- Using the new parameter --blackfilter-scan-exclude [l,t,r,b], areas can
+  be specified on which the blackfilter will not work. This is useful to
+  exclude the blackfilter from working on inner page content, e.g. to 
+  protect images with larger dark parts from deletion.
+  Note that the --layout option may preset some blackfilter-scan-exclude 
+  masks.
+- The speed of the noisefilter has been optimized a bit.
+- The default --mask-scan-step value has been changed from 10 to 5, which
+  should sometimes lead to better mask-area detection.
+- The default --deskew-scan-depth value has been changed from 0.66 to 0.5,
+  should sometimes lead to better rotation detection.
+- The default --black-treshold value has been changed from 0.5 to 0.33,
+  which should give a better looking, more saturated result when converting
+  grayscale images to black-and-white mode.
+- Existing output files will no longer be overwritten by default. If an
+  output file to be written already exists, the program terminates with an
+  error instead. Overwriting can be allowed using the --overwrite switch.
+- Fix: Setting the parameter --pre-rotate or --post-rotate to 0 will no
+  longer issue a useless warning message.
+- Tested on MacOS X, additional compilation instructions for MacOS have been
+   added to the documentation.
+- Tested on SPARC Solaris.
+- Compiler switch -DNOSINCOS disables use of the sincos() function, which
+  preserves compatibility with math libraries that do not provide this
+  function.
+
+Release 1.0.1, 2005-03-14:
+- Syntax cleanups, better ANSI-C compatibility to solve some compiler issues.
+  Using the -pedantic compiler switch, only warnings with intended origin are
+  still issued.
+- Minor changes to the usage-info.
+
+Release 1.0, 2005-03-01:
+- Initial release.

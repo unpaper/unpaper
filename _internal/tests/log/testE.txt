@@ -1,0 +1,102 @@
+0.3 (build 2007-12-31 02:30:11)
+unpaper 0.3 - written by Jens Gulden 2005-2007.
+Licensed under the GNU General Public License, this comes with no warranty.
+
+-------------------------------------------------------------------------------
+Processing sheet #1: testE001.pbm -> resultE001.pbm, resultE002.pbm
+input-file for sheet 1: testE001.pbm (type pgm)
+output-files for sheet 1: resultE001.pbm, resultE002.pbm (type pgm)
+sheet size: 3507x2480
+...
+noise-filter ... deleted 172 clusters.
+blur-filter... deleted 0 pixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1811,0,3456,2479
+gray-filter... deleted 0 pixels.
+converting to qpixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1811,0,3456,2479
+detected rotation left: [66,0,1596,2479]: 0.800000
+detected rotation right: [66,0,1596,2479]: 0.800000
+rotation average: 0.800000  deviation: 0.000000  rotation-scan-deviation (maximum): 1.000000  [66,0,1596,2479]
+rotate (876,1240): -0.800000
+detected rotation left: [1811,0,3456,2479]: -2.600000
+detected rotation right: [1811,0,3456,2479]: -2.600000
+rotation average: -2.600000  deviation: 0.000000  rotation-scan-deviation (maximum): 1.000000  [1811,0,3456,2479]
+rotate (2631,1240): 2.600000
+converting back from qpixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1836,0,3426,2479
+centering mask [66,0,1596,2479] (876,1240): 45, 0
+centering mask [1836,0,3426,2479] (2631,1240): 0, 0
+border detected: (0,120,1754,86) in [0,0,1753,2479]
+border detected: (1753,165,1,36) in [1753,0,3506,2479]
+aligning mask [0,120,1752,2393] (0,102): 0, -18
+aligning mask [1753,165,3505,2443] (1753,100): 0, -65
+writing output.
+
+-------------------------------------------------------------------------------
+Processing sheet #2: testE002.pbm -> resultE003.pbm, resultE004.pbm
+input-file for sheet 2: testE002.pbm (type pgm)
+output-files for sheet 2: resultE003.pbm, resultE004.pbm (type pgm)
+sheet size: 3507x2480
+...
+noise-filter ... deleted 173 clusters.
+blur-filter... deleted 0 pixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1811,0,3456,2479
+gray-filter... deleted 0 pixels.
+converting to qpixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1811,0,3456,2479
+detected rotation left: [66,0,1596,2479]: 0.800000
+detected rotation right: [66,0,1596,2479]: 0.800000
+rotation average: 0.800000  deviation: 0.000000  rotation-scan-deviation (maximum): 1.000000  [66,0,1596,2479]
+rotate (876,1240): -0.800000
+detected rotation left: [1811,0,3456,2479]: -2.600000
+detected rotation right: [1811,0,3456,2479]: -2.600000
+rotation average: -2.600000  deviation: 0.000000  rotation-scan-deviation (maximum): 1.000000  [1811,0,3456,2479]
+rotate (2631,1240): 2.600000
+converting back from qpixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1836,0,3426,2479
+centering mask [66,0,1596,2479] (876,1240): 45, 0
+centering mask [1836,0,3426,2479] (2631,1240): 0, 0
+border detected: (0,120,1754,86) in [0,0,1753,2479]
+border detected: (1753,165,1,36) in [1753,0,3506,2479]
+aligning mask [0,120,1752,2393] (0,102): 0, -18
+aligning mask [1753,165,3505,2443] (1753,100): 0, -65
+writing output.
+
+-------------------------------------------------------------------------------
+Processing sheet #3: testE003.pbm -> resultE005.pbm, resultE006.pbm
+input-file for sheet 3: testE003.pbm (type pgm)
+output-files for sheet 3: resultE005.pbm, resultE006.pbm (type pgm)
+sheet size: 3507x2480
+...
+noise-filter ... deleted 172 clusters.
+blur-filter... deleted 0 pixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1811,0,3456,2479
+gray-filter... deleted 0 pixels.
+converting to qpixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1811,0,3456,2479
+detected rotation left: [66,0,1596,2479]: 0.800000
+detected rotation right: [66,0,1596,2479]: 0.800000
+rotation average: 0.800000  deviation: 0.000000  rotation-scan-deviation (maximum): 1.000000  [66,0,1596,2479]
+rotate (876,1240): -0.800000
+detected rotation left: [1811,0,3456,2479]: -2.600000
+detected rotation right: [1811,0,3456,2479]: -2.600000
+rotation average: -2.600000  deviation: 0.000000  rotation-scan-deviation (maximum): 1.000000  [1811,0,3456,2479]
+rotate (2631,1240): 2.600000
+converting back from qpixels.
+auto-masking (876,1240): 66,0,1596,2479
+auto-masking (2631,1240): 1836,0,3426,2479
+centering mask [66,0,1596,2479] (876,1240): 45, 0
+centering mask [1836,0,3426,2479] (2631,1240): 0, 0
+border detected: (0,120,1754,86) in [0,0,1753,2479]
+border detected: (1753,165,1,36) in [1753,0,3506,2479]
+aligning mask [0,120,1752,2393] (0,102): 0, -18
+aligning mask [1753,165,3505,2443] (1753,100): 0, -65
+writing output.

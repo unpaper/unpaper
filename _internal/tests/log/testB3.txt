@@ -1,0 +1,11 @@
+0.3 (build 2007-12-31 02:30:11)
+unpaper 0.3 - written by Jens Gulden 2005-2007.
+Licensed under the GNU General Public License, this comes with no warranty.
+
+-------------------------------------------------------------------------------
+Processing sheet: test004.pgm, test005.pbm -> resultB3.pgm
+input-files for sheet 1: test004.pgm, test005.pbm (types pgm, pbm)
+output-file for sheet 1: resultB3.pgm (type pgm)
+sheet size: 2480x1754
+...
+writing output.

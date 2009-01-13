@@ -1,0 +1,11 @@
+0.3 (build 2007-12-31 02:30:11)
+unpaper 0.3 - written by Jens Gulden 2005-2007.
+Licensed under the GNU General Public License, this comes with no warranty.
+
+-------------------------------------------------------------------------------
+Processing sheet: test002.pbm -> resultC1.pbm
+input-file for sheet 1: test002.pbm (type pbm)
+output-file for sheet 1: resultC1.pbm (type pbm)
+sheet size: 2480x3507
+...
+writing output.

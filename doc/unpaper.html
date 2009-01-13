@@ -1,0 +1,762 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE"
+ content="text/html; charset=iso-8859-1">
+  <title>unpaper - User Documentation</title>
+  <meta name="AUTHOR" content="Jens Gulden">
+  <link rel="stylesheet" href="img/style.css">
+  <script src="img/nospam.js" type="text/javascript"></script>
+</head>
+<body>
+
+<h1>unpaper - User Documentation</h1>
+
+<p>This document describes the concepts and features of <a href="index.html"><tt>unpaper</tt></a>.</p>
+
+
+<h2 class="toc">Table of Contents<br></h2>
+
+<big><a href="#basicconcepts">Basic Concepts</a></big>
+<blockquote><a href="#sheetsandpages">Sheets and Pages</a><br>
+  <a href="#imagefiles">Input and Output Image Files</a><br>
+  <a href="#layoutsandtemplates">Layouts and Templates</a><br>
+  <a href="#multiplefiles">Processing Multiple Files</a><br>
+  <a href="#masks">Masks</a><br>
+  <a href="#borders">Borders</a><br>
+  <a href="#sizevalues">Size Values </a></blockquote>
+<ul>
+</ul>
+<big><a href="#imageprocessingfeatures">Image Processing Features</a></big>
+<blockquote><a href="#blackfilter">Blackfilter</a><br>
+  <a href="#noisefilter">Noisefilter</a><br>
+  <a href="#blurfilter">Blurfilter</a><br>
+  <a href="#grayfilter">Grayfilter</a><br>
+  <a href="#deskewing">Deskewing (Auto-Straightening)</a></blockquote>
+<ul>
+</ul>
+<big><a href="#processingorder">Processing Order</a></big><br>
+
+
+<h2><a name="basicconcepts">Basic Concepts</a></h2>
+
+The terminology to describe <tt>unpaper</tt> makes heavy use of the
+paper metaphor, because the software is mainly intended for post-processing
+scanned images from printed paper documents. <br>
+
+<h3><a class="mozTocH3" name="sheetsandpages"></a>Sheets and Pages</h3>
+
+The very basic object <tt>unpaper</tt> operates on is a <i><b>sheet</b></i>.
+A <i>sheet</i> is an initially blank image in the computer's memory. Think of a <i>sheet</i>
+as an initially empty piece of paper on which something will be printed later.<br>
+<br>
+To do something useful with a <i>sheet</i>, you will at least want to
+place one <b><i>page</i></b> onto a <i>sheet</i>. A <i>page</i> is a
+logical unit of a document which takes up a rectangular area on a <i>sheet</i>.
+In the most simple case, one <i>sheet</i> carries exactly one <i>page</i>,&nbsp;
+in other cases (e.g. when using a double-page <i>layout</i>) there can be
+multiple <i>pages</i> placed on one <i>sheet</i>.<br>
+<br>
+<img alt="" src="img/sheetspages.png"><br>
+<small>Figure 1: Sheets and Pages</small><br>
+
+<h3><a class="mozTocH3" name="imagefiles"></a>Input and Output Image Files</h3>
+
+<tt>unpaper</tt>
+can process either double-page <i>layout</i> scans or individually scanned
+<i>pages</i>. It is up to the user's choice whether an <b><i>image-file</i></b>
+carries a single <i>page</i> or a whole <i>sheet</i> with two <i>pages</i>.
+The program can be configured to either join individual <i>image-files</i>
+as multiple <i>pages</i> onto one <i>sheet</i>, or split <i>sheets</i>
+containing multiple <i>pages</i> into several output <i>image-files</i>
+when saving the output.<br>
+<br>
+By default, <tt>unpaper</tt> places one input <i>image-file</i> onto
+a <i>sheet</i>, and saves one output <i>image-file</i> per <i>sheet</i>.
+Alternatively, the number of input or output <i>image-files</i> per <i>sheet</i>
+can be set to two using the <b><tt>--input-pages</tt><tt> 2</tt></b> or 
+<b><tt>--output-pages 2</tt></b> options.<br>
+<br>
+If two <i>image-files</i>
+are specified as input, they will successively be placed on the
+left-hand half and the right-hand half of the <i>sheet</i>.<br>
+<br>
+<img alt="" src="img/input-pages.png"><br>
+<small>Figure 2: Input Files<br>
+</small><br>
+In the same way, if two <i>image-files</i>
+are specified as output, the <i>sheet</i> will be split into two halves
+which get saved as individual files.<br>
+<br>
+<img alt="" src="img/output-pages.png"><br>
+<small>Figure 3: Output Files<br>
+</small><br>
+The default value both for <tt>--input-pages</tt> and <tt>--output-pages</tt>
+is 1.<br>
+
+<h4><span class="mozTocH4"></span>File Formats</h4>
+The <i>image-file</i> formats accepted by <tt>unpaper</tt> are those
+of the PNM-family: <b>PBM</b>, <b>PGM</b> and <b>PPM</b>. This
+ensures interoperability with
+the <a href="http://www.sane-project.org/">SANE</a> tools under Linux.
+The simplicity of the PNM file-formats also
+allows <tt>unpaper</tt> to be developed as a
+pure standalone program without any dependencies on external packages
+or libraries, because the PNM file-formats are very easy to handle.<br>
+<br>
+In order to operate on images with a different file-format, several
+image file-format converters are available which
+can be used to convert to PNM before processing,
+and afterwards convert back from PNM to the desired file format. Look
+e.g. at <tt>pngtopnm</tt> <tt>/</tt> <tt>pnmtopng</tt>, <tt>tifftopnm</tt>
+<tt>/</tt> <tt>pnmtotiff</tt>, <tt>jpegtopnm</tt> <tt>/</tt> <tt>pnmtojpeg</tt>,
+or
+consider using the all-purpose image file-type converter <tt>convert</tt>
+from the <a href="http://www.imagemagick.org/">imagemagick</a> package.<br>
+
+<h3><a class="mozTocH3" name="layoutsandtemplates"></a>Layouts and Templates</h3>
+
+<h4>Built-In Layout-Templates</h4>
+<b><i>Layouts</i></b> are the linking concept between physical <i>sheets</i>
+and logical <i>pages</i>. A <i>layout</i> determines a set of
+rectangular areas at which <i>pages</i> (or other parts of content)
+appear on a <i>sheet</i>. The most common and simple <i>layouts</i>
+generally used are the single-page <i>layout</i> (one <i>page</i>
+covers the whole <i>sheet</i>), and
+the double-page <i>layout</i> (two <i>pages</i> are placed on the
+left-hand-side and the right-hand-side of the <i>sheet</i>).<br>
+<br>
+<tt>unpaper</tt> provides basic <b><i>layout </i><i>templates</i></b> for
+the above types<i>. There are 2 <i>layout</i> <i>templates</i>
+built in, a third one deactivates any template:<br>
+<ol>
+  <li><tt>single</tt></li>
+  <li><tt>double</tt></li>
+  <li><tt>none</tt><br>
+  </li>
+</ol>
+<img alt="" src="img/layout-templates.png"><br>
+<small>Figure 6: Available Layout Templates</small><br>
+<br>
+A <i>layout template</i> is chosen by using the option <b><tt>--layout</tt></b>,
+e.g. <br>
+<br>
+<tt>unpaper --layout double input%03d.pbm output%03d.pbm</tt>. <br>
+<br>
+Choosing a <i>template</i> with the <tt>--layout</tt>
+option is equivalent to specifying a set of other options, e.g.
+setting <tt>--mask-scan-point</tt>.
+In order to combine a <i>template</i> with other options,
+make sure that the more specific options appear behind the <tt>--layout</tt>
+option, in order to overwrite the <i>template</i> settings.<br>
+<br>
+The default template is <tt>single</tt>, use <tt>none</tt> to deactivate this.<br>
+<br>
+<i>Note:</i> A <i>layout</i> is completely independent from the number
+of<i> image-files</i> used as input or output. That means, you can either specify
+<tt>--layout double</tt> together with a single input <i>image-file</i>
+(in cases where the input <i>image-file</i> already contains two scanned <i>pages</i>
+in a double-page <i>layout</i>), or use it together with an <tt>--input-pages
+2</tt> setting, in order to join two individually scanned <i>pages</i>
+on one <i>sheet</i>.<br>
+
+<h4>Complex Layouts<br></h4>
+Besides the built-in fixed <i>templates</i>, any kind of complex <i>layout</i>
+can be handled by manually specifying either <i>mask-scan-points</i>
+using the <b><tt>--mask-scan-point</tt></b> option, or setting <i>masks</i> at
+fixed coordinates using the <b><tt>--mask</tt></b> option. Both the <tt>--mask-scan-point</tt>
+and the <tt>--mask</tt> option may occur any number of times, in order
+to declare as many <i>masks</i> in the <i>layout</i> as desired. See below for
+a further explanation on <i>masks</i>.<br>
+
+<h3><a class="mozTocH3" name="multiplefiles"></a>Processing Multiple Files</h3>
+
+In many cases, especially when post-processing scanned books, there
+will be several input <i>image-files</i> to process in sequence within
+a single run of <tt>unpaper</tt>, and several output <i>image-files</i> to be generated.
+Processing of multiple files in a batch job is supported through the
+use of wildcards in filenames, e.g.:<br>
+<br>
+<tt>unpaper (...options...) input%03d.pbm output%03.pbm</tt><br>
+<br>
+This will successively read
+images from files <tt>input001.pbm</tt>, <tt>input002.pbm</tt>, <tt>input003.pbm</tt>
+etc., and write output to the files <tt>output001.pbm</tt>,
+<tt>output002.pbm</tt>, <tt>output003.pbm</tt> etc., until no more
+input <i>image-files</i> with the current index number are available.<br>
+<br>
+Using a wildcard of the form "%0<i>n</i>d" will replace each occurrence
+of the wildcard with an increasing index number, by default
+starting with 1 and counting up by 1 each time another files gets loaded. <i>n</i>
+denotes the number of digits that the replaced number string is
+supposed to have, and the <i>0</i> requests leading zeros. Thus "%03d"
+will get replaced with strings in the sequence <tt>001</tt>, <tt>002</tt>,
+<tt>003</tt> etc. This way, a sequence of images named e.g. <tt>input001.pgm</tt>,
+<tt>input002.pgm</tt>, <tt>input003.pgm</tt>... can be specified.
+There are two seperate index counters for input and output files which
+get increased independently from each other.<br>
+<br>
+Wildcards in filenames are also useful when combining a sequence
+of individual <i>pages</i> onto double-page layouted <i>sheets</i>,
+or when splitting double-page layouted <i>sheets</i> into individual
+output files. When using two input or output <i>image-files</i> (by
+specifying <tt>--input-pages 2</tt> or <tt>--output-pages 2</tt>) the
+index number replaced for the wildcard
+will generally not be the same as the <i>sheet</i> number in the
+processing sequence, but will grow twice as fast. <br>
+<br>
+The following example will combine
+single-page <i>image-files</i> onto a double-page <i>layout</i> <i>sheet</i>:<br>
+<br>
+<tt>unpaper -n --input-pages 2 singlepage%03d.pgm output%03d.pgm<br>
+</tt><br>
+This joins the input images <tt>singlepage001.pgm</tt> and <tt>singlepage002.pgm</tt>
+on<tt> output001.pgm</tt>, <tt>singlepage003.pgm</tt> and <tt>singlepage004.pgm</tt>
+on <tt>output002.pgm</tt>, and so on. Note that due to the use of
+option <tt>-n</tt> (short for <tt>--no-processing</tt>), the
+images are simply copied onto the left-hand half and the right-hand half of the <i>sheet</i>
+without any processing regarding <i>layout</i>, <i>mask-detection</i>
+etc.<br>
+<br>
+Using
+multiple input <i>image-files</i> by setting <tt>--input-pages 2</tt>
+is
+independent from any <i>layout</i> possibly specified with the <tt>--layout</tt>
+option. However, in order to use <tt>unpaper</tt>'s post-processing
+features for more than simply joining two <i>image-files</i> to one,
+you will
+most likely want to combine the use of <tt>--input-pages 2</tt> with
+the <tt>--layout double</tt> option, as in:<br>
+<br>
+<tt>unpaper --layout double</tt><tt> </tt><tt>--input-pages 2 (...other options...) singlepage%03d.pgm output%03d.pgm</tt><br>
+<br>
+<img alt="" src="img/multiple-input-files.png"><br>
+<small>Figure 4: Sequence of multiple input images</small><br>
+<br>
+Similarly, it is also possible to split up a <i>sheet</i> into
+several <i>image-files</i> when saving. The following line would be
+used to split up a sequence of double-page layouted <i>sheets</i> into a sequence of
+single-page output images, including full image processing (applying <i>masking</i>,
+<i>deskewing</i>, <i>border-aligning</i> etc., see below) in
+order to make sure that the <i>pages</i> in the double-page <i>layout</i>
+are really placed fully on the left-hand half and the right-hand half of the <i>sheet</i>
+before the <i>sheet</i> gets split up:<br>
+<br>
+<tt>unpaper --layout double (...options...) --output-pages 2 doublepage%03d.pgm singlepage%03d.pgm</tt><br>
+<br>
+<img alt="" src="img/multiple-output-files.png"><br>
+<small>Figure 5: Sequence of multiple output images</small><br>
+<br>
+By default, processing of multiple <i>sheets</i> starts with <i>sheet</i>
+number 1, and also with input&nbsp;and output <i>image-files</i> number
+1. <tt>unpaper</tt> will run as long as input <i>image-files</i> with the current index
+number can be found. If no more input files are available, processing stops.<br>
+
+<h4>Adjusting Indices</h4>
+In order to start with a different <i>sheet</i> index, the <b><tt>--start-sheet</tt></b>
+option can be set. Likewise, setting <b><tt>--end-sheet</tt></b>
+specifies a fix <i>sheet</i> number that will the last one
+processed, even if more input-files are available.<br>
+<br>
+Using <b><tt>--sheet</tt></b>, a single <i>sheet</i> or a set of specific
+<i>sheet</i> numbers to be processed can be specified. For example: <br>
+<br>
+<tt>unpaper --sheet 7,12-15,31 --input-pages 2 (...options...) input%03d.pgm output%03d.pgm</tt><br>
+<br>
+This would generate the output-files <tt>output007.pgm</tt>, <tt>output012.pgm</tt>,
+<tt>output013.pgm</tt>, <tt>output014.pgm</tt>, <tt>output015.pgm</tt>
+and <tt>output031.pgm</tt>, reading input from the same files as if a
+whole sequence of <i>sheets</i> and <i>pages</i> starting with index 1 had been
+processed, i.e. reading the files <tt>input013.pgm</tt> and <tt>input014.pgm</tt>
+for <i>sheet</i> 7, <tt>input023.pgm</tt> and <tt>input024.pgm</tt>
+for <i>sheet</i> 12, and so on.<br>
+<br>
+To prevent some <i>sheets</i> from being processed (i.e., remove them
+from the sequence), the option <b><tt>--exclude</tt></b>
+can be used. Note that this is different from option <tt>--no-processing</tt>
+or <tt>-n</tt>, which still would generate the output files but
+without applying any image processing to them.<br>
+<br>
+The input and output index numbers to start with can be adjusted using
+the options <b><tt>--start-input</tt></b> and <b><tt>--start-output</tt></b>.
+These values apply to the wildcard replacement in filenames only and
+are independent from the <i>sheet</i> numbering. In other words,
+setting these options specifies an offset at which the file numbering starts relative
+to <i>sheet</i> 1. For example:<br>
+<br>
+<tt>unpaper </tt><tt>--input-pages 2 (...options...) --start-input 7 input%03d.pgm output%03d.pgm</tt><br>
+<br>
+These settings would cause the input-files <tt>input007.pgm</tt> and <tt>input008.pgm</tt>
+to be used for <i>sheet</i> 1, <tt>input009.pgm</tt> and <tt>input010.pgm</tt>
+for <i>sheet</i> 2, and so on. The default value for both options is 1.<br>
+
+<h4>File-Sequence Patterns<br></h4>
+More sophisticated <b><i>file-sequence patterns</i></b> can be
+specified using the <b><tt>--input-file-sequence</tt></b>
+or <b><tt>--output-file-sequence</tt></b> options. In cases where the
+input files are named after a pattern like e.g. <tt>left01.pbm</tt>, <tt>right01.pbm</tt>,
+<tt>left02.pbm</tt>, <tt>right02.pbm</tt> etc., the use of <tt>--input-pages 2</tt> together with <tt>--input-file-sequence left%02d.pbm right%02d.pbm</tt>
+will load to the desired images. The index counter with which the
+wildcards in the filenames get replaced is increased every time the
+<i>file-sequence pattern</i> is iterated through, it will not be
+increased after each single replacement of a wildcard.<br>
+<br>
+Note that it would also be possible to use
+<i>file-sequence patterns</i> of
+different lengths than the number of <i>pages</i> per <i>sheet</i>.
+In case an input <i>file-sequence</i> like e.g. <tt>a%d.pbm b%d.pbm c%d.pbm</tt>
+is specified together with <tt>--input-pages
+2</tt>, the input <i>image-files</i> used for the first <i>sheet</i>
+would be <tt>a1.pbm</tt>
+and <tt>b1.pbm</tt>, the input <i>image-files</i> used for the second
+<i>sheet</i> would be <tt>c1.pbm</tt>
+and <tt>a2.pbm</tt> (!), for the third <i>sheet</i> they would be <tt>b2.pbm</tt>
+and <tt>c2.pbm</tt>, and so on. It's up to the user whether it makes sense to use
+<i>file-sequence patterns</i> of different length than the corresponding number of
+input <i>image-files</i> or output <i>image-files</i> per <i>sheet</i>.<br>
+<br>
+Specifying a filename as the very last argument on the command-line is
+equivalent to using <tt>--output-file-sequence &lt;file&gt;</tt>
+(a sequence of length 1), specifying a filename as the last-but-one
+argument on the command line is equivalent to using <tt>--input-file-sequence
+&lt;file&gt;</tt>.<br>
+
+<h4>Inserting Blank Content</h4>
+Input <i>file-sequences</i> may be forced to use completely blank images at
+some index positions. The <b><tt>--insert-blank</tt></b> option allows to specify one or more input
+indices at which no file is read, but instead a blank image is inserted
+into the sequence of input images. The input image that would have been
+loaded at this index position in the sequence will be used at the
+following non-blank index posisiton instead, thus the following indices
+get shifted to make room for the blank image inserted.<br>
+<br>
+The <b><tt>--replace-blank</tt></b> option also allows to insert blank
+images into the sequence, but it suppresses the images that would have
+been loaded at the specified index positions and ignores them. No
+index positions get shifted to make room for the blank image.<br>
+
+<h3><a class="mozTocH3" name="masks"></a>Masks<br></h3>
+
+<b><i>Masks</i></b> are rectangular areas on a <i>sheet</i> that are
+affected by several of the processing steps <tt>unpaper</tt> performs.
+Although there may be as many <i>masks</i>
+on a <i>sheet</i> as desired, in most cases it will be useful to
+operate with either one or two <i>masks</i> per <i>sheet</i> only. A
+single-page <i>layout</i> would operate on only one <i>mask</i> covering the whole
+<i>page</i>, a double-page <i>layout</i> would make use of two <i>masks</i>, one placed
+somewhere in the left-hand half of a <i>sheet</i>, the other somewhere in the
+right-hand half.<br>
+
+<h4>Automatic Mask-Detection</h4>
+<i>Masks</i> can be set directly by specifying pixel coordinates
+using the <tt>--mask</tt> option, but in most cases it is desirable to
+detect <i>masks</i> automatically. Automatic <b><i>mask-detection</i></b>
+allows input images to contain content which is not perfectly placed at fix
+areas, but probably differs slightly in position from <i>sheet</i> to <i>sheet</i>
+(which is usually the case when books are scanned or photocopied manually).<br>
+<br>
+Automatic <i>mask-detection</i> uses a starting point somewhere on the
+<i>sheet</i> called <b><i>mask-scan-point</i></b>, which marks a
+position estimated to be somewhere inside the <i>mask</i> to be detected. (When detecting
+<i>masks</i> that cover a whole <i>page</i>, it is useful to place the <i>mask-scan-point</i>
+right in the center of the <i>sheet</i>'s half on which the <i>page</i>
+appears.) Beginning from the <i>mask-scan-point</i>, the image content is
+virtually scanned in either the two horizontal directions (left and
+right), or the two vertical directions (up and down), or all four directions, until no
+more dark pixels are found which means an edge of the <i>mask</i> is
+considered to have been found.<br>
+<br>
+<img alt="" src="img/mask-scan.png"><br>
+<small>Figure 7: Mask-Detection</small><br>
+<br>
+Several parameters control the process of <i>mask-detection</i>. At
+first, <i>mask-scan-points</i> to start detection at get specified
+either using the <tt>--layout</tt>
+option (which automatically sets one <i>mask-scan-point</i> for single-page
+<i>layouts</i>, and two <i>mask-scan-points</i> for double-page <i>layouts</i>)
+or manually with the option <b><tt>--mask-scan-point</tt></b>.<br>
+<br>
+<i>Mask-detection</i> is performed by the use of a 'virtual bar' which
+covers an area of the <i>sheet</i> under which the number of dark pixels is
+counted.<br>
+The 'virtual bar' is moved towards the directions
+specified by <b><tt>--mask-scan-direction</tt></b>.
+(Those directions not given via <tt>--mask-scan-direction</tt> will
+use up the whole <i>sheet</i>'s size in these directions for the
+detected result.)<br>
+<br>
+While moving the 'virtual bar' the number of
+dark pixels below it is continually compared to the number that has
+been counted at the very first position of the 'virtual bar' above the <i>mask-scan-point</i>
+when detection started. Once the number of dark pixels drops below the
+relative value given by <b><tt>--mask-scan-threshold</tt></b>,
+<i>mask-detection</i> stops and an edge of the <i>mask</i> is
+considered to have been found.<br>
+<br>
+<img alt="" src="img/mask-scan-detail1.png"><br>
+<small>Figure 8: 'Virtual Bar' for Mask-Detection</small><br>
+<br>
+The width of the 'virtual bar' can be configured using the <b><tt>--mask-scan-size</tt></b>
+option, the length of it by setting <b><tt>--mask-scan-depth</tt></b>.
+Adjusting the 'virtual bar's' width can help to fine-tune the process
+of mask detection according to the content that is being scanned. The
+wider the 'virtual bar' is, the more tolerant the detection process
+becomes with respect to small gaps in the content (which is e.g. needed
+if a <i>page</i> is made up of multiple columns). However, if the
+'virtual bar' is too wide, detection might not stop properly when a
+mask's edge should have been found.<br>
+<img alt="" src="img/mask-scan-detail2.png"><br>
+<small>Figure 9: Mask-Scan-Threshold</small><br>
+<br>
+<i>Mask-detection</i> can be disabled using the <b><tt>--no-mask-scan</tt></b>
+option, optionally followed by the <i>sheet</i> numbers to disable the filter
+for.
+
+<h4>Mask-Centering</h4>
+<i>Masks</i> that have been automatically detected or manually set will
+be used for several
+further processing steps. At first they provide the basis
+for properly centering the content on the corresponding <i>page</i>
+area on the <i>sheet</i>.<br>
+<br>
+This allows <tt>unpaper</tt> to automatically
+correct imprecise positions of <i>page</i> content in scanned <i>sheets</i>
+and shift the content to a normalized position. Especially
+when processing multiple <i>pages</i>, this leads to more regular
+positions of <i>pages</i> in the sequence of resulting <i>sheets</i>.<br>
+<img alt="" src="img/mask-center.png"><br>
+<small>Figure 10: Mask-Centering</small><br>
+<br>
+<i>Mask-centering</i> can be suppressed using <b><tt>--no-mask-center</tt></b>,
+optionally followed by the <i>sheet</i> numbers to disable the filter for.
+
+<h3><a class="mozTocH3" name="borders"></a>Borders</h3>
+
+Unlike <i>masks</i>, <b><i>borders</i></b> are detected by starting
+at the outer edges of the <i>sheet</i>
+(or left/right halfs of the <i>sheet</i>, in a double-page <i>layout</i>),
+and then scanning towards the middle until
+some content-pixels are reached. Again, a 'virtual bar' is used for
+detection, the width of which can be set using the option <b><tt>--border-scan-size</tt></b>,
+and the step-distance with which to move it by setting the option
+<b><tt>--border-scan-step</tt></b>. The option
+<b><tt>--border-scan-threshold</tt></b> determines the maximum absolute
+number of pixels which are tolerated to be found below the 'virtual
+bar' until <i>border-detection</i> stops and one edge of the <i>border</i>
+area is considered to have been found.<br>
+<br>
+<img alt="" src="img/border-scan.png"><br>
+<small>Figure 11: Border-Detection</small><br>
+
+<h4>Border-Aligning</h4>
+<i>Borders</i> serve two different purposes: First, the area outside
+the detected <i>border</i> on the <i>sheet</i> will be wiped out, which
+is another mechanism to clean the outer <i>sheet</i> boundary from unwanted
+pixels. <br>
+<br>
+Second, a detected <i>border</i> can optionally be aligned towards one edge of
+the <i>sheet</i>. <b><i>Border-aligning</i></b> means shifting the area
+inside the <i>border</i> towards one edge of the <i>sheet</i>.
+The edge towards which to shift the border is specified with the
+option <b><tt>--border-align</tt></b>.
+Additionally, a fixed distance from the edge is
+kept, which can be set via <b><tt>--border-margin</tt></b>.
+<br>
+This way, it can be assured that e.g. all <i>pages</i> of a scanned
+book regularly start 2 cm below the upper <i>sheet</i> edge.<br>
+<br>
+<img alt="" src="img/border-align.png"><br>
+<small>Figure 12: Border-Aligning</small><br>
+<br>
+Note that <i>border-aligning</i> is not performed by default, it needs
+to be explicitly activated by setting the option <tt>--border-align</tt> to
+one of the edge names <tt>top</tt>, <tt>bottom</tt>, <tt>left</tt>
+or <tt>right</tt>, and by setting <tt>--border-margin</tt> to the
+desired distance which is to be kept to this edge.<br>
+<br>
+Use <b><tt>--no-border-scan </tt></b>to disable <i>border-detection</i>,
+or <b><tt>--no-border-align</tt></b>
+to prevent <i>border-aligning</i> on specific <i>sheets</i>, both
+optionally followed by
+the <i>sheet</i> numbers to disable the filters for.
+
+<h3><a class="mozTocH3" name="sizevalues"></a>Size Values<br></h3>
+
+Whenever an option expects a <b><i>size</i></b> value, there are three
+possible ways to specify that:<br>
+<ul>
+  <li>as absolute pixel values, e.g. <tt>--sheet-size 4000,3000</tt></li>
+  <li>as length measurements on one of the scales <tt>cm</tt>, <tt>mm</tt>,
+    <tt>in</tt>, e.g. <tt>--size 30cm,20cm</tt> or also <tt>--size
+10in,250mm<br>
+    </tt></li>
+  <li>using one of the following <i>size</i> names:&nbsp;</li>
+  <ul>
+    <li><tt>a5</tt><br>
+    </li>
+    <li><tt>a4</tt><br>
+    </li>
+    <li><tt>a3</tt><br>
+    </li>
+    <li><tt>letter</tt><br>
+    </li>
+    <li><tt>legal</tt><br>
+    </li>
+    <li><tt>a5-landscape</tt> (horizontally oriented A5)<br>
+    </li>
+    <li><tt>a4-landscape</tt> (horizontally oriented A4) </li>
+    <li><tt>a3-landscape</tt> (horizontally oriented A3) </li>
+    <li><tt>letter-landscape</tt> (horizontally oriented letter) </li>
+    <li><tt>legal-landscape</tt> (horizontally oriented legal)<br>
+      <br>
+Examples: <tt>--sheet-size a4</tt>, <tt>--post-zoom letter</tt><tt>-landscape</tt>
+    </li>
+  </ul>
+</ul>
+Using one of the last two ways, length measurements get internally
+converted to absolute pixel values based on the resolution set via
+the option <b><tt>--dpi</tt></b>. If the default of 300 DPI should be
+changed, this option must appear on the command line before
+using a length measurement value. <tt>--dpi</tt> may also appear
+multiple times, e.g. if the <i>size</i> values of the output image(s)
+should be based on a different resolution than those of the input file(s).<br>
+<br>
+Note that using the <tt>--dpi</tt> option will have no effect on the
+resolution of the <i>image-files</i> that get written as output. (The PNM format is not
+capable of storing information about the image resolution.) The value
+set via <tt>--dpi</tt> will only have effect on <tt>unpaper</tt>'s internal conversion of
+length measurements to absolute pixel values when <i>size</i> values are specified using
+length measurements or <i>size</i> names.<br>
+
+
+<h2><a name="imageprocessingfeatures"></a>Image Processing Features</h2>
+
+<h3><a class="mozTocH4" name="blackfilter"></a>Blackfilter</h3>
+
+Sometimes it is desirable to automatically remove large black areas
+which originate from bad photocopies or other optical influences. The <b><i>blackfilter</i></b>
+can help to find large areas of black and wipe them out automatically.<br>
+<br>
+<img alt="" src="img/blackfilter.png"><br>
+<small>Figure 13: Blackfilter</small><br>
+<br>
+Be careful with pictures in scanned documents, especially
+with diagrams. Some diagrams intentionally contain large areas of dark
+color, which might be affected by automatic wipe-out of the
+<i>blackfilter</i>. In order to prevent actual <i>page</i> content
+from being wiped out, the option <b><tt>--blackfilter-scan-exclude</tt></b>
+allows to specify areas on the <i>sheet</i> which should not be taken
+into account by the <i>blackfilter</i>. When using one of the default <i>layout
+templates</i> set via the <b><tt>--layout</tt></b>
+option, the inner area of each <i>page</i> will automatically be
+excluded from black-filtering.<br>
+<br>
+<img alt="" src="img/blackfilter-detail.png"><br>
+<small>Figure 14: Blackfilter Details</small><br>
+<br>
+The <i>blackfilter</i> can be disabled by the option <b><tt>--no-blackfilter</tt></b>,
+optionally followed by the <i>sheet</i> numbers to disable the filter
+for.<br>
+
+<h3><a class="mozTocH4" name="noisefilter"></a>Noisefilter</h3>
+
+The <b><i>noisefilter</i></b> removes small clusters of pixels
+("noise") from the <i>sheet</i>.<br>
+The maximum pixel-size of clusters to be removed can be set via <b><tt>--noisefilter-intensity</tt></b>.
+This value must not be chosen too high in order not to remove relevant
+elements of <i>page</i> content, e.g. normal text-points ("."). As a
+consequence, this option might have to be adjusted on images with a low
+scan resolution.<br>
+<br>
+<img alt="" src="img/noisefilter.png"><br>
+<small>Figure 15: Noisefilter</small><br>
+<br>
+Disable with <b><tt>--no-noisefilter</tt></b>, optionally followed by
+the <i>sheet</i> numbers to disable the filter for.<br>
+
+<h3><a class="mozTocH4" name="blurfilter"></a>Blurfilter</h3>
+
+The <b><i>blurfilter</i></b> removes "lonely" clusters of pixels, i.e.
+clusters which have only very few other dark pixels in their neighborhood.<br>
+<br>
+<img alt="" src="img/blurfilter.png"><br>
+<small>Figure 16: Blurfilter</small><br>
+<br>
+The size of the neighborhood to be searched and the amount of other dark
+pixels accepted in the neighborhood below which the area gets wiped out
+can be adjusted with the options <b><tt>--blurfilter-size</tt></b>,
+<b><tt>--blurfilter-step</tt></b> and <b><tt>--blurfilter-intensity</tt></b>.
+Additionally, <tt>--blurfilter-step</tt> also determines the step-size
+with which the neighborhood-area is moved across the image while filtering.<br>
+<br>
+<img alt="" src="img/blurfilter-detail.png"><br>
+<small>Figure 17: Blurfilter Details</small><br>
+<br>
+Disable with <b><tt>--no-blurfilter</tt></b>, optionally followed by
+the <i>sheet</i> numbers to disable the filter for.<br>
+
+<h3><a class="mozTocH4" name="grayfilter"></a>Grayfilter</h3>
+
+The <b><i>grayfilter</i></b> removes areas which are gray-only, that
+means it wipes
+out all those areas which do not contain a maximum relative amount of
+non-dark pixels. The size of the local area the
+<i>grayfilter</i> operates on can be set using <b><tt>--grayfilter-size</tt></b>,
+and the granularity of detection is controlled via <b><tt>--grayfiter-step</tt></b>.
+The maximum relative amount of non-dark pixels that are still
+considered to be deletable can be set using <b><tt>--grayfilter-threshold</tt></b>.<br>
+<br>
+Be careful with the <i>grayfilter</i> when processing color scans,
+because any bright color might be considered as gray and be wiped out. It might be a good
+idea to disable the <i>grayfilter</i> when processing color scans.<br>
+<br>
+Disable with <b><tt>--no-grayfilter</tt></b>, optionally followed by
+the <i>sheet</i> numbers to disable the filter for.<br>
+
+<h3><a class="mozTocH3" name="deskewing"></a>Deskewing (Auto-Straightening)</h3>
+
+The <i>deskewing</i> performed by <tt>unpaper</tt> is actually a
+rotation to automatically straighten rectangular content areas on the <i>sheet</i>.
+It is applied to any <i>mask</i> that has been found during <i>mask-detection</i>
+or that has been set directly via the <tt>--mask</tt> option.<br>
+<br>
+<img alt="" src="img/deskew.png"><br>
+<small>Figure 18: Deskewing</small><br>
+<br>
+The algorithm that detects the angle of skew works
+better the more regular and solid the edges of the area's content are.<br>
+It works as follows:<br>
+A 'virtual line' is moved from the outside of one edge inside the
+rectangular area. This happens several times, gradually changing the
+rotation of the 'virtual line'. (Called 'virtual', because there is of
+course no visible line drawn in the image.) The algorithm will count
+the number of dark pixels along the line as it is virtually moved.<br>
+<br>
+Some parameters control the the size of the 'virtual line' and its
+movement:<br>
+<b><tt>--deskew-scan-size</tt></b>: the height/width of the 'virtual
+line' used for scanning (the length of the line at rotation angle 0)<br>
+<b><tt>--deskew-scan-range</tt></b>: the absolute value of degrees
+between the negative and positive value of which the line will be
+rotated (i.e., the default value 5.0 will cause the 'virtual line' to
+be rotated in several small steps between -5.0 degrees and 5.0 degrees).<br>
+<b><tt>--deskew-scan-step</tt></b>: the step size with which to iterate
+between the bounds set by <tt>--deskew-scan-range</tt> (I.e., a value
+of 0.1 will lead to the virtual line being successively rotated with
+0.0, 0.1, -0.1, 0.2, -0.2, 0.3, -0.3 ... degrees.)<br>
+<br>
+<img alt="" src="img/deskew-detail1.png"><br>
+<small>Figure 19: Rotation Detection</small><br>
+<br>
+At each of these rotation steps, the following is done:
+The rotated 'virtual line' gets moved (again 'moved virtually') towards
+the center of the rectangular area on which detection gets performed.
+Movement is performed pixel by pixel, it starts with the line
+completely outside the rectangular area, not yet reaching inside the
+area. At each movement-step, the number of dark pixels covered by the
+virtual line is counted and is accumulated as the total sum of dark
+pixels. For each rotation angle at which this is done, the maximum
+difference in the accumulated sum of dark pixels occurring between a
+previous movement-step and the next one gets calculated. The rotation
+angle for which this maximum difference becomes maximal will be the rotation
+angle detected for <i>deskewing</i>.<br>
+<br>
+The relative amount of dark pixels to accumulate before shifting the 'virtual line' is stopped (and
+continued with the next rotation-step) is given by <b><tt>--deskew-scan-depth</tt></b>.
+This value is relative to the number of pixels that the 'virtual line' covers in total, i.e.
+for the default deskew-scan-size of 1500 and the default deskew-scan-depth
+of 0.66, shifting at each rotation step stops after 1000 dark pixels
+have been counted in sum (or, if not enough pixels are met, when the
+'virtual line' has reached the center of the rectangular area).<br>
+<br>
+Sometimes, trying out different deskew-scan-depth values, either lower
+than the default of 0.66, or higher, can noticeably increase
+detection quality. Which value is best is merely coincidental,
+depending on the shape of the outer edges of each very first character
+in each line of a text area.<br>
+<br>
+<img alt="" src="img/deskew-detail2.png"><br>
+<small>Figure 20: Rotation Detection Details</small><br>
+<br>
+The above described the detection process starting at one single edge
+of a 4-edged rectangular area (e.g. the left edge, as displayed in the above image).
+However, the overall rotation angle detection uses results of up to all
+four edges. Which edges to use can be specified by <b><tt>--deskew-scan-direction</tt></b>.
+The final rotation angle will then be the average value of all rotation
+angles detected at each edge. Usually, the individually detected values
+can be expected to be almost the same at each edge, if the rectangular
+area to be deskewed has a regular shape. If, however,
+the individual values differ too much, it can be concluded that
+something went wrong with the detection, and no <i>deskewing</i>
+should be performed. (E.g., if the
+rotation at the left edge appears to be -0.5 degrees, but at the right
+edge results in 1.9 degrees, one should better not use the average value,
+because with that big difference something seems to have gone wrong with the
+detection.)
+So, before using the average of all individually detected values, their
+statistical standard-deviation is calculated, which is <img class="inline" alt="squareroot((a-average)^2 + (b-average)^2 + ...)" src="img/standard-deviation.png" align="top">.
+If the standard-deviation among the detected angles exceeds the value
+specified by <b><tt>--deskew-scan-deviation</tt></b>, the total result
+is considered to be wrong and no <i>deskewing</i> is
+performed.<br>
+<br>
+<i>Deskewing</i> can be disabled with <b><tt>--no-deskew</tt></b>,
+optionally followed by the <i>sheet</i> numbers to disable it for.<br>
+
+
+<h2><a name="processingorder"></a>Processing Order</h2>
+
+Processing of the filters and auto-corrections is performed in a fixed
+order according to the following sequence:<br>
+<ol>
+  <li><b>load</b> image file(s)<br>
+  </li>
+  <li>perform <b>pre-rotate</b>, <b>pre-mirror</b> etc. actions on
+the individual input files (if specified)<br>
+  </li>
+  <li><b>place</b> on the sheet (multiple input-files are
+placed as tiles), auto-determine sheet size by the size of the
+input image-file(s) if
+not specified explicitly</li>
+  <li>apply <b>noisefilter</b> and <b>blurfilter</b> to remove small
+bits of unwanted pixels</li>
+  <li>apply <b>blackfilter</b> and <b>grayfilter</b> to remove larger
+areas of unwanted pixels</li>
+  <li>detect <b>masks</b> starting from specified mask-scan-points</li>
+  <li>perform <b>deskewing</b> on each detected or directly specified
+mask</li>
+  <li><b>re-detect masks</b> again to get precise masks after deskewing</li>
+  <li><b>center masks</b> on the corresponding page's area on the sheet</li>
+  <li>perform <b>border-detection</b></li>
+  <li><b>align</b> the detected borders</li>
+  <li><b>save</b> output image file(s), possibly perform <b>post-rotate</b>,
+    <b>post-mirror</b> etc. actions on the individual output files
+before saving<br>
+  </li>
+</ol>
+<img alt="" src="img/processing-order.png"><br>
+<small>Figure 21: Processing Order</small><br>
+
+<h4><span class="mozTocH4"></span>Disabling processing steps</h4>
+Each processing step can be disabled individually by
+a corresponding <b><tt>--no-xxx</tt></b> option (where <tt>xxx</tt>
+stands for the feature to disable, e.g. <tt>--no-grayfilter</tt>, <tt>--no-mask-scan</tt>
+etc.).<br>
+If such an option is followed by a <i>sheet</i> number, or a comma-seperated list
+of multiple <i>sheet</i> numbers, the filter gets disabled only for those <i>sheets</i>
+specified. Otherwise (if no <i>sheet</i> number follows), the filter is
+disabled for all <i>sheets</i>. Instead of specifying individual <i>sheet</i>
+numbers, also a range of numbers can be given, e.g. "10-20" to represent all
+<i>sheet</i> numbers between 10 and 20. Example:<br>
+<br>
+<tt>unpaper (...options...) --no-blackfilter 3,15,21-28,40 (...)<br></tt><br>
+This will disable the <i>blackfilter</i> on the <i>sheets</i> 3, 15,
+21, 22, 23, etc. until 28, and 40.<br>
+<br>
+<p align="center"><font size="1">Written by Jens Gulden 2006-2007
+<script><!--
+nospam("unpaper","jensgulden","de")
+//--></script><br>
+Modifications under the GPL are welcome.</font></p>
+</body>
+</html>

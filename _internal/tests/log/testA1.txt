@@ -1,0 +1,27 @@
+0.3 (build 2007-12-31 02:30:11)
+unpaper 0.3 - written by Jens Gulden 2005-2007.
+Licensed under the GNU General Public License, this comes with no warranty.
+
+-------------------------------------------------------------------------------
+Processing sheet: test001.pbm -> resultA1.pbm
+input-file for sheet 1: test001.pbm (type pgm)
+output-file for sheet 1: resultA1.pbm (type pgm)
+sheet size: 2480x3507
+...
+black-area flood-fill: [0,0,19,499]
+noise-filter ... deleted 103 clusters.
+blur-filter... deleted 0 pixels.
+auto-masking (1240,1753): 600,0,2300,3506
+gray-filter... deleted 0 pixels.
+converting to qpixels.
+auto-masking (1240,1753): 600,0,2300,3506
+detected rotation left: [600,0,2300,3506]: -4.000000
+detected rotation right: [600,0,2300,3506]: -4.000000
+rotation average: -4.000000  deviation: 0.000000  rotation-scan-deviation (maximum): 1.000000  [600,0,2300,3506]
+rotate (1240,1753): 4.000000
+converting back from qpixels.
+auto-masking (1240,1753): 670,0,2270,3506
+centering mask [670,0,2270,3506] (1240,1753): -230, 0
+border detected: (0,315,1,736) in [0,0,2479,3506]
+aligning mask [0,315,2478,2770] (0,525): 0, 210
+writing output.

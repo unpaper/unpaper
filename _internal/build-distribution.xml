@@ -1,0 +1,277 @@
+<!-- 
+    ANT build file for unpaper.
+-->
+<project name="unpaper" basedir="/home/jgulden/workspace/unpaper" default="all">
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         Initialize.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <target name="init">
+
+        <property name="VERSION_MAJOR" value="0"/>
+        <property name="VERSION_MINOR" value="3"/>
+		<tstamp>
+      		<format property="TIMESTAMP" pattern="yyyy-MM-dd HH:mm:ss"/>
+		</tstamp>        
+		<tstamp>
+      		<format property="FILETIMESTAMP" pattern="yyyyMMddHHmmss"/>
+		</tstamp>        
+        <property name="RELEASE_NAME" value="${ant.project.name}-${VERSION_MAJOR}.${VERSION_MINOR}"/>
+        <property name="RELEASE_BIN_NAME" value="${ant.project.name}-bin-${VERSION_MAJOR}.${VERSION_MINOR}"/>
+        <property name="BUILD_SRC_NAME" value="${RELEASE_NAME}-${FILETIMESTAMP}"/>
+        <property name="BUILD_NAME" value="${RELEASE_BIN_NAME}-${FILETIMESTAMP}"/>
+        <property name="BUILD_TARGET" value="/home/jgulden/workspace/_build/${ant.project.name}/"/>
+        <property name="TEMPLATES" value="_internal/templates"/>
+        <property name="TMP" value="/tmp"/>
+    </target>
+
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         Compile.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <target name="gcc" depends="init">
+    
+        <exec executable="gcc-4.1" dir="." failonerror="yes">
+          <arg value="-lm"/> <!-- link math library -->
+          <arg value="-O3"/> <!-- full optimization -->
+          <arg value="-funroll-all-loops"/>
+          <arg value="-fomit-frame-pointer"/>
+          <arg value="-ftree-vectorize"/>
+          <arg value="-Wall"/>
+          <arg value="-W"/>
+          <arg value="-pedantic"/>
+          <arg value="-D"/> <arg value='TIMESTAMP="${TIMESTAMP}"'/>
+          <arg value="-o"/> <arg value="unpaper"/>
+          <arg value="unpaper.c"/>
+        </exec>
+        
+    	<!-- Pentium-M
+        <exec executable="gcc-4.1" dir="." failonerror="yes">
+          <arg value="-lm"/>
+          <arg value="-O3"/>
+          
+          <arg value="-march=pentium-m"/>
+          
+          <arg value="-funroll-all-loops"/>
+          <arg value="-fomit-frame-pointer"/>
+          <arg value="-ftree-vectorize"/>
+          <arg value="-Wall"/>
+          <arg value="-W"/>
+          <arg value="-pedantic"/>
+          <arg value="-D"/> <arg value='TIMESTAMP="${TIMESTAMP}"'/>
+          <arg value="-o"/> <arg value="unpaper-pentium-m"/>
+          <arg value="unpaper.c"/>
+        </exec>
+        -->
+    	
+        <!--
+        <exec executable="gcc" dir="." failonerror="yes">
+          <arg value="-lm"/>
+          <arg value="-O3"/>
+          <arg value="-funroll-all-loops"/>
+          <arg value="-fomit-frame-pointer"/>
+          <arg value="-Wall"/>
+          <arg value="-W"/>
+          <arg value="-pedantic"/>
+          <arg value="-D"/> <arg value='TIMESTAMP="${TIMESTAMP}"'/>
+          <arg value="-o"/> <arg value="unpaper-gcc3.3"/>
+          <arg value="unpaper.c"/>
+        </exec>
+        -->
+        
+        <echo message="Compiler finished." level="info"/>
+    </target>
+
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         Compile quickly for debugging.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <target name="debug" depends="init">
+    
+        <exec executable="gcc-4.1" dir="." failonerror="yes">
+          <arg value="-lm"/> <!-- link math library -->
+          <arg value="-O3"/> <!-- full optimization -->
+          <arg value="-Wall"/>
+          <arg value="-W"/>
+          <arg value="-pedantic"/>
+          <!--<arg value="-D"/> <arg value='TIMESTAMP="${TIMESTAMP}"'/>-->
+          <arg value="-o"/> <arg value="unpaper"/>
+          <arg value="unpaper.c"/>
+        </exec>
+        
+        <echo message="Compiling DEBUG executable finished." level="info"/>
+    </target>
+
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         Create documentation.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <target name="doc" depends="init,gcc">
+        <exec executable="./unpaper" dir="." failonerror="yes" outputproperty="version">
+            <arg value="--version-number"/>
+        </exec>
+        <exec executable="./unpaper" dir="." failonerror="yes" outputproperty="build">
+            <arg value="--version-build"/>
+        </exec>
+        <exec executable="./unpaper" dir="." failonerror="yes" output="${TMP}/versionname.txt">
+            <arg value="--version-number"/>
+        </exec>
+        <exec executable="./unpaper" dir="." failonerror="yes" output="${TMP}/compile.txt">
+            <arg value="--help-compile"/>
+        </exec>
+        <exec executable="./unpaper" dir="." failonerror="yes" output="${TMP}/readme.txt">
+            <arg value="--help-readme"/>
+        </exec>
+        <exec executable="./unpaper" dir="." failonerror="yes" output="${TMP}/usage.txt">
+            <arg value="--help-usage"/>
+        </exec>
+        <exec executable="./unpaper" dir="." failonerror="yes" output="${TMP}/options.txt">
+            <arg value="--help-options"/>
+        </exec>
+        
+        <!--<replace file="${TMP}/versionname.txt">
+            <replacefilter token="." value="_"/>
+        </replace>-->
+    	
+        <!-- create README -->
+        
+        <loadfile srcFile="${TMP}/compile.txt" property="compile"/>
+        <loadfile srcFile="${TMP}/versionname.txt" property="versionname"/>
+        <loadfile srcFile="${TMP}/readme.txt" property="readme"/>
+        <loadfile srcFile="${TMP}/usage.txt" property="usage"/>
+        <loadfile srcFile="${TMP}/options.txt" property="options"/>
+        
+        <copy file="${TEMPLATES}/README.template" tofile="README" overwrite="yes"/>
+        <replace file="README">
+            <replacefilter token="#version#" value="${version}"/>
+            <replacefilter token="#build#" value="${build}"/>
+            <replacefilter token="#compile#" value="${compile}"/>
+            <replacefilter token="#readme#" value="${readme}"/>
+            <replacefilter token="#usage#" value="${usage}"/>
+            <replacefilter token="#options#" value="${options}"/>
+        </replace>
+                
+        <!-- create index.html -->
+        
+        <replace file="${TMP}/compile.txt">
+            <replacefilter token="&lt;" value="&amp;lt;"/>
+            <replacefilter token="&gt;" value="&amp;gt;"/>
+        </replace>
+        <replace file="${TMP}/readme.txt">
+            <replacefilter token="&lt;" value="&amp;lt;"/>
+            <replacefilter token="&gt;" value="&amp;gt;"/>
+            <replacefilter token="unpaper" value="&lt;tt&gt;unpaper&lt;/tt&gt;"/>
+            <replacefilter token="scanimage" value="&lt;tt&gt;scanimage&lt;/tt&gt;"/>
+            <replacefilter token="scanadf" value="&lt;tt&gt;scanadf&lt;/tt&gt;"/>
+            <replacefilter token="pgm2tiff" value="&lt;tt&gt;pgm2tiff&lt;/tt&gt;"/>
+            <replacefilter token="tiffcp" value="&lt;tt&gt;tiffcp&lt;/tt&gt;"/>
+            <replacefilter token="tiff2pdf" value="&lt;tt&gt;tiff2pdf&lt;/tt&gt;"/>
+        </replace>
+        <replace file="${TMP}/usage.txt">
+            <replacefilter token="&lt;" value="&amp;lt;"/>
+            <replacefilter token="&gt;" value="&amp;gt;"/>
+            <replacefilter token="Filenames" value="&lt;/pre&gt;Filenames"/>
+            <replacefilter token="etc." value="etc.&lt;pre&gt;"/>
+        </replace>
+        <replace file="${TMP}/options.txt">
+            <replacefilter token="&lt;" value="&amp;lt;"/>
+            <replacefilter token="&gt;" value="&amp;gt;"/>
+        </replace>
+        
+        <loadfile srcFile="${TMP}/compile.txt" property="compileHTML"/>
+        <loadfile srcFile="${TMP}/readme.txt" property="readmeHTML"/>
+        <loadfile srcFile="${TMP}/usage.txt" property="usageHTML"/>
+        <loadfile srcFile="${TMP}/options.txt" property="optionsHTML"/>
+        
+        <copy file="${TEMPLATES}/index.html.template" tofile="doc/index.html" overwrite="yes"/>
+        <replace file="doc/index.html">
+            <replacefilter token="#version#" value="${version}"/>
+            <replacefilter token="#versionname#" value="${versionname}"/>
+            <replacefilter token="#build#" value="${build}"/>
+            <replacefilter token="#compile#" value="${compileHTML}"/>
+            <replacefilter token="#readme#" value="${readmeHTML}"/>
+            <replacefilter token="#usage#" value="${usageHTML}"/>
+            <replacefilter token="#options#" value="${optionsHTML}"/>
+        </replace>
+    </target>
+
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         Create examples / run tests.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <target name="examples" depends="init,gcc,doc">
+    	<!--subant antfile="build-tests.xml" buildpath="doc/examples/make"/-->
+    	<!--
+    	<ant antfile="doc/examples/make/build-tests.xml" inheritAll="false"/>
+    	-->
+    </target>
+
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         Create final distribution archive.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <target name="distribution" depends="init,gcc,doc,examples">
+
+        <tar destfile="${BUILD_TARGET}/${BUILD_NAME}.tar.gz" compression="gzip">
+            <tarfileset dir="." prefix="${RELEASE_NAME}/">
+                <!--include name="unpaper.c"/-->
+                <!--include name="unpaper.html"/-->
+            	
+                <include name="README"/>
+                <include name="LICENSE"/>
+                <include name="CHANGELOG"/>
+                <include name="doc/"/>                
+            	
+                <!--<include name="img/before.png"/>
+                <include name="img/arrow.png"/>
+                <include name="img/after.png"/>-->
+            </tarfileset>
+            <tarfileset dir="." mode="755" prefix="${RELEASE_NAME}/">
+                <include name="make.sh"/>
+            </tarfileset>
+            <tarfileset dir="." mode="755" prefix="${RELEASE_NAME}/bin/">
+                <include name="unpaper"/>
+            </tarfileset>
+            <tarfileset dir="." prefix="${RELEASE_NAME}/src/">
+                <include name="unpaper.c"/>
+            </tarfileset>
+        </tar>
+    	
+    	<!-- fix: unpack and repack with shell's tar -->
+    	<delete dir="${TMP}/${RELEASE_NAME}" failonerror="false"/>
+    	<untar src="${BUILD_TARGET}/${BUILD_NAME}.tar.gz" dest="${TMP}" compression="gzip"/>
+    	
+    	<chmod file="${TMP}/${RELEASE_NAME}/bin/unpaper" perm="a+x"/>
+    	<chmod file="${TMP}/${RELEASE_NAME}/make.sh" perm="a+x"/>
+
+    	<exec executable="/bin/tar">
+    	    <arg value="cvzf"/>
+    	    <arg value="${BUILD_TARGET}/${BUILD_NAME}.tar.gz"/> <!-- overwrite -->
+    	    <arg value="-C"/>
+    	    <arg value="${TMP}"/>
+    	    <arg value="${RELEASE_NAME}"/>
+    	</exec>
+    	<!-- src-distribution -->
+    	<delete dir="${TMP}/${RELEASE_NAME}/bin" failonerror="true"/>
+    	<exec executable="/bin/tar">
+    	    <arg value="cvzf"/>
+    	    <arg value="${BUILD_TARGET}/${BUILD_SRC_NAME}.tar.gz"/> <!-- overwrite -->
+    	    <arg value="-C"/>
+    	    <arg value="${TMP}"/>
+    	    <arg value="${RELEASE_NAME}"/>
+    	</exec>
+    	
+        <copy file="${BUILD_TARGET}/${BUILD_NAME}.tar.gz" tofile="${BUILD_TARGET}/${RELEASE_BIN_NAME}.tar.gz" overwrite="yes"/> <!-- always have latest build without timestamp, too -->
+        <copy file="${BUILD_TARGET}/${BUILD_SRC_NAME}.tar.gz" tofile="${BUILD_TARGET}/${RELEASE_NAME}.tar.gz" overwrite="yes"/> <!-- always have latest build without timestamp, too -->
+        
+    </target>
+
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+         Main target to build everything.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <target name="all" depends="gcc,doc,distribution">
+        <echo message="Build ok."/>
+    </target>
+
+</project>

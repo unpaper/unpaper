@@ -1,0 +1,38 @@
+
+p.options {
+    background: lightGray;
+    font-family: Courier;
+    padding: 10px;
+    border-size: 1px;
+    border-style: solid;
+}
+
+p.description {
+    font-family: Helvetica,Arial;
+}
+
+img.input {
+    margin-right: 10px;
+    border-size: 1px;
+    border-style: solid;
+    border-color: black;
+    padding: 1px;
+    /*width: 300px;*/
+    height: 250px;
+}
+
+img.output {
+    margin-right: 10px;
+    border-size: 1px;
+    border-style: solid;
+    border-color: black;
+    padding: 1px;
+    /*width: 300px;*/
+    height: 250px;
+}
+
+iframe.log {
+    background: lightGray;
+    border-size: 1px;
+    border-style: solid;
+}

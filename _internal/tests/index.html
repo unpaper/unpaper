@@ -1,0 +1,451 @@
+<html xmlns:fo="http://www.w3.org/1999/XSL/Format">
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>unpaper - Test Protocol</title>
+<link rel="stylesheet" href="img/style.css">
+</head>
+<body>
+<hr>
+<h2>[A1] Single-Page Template Layout, Black+White, Full Processing</h2>
+<p class="description">
+            The default template '--layout single' takes effect.
+        </p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test001.png" target="_blank" onclick="window.open('img/test001.png', 'test001.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test001.png"></a>
+<br>
+<small>test001.pbm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultA1.png" target="_blank" onclick="window.open('img-results/resultA1.png', 'resultA1.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultA1.png"></a>
+<br>
+<small>resultA1.pbm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite test001.pbm resultA1.pbm</p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testA1.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[B1] Combined Color/Gray, No Processing</h2>
+<p class="description">
+            Two images of different color-formats are joined together on one sheet. The output color-format will automatically
+            be adjusted in order to capture the more complex color-format.
+        </p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test003.png" target="_blank" onclick="window.open('img/test003.png', 'test003.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test003.png"></a>
+<br>
+<small>test003.ppm</small></td><td><a href="img/test004.png" target="_blank" onclick="window.open('img/test004.png', 'test004.pgm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test004.png"></a>
+<br>
+<small>test004.pgm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultB1.png" target="_blank" onclick="window.open('img-results/resultB1.png', 'resultB1.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultB1.png"></a>
+<br>
+<small>resultB1.ppm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            -n --input-pages 2 --input-file-sequence test003.ppm test004.pgm --output-file-sequence resultB1.ppm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testB1.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[B2] Combined Color/Black+White, No Processing</h2>
+<p class="description">
+            Two images of different color-formats are joined together on one sheet. The output color-format will automatically
+            be adjusted in order to capture the more complex color-format.
+        </p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test003.png" target="_blank" onclick="window.open('img/test003.png', 'test003.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test003.png"></a>
+<br>
+<small>test003.ppm</small></td><td><a href="img/test005.png" target="_blank" onclick="window.open('img/test005.png', 'test005.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test005.png"></a>
+<br>
+<small>test005.pbm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultB2.png" target="_blank" onclick="window.open('img-results/resultB2.png', 'resultB2.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultB2.png"></a>
+<br>
+<small>resultB2.ppm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            -n --input-pages 2 --input-file-sequence test003.ppm test005.pbm --output-file-sequence resultB2.ppm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testB2.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[B3] Combined Gray/Black+White, No Processing</h2>
+<p class="description">
+            Two images of different color-formats are joined together on one sheet. The output color-format will automatically
+            be adjusted in order to capture the more complex color-format.
+        </p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test004.png" target="_blank" onclick="window.open('img/test004.png', 'test004.pgm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test004.png"></a>
+<br>
+<small>test004.pgm</small></td><td><a href="img/test005.png" target="_blank" onclick="window.open('img/test005.png', 'test005.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test005.png"></a>
+<br>
+<small>test005.pbm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultB3.png" target="_blank" onclick="window.open('img-results/resultB3.png', 'resultB3.pgm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultB3.png"></a>
+<br>
+<small>resultB3.pgm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            -n --input-pages 2 --input-file-sequence test004.pgm test005.pbm --output-file-sequence resultB3.pgm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testB3.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[C1] Black sheet background color</h2>
+<p class="description">
+            The source file is smaller than the sheet size a4.
+        </p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test002.png" target="_blank" onclick="window.open('img/test002.png', 'test002.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test002.png"></a>
+<br>
+<small>test002.pbm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultC1.png" target="_blank" onclick="window.open('img-results/resultC1.png', 'resultC1.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultC1.png"></a>
+<br>
+<small>resultC1.pbm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            -n --sheet-size a4 --sheet-background black test002.pbm resultC1.pbm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testC1.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[C2] Explicit shifting.</h2>
+<p class="description">
+        
+</p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test002.png" target="_blank" onclick="window.open('img/test002.png', 'test002.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test002.png"></a>
+<br>
+<small>test002.pbm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultC2.png" target="_blank" onclick="window.open('img-results/resultC2.png', 'resultC2.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultC2.png"></a>
+<br>
+<small>resultC2.pbm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            -n --sheet-size a4 --pre-shift -5cm,9cm test002.pbm resultC2.pbm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testC2.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[D1] Crop to sheet size</h2>
+<p class="description">
+            (The input file has greater height and smaller width than the sheet size.)
+        </p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test003.png" target="_blank" onclick="window.open('img/test003.png', 'test003.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test003.png"></a>
+<br>
+<small>test003.ppm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultD1.png" target="_blank" onclick="window.open('img-results/resultD1.png', 'resultD1.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultD1.png"></a>
+<br>
+<small>resultD1.ppm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            -n --sheet-size 20cm,10cm test003.ppm resultD1.ppm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testD1.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[D2] Fit to sheet size</h2>
+<p class="description">
+            (The input file has greater height and smaller width than the sheet size.)
+        </p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test003.png" target="_blank" onclick="window.open('img/test003.png', 'test003.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test003.png"></a>
+<br>
+<small>test003.ppm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultD2.png" target="_blank" onclick="window.open('img-results/resultD2.png', 'resultD2.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultD2.png"></a>
+<br>
+<small>resultD2.ppm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            -n --size 20cm,10cm test003.ppm resultD2.ppm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testD2.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[D3] Stretch to sheet size</h2>
+<p class="description">
+            (The input file has greater height and smaller width than the sheet size.)
+        </p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/test003.png" target="_blank" onclick="window.open('img/test003.png', 'test003.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/test003.png"></a>
+<br>
+<small>test003.ppm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultD3.png" target="_blank" onclick="window.open('img-results/resultD3.png', 'resultD3.ppm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultD3.png"></a>
+<br>
+<small>resultD3.ppm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            -n --stretch 20cm,10cm test003.ppm resultD3.ppm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testD3.txt" width="600" height="400"></iframe>
+</p>
+<hr>
+<h2>[E] Splitting 2-page layout into seperate output pages</h2>
+<p class="description">
+        
+        
+</p>
+<table>
+<tr>
+<td>
+<h3>Input</h3>
+</td><td width="10%"></td><td>
+<h3>Output</h3>
+</td>
+</tr>
+<tr>
+<td>
+<table>
+<tr>
+<td><a href="img/testE001.png" target="_blank" onclick="window.open('img/testE001.png', 'testE001.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/testE001.png"></a>
+<br>
+<small>testE001.pbm</small></td><td><a href="img/testE002.png" target="_blank" onclick="window.open('img/testE002.png', 'testE002.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/testE002.png"></a>
+<br>
+<small>testE002.pbm</small></td><td><a href="img/testE003.png" target="_blank" onclick="window.open('img/testE003.png', 'testE003.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="input" src="img/testE003.png"></a>
+<br>
+<small>testE003.pbm</small></td>
+</tr>
+</table>
+</td><td></td><td align="left">
+<table>
+<tr>
+<td><a href="img-results/resultE001.png" target="_blank" onclick="window.open('img-results/resultE001.png', 'resultE001.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultE001.png"></a>
+<br>
+<small>resultE001.pbm</small></td><td><a href="img-results/resultE002.png" target="_blank" onclick="window.open('img-results/resultE002.png', 'resultE002.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultE002.png"></a>
+<br>
+<small>resultE002.pbm</small></td><td><a href="img-results/resultE003.png" target="_blank" onclick="window.open('img-results/resultE003.png', 'resultE003.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultE003.png"></a>
+<br>
+<small>resultE003.pbm</small></td><td><a href="img-results/resultE004.png" target="_blank" onclick="window.open('img-results/resultE004.png', 'resultE004.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultE004.png"></a>
+<br>
+<small>resultE004.pbm</small></td><td><a href="img-results/resultE005.png" target="_blank" onclick="window.open('img-results/resultE005.png', 'resultE005.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultE005.png"></a>
+<br>
+<small>resultE005.pbm</small></td><td><a href="img-results/resultE006.png" target="_blank" onclick="window.open('img-results/resultE006.png', 'resultE006.pbm', 'width=600,toolbar=no,location=no,scrollbars=yes,resizable=yes,status=no');return false"><img class="output" src="img-results/resultE006.png"></a>
+<br>
+<small>resultE006.pbm</small></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<h3>Options</h3>
+<p class="options">
+            unpaper -v --overwrite 
+            --layout double --output-pages 2 testE%03d.pbm resultE%03d.pbm
+        </p>
+<h3>Verbose Output</h3>
+<p class="output">
+<iframe class="log" src="log/testE.txt" width="600" height="400"></iframe>
+</p>
+</body>
+</html>
