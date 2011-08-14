@@ -1,35 +1,6 @@
 /* ---------------------------------------------------------------------------
 unpaper - written by Jens Gulden 2005-2007                                  */
 
-const char* README = 
-"unpaper is a post-processing tool for scanned sheets of paper, especially for\n"
-"book pages that have been scanned from previously created photocopies.\n"
-"The main purpose is to make scanned book pages better readable on screen\n"
-"after conversion to PDF. Additionally, unpaper might be useful to enhance\n"
-"the quality of scanned pages before performing optical character recognition\n"
-"(OCR).\n\n"
-
-"unpaper tries to clean scanned images by removing dark edges that appeared\n"
-"through scanning or copying on areas outside the actual page content (e.g.\n"
-"dark areas between the left-hand-side and the right-hand-side of a double-\n"
-"sided book-page scan).\n"
-"The program also tries to detect disaligned centering and rotation of pages\n"
-"and will automatically straighten each page by rotating it to the correct\n"
-"angle. This process is called \"deskewing\".\n"
-"Note that the automatic processing will sometimes fail. It is always a good\n"
-"idea to manually control the results of unpaper and adjust the parameter\n"
-"settings according to the requirements of the input. Each processing step can\n"
-"also be disabled individually for each sheet.\n\n"
-
-"Input and output files can be in either .pbm , .pgm or .ppm format, thus\n"
-"generally in .pnm format, as also used by the Linux scanning tools scanimage\n"
-"and scanadf.\n"
-"Conversion to PDF can e.g. be achieved with the Linux tools pgm2tiff, tiffcp\n"
-"and tiff2pdf.";
-
-const char* COMPILE = 
-"gcc -D TIMESTAMP=\"<yyyy-MM-dd HH:mm:ss>\" -lm -O3 -funroll-all-loops -fomit-frame-pointer -ftree-vectorize -o unpaper unpaper.c\n";
-
 /* ------------------------------------------------------------------------ */
 
 #include <stdlib.h>
@@ -550,10 +521,6 @@ const char* OPTIONS =
 
 //-vvv --debug                        Undocumented.
 //-vvvv --debug-save                  Undocumented.
-//--help-options                      Undocumented.
-//--help-usage                        Undocumented.
-//--help-readme                       Undocumented.
-//--help-compile                      Undocumented.
 
 
 const char* HELP = 
@@ -3839,26 +3806,6 @@ int main(int argc, char* argv[]) {
                 printf(USAGE);
                 printf("Options are:\n");
                 printf(OPTIONS);
-                return 0;
-
-            // --help-options (undocumented, used by build-process)
-            } else if (strcmp(argv[i], "--help-options")==0) {
-                printf(OPTIONS);
-                return 0;
-
-            // --help-usage (undocumented, used by build-process)
-            } else if (strcmp(argv[i], "--help-usage")==0) {
-                printf(USAGE);
-                return 0;
-
-            // --help-readme (undocumented, used by build-process)
-            } else if (strcmp(argv[i], "--help-readme")==0) {
-                printf(README);
-                return 0;
-
-            // --help-compile (undocumented, used by build-process)
-            } else if (strcmp(argv[i], "--help-compile")==0) {
-                printf(COMPILE);
                 return 0;
 
             // --version -V
