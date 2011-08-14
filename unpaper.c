@@ -1839,7 +1839,6 @@ static BOOLEAN fileExists(char* filename) {
  */
 static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
     FILE *f;
-    int fileSize;
     int bytesPerLine;
     char magic[10];
     char word[255];
@@ -1872,11 +1871,6 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
         printf("*** error: Unable to open file %s.\n", filename);
         return FALSE;
     }
-
-    // get file size
-    fseek(f, 0, SEEK_END); // to end
-    fileSize = ftell(f);
-    rewind(f); // back to start
 
     // read magic number
     fread(magic, 1, 2, f);
