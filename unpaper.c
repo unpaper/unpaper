@@ -1846,7 +1846,6 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
     char c;
     int maxColorIndex;
     int inputSize;
-    int inputSizeFile;
     int read;
     unsigned char* buffer2;
     int lineOffsetInput;
@@ -1936,7 +1935,6 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
     }
 
     // read binary image data
-    inputSizeFile = fileSize - ftell(f);
     inputSize = bytesPerLine * image->height;
 
     image->buffer = (unsigned char*)malloc(inputSize);
@@ -3031,14 +3029,12 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
     int shiftX;
     int shiftY;
     int l, t, r, b;
-    int total;
     int diffX;
     int diffY;
     int mask[EDGES_COUNT];
     BOOLEAN alreadyExcludedMessage;
 
     thresholdBlack = (int)(WHITE * (1.0-blackThreshold));
-    total = size * dep;
     if (stepX != 0) { // horizontal scanning
         left = 0;
         top = 0;
@@ -3239,7 +3235,6 @@ static int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterSc
     int count;
     int lightness;
     int thresholdAbs;
-    int total;
     int result;
     
     result = 0;
@@ -3249,7 +3244,6 @@ static int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterSc
     top = 0;
     right = grayfilterScanSize[HORIZONTAL] - 1;
     bottom = grayfilterScanSize[VERTICAL] - 1;
-    total = grayfilterScanSize[HORIZONTAL] * grayfilterScanSize[VERTICAL];
     
     while (TRUE) { // !
         count = countPixelsRect(left, top, right, bottom, 0, blackMax, FALSE, image);
