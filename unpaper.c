@@ -3341,14 +3341,6 @@ static void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direc
 
 
 /**
- * Moves a rectangular area of pixels to be centered inside a specified area coordinates.
- */
-static void centerMaskInsideMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], struct IMAGE* image) {
-    alignMask(mask, outside, 0, NULL, image);
-}
-
-
-/**
  * Find the size of one border edge.
  *
  * @param x1..y2 area inside of which border is to be detected
