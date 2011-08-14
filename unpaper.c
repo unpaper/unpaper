@@ -10,22 +10,22 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 #include <time.h>
  
 #ifdef TIMESTAMP
-const char* BUILD = TIMESTAMP;
+static const char BUILD[] = TIMESTAMP;
 #else
-const char* BUILD = NULL;
+static const char BUILD[] = "";
 #endif
 
-const char* WELCOME = 
+static const char WELCOME[] =
 "unpaper %s - written by Jens Gulden 2005-2007.\n"
 "Licensed under the GNU General Public License, this comes with no warranty.\n";
               
-const char* USAGE = 
+static const char USAGE[] =
 "Usage: unpaper [options] <input-file(s)> <output-file(s)>\n\n"
 "Filenames may contain a formatting placeholder starting with '%%' to insert a\n"
 "page counter for multi-page processing. E.g.: 'scan%%03d.pbm' to process files\n"
 "scan001.pbm, scan002.pbm, scan003.pbm etc.\n";
 
-const char* OPTIONS = 
+static const char OPTIONS[] =
 "-l --layout single                   Set default layout options for a sheet:\n"
 "           |double                   'single': One page per sheet.\n"
 "           |none                     'double': Two pages per sheet, landscape\n"
@@ -523,7 +523,7 @@ const char* OPTIONS =
 //-vvvv --debug-save                  Undocumented.
 
 
-const char* HELP = 
+static const char HELP[] =
 "Run 'unpaper --help' for usage information.\n";
 
 
