@@ -975,7 +975,7 @@ static void printFloats(float f[2]) {
 /**
  * Combines an array of strings to a comma-seperated string.
  */
-static char* implode(char* buf, char* s[], int cnt) {
+static char* implode(char* buf, const char* s[], int cnt) {
     int i;
     if (cnt > 0) {
         if (s[0] != NULL) {
@@ -2025,7 +2025,7 @@ static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwr
     int off;
     unsigned char bit;
     unsigned char val;
-    char* outputMagic;
+    const char* outputMagic;
     FILE* outputFile;
     int blackThresholdAbs;
     bool result;
@@ -3550,7 +3550,7 @@ int main(int argc, char* argv[]) {
     bool writeoutput;
     bool qpixels;
     bool multisheets;
-    char* outputTypeName; 
+    const char* outputTypeName; 
     int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
     int noBlackfilterMultiIndexCount;
     int noNoisefilterMultiIndex[MAX_MULTI_INDEX];
@@ -3619,9 +3619,9 @@ int main(int argc, char* argv[]) {
     struct IMAGE originalSheet;
     struct IMAGE qpixelSheet;
     struct IMAGE page;
-    char* layoutStr;
-    char* inputTypeName; 
-    char* inputTypeNames[MAX_PAGES];
+    const char* layoutStr;
+    const char* inputTypeName; 
+    const char* inputTypeNames[MAX_PAGES];
     int inputType;
     int filterResult;
     double rotation;
@@ -4474,7 +4474,7 @@ int main(int argc, char* argv[]) {
         // test if (at least one) input file exists
         if ( multisheets && ( allInputFilesMissing ) ) {
             if (nr == startSheet) { // only an error if first file not found, otherwise regular end of multisheet processing
-                printf("*** error: Input file(s) %s not found.\n", implode(s1, inputFilenamesResolved, inputCount));
+                printf("*** error: Input file(s) %s not found.\n", implode(s1, (const char **)inputFilenamesResolved, inputCount));
             }
             endSheet = nr - 1; // exit for-loop
 
@@ -4492,9 +4492,9 @@ int main(int argc, char* argv[]) {
                 }
                 if (verbose > VERBOSE_QUIET) {
                     if (multisheets) {
-                        printf("Processing sheet #%d: %s -> %s\n", nr, implode(s1, inputFilenamesResolved, inputCount), implode(s2, outputFilenamesResolved, outputCount));
+                        printf("Processing sheet #%d: %s -> %s\n", nr, implode(s1, (const char **)inputFilenamesResolved, inputCount), implode(s2, (const char **)outputFilenamesResolved, outputCount));
                     } else {
-                        printf("Processing sheet: %s -> %s\n", implode(s1, inputFilenamesResolved, inputCount), implode(s2, outputFilenamesResolved, outputCount));
+                        printf("Processing sheet: %s -> %s\n", implode(s1, (const char **)inputFilenamesResolved, inputCount), implode(s2, (const char **)outputFilenamesResolved, outputCount));
                     }
                 }
 
@@ -4507,7 +4507,7 @@ int main(int argc, char* argv[]) {
                         if (inputFilenamesResolved[j] != NULL) { // may be null if --insert-blank or --replace-blank
                         
                             success = loadImage(inputFilenamesResolved[j], &page, &inputType);
-                            inputTypeName = (char*)FILETYPE_NAMES[inputType];
+                            inputTypeName = FILETYPE_NAMES[inputType];
                             inputTypeNames[j] = inputTypeName;
                             sprintf(debugFilename, "_loaded_%d.pnm", inputNr-inputCount+j);
                             saveDebug(debugFilename, &page);
@@ -4644,7 +4644,7 @@ int main(int argc, char* argv[]) {
                                 outputType = PGM;
                             }
                         }
-                        outputTypeName = (char*)FILETYPE_NAMES[outputType];
+                        outputTypeName = FILETYPE_NAMES[outputType];
                     } else { // parse user-setting
                         outputType = -1;
                         for (i = 0; (outputType == -1) && (i < FILETYPES_COUNT); i++) {
@@ -4926,16 +4926,16 @@ int main(int argc, char* argv[]) {
                         if ((sheetSize[WIDTH] != -1) || (sheetSize[HEIGHT] != -1)) {
                             printf("sheet size forced to: %d x %d pixels\n", sheetSize[WIDTH], sheetSize[HEIGHT]);
                         }
-                        printf("input-file-sequence:  %s\n", implode(s1, inputFileSequence, inputFileSequenceCount));
-                        printf("output-file-sequence: %s\n", implode(s1, outputFileSequence, outputFileSequenceCount));
+                        printf("input-file-sequence:  %s\n", implode(s1, (const char **)inputFileSequence, inputFileSequenceCount));
+                        printf("output-file-sequence: %s\n", implode(s1, (const char **)outputFileSequence, outputFileSequenceCount));
                         if (overwrite) {
                             printf("OVERWRITING EXISTING FILES\n");
                         }
                         printf("\n");
                     }
                     if (verbose >= VERBOSE_NORMAL) {
-                        printf("input-file%s for sheet %d: %s (type%s %s)\n", pluralS(inputCount), nr, implode(s1, inputFilenamesResolved, inputCount), pluralS(inputCount), implode(s2, inputTypeNames, inputCount));
-                        printf("output-file%s for sheet %d: %s (type %s)\n", pluralS(outputCount), nr, implode(s1, outputFilenamesResolved, outputCount), outputTypeName);
+                        printf("input-file%s for sheet %d: %s (type%s %s)\n", pluralS(inputCount), nr, implode(s1, (const char **)inputFilenamesResolved, inputCount), pluralS(inputCount), implode(s2, inputTypeNames, inputCount));
+                        printf("output-file%s for sheet %d: %s (type %s)\n", pluralS(outputCount), nr, implode(s1, (const char **)outputFilenamesResolved, outputCount), outputTypeName);
                         printf("sheet size: %dx%d\n", sheet.width, sheet.height);
                         printf("...\n");
                     }
