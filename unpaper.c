@@ -8,6 +8,19 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 #include <string.h>
 #include <math.h>
 #include <time.h>
+
+#if HAVE_STDBOOL_H
+# include <stdbool.h>
+#else
+ typedef enum {
+   FALSE,
+   TRUE
+ } BOOLEAN;
+
+# define bool BOOLEAN
+# define false FALSE
+# define true TRUE
+#endif
  
 #ifdef TIMESTAMP
 static const char BUILD[] = TIMESTAMP;
@@ -559,11 +572,6 @@ static const char HELP[] =
 /* --- typedefs ----------------------------------------------------------- */
 
 typedef enum {
-    FALSE,
-    TRUE
-} BOOLEAN;
-
-typedef enum {
     VERBOSE_QUIET = -1,
     VERBOSE_NONE = 0,
     VERBOSE_NORMAL = 1,
@@ -636,7 +644,7 @@ struct IMAGE {
     int width;
     int height;
     int bitdepth;
-    BOOLEAN color;
+    bool color;
     int background;
 };
 
@@ -754,15 +762,15 @@ static int parseDirections(char* s, int* exitCode) {
  * Prints whether directions are vertical, horizontal, or both.
  */            
 static void printDirections(int d) {
-    BOOLEAN comma = FALSE;
+    bool comma = false;
     
     printf("[");
     if ((d & 1<<VERTICAL) != 0) {
         printf("vertical");
-        comma = TRUE;
+        comma = true;
     }
     if ((d & 1<<HORIZONTAL) != 0) {
-        if (comma == TRUE) {
+        if (comma == true) {
             printf(",");
         }
         printf("horizontal");
@@ -800,29 +808,29 @@ static int parseEdges(char* s, int* exitCode) {
  * Prints whether edges are left, top, right, bottom or combinations.
  */            
 static void printEdges(int d) {
-    BOOLEAN comma = FALSE;
+    bool comma = false;
     
     printf("[");
     if ((d & 1<<LEFT) != 0) {
         printf("left");
-        comma = TRUE;
+        comma = true;
     }
     if ((d & 1<<TOP) != 0) {
-        if (comma == TRUE) {
+        if (comma == true) {
             printf(",");
         }
         printf("top");
-        comma = TRUE;
+        comma = true;
     }
     if ((d & 1<<RIGHT) != 0) {
-        if (comma == TRUE) {
+        if (comma == true) {
             printf(",");
         }
         printf("right");
-        comma = TRUE;
+        comma = true;
     }
     if ((d & 1<<BOTTOM) != 0) {
-        if (comma == TRUE) {
+        if (comma == true) {
             printf(",");
         }
         printf("bottom");
@@ -1042,18 +1050,18 @@ static void parseMultiIndex(int* i, char* argv[], int multiIndex[], int* multiIn
  *
  * @see parseMultiIndex(..)
  */
-static BOOLEAN isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
+static bool isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
     int i;
     
     if (multiIndexCount == -1) {
-        return TRUE; // all
+        return true; // all
     } else {
         for (i = 0; i < multiIndexCount; i++) {
             if (index == multiIndex[i]) {
-                return TRUE; // found in list
+                return true; // found in list
             }
         }
-        return FALSE; // not found in list
+        return false; // not found in list
     }
 }
 
@@ -1064,8 +1072,8 @@ static BOOLEAN isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int mu
  * multi-indices: if an entry is part of excludeIndex, it is treated as being
  * an entry of all other multiIndices, too.)
  */
-static BOOLEAN isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount, int excludeIndex[MAX_MULTI_INDEX], int excludeIndexCount) {
-    return ( (isInMultiIndex(index, excludeIndex, excludeIndexCount) == TRUE) || (isInMultiIndex(index, multiIndex, multiIndexCount) == TRUE) );
+static bool isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount, int excludeIndex[MAX_MULTI_INDEX], int excludeIndexCount) {
+    return ( (isInMultiIndex(index, excludeIndex, excludeIndexCount) == true) || (isInMultiIndex(index, multiIndex, multiIndexCount) == true) );
 }
 
 
@@ -1094,11 +1102,11 @@ static void printMultiIndex(int multiIndex[MAX_MULTI_INDEX], int multiIndexCount
 /**
  * Tests if a point is covered by a mask.
  */
-static BOOLEAN inMask(int x, int y, int mask[EDGES_COUNT]) {
+static bool inMask(int x, int y, int mask[EDGES_COUNT]) {
     if ( (x >= mask[LEFT]) && (x <= mask[RIGHT]) && (y >= mask[TOP]) && (y <= mask[BOTTOM]) ) {
-        return TRUE;
+        return true;
     } else {
-        return FALSE;
+        return false;
     }
 }
 
@@ -1106,7 +1114,7 @@ static BOOLEAN inMask(int x, int y, int mask[EDGES_COUNT]) {
 /**
  * Tests if masks a and b overlap.
  */
-static BOOLEAN masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
+static bool masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
     return ( inMask(a[LEFT], a[TOP], b) || inMask(a[RIGHT], a[BOTTOM], b) );
 }
 
@@ -1114,15 +1122,15 @@ static BOOLEAN masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
 /**
  * Tests if at least one mask in masks overlaps with m.
  */
-static BOOLEAN masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
+static bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
     int i;
     
     for ( i = 0; i < masksCount; i++ ) {
         if ( masksOverlap(m, masks[i]) ) {
-            return TRUE;
+            return true;
         }
     }
-    return FALSE;
+    return false;
 }
 
 
@@ -1132,7 +1140,7 @@ static BOOLEAN masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_CO
  * Allocates a memory block for storing image data and fills the IMAGE-struct
  * with the specified values.
  */
-static void initImage(struct IMAGE* image, int width, int height, int bitdepth, BOOLEAN color, int background) {
+static void initImage(struct IMAGE* image, int width, int height, int bitdepth, bool color, int background) {
     int size;
     
     size = width * height;
@@ -1186,19 +1194,19 @@ static void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
 /**
  * Sets the color/grayscale value of a single pixel.
  *
- * @return TRUE if the pixel has been changed, FALSE if the original color was the one to set
+ * @return true if the pixel has been changed, false if the original color was the one to set
  */ 
-static BOOLEAN setPixel(int pixel, int x, int y, struct IMAGE* image) {
+static bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
     unsigned char* p;
     int w, h;
     int pos;
-    BOOLEAN result;
+    bool result;
     unsigned char r, g, b;
     
     w = image->width;
     h = image->height;
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
-        return FALSE; //nop
+        return false; //nop
     } else {
         pos = (y * w) + x;
         r = (pixel >> 16) & 0xff;
@@ -1213,26 +1221,26 @@ static BOOLEAN setPixel(int pixel, int x, int y, struct IMAGE* image) {
             }
             if (*p != (unsigned char)pixel) {
                 *p = (unsigned char)pixel;
-                return TRUE;
+                return true;
             } else {
-                return FALSE;
+                return false;
             }
         } else { // color
-            result = FALSE;
+            result = false;
             p = &image->buffer[pos*3];
             if (*p != r) {
                 *p = r;
-                result = TRUE;
+                result = true;
             }
             p++;
             if (*p != g) {
                 *p = g;
-                result = TRUE;
+                result = true;
             }
             p++;
             if (*p != b) {
                 *p = b;
-                result = TRUE;
+                result = true;
             }
             if ( result ) { // modified: update cached grayscale, lightness and brightnessInverse values
                 image->bufferGrayscale[pos] = pixelGrayscale(r, g, b);
@@ -1378,44 +1386,44 @@ static int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
 /**
  * Sets the color/grayscale value of a single pixel to either black or white.
  *
- * @return TRUE if the pixel has been changed, FALSE if the original color was the one to set
+ * @return true if the pixel has been changed, false if the original color was the one to set
  */ 
-static BOOLEAN setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
+static bool setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
     unsigned char* p;
     int w, h;
     int pos;
-    BOOLEAN result;
+    bool result;
     
     w = image->width;
     h = image->height;
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
-        return FALSE; //nop
+        return false; //nop
     } else {
         pos = (y * w) + x;
         if ( ! image->color ) {
             p = &image->buffer[pos];
             if (*p != blackwhite) {
                 *p = blackwhite;
-                return TRUE;
+                return true;
             } else {
-                return FALSE;
+                return false;
             }
         } else { // color
             p = &image->buffer[pos * 3];
-            result = FALSE;
+            result = false;
             if (*p != blackwhite) {
                 *p = blackwhite;
-                result = TRUE;
+                result = true;
             }
             p++;
             if (*p != blackwhite) {
                 *p = blackwhite;
-                result = TRUE;
+                result = true;
             }
             p++;
             if (*p != blackwhite) {
                 *p = blackwhite;
-                result = TRUE;
+                result = true;
             }
             return result;
         }
@@ -1426,9 +1434,9 @@ static BOOLEAN setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
 /**
  * Sets the color/grayscale value of a single pixel to white.
  *
- * @return TRUE if the pixel has been changed, FALSE if the original color was the one to set
+ * @return true if the pixel has been changed, false if the original color was the one to set
  */ 
-static BOOLEAN clearPixel(int x, int y, struct IMAGE* image) {
+static bool clearPixel(int x, int y, struct IMAGE* image) {
     return setPixelBW(x, y, image, WHITE);
 }
 
@@ -1583,7 +1591,7 @@ static int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* ima
  * values ranges between minColor and maxBrightness. Optionally, the area can get
  * cleared with white color while counting.
  */
-static int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, BOOLEAN clear, struct IMAGE* image) {
+static int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, struct IMAGE* image) {
     int x;
     int y;
     int pixel;
@@ -1594,7 +1602,7 @@ static int countPixelsRect(int left, int top, int right, int bottom, int minColo
         for (x = left; x <= right; x++) {
             pixel = getPixelGrayscale(x, y, image);
             if ((pixel>=minColor) && (pixel <= maxBrightness)) {
-                if (clear==TRUE) {
+                if (clear==true) {
                     clearPixel(x, y, image);
                 }
                 count++;
@@ -1611,7 +1619,7 @@ static int countPixelsRect(int left, int top, int right, int bottom, int minColo
  * of 9 pixels if level==1, 16 pixels if level==2 and so on).
  * Optionally, the pixels can get cleared after counting.
  */
-static int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int whiteMin, struct IMAGE* image) {
+static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whiteMin, struct IMAGE* image) {
     int xx;
     int yy;
     int count;
@@ -1623,7 +1631,7 @@ static int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int 
         // upper row
         pixel = getPixelLightness(xx, y - level, image);
         if (pixel < whiteMin) { // non-light pixel found
-            if (clear == TRUE) {
+            if (clear == true) {
                 clearPixel(xx, y - level, image);
             }
             count++;
@@ -1631,7 +1639,7 @@ static int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int 
         // lower row
         pixel = getPixelLightness(xx, y + level, image);
         if (pixel < whiteMin) {
-            if (clear == TRUE) {
+            if (clear == true) {
                 clearPixel(xx, y + level, image);
             }
             count++;
@@ -1642,7 +1650,7 @@ static int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int 
         // first col
         pixel = getPixelLightness(x - level, yy, image);
         if (pixel < whiteMin) {
-            if (clear == TRUE) {
+            if (clear == true) {
                 clearPixel(x - level, yy, image);
             }
             count++;
@@ -1650,7 +1658,7 @@ static int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int 
         // last col
         pixel = getPixelLightness(x + level, yy, image);
         if (pixel < whiteMin) {
-            if (clear == TRUE) {
+            if (clear == true) {
                 clearPixel(x + level, yy, image);
             }
             count++;
@@ -1662,7 +1670,7 @@ static int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int 
             if (abs(xx-x)==level || abs(yy-y)==level) {
                 pixel = getPixelLightness(xx, yy, image);
                 if (pixel < whiteMin) {
-                    if (clear==TRUE) {
+                    if (clear==true) {
                         clearPixel(xx, yy, image);
                     }
                     count++;
@@ -1687,7 +1695,7 @@ static int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct
     count = 1; // assume self as set
     lCount = -1;
     for (level = 1; (lCount != 0) && (level <= intensity); level++) { // can finish when one level is completely zero
-        lCount = countPixelNeighborsLevel(x, y, FALSE, level, whiteMin, image);
+        lCount = countPixelNeighborsLevel(x, y, false, level, whiteMin, image);
         count += lCount;
     }
     return count;
@@ -1706,7 +1714,7 @@ static void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image)
     clearPixel(x, y, image);    
     lCount = -1;
     for (level = 1; lCount != 0; level++) { // lCount will become 0, otherwise countPixelNeighbors() would previously have delivered a bigger value (and this here would not have been called)
-        lCount = countPixelNeighborsLevel(x, y, TRUE, level, whiteMin, image);
+        lCount = countPixelNeighborsLevel(x, y, true, level, whiteMin, image);
     }
 }
 
@@ -1817,14 +1825,14 @@ static void floodFill(int x, int y, int color, int maskMin, int maskMax, int int
 /**
  * Tests if a file exists.
  */
-static BOOLEAN fileExists(char* filename) {
+static bool fileExists(char* filename) {
     FILE *f;
     f = fopen(filename,"r");
     if (f == NULL) {
-        return FALSE;
+        return false;
     } else {
         fclose(f);
-        return TRUE;
+        return true;
     }
 }
 
@@ -1835,9 +1843,9 @@ static BOOLEAN fileExists(char* filename) {
  * @param filename name of file to load
  * @param image structure to hold loaded image
  * @param type returns the type of the loaded image
- * @return TRUE on success, FALSE on failure
+ * @return true on success, false on failure
  */
-static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
+static bool loadImage(char* filename, struct IMAGE* image, int* type) {
     FILE *f;
     int bytesPerLine;
     char magic[10];
@@ -1869,7 +1877,7 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
     f = fopen(filename, "rb");
     if (f == NULL) {
         printf("*** error: Unable to open file %s.\n", filename);
-        return FALSE;
+        return false;
     }
 
     // read magic number
@@ -1878,18 +1886,18 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
     if (strcmp(magic, "P4")==0) {
         *type = PBM;
         image->bitdepth = 1;
-        image->color = FALSE;
+        image->color = false;
     } else if (strcmp(magic, "P5")==0) {
         *type = PGM;
         image->bitdepth = 8;
-        image->color = FALSE;
+        image->color = false;
     } else if (strcmp(magic, "P6")==0) {
         *type = PPM;
         image->bitdepth = 8;
-        image->color = TRUE;
+        image->color = true;
     } else {
         printf("*** error: input file format using magic '%s' is unknown.\n", magic);
-        return FALSE;
+        return false;
     }
 
     // get image info: width, height, optionally depth
@@ -1920,7 +1928,7 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
         fgetc(f); // skip \n after max color index
         if (maxColorIndex > 255) {
             printf("*** error: grayscale / color-component bit depths above 8 are not supported.\n");
-            return FALSE;
+            return false;
         }
         bytesPerLine = image->width;
         if (*type == PPM) {
@@ -1935,7 +1943,7 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
     read = fread(image->buffer, 1, inputSize, f);
     if (read != inputSize) {
         printf("*** error: Only %d out of %d could be read.\n", read, inputSize);
-        return FALSE;
+        return false;
     }
     
     if (*type == PBM) { // internally convert b&w to 8-bit for processing
@@ -1988,7 +1996,7 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
         image->bufferDarknessInverse = image->buffer;
     }
     
-    return TRUE;
+    return true;
 }
 
 
@@ -2000,9 +2008,9 @@ static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
  * @param type filetype of the image to save
  * @param overwrite allow overwriting existing files
  * @param blackThreshold threshold for grayscale-to-black&white conversion
- * @return TRUE on success, FALSE on failure
+ * @return true on success, false on failure
  */
-static BOOLEAN saveImage(char* filename, struct IMAGE* image, int type, BOOLEAN overwrite, float blackThreshold) {
+static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwrite, float blackThreshold) {
     unsigned char* buf;
     int bytesPerLine;
     int inputSize;
@@ -2020,13 +2028,13 @@ static BOOLEAN saveImage(char* filename, struct IMAGE* image, int type, BOOLEAN 
     char* outputMagic;
     FILE* outputFile;
     int blackThresholdAbs;
-    BOOLEAN result;
+    bool result;
 
     if (verbose>=VERBOSE_MORE) {
         printf("saving file %s.\n", filename);
     }
 
-    result = TRUE;
+    result = true;
     if (type == PBM) { // convert to pbm
         blackThresholdAbs = WHITE * (1.0 - blackThreshold);
         bytesPerLine = (image->width + 7) >> 3; // / 8;
@@ -2096,11 +2104,11 @@ static BOOLEAN saveImage(char* filename, struct IMAGE* image, int type, BOOLEAN 
             fclose(outputFile);
         } else {
             printf("*** error: Cannot open output file '%s'.\n", filename);
-            result = FALSE;
+            result = false;
         }
     } else {
         printf("file %s already exists (use --overwrite to replace).\n", filename);
-        result = FALSE;
+        result = false;
     }
     if (buf != image->buffer) {
         free(buf);
@@ -2123,7 +2131,7 @@ static void saveDebug(char* filename, struct IMAGE* image) {
         } else {
             type = PGM;
         }
-        saveImage(filename, image, type, TRUE, 0.5); // 0.5 is a dummy, not used because PGM depth
+        saveImage(filename, image, type, true, 0.5); // 0.5 is a dummy, not used because PGM depth
     }
 }
 
@@ -2762,7 +2770,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
         bottom = startY + half;
     }
     
-    while (TRUE) { // !
+    while (true) { // !
         blackness = 255 - brightnessRect(left, top, right, bottom, image);
         total += blackness;
         count++;
@@ -2784,11 +2792,11 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
  *
  * @return the detected mask in left, top, right, bottom; or -1, -1, -1, -1 if no mask could be detected
  */
-static BOOLEAN detectMask(int startX, int startY, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT], int* left, int* top, int* right, int* bottom, struct IMAGE* image) {
+static bool detectMask(int startX, int startY, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT], int* left, int* top, int* right, int* bottom, struct IMAGE* image) {
     int width;
     int height;
     int half[DIRECTIONS_COUNT];
-    BOOLEAN success;
+    bool success;
     
     half[HORIZONTAL] = maskScanSize[HORIZONTAL] / 2;
     half[VERTICAL] = maskScanSize[VERTICAL] / 2;
@@ -2810,18 +2818,18 @@ static BOOLEAN detectMask(int startX, int startY, int maskScanDirections, int ma
     // if below minimum or above maximum, set to maximum
     width = *right - *left;
     height = *bottom - *top;
-    success = TRUE;
+    success = true;
     if ( ((maskScanMinimum[WIDTH] != -1) && (width < maskScanMinimum[WIDTH])) || ((maskScanMaximum[WIDTH] != -1) && (width > maskScanMaximum[WIDTH])) ) {
         width = maskScanMaximum[WIDTH] / 2;
         *left = startX - width;
         *right = startX + width;
-        success = FALSE;;
+        success = false;;
     }
     if ( ((maskScanMinimum[HEIGHT] != -1) && (height < maskScanMinimum[HEIGHT])) || ((maskScanMaximum[HEIGHT] != -1) && (height > maskScanMaximum[HEIGHT])) ) {
         height = maskScanMaximum[HEIGHT] / 2;
         *top = startY - height;
         *bottom = startY + height;
-        success = FALSE;
+        success = false;
     }
     return success;
 }
@@ -2833,7 +2841,7 @@ static BOOLEAN detectMask(int startX, int startY, int maskScanDirections, int ma
  * @param mask point to array into which detected masks will be stored
  * @return number of masks stored in mask[][]
  */
-static int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], BOOLEAN maskValid[MAX_MASKS], int point[MAX_POINTS][COORDINATES_COUNT], int pointCount, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT],  struct IMAGE* image) {
+static int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], bool maskValid[MAX_MASKS], int point[MAX_POINTS][COORDINATES_COUNT], int pointCount, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT],  struct IMAGE* image) {
     int left;
     int top;
     int right;
@@ -2853,7 +2861,7 @@ static int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], BOOLEAN maskValid[MAX_M
                  maskCount++;
                  if (verbose>=VERBOSE_NORMAL) {
                      printf("auto-masking (%d,%d): %d,%d,%d,%d", point[i][X], point[i][Y], left, top, right, bottom);
-                     if (maskValid[i] == FALSE) { // (mask had been auto-set to full page size)
+                     if (maskValid[i] == false) { // (mask had been auto-set to full page size)
                          printf(" (invalid detection, using full page size)");
                      }
                      printf("\n");
@@ -2863,7 +2871,7 @@ static int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], BOOLEAN maskValid[MAX_M
                      printf("auto-masking (%d,%d): NO MASK FOUND\n", point[i][X], point[i][Y]);
                  }
              }
-             //if (maskValid[i] == FALSE) { // (mask had been auto-set to full page size)
+             //if (maskValid[i] == false) { // (mask had been auto-set to full page size)
              //    if (verbose>=VERBOSE_NORMAL) {
              //        printf("auto-masking (%d,%d): NO MASK DETECTED\n", point[i][X], point[i][Y]);
              //    }
@@ -2883,7 +2891,7 @@ static void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int mask
     int y;
     int i;
     int left, top, right, bottom;
-    BOOLEAN m;
+    bool m;
     
     if (maskCount<=0) {
         return;
@@ -2891,17 +2899,17 @@ static void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int mask
     for (y=0; y < image->height; y++) {
         for (x=0; x < image->width; x++) {
             // in any mask?
-            m = FALSE;
-            for (i=0; ((m==FALSE) && (i<maskCount)); i++) {
+            m = false;
+            for (i=0; ((m==false) && (i<maskCount)); i++) {
                 left = mask[i][LEFT];
                 top = mask[i][TOP];
                 right = mask[i][RIGHT];
                 bottom = mask[i][BOTTOM];
                 if (y>=top && y<=bottom && x>=left && x<=right) {
-                    m = TRUE;
+                    m = true;
                 }
             }
-            if (m == FALSE) {
+            if (m == false) {
                 setPixel(maskColor, x, y, image); // delete: set to white
             }
         }
@@ -2949,22 +2957,22 @@ static void mirror(int directions, struct IMAGE* image) {
     int yy;
     int pixel1;
     int pixel2;
-    BOOLEAN horizontal;
-    BOOLEAN vertical;
+    bool horizontal;
+    bool vertical;
     int untilX;
     int untilY;
     
-    horizontal = ((directions & 1<<HORIZONTAL) != 0) ? TRUE : FALSE;
-    vertical = ((directions & 1<<VERTICAL) != 0) ? TRUE : FALSE;
-    untilX = ((horizontal==TRUE)&&(vertical==FALSE)) ? ((image->width - 1) >> 1) : (image->width - 1);  // w>>1 == (int)(w-0.5)/2
-    untilY = (vertical==TRUE) ? ((image->height - 1) >> 1) : image->height - 1;
+    horizontal = ((directions & 1<<HORIZONTAL) != 0) ? true : false;
+    vertical = ((directions & 1<<VERTICAL) != 0) ? true : false;
+    untilX = ((horizontal==true)&&(vertical==false)) ? ((image->width - 1) >> 1) : (image->width - 1);  // w>>1 == (int)(w-0.5)/2
+    untilY = (vertical==true) ? ((image->height - 1) >> 1) : image->height - 1;
     for (y = 0; y <= untilY; y++) {
-        yy = (vertical==TRUE) ? (image->height - y - 1) : y;
-        if ((vertical==TRUE) && (horizontal==TRUE) && (y == yy)) { // last middle line in odd-lined image mirrored both h and v
+        yy = (vertical==true) ? (image->height - y - 1) : y;
+        if ((vertical==true) && (horizontal==true) && (y == yy)) { // last middle line in odd-lined image mirrored both h and v
             untilX = ((image->width - 1) >> 1);
         }
         for (x = 0; x <= untilX; x++) {
-            xx = (horizontal==TRUE) ? (image->width - x - 1) : x;
+            xx = (horizontal==true) ? (image->width - x - 1) : x;
             pixel1 = getPixel(x, y, image);
             pixel2 = getPixel(xx, yy, image);
             setPixel(pixel2, x, y, image);
@@ -3026,7 +3034,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
     int diffX;
     int diffY;
     int mask[EDGES_COUNT];
-    BOOLEAN alreadyExcludedMessage;
+    bool alreadyExcludedMessage;
 
     thresholdBlack = (int)(WHITE * (1.0-blackThreshold));
     if (stepX != 0) { // horizontal scanning
@@ -3058,7 +3066,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
             r -= diffX;
             b -= diffY;
         }
-        alreadyExcludedMessage = FALSE;
+        alreadyExcludedMessage = false;
         while ((l < image->width) && (t < image->height)) { // single scanning "stripe"
             blackness = 255 - darknessInverseRect(l, t, r, b, image);
             if (blackness >= 255*threshold) { // found a solidly black area
@@ -3069,7 +3077,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
                 if (! masksOverlapAny(mask, exclude, excludeCount) ) {
                     if (verbose >= VERBOSE_NORMAL) {
                         printf("black-area flood-fill: [%d,%d,%d,%d]\n", l, t, r, b);
-                        alreadyExcludedMessage = FALSE;
+                        alreadyExcludedMessage = false;
                     }
                     // start flood-fill in this area (on each pixel to make sure we get everything, in most cases first flood-fill from first pixel will delete all other black pixels in the area already)
                     for (y = t; y <= b; y++) {
@@ -3080,7 +3088,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
                 } else {
                     if ((verbose >= VERBOSE_NORMAL) && (!alreadyExcludedMessage)) {
                         printf("black-area EXCLUDED: [%d,%d,%d,%d]\n", l, t, r, b);
-                        alreadyExcludedMessage = TRUE; // do this only once per scan-stripe, otherwise too many mesages
+                        alreadyExcludedMessage = true; // do this only once per scan-stripe, otherwise too many mesages
                     }
                 }
             }
@@ -3171,30 +3179,30 @@ static int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterSc
     bottom = blurfilterScanSize[VERTICAL] - 1;
     total = blurfilterScanSize[HORIZONTAL] * blurfilterScanSize[VERTICAL];
     
-    while (TRUE) { // !
+    while (true) { // !
         max = 0;
-        count = countPixelsRect(left, top, right, bottom, 0, whiteMin, FALSE, image);
+        count = countPixelsRect(left, top, right, bottom, 0, whiteMin, false, image);
         if (count > max) {
             max = count;
         }
-        count = countPixelsRect(left-blurfilterScanStep[HORIZONTAL], top-blurfilterScanStep[VERTICAL], right-blurfilterScanStep[HORIZONTAL], bottom-blurfilterScanStep[VERTICAL], 0, whiteMin, FALSE, image);
+        count = countPixelsRect(left-blurfilterScanStep[HORIZONTAL], top-blurfilterScanStep[VERTICAL], right-blurfilterScanStep[HORIZONTAL], bottom-blurfilterScanStep[VERTICAL], 0, whiteMin, false, image);
         if (count > max) {
             max = count;
         }
-        count = countPixelsRect(left+blurfilterScanStep[HORIZONTAL], top-blurfilterScanStep[VERTICAL], right+blurfilterScanStep[HORIZONTAL], bottom-blurfilterScanStep[VERTICAL], 0, whiteMin, FALSE, image);
+        count = countPixelsRect(left+blurfilterScanStep[HORIZONTAL], top-blurfilterScanStep[VERTICAL], right+blurfilterScanStep[HORIZONTAL], bottom-blurfilterScanStep[VERTICAL], 0, whiteMin, false, image);
         if (count > max) {
             max = count;
         }
-        count = countPixelsRect(left-blurfilterScanStep[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right-blurfilterScanStep[HORIZONTAL], bottom+blurfilterScanStep[VERTICAL], 0, whiteMin, FALSE, image);
+        count = countPixelsRect(left-blurfilterScanStep[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right-blurfilterScanStep[HORIZONTAL], bottom+blurfilterScanStep[VERTICAL], 0, whiteMin, false, image);
         if (count > max) {
             max = count;
         }
-        count = countPixelsRect(left+blurfilterScanStep[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanStep[HORIZONTAL], bottom+blurfilterScanStep[VERTICAL], 0, whiteMin, FALSE, image);
+        count = countPixelsRect(left+blurfilterScanStep[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanStep[HORIZONTAL], bottom+blurfilterScanStep[VERTICAL], 0, whiteMin, false, image);
         if (count > max) {
             max = count;
         }
         if ((((float)max)/total) <= blurfilterIntensity) {
-            result += countPixelsRect(left, top, right, bottom, 0, whiteMin, TRUE, image); // also clear
+            result += countPixelsRect(left, top, right, bottom, 0, whiteMin, true, image); // also clear
         }
         if (right < image->width) { // not yet at end of row
             left += blurfilterScanStep[HORIZONTAL];
@@ -3239,8 +3247,8 @@ static int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterSc
     right = grayfilterScanSize[HORIZONTAL] - 1;
     bottom = grayfilterScanSize[VERTICAL] - 1;
     
-    while (TRUE) { // !
-        count = countPixelsRect(left, top, right, bottom, 0, blackMax, FALSE, image);
+    while (true) { // !
+        count = countPixelsRect(left, top, right, bottom, 0, blackMax, false, image);
         if (count == 0) {
             lightness = lightnessRect(left, top, right, bottom, image);
             if ((WHITE - lightness) < thresholdAbs) { // (lower threshold->more deletion)
@@ -3377,7 +3385,7 @@ static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, 
     }
     result = 0;
     while (result < max) {
-        cnt = countPixelsRect(left, top, right, bottom, 0, maxBlack, FALSE, image);
+        cnt = countPixelsRect(left, top, right, bottom, 0, maxBlack, false, image);
         if (cnt >= threshold) {
             return result; // border has been found: regular exit here
         }
@@ -3497,7 +3505,7 @@ int main(int argc, char* argv[]) {
     int preBorder[EDGES_COUNT];
     int postBorder[EDGES_COUNT];
     int border[EDGES_COUNT];
-    BOOLEAN maskValid[MAX_MASKS];
+    bool maskValid[MAX_MASKS];
     int preMaskCount;
     int preMask[MAX_MASKS][EDGES_COUNT];
     int blackfilterScanDirections;
@@ -3539,9 +3547,9 @@ int main(int argc, char* argv[]) {
     int outsideBorderscanMaskCount;
     float whiteThreshold;
     float blackThreshold;
-    BOOLEAN writeoutput;
-    BOOLEAN qpixels;
-    BOOLEAN multisheets;
+    bool writeoutput;
+    bool qpixels;
+    bool multisheets;
     char* outputTypeName; 
     int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
     int noBlackfilterMultiIndexCount;
@@ -3577,8 +3585,8 @@ int main(int argc, char* argv[]) {
     int insertBlankCount;    
     int replaceBlank[MAX_MULTI_INDEX];
     int replaceBlankCount;    
-    BOOLEAN overwrite;
-    BOOLEAN showTime;
+    bool overwrite;
+    bool showTime;
     int dpi;
     
     // --- local variables ---
@@ -3595,7 +3603,7 @@ int main(int argc, char* argv[]) {
     int previousWidth;
     int previousHeight;
     int previousBitdepth;
-    BOOLEAN previousColor;
+    bool previousColor;
     int inputFileSequencePos; // index 'looping' through input-file-seq (without additionally inserted blank images)
     int outputFileSequencePos; // index 'looping' through output-file-seq
     int inputFileSequencePosTotal; // index 'looping' through input-file-seq (with additional blank images)
@@ -3623,22 +3631,22 @@ int main(int argc, char* argv[]) {
     int outputType;
     int outputDepth;
     int bd;
-    BOOLEAN col;
-    BOOLEAN success;
-    BOOLEAN done;
-    BOOLEAN anyWildcards;
-    BOOLEAN allInputFilesMissing;
+    bool col;
+    bool success;
+    bool done;
+    bool anyWildcards;
+    bool allInputFilesMissing;
     int nr;
     int inputNr;
     int outputNr;
-    BOOLEAN first;
+    bool first;
     clock_t startTime;
     clock_t endTime;
     clock_t time;
     unsigned long int totalTime;
     int totalCount;
-    BOOLEAN ins;
-    BOOLEAN repl;
+    bool ins;
+    bool repl;
     int blankCount;
     int exitCode;
 
@@ -3646,7 +3654,7 @@ int main(int argc, char* argv[]) {
     page.buffer = NULL;
     exitCode = 0; // error code to return
     bd = 1; // default bitdepth if not resolvable (i.e. usually empty input, so bd=1 is good choice)
-    col = FALSE; // default no color if not resolvable
+    col = false; // default no color if not resolvable
     
     // explicitly un-initialize variables that are sometimes not used to avoid compiler warnings
     qpixelSheet.buffer = NULL; // used optionally, deactivated by --no-qpixels
@@ -3671,8 +3679,8 @@ int main(int argc, char* argv[]) {
     outputFileSequencePos = 0;
     inputFileSequencePosTotal = 0;
     previousWidth = previousHeight = previousBitdepth = -1;
-    previousColor = FALSE;
-    first = TRUE;
+    previousColor = false;
+    first = true;
     
     for (nr = startSheet; (endSheet == -1) || (nr <= endSheet); nr++) {
 
@@ -3743,9 +3751,9 @@ int main(int argc, char* argv[]) {
         blackThreshold = 0.33;
         sheetSize[WIDTH] = sheetSize[HEIGHT] = -1;
         sheetBackground = WHITE;
-        writeoutput = TRUE;
-        qpixels = TRUE;
-        multisheets = TRUE;
+        writeoutput = true;
+        qpixels = true;
+        multisheets = true;
         inputCount = 1;
         outputCount = 1;
         inputFileSequenceCount = 0;
@@ -3767,8 +3775,8 @@ int main(int argc, char* argv[]) {
         ignoreMultiIndexCount = 0;
         insertBlankCount = 0;
         replaceBlankCount = 0;
-        overwrite = FALSE;
-        showTime = FALSE;
+        overwrite = false;
+        showTime = false;
         dpi = 300;
 
 
@@ -3967,7 +3975,7 @@ int main(int argc, char* argv[]) {
                 mask[maskCount][TOP] = top;
                 mask[maskCount][RIGHT] = right;
                 mask[maskCount][BOTTOM] = bottom;
-                maskValid[maskCount] = TRUE;
+                maskValid[maskCount] = true;
                 maskCount++;
 
 
@@ -4255,11 +4263,11 @@ int main(int argc, char* argv[]) {
             } else if (strcmp(argv[i], "-if")==0 || strcmp(argv[i], "--input-file-sequence")==0) {
                 inputFileSequenceCount = 0;
                 i++;
-                done = FALSE;
+                done = false;
                 while ( (i < argc) && (!done) ) {
                     inputFileSequence[inputFileSequenceCount] = argv[i];
                     if (inputFileSequence[inputFileSequenceCount][0] == '-') { // is next option
-                        done = TRUE;
+                        done = true;
                         i--;
                     } else { // continue collecting filenames
                         i++;
@@ -4271,11 +4279,11 @@ int main(int argc, char* argv[]) {
             } else if (strcmp(argv[i], "-of")==0 || strcmp(argv[i], "--output-file-sequence")==0) {
                 outputFileSequenceCount = 0;
                 i++;
-                done = FALSE;
+                done = false;
                 while ( (i < argc) && (!done) ) {
                     outputFileSequence[outputFileSequenceCount] = argv[i];
                     if (outputFileSequence[outputFileSequenceCount][0] == '-') { // is next option
-                        done = TRUE;
+                        done = true;
                         i--;
                     } else { // continue collecting filenames
                         i++;
@@ -4294,15 +4302,15 @@ int main(int argc, char* argv[]) {
 
             // --test-only  -T
             } else if (strcmp(argv[i], "-T")==0 || strcmp(argv[i], "--test-only")==0) {
-                writeoutput = FALSE;
+                writeoutput = false;
 
             // --no-qpixels
             } else if (strcmp(argv[i], "--no-qpixels")==0) {
-                qpixels = FALSE;
+                qpixels = false;
 
             // --no-multi-pages
             } else if (strcmp(argv[i], "--no-multi-pages")==0) {
-                multisheets = FALSE;
+                multisheets = false;
 
             // --dpi
             } else if (strcmp(argv[i], "--dpi")==0) {
@@ -4322,11 +4330,11 @@ int main(int argc, char* argv[]) {
 
             // --overwrite
             } else if (strcmp(argv[i], "--overwrite")==0) {
-                overwrite = TRUE;
+                overwrite = true;
 
             // --time
             } else if (strcmp(argv[i], "--time")==0) {
-                showTime = TRUE;
+                showTime = true;
 
             // --verbose  -v
             } else if (strcmp(argv[i], "-v")==0  || strcmp(argv[i], "--verbose")==0) {
@@ -4366,7 +4374,7 @@ int main(int argc, char* argv[]) {
             if (startSheet < nr) { // startSheet==0
                 nr = startSheet;
             }
-            first = FALSE;
+            first = false;
         }
 
         if ( nr == startSheet ) {
@@ -4410,12 +4418,12 @@ int main(int argc, char* argv[]) {
         }                
 
         // resolve filenames for current sheet
-        anyWildcards = FALSE;
-        allInputFilesMissing = TRUE;
+        anyWildcards = false;
+        allInputFilesMissing = true;
         blankCount = 0;
         for (j = 0; j < inputCount; j++) {
             if ( (!anyWildcards) && (strchr(inputFileSequence[inputFileSequencePos], '%') != 0) ) {
-                anyWildcards = TRUE;
+                anyWildcards = true;
             }
             ins = isInMultiIndex(inputFileSequencePosTotal+1, insertBlank, insertBlankCount);
             repl = isInMultiIndex(inputFileSequencePosTotal+1, replaceBlank, replaceBlankCount);
@@ -4423,12 +4431,12 @@ int main(int argc, char* argv[]) {
                 sprintf(inputFilenamesResolvedBuffer[j], inputFileSequence[inputFileSequencePos++], inputNr);
                 inputFilenamesResolved[j] = inputFilenamesResolvedBuffer[j];
                 if ( allInputFilesMissing && ( fileExists(inputFilenamesResolved[j]) ) ) {
-                    allInputFilesMissing = FALSE;
+                    allInputFilesMissing = false;
                 }
             } else { // use blank input
                 inputFilenamesResolved[j] = NULL;
                 blankCount++;
-                //allInputFilesMissing = FALSE;
+                //allInputFilesMissing = false;
                 if (repl) { // but skip input file sequence pos if replace-mode
                     inputFileSequencePos++;
                 }
@@ -4440,20 +4448,20 @@ int main(int argc, char* argv[]) {
             inputFileSequencePosTotal++;
         }
         if (blankCount == inputCount) {
-            allInputFilesMissing = FALSE;
+            allInputFilesMissing = false;
         }
         
         // multi-(input-)sheets?
-        if ( multisheets && anyWildcards ) { // might already have been disabled by option (multisheets==FALSE)
-            //nop, multisheets remains TRUE
+        if ( multisheets && anyWildcards ) { // might already have been disabled by option (multisheets==false)
+            //nop, multisheets remains true
         } else {
-            multisheets = FALSE;
+            multisheets = false;
             endSheet = startSheet;
         }
 
         for (j = 0; j < outputCount; j++) {
             if ( (!anyWildcards) && (strchr(outputFileSequence[outputFileSequencePos], '%') != 0) ) {
-                anyWildcards = TRUE;
+                anyWildcards = true;
             }
             sprintf(outputFilenamesResolvedBuffer[j], outputFileSequence[outputFileSequencePos++], outputNr);
             outputFilenamesResolved[j] = outputFilenamesResolvedBuffer[j];
@@ -4491,7 +4499,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 // load input image(s)
-                success = TRUE;
+                success = true;
                 for ( j = 0; (success) && (j < inputCount); j++) {
                 
                     if ( (inputFilenamesResolved[j] == NULL) || fileExists(inputFilenamesResolved[j]) ) {
@@ -4833,7 +4841,7 @@ int main(int argc, char* argv[]) {
                             printf("deskew-scan-range: %f\n", deskewScanRange);
                             printf("deskew-scan-step: %f\n", deskewScanStep);
                             printf("deskew-scan-deviation: %f\n", deskewScanDeviation);
-                            if (qpixels==FALSE) {
+                            if (qpixels==false) {
                                 printf("qpixel-coding DISABLED.\n");
                             }
                             if (noDeskewMultiIndexCount > 0) {
@@ -5164,7 +5172,7 @@ int main(int argc, char* argv[]) {
                         saveDebug("./_before-deskew.pnm", &sheet);
                         originalSheet = sheet; // copy struct entries ('clone')
                         // convert to qpixels
-                        if (qpixels==TRUE) {
+                        if (qpixels==true) {
                             if (verbose>=VERBOSE_NORMAL) {
                                 printf("converting to qpixels.\n");
                             }
@@ -5188,7 +5196,7 @@ int main(int argc, char* argv[]) {
                         // auto-deskew each mask
                         for (i = 0; i < maskCount; i++) {
 
-                            // if ( maskValid[i] == TRUE ) { // point may have been invalidated if mask has not been auto-detected
+                            // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
 
                                 // for rotation detection, original buffer is used (not qpixels)
                                 saveDebug("./_before-deskew-detect.pnm", &originalSheet);
@@ -5223,7 +5231,7 @@ int main(int argc, char* argv[]) {
                         } 
 
                         // convert back from qpixels
-                        if (qpixels == TRUE) {
+                        if (qpixels == true) {
                             if (verbose >= VERBOSE_NORMAL) {
                                 printf("converting back from qpixels.\n");
                             }
@@ -5388,13 +5396,13 @@ int main(int argc, char* argv[]) {
 
                     // write split pages output
 
-                    if (writeoutput == TRUE) {    
+                    if (writeoutput == true) {    
                         if (verbose >= VERBOSE_NORMAL) {
                             printf("writing output.\n");
                         }
                         // write files
                         saveDebug("./_before-save.pnm", &sheet);
-                        success = TRUE;
+                        success = true;
                         page.width = sheet.width / outputCount;
                         page.height = sheet.height;
                         page.bitdepth = sheet.bitdepth;
@@ -5426,7 +5434,7 @@ int main(int argc, char* argv[]) {
                             if ( outputCount > 1 ) {
                                 freeImage(&page);
                             }
-                            if (success == FALSE) {
+                            if (success == false) {
                                 printf("*** error: Could not save image data to file %s.\n", outputFilenamesResolved[j]);
                                 exitCode = 2;
                             }
