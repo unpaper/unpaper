@@ -644,7 +644,7 @@ struct IMAGE {
 /* --- constants ---------------------------------------------------------- */
 
 // file type names (see typedef FILETYPES)
-const char FILETYPE_NAMES[FILETYPES_COUNT][5] = {
+static const char FILETYPE_NAMES[FILETYPES_COUNT][4] = {
     "pbm",
     "pgm",
     "ppm"
@@ -652,7 +652,7 @@ const char FILETYPE_NAMES[FILETYPES_COUNT][5] = {
 
 // factors for conversion to inches
 #define MEASUREMENTS_COUNT 3
-const char MEASUREMENTS[MEASUREMENTS_COUNT][2][15] = {
+static const char MEASUREMENTS[MEASUREMENTS_COUNT][2][16] = {
     { "in", "1.0" },
     { "cm", "0.393700787" },
     { "mm", "0.0393700787" }
@@ -660,7 +660,7 @@ const char MEASUREMENTS[MEASUREMENTS_COUNT][2][15] = {
 
 // papersize alias names
 #define PAPERSIZES_COUNT 10
-const char PAPERSIZES[PAPERSIZES_COUNT][2][50] = {
+static const char PAPERSIZES[PAPERSIZES_COUNT][2][32] = {
     { "a5", "14.8cm,21cm" },
     { "a5-landscape", "21cm,14.8cm" },
     { "a4", "21cm,29.7cm" },
@@ -676,7 +676,7 @@ const char PAPERSIZES[PAPERSIZES_COUNT][2][50] = {
 
 // color alias names
 #define COLORS_COUNT 2
-const char COLORS[COLORS_COUNT][2][50] = {
+static const char COLORS[COLORS_COUNT][2][8] = {
     { "black", "#000000" },
     { "white", "#ffffff" }
 };
