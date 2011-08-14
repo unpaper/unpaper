@@ -684,7 +684,7 @@ static const char COLORS[COLORS_COUNT][2][8] = {
 
 /* --- global variable ---------------------------------------------------- */
 
-VERBOSE_LEVEL verbose;
+static VERBOSE_LEVEL verbose;
 
 
 
@@ -698,7 +698,7 @@ VERBOSE_LEVEL verbose;
 /**
  * Returns the quadratic square of a number.
  */
-double sqr(double d) {
+static double sqr(double d) {
     return d*d;
 }
 
@@ -706,7 +706,7 @@ double sqr(double d) {
 /**
  * Converts degrees to radians.
  */
-double degreesToRadians(double d) {
+static double degreesToRadians(double d) {
     return d * M_PI / 180.0;
 }
 
@@ -714,7 +714,7 @@ double degreesToRadians(double d) {
 /**
  * Converts radians to degrees.
  */
-double radiansToDegrees(double r) {
+static double radiansToDegrees(double r) {
     return r * 180.0 / M_PI;
 }
 
@@ -722,7 +722,7 @@ double radiansToDegrees(double r) {
 /**
  * Limits an integer value to a maximum.
  */
-void limit(int* i, int max) {
+static void limit(int* i, int max) {
     if (*i > max) {
         *i = max;
     }
@@ -734,7 +734,7 @@ void limit(int* i, int max) {
 /**
  * Parses a parameter string on occurrences of 'vertical', 'horizontal' or both.
  */            
-int parseDirections(char* s, int* exitCode) {
+static int parseDirections(char* s, int* exitCode) {
     int dir = 0;
     if (strchr(s, 'h') != 0) { // (there is no 'h' in 'vertical'...)
         dir = 1<<HORIZONTAL;
@@ -753,7 +753,7 @@ int parseDirections(char* s, int* exitCode) {
 /**
  * Prints whether directions are vertical, horizontal, or both.
  */            
-void printDirections(int d) {
+static void printDirections(int d) {
     BOOLEAN comma = FALSE;
     
     printf("[");
@@ -774,7 +774,7 @@ void printDirections(int d) {
 /**
  * Parses a parameter string on occurrences of 'left', 'top', 'right', 'bottom' or combinations.
  */            
-int parseEdges(char* s, int* exitCode) {
+static int parseEdges(char* s, int* exitCode) {
     int dir = 0;
     if (strstr(s, "left") != 0) {
         dir = 1<<LEFT;
@@ -799,7 +799,7 @@ int parseEdges(char* s, int* exitCode) {
 /**
  * Prints whether edges are left, top, right, bottom or combinations.
  */            
-void printEdges(int d) {
+static void printEdges(int d) {
     BOOLEAN comma = FALSE;
     
     printf("[");
@@ -835,7 +835,7 @@ void printEdges(int d) {
  * Parses either a single integer string, of a pair of two integers seperated
  * by a comma.
  */            
-void parseInts(char* s, int i[2]) {
+static void parseInts(char* s, int i[2]) {
     i[0] = -1;
     i[1] = -1;
     sscanf(s, "%d,%d", &i[0], &i[1]);
@@ -850,7 +850,7 @@ void parseInts(char* s, int i[2]) {
  * Values may be suffixed by MEASUREMENTS such as 'cm', 'in', in that case
  * conversion to pixels is perfomed based on the dpi-value.
  */            
-void parseSize(char* s, int i[2], int dpi, int* exitCode) {
+static void parseSize(char* s, int i[2], int dpi, int* exitCode) {
     char str[2][255];
     char pattern[2][255];
     float factor[2];
@@ -915,7 +915,7 @@ void parseSize(char* s, int i[2], int dpi, int* exitCode) {
 /**
  * Parses a color. Currently only "black" and "white".
  */            
-int parseColor(char* s, int* exitCode) {
+static int parseColor(char* s, int* exitCode) {
     int j;
 
     // is s a color name?
@@ -937,7 +937,7 @@ int parseColor(char* s, int* exitCode) {
 /**
  * Outputs a pair of two integers seperated by a comma.
  */            
-void printInts(int i[2]) {
+static void printInts(int i[2]) {
     printf("[%d,%d]\n", i[0], i[1]);
 }
 
@@ -946,7 +946,7 @@ void printInts(int i[2]) {
  * Parses either a single float string, of a pair of two floats seperated
  * by a comma.
  */            
-void parseFloats(char* s, float f[2]) {
+static void parseFloats(char* s, float f[2]) {
     f[0] = -1.0;
     f[1] = -1.0;
     sscanf(s, "%f,%f", &f[0], &f[1]);
@@ -959,7 +959,7 @@ void parseFloats(char* s, float f[2]) {
 /**
  * Outputs a pair of two floats seperated by a comma.
  */            
-void printFloats(float f[2]) {
+static void printFloats(float f[2]) {
     printf("[%f,%f]\n", f[0], f[1]);
 }
 
@@ -967,7 +967,7 @@ void printFloats(float f[2]) {
 /**
  * Combines an array of strings to a comma-seperated string.
  */
-char* implode(char* buf, char* s[], int cnt) {
+static char* implode(char* buf, char* s[], int cnt) {
     int i;
     if (cnt > 0) {
         if (s[0] != NULL) {
@@ -995,7 +995,7 @@ char* implode(char* buf, char* s[], int cnt) {
  *
  * @see isInMultiIndex(..)
  */
-void parseMultiIndex(int* i, char* argv[], int multiIndex[], int* multiIndexCount) {
+static void parseMultiIndex(int* i, char* argv[], int multiIndex[], int* multiIndexCount) {
     char s1[MAX_MULTI_INDEX * 5]; // buffer
     char s2[MAX_MULTI_INDEX * 5]; // buffer
     char c;
@@ -1042,7 +1042,7 @@ void parseMultiIndex(int* i, char* argv[], int multiIndex[], int* multiIndexCoun
  *
  * @see parseMultiIndex(..)
  */
-BOOLEAN isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
+static BOOLEAN isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
     int i;
     
     if (multiIndexCount == -1) {
@@ -1064,7 +1064,7 @@ BOOLEAN isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiInde
  * multi-indices: if an entry is part of excludeIndex, it is treated as being
  * an entry of all other multiIndices, too.)
  */
-BOOLEAN isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount, int excludeIndex[MAX_MULTI_INDEX], int excludeIndexCount) {
+static BOOLEAN isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount, int excludeIndex[MAX_MULTI_INDEX], int excludeIndexCount) {
     return ( (isInMultiIndex(index, excludeIndex, excludeIndexCount) == TRUE) || (isInMultiIndex(index, multiIndex, multiIndexCount) == TRUE) );
 }
 
@@ -1072,7 +1072,7 @@ BOOLEAN isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCou
 /**
  * Outputs all entries in an array of integer to the console.
  */
-void printMultiIndex(int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
+static void printMultiIndex(int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
     int i;
     
     if (multiIndexCount == -1) {
@@ -1094,7 +1094,7 @@ void printMultiIndex(int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
 /**
  * Tests if a point is covered by a mask.
  */
-BOOLEAN inMask(int x, int y, int mask[EDGES_COUNT]) {
+static BOOLEAN inMask(int x, int y, int mask[EDGES_COUNT]) {
     if ( (x >= mask[LEFT]) && (x <= mask[RIGHT]) && (y >= mask[TOP]) && (y <= mask[BOTTOM]) ) {
         return TRUE;
     } else {
@@ -1106,7 +1106,7 @@ BOOLEAN inMask(int x, int y, int mask[EDGES_COUNT]) {
 /**
  * Tests if masks a and b overlap.
  */
-BOOLEAN masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
+static BOOLEAN masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
     return ( inMask(a[LEFT], a[TOP], b) || inMask(a[RIGHT], a[BOTTOM], b) );
 }
 
@@ -1114,7 +1114,7 @@ BOOLEAN masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
 /**
  * Tests if at least one mask in masks overlaps with m.
  */
-BOOLEAN masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
+static BOOLEAN masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
     int i;
     
     for ( i = 0; i < masksCount; i++ ) {
@@ -1132,7 +1132,7 @@ BOOLEAN masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], i
  * Allocates a memory block for storing image data and fills the IMAGE-struct
  * with the specified values.
  */
-void initImage(struct IMAGE* image, int width, int height, int bitdepth, BOOLEAN color, int background) {
+static void initImage(struct IMAGE* image, int width, int height, int bitdepth, BOOLEAN color, int background) {
     int size;
     
     size = width * height;
@@ -1163,7 +1163,7 @@ void initImage(struct IMAGE* image, int width, int height, int bitdepth, BOOLEAN
 /**
  * Frees an image.
  */
-void freeImage(struct IMAGE* image) {    
+static void freeImage(struct IMAGE* image) {    
     free(image->buffer);
     if (image->color) {
         free(image->bufferGrayscale);
@@ -1176,7 +1176,7 @@ void freeImage(struct IMAGE* image) {
 /**
  * Replaces one image with another.
  */
-void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {    
+static void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {    
     freeImage(image);
     // pass-back new image
     *image = *newimage; // copy whole struct
@@ -1188,7 +1188,7 @@ void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
  *
  * @return TRUE if the pixel has been changed, FALSE if the original color was the one to set
  */ 
-BOOLEAN setPixel(int pixel, int x, int y, struct IMAGE* image) {
+static BOOLEAN setPixel(int pixel, int x, int y, struct IMAGE* image) {
     unsigned char* p;
     int w, h;
     int pos;
@@ -1251,7 +1251,7 @@ BOOLEAN setPixel(int pixel, int x, int y, struct IMAGE* image) {
  *
  * @return color or grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
-int getPixel(int x, int y, struct IMAGE* image) {
+static int getPixel(int x, int y, struct IMAGE* image) {
     int w, h;
     int pos;
     int pix;
@@ -1308,7 +1308,7 @@ int getPixelComponent(int x, int y, int colorComponent, struct IMAGE* image) {
  *
  * @return grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
-int getPixelGrayscale(int x, int y, struct IMAGE* image) {
+static int getPixelGrayscale(int x, int y, struct IMAGE* image) {
     int w, h;
     int pos;
 
@@ -1334,7 +1334,7 @@ int getPixelGrayscale(int x, int y, struct IMAGE* image) {
  *
  * @return lightness-value (the higher, the lighter) of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
-int getPixelLightness(int x, int y, struct IMAGE* image) {
+static int getPixelLightness(int x, int y, struct IMAGE* image) {
     int w, h;
     int pos;
 
@@ -1360,7 +1360,7 @@ int getPixelLightness(int x, int y, struct IMAGE* image) {
  *
  * @return inverse-darkness-value (the LOWER, the darker) of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
-int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
+static int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
     int w, h;
     int pos;
 
@@ -1380,7 +1380,7 @@ int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
  *
  * @return TRUE if the pixel has been changed, FALSE if the original color was the one to set
  */ 
-BOOLEAN setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
+static BOOLEAN setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
     unsigned char* p;
     int w, h;
     int pos;
@@ -1428,7 +1428,7 @@ BOOLEAN setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
  *
  * @return TRUE if the pixel has been changed, FALSE if the original color was the one to set
  */ 
-BOOLEAN clearPixel(int x, int y, struct IMAGE* image) {
+static BOOLEAN clearPixel(int x, int y, struct IMAGE* image) {
     return setPixelBW(x, y, image, WHITE);
 }
 
@@ -1437,7 +1437,7 @@ BOOLEAN clearPixel(int x, int y, struct IMAGE* image) {
  * Clears a rectangular area of pixels with either black or white.
  * @return The number of pixels actually changed from black (dark) to white.
  */
-int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int blackwhite) {
+static int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int blackwhite) {
     int x;
     int y;
     int count;
@@ -1457,7 +1457,7 @@ int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int
 /**
  * Copies one area of an image into another.
  */
-void copyImageArea(int x, int y, int width, int height, struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
+static void copyImageArea(int x, int y, int width, int height, struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
     int row;
     int col;
     int pixel;
@@ -1474,7 +1474,7 @@ void copyImageArea(int x, int y, int width, int height, struct IMAGE* source, in
 /**
  * Copies a whole image into another.
  */
-void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
+static void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
     copyImageArea(0, 0, source->width, source->height, source, toX, toY, target);
 }
 
@@ -1485,7 +1485,7 @@ void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
  * surrounded by a white border, if it is bigger, it gets equally cropped
  * at the edges.
  */
-void centerImageArea(int x, int y, int w, int h, struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target) {
+static void centerImageArea(int x, int y, int w, int h, struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target) {
     if ((w < ww) || (h < hh)) { // white rest-border will remain, so clear first
         clearRect(toX, toY, toX + ww - 1, toY + hh - 1, target, target->background);
     }
@@ -1510,7 +1510,7 @@ void centerImageArea(int x, int y, int w, int h, struct IMAGE* source, int toX, 
 /**
  * Centers a whole image inside an area of another image.
  */
-void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target) {
+static void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target) {
     centerImageArea(0, 0, source->width, source->height, source, toX, toY, ww, hh, target);
 }
 
@@ -1518,7 +1518,7 @@ void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct 
 /**
  * Returns the average brightness of a rectagular area.
  */
-int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
+static int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
     int x;
     int y;
     int pixel;
@@ -1539,7 +1539,7 @@ int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
 /**
  * Returns the average lightness of a rectagular area.
  */
-int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
+static int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
     int x;
     int y;
     int pixel;
@@ -1560,7 +1560,7 @@ int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
 /**
  * Returns the average darkness of a rectagular area.
  */
-int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
+static int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
     int x;
     int y;
     int pixel;
@@ -1583,7 +1583,7 @@ int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
  * values ranges between minColor and maxBrightness. Optionally, the area can get
  * cleared with white color while counting.
  */
-int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, BOOLEAN clear, struct IMAGE* image) {
+static int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, BOOLEAN clear, struct IMAGE* image) {
     int x;
     int y;
     int pixel;
@@ -1611,7 +1611,7 @@ int countPixelsRect(int left, int top, int right, int bottom, int minColor, int 
  * of 9 pixels if level==1, 16 pixels if level==2 and so on).
  * Optionally, the pixels can get cleared after counting.
  */
-int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int whiteMin, struct IMAGE* image) {
+static int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int whiteMin, struct IMAGE* image) {
     int xx;
     int yy;
     int count;
@@ -1679,7 +1679,7 @@ int countPixelNeighborsLevel(int x, int y, BOOLEAN clear, int level, int whiteMi
  * reachable from the dark pixel at (x,y), without having to cross bright
  * pixels.
  */
-int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE* image) {
+static int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE* image) {
     int level;
     int count;
     int lCount;
@@ -1699,7 +1699,7 @@ int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE*
  * (x,y). This should be called only if it has previously been detected that
  * the amount of pixels to clear will be reasonable small.
  */
-void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
+static void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
     int level;
     int lCount;
 
@@ -1715,7 +1715,7 @@ void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
  * Flood-fill an area of pixels.
  * (Declaration of header for indirect recursive calls.)
  */
-void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image);
+static void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image);
 
 
 /**
@@ -1726,7 +1726,7 @@ void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity,
  * @param stepX either -1 or 1, if stepY is 0, else 0
  * @param stepY either -1 or 1, if stepX is 0, else 0
  */
-int fillLine(int x, int y, int stepX, int stepY, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
+static int fillLine(int x, int y, int stepX, int stepY, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
     int pixel;
     int distance;
     int intensityCount;
@@ -1764,7 +1764,7 @@ int fillLine(int x, int y, int stepX, int stepY, int color, int maskMin, int mas
  * @param stepY either -1 or 1, if stepX is 0, else 0
  * @see fillLine()
  */
-void floodFillAroundLine(int x, int y, int stepX, int stepY, int distance, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
+static void floodFillAroundLine(int x, int y, int stepX, int stepY, int distance, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
     int d;
     
     for (d = 0; d < distance; d++) {
@@ -1786,7 +1786,7 @@ void floodFillAroundLine(int x, int y, int stepX, int stepY, int distance, int c
  *
  * @see earlier header-declaration to enable indirect recursive calls
  */
-void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
+static void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
     int left;
     int top;
     int right;
@@ -1817,7 +1817,7 @@ void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity,
 /**
  * Tests if a file exists.
  */
-BOOLEAN fileExists(char* filename) {
+static BOOLEAN fileExists(char* filename) {
     FILE *f;
     f = fopen(filename,"r");
     if (f == NULL) {
@@ -1837,7 +1837,7 @@ BOOLEAN fileExists(char* filename) {
  * @param type returns the type of the loaded image
  * @return TRUE on success, FALSE on failure
  */
-BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
+static BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
     FILE *f;
     int fileSize;
     int bytesPerLine;
@@ -2010,7 +2010,7 @@ BOOLEAN loadImage(char* filename, struct IMAGE* image, int* type) {
  * @param blackThreshold threshold for grayscale-to-black&white conversion
  * @return TRUE on success, FALSE on failure
  */
-BOOLEAN saveImage(char* filename, struct IMAGE* image, int type, BOOLEAN overwrite, float blackThreshold) {
+static BOOLEAN saveImage(char* filename, struct IMAGE* image, int type, BOOLEAN overwrite, float blackThreshold) {
     unsigned char* buf;
     int bytesPerLine;
     int inputSize;
@@ -2120,7 +2120,7 @@ BOOLEAN saveImage(char* filename, struct IMAGE* image, int type, BOOLEAN overwri
 /**
  * Saves the image if full debugging mode is enabled.
  */
-void saveDebug(char* filename, struct IMAGE* image) {
+static void saveDebug(char* filename, struct IMAGE* image) {
     int type;
     
     if (verbose >= VERBOSE_DEBUG_SAVE) {
@@ -2151,7 +2151,7 @@ void saveDebug(char* filename, struct IMAGE* image) {
  *
  * @param m ascending slope of the virtually shifted (m=tan(angle)). Mind that this is negative for negative radians.
  */
-int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScanDepth, int shiftX, int shiftY, int left, int top, int right, int bottom, struct IMAGE* image) {
+static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScanDepth, int shiftX, int shiftY, int left, int top, int right, int bottom, struct IMAGE* image) {
     int width;
     int height;
     int mid;
@@ -2261,7 +2261,7 @@ int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScanDepth, 
  * Which of the four edges to take depends on whether shiftX or shiftY is non-zero,
  * and what sign this shifting value has.
  */
-double detectEdgeRotation(float deskewScanRange, float deskewScanStep, int deskewScanSize, float deskewScanDepth, int shiftX, int shiftY, int left, int top, int right, int bottom, struct IMAGE* image) {
+static double detectEdgeRotation(float deskewScanRange, float deskewScanStep, int deskewScanSize, float deskewScanDepth, int shiftX, int shiftY, int left, int top, int right, int bottom, struct IMAGE* image) {
     // either shiftX or shiftY is 0, the other value is -i|+i
     // depending on shiftX/shiftY the start edge for shifting is determined
     double rangeRad;
@@ -2294,7 +2294,7 @@ double detectEdgeRotation(float deskewScanRange, float deskewScanStep, int deske
  * Angles between -deskewScanRange and +deskewScanRange are scanned, at either the
  * horizontal or vertical edges of the area specified by left, top, right, bottom.
  */
-double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScanStep, int deskewScanSize, float deskewScanDepth, float deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image) {
+static double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScanStep, int deskewScanSize, float deskewScanDepth, float deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image) {
     double rotation[4];
     int count;
     double total;
@@ -2367,7 +2367,7 @@ double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScan
  * (To rotate parts of an image, extract the part with copyBuffer, rotate, and re-paste with copyBuffer.)
  */
 //void rotate(double radians, struct IMAGE* source, struct IMAGE* target, double* trigonometryCache, int trigonometryCacheBaseSize) {
-void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
+static void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
     int x;
     int y;
     int midX;
@@ -2468,7 +2468,7 @@ void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
  * qpixelBuf must have been allocated before with 4-times amount of memory as
  * buf.
  */
-void convertToQPixels(struct IMAGE* image, struct IMAGE* qpixelImage) {
+static void convertToQPixels(struct IMAGE* image, struct IMAGE* qpixelImage) {
     int x;
     int y;
     int xx;
@@ -2498,7 +2498,7 @@ void convertToQPixels(struct IMAGE* image, struct IMAGE* qpixelImage) {
  * buf must have been allocated before with 1/4-times amount of memory as
  * qpixelBuf.
  */
-void convertFromQPixels(struct IMAGE* qpixelImage, struct IMAGE* image) {
+static void convertFromQPixels(struct IMAGE* qpixelImage, struct IMAGE* image) {
     int x;
     int y;
     int xx;
@@ -2535,7 +2535,7 @@ void convertFromQPixels(struct IMAGE* qpixelImage, struct IMAGE* image) {
  * @param w the new width to stretch to
  * @param h the new height to stretch to
  */
-void stretch(int w, int h, struct IMAGE* image) {
+static void stretch(int w, int h, struct IMAGE* image) {
     struct IMAGE newimage;
     int x;
     int y;
@@ -2673,7 +2673,7 @@ void stretch(int w, int h, struct IMAGE* image) {
  * @param w the new width to resize to
  * @param h the new height to resize to
  */
-void resize(int w, int h, struct IMAGE* image) {
+static void resize(int w, int h, struct IMAGE* image) {
     struct IMAGE newimage;
     int ww;
     int hh;
@@ -2709,7 +2709,7 @@ void resize(int w, int h, struct IMAGE* image) {
  * @param shiftX horizontal shifting
  * @param shiftY vertical shifting
  */
-void shift(int shiftX, int shiftY, struct IMAGE* image) {
+static void shift(int shiftX, int shiftY, struct IMAGE* image) {
     struct IMAGE newimage;
     int x;
     int y;
@@ -2735,7 +2735,7 @@ void shift(int shiftX, int shiftY, struct IMAGE* image) {
  *
  * @return number of shift-steps until blank edge found
  */
-int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskScanSize, int maskScanDepth, float maskScanThreshold, struct IMAGE* image) {
+static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskScanSize, int maskScanDepth, float maskScanThreshold, struct IMAGE* image) {
     // either shiftX or shiftY is 0, the other value is -i|+i
     int left;
     int top;
@@ -2792,7 +2792,7 @@ int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskScanSize,
  *
  * @return the detected mask in left, top, right, bottom; or -1, -1, -1, -1 if no mask could be detected
  */
-BOOLEAN detectMask(int startX, int startY, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT], int* left, int* top, int* right, int* bottom, struct IMAGE* image) {
+static BOOLEAN detectMask(int startX, int startY, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT], int* left, int* top, int* right, int* bottom, struct IMAGE* image) {
     int width;
     int height;
     int half[DIRECTIONS_COUNT];
@@ -2841,7 +2841,7 @@ BOOLEAN detectMask(int startX, int startY, int maskScanDirections, int maskScanS
  * @param mask point to array into which detected masks will be stored
  * @return number of masks stored in mask[][]
  */
-int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], BOOLEAN maskValid[MAX_MASKS], int point[MAX_POINTS][COORDINATES_COUNT], int pointCount, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT],  struct IMAGE* image) {
+static int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], BOOLEAN maskValid[MAX_MASKS], int point[MAX_POINTS][COORDINATES_COUNT], int pointCount, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT],  struct IMAGE* image) {
     int left;
     int top;
     int right;
@@ -2886,7 +2886,7 @@ int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], BOOLEAN maskValid[MAX_MASKS], 
  * Permanently applies image masks. Each pixel which is not covered by at least
  * one mask is set to maskColor.
  */
-void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int maskColor, struct IMAGE* image) {
+static void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int maskColor, struct IMAGE* image) {
     int x;
     int y;
     int i;
@@ -2923,7 +2923,7 @@ void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int maskColor, 
  * Permanently wipes out areas of an images. Each pixel covered by a wipe-area
  * is set to wipeColor.
  */
-void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, int wipeColor, struct IMAGE* image) {
+static void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, int wipeColor, struct IMAGE* image) {
     int x;
     int y;
     int i;
@@ -2950,7 +2950,7 @@ void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, int wipeColor, 
 /**
  * Mirrors an image either horizontally, vertically, or both.
  */
-void mirror(int directions, struct IMAGE* image) {
+static void mirror(int directions, struct IMAGE* image) {
     int x;
     int y;
     int xx;
@@ -2989,7 +2989,7 @@ void mirror(int directions, struct IMAGE* image) {
  *
  * @param direction either -1 (rotate anti-clockwise) or 1 (rotate clockwise)
  */
-void flipRotate(int direction, struct IMAGE* image) {
+static void flipRotate(int direction, struct IMAGE* image) {
     struct IMAGE newimage;
     int x;
     int y;
@@ -3019,7 +3019,7 @@ void flipRotate(int direction, struct IMAGE* image) {
  * @param stepY is 0 if stepX!=0
  * @see blackfilter()
  */
-void blackfilterScan(int stepX, int stepY, int size, int dep, float threshold, int exclude[MAX_MASKS][EDGES_COUNT], int excludeCount, int intensity, float blackThreshold, struct IMAGE* image) {
+static void blackfilterScan(int stepX, int stepY, int size, int dep, float threshold, int exclude[MAX_MASKS][EDGES_COUNT], int excludeCount, int intensity, float blackThreshold, struct IMAGE* image) {
     int left;
     int top;
     int right;
@@ -3112,7 +3112,7 @@ void blackfilterScan(int stepX, int stepY, int size, int dep, float threshold, i
  * A virtual bar of width 'size' and height 'depth' is horizontally moved 
  * above the middle of the sheet (or the full sheet, if depth ==-1).
  */
-void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], float blackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, float blackThreshold, struct IMAGE* image) {
+static void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], float blackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, float blackThreshold, struct IMAGE* image) {
     if ((blackfilterScanDirections & 1<<HORIZONTAL) != 0) { // left-to-right scan
         blackfilterScan(blackfilterScanStep[HORIZONTAL], 0, blackfilterScanSize[HORIZONTAL], blackfilterScanDepth[HORIZONTAL], blackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, blackThreshold, image);
     }
@@ -3129,7 +3129,7 @@ void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIO
  *
  * @param intensity maximum cluster size to delete
  */
-int noisefilter(int intensity, float whiteThreshold, struct IMAGE* image) {
+static int noisefilter(int intensity, float whiteThreshold, struct IMAGE* image) {
     int x;
     int y;
     int whiteMin;
@@ -3162,7 +3162,7 @@ int noisefilter(int intensity, float whiteThreshold, struct IMAGE* image) {
  * filter. This algoithm counts pixels while 'shaking' the area to detect,
  * and clears the area if the amount of white pixels exceeds whiteTreshold.
  */
-int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, float whiteThreshold, struct IMAGE* image) {
+static int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, float whiteThreshold, struct IMAGE* image) {
     int whiteMin;
     int left;
     int top;
@@ -3230,7 +3230,7 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
  * Two conditions have to apply before an area gets deleted: first, not a single black pixel may be contained,
  * second, a minimum threshold of blackness must not be exceeded.
  */
-int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], float grayfilterThreshold, float blackThreshold, struct IMAGE* image) {
+static int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], float grayfilterThreshold, float blackThreshold, struct IMAGE* image) {
     int blackMax;
     int left;
     int top;
@@ -3281,7 +3281,7 @@ int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[
 /**
  * Moves a rectangular area of pixels to be centered above the centerX, centerY coordinates.
  */
-void centerMask(int centerX, int centerY, int left, int top, int right, int bottom, struct IMAGE* image) {
+static void centerMask(int centerX, int centerY, int left, int top, int right, int bottom, struct IMAGE* image) {
     struct IMAGE newimage;
     int width;
     int height;
@@ -3312,7 +3312,7 @@ void centerMask(int centerX, int centerY, int left, int top, int right, int bott
 /**
  * Moves a rectangular area of pixels to be centered inside a specified area coordinates.
  */
-void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, int margin[DIRECTIONS_COUNT], struct IMAGE* image) {
+static void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, int margin[DIRECTIONS_COUNT], struct IMAGE* image) {
     struct IMAGE newimage;
     int width;
     int height;
@@ -3349,7 +3349,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, i
 /**
  * Moves a rectangular area of pixels to be centered inside a specified area coordinates.
  */
-void centerMaskInsideMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], struct IMAGE* image) {
+static void centerMaskInsideMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], struct IMAGE* image) {
     alignMask(mask, outside, 0, NULL, image);
 }
 
@@ -3359,7 +3359,7 @@ void centerMaskInsideMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], struc
  *
  * @param x1..y2 area inside of which border is to be detected
  */
-int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, int size, int threshold, int maxBlack, struct IMAGE* image) {
+static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, int size, int threshold, int maxBlack, struct IMAGE* image) {
     int left;
     int top;
     int right;
@@ -3414,7 +3414,7 @@ int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, int siz
 /**
  * Detects a border of completely non-black pixels around the area outsideBorder[LEFT],outsideBorder[TOP]-outsideBorder[RIGHT],outsideBorder[BOTTOM].
  */
-void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], float blackThreshold, int outsideMask[EDGES_COUNT], struct IMAGE* image) {
+static void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], float blackThreshold, int outsideMask[EDGES_COUNT], struct IMAGE* image) {
     int blackThresholdAbs;
     
     border[LEFT] = outsideMask[LEFT];
@@ -3440,7 +3440,7 @@ void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderS
 /**
  * Converts a border-tuple to a mask-tuple.
  */
-void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], struct IMAGE* image) {
+static void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], struct IMAGE* image) {
     mask[LEFT] = border[LEFT];
     mask[TOP] = border[TOP];
     mask[RIGHT] = image->width - border[RIGHT] - 1;
@@ -3455,7 +3455,7 @@ void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], struct IMAGE* 
  * Applies a border to the whole image. All pixels in the border range at the
  * edges of the sheet will be cleared.
  */
-void applyBorder(int border[EDGES_COUNT], int borderColor, struct IMAGE* image) {
+static void applyBorder(int border[EDGES_COUNT], int borderColor, struct IMAGE* image) {
     int mask[EDGES_COUNT];
     
     if (border[LEFT]!=0 || border[TOP]!=0 || border[RIGHT]!=0 || border[BOTTOM]!=0) {
