@@ -644,8 +644,8 @@ struct IMAGE {
     int width;
     int height;
     int bitdepth;
-    bool color;
     int background;
+    bool color;
 };
 
 
