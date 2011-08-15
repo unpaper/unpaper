@@ -650,29 +650,52 @@ static const char FILETYPE_NAMES[FILETYPES_COUNT][4] = {
 };
 
 // factors for conversion to inches
+#define CM2IN 0.393700787
+#define MM2IN CM2IN/10.0
+
 #define MEASUREMENTS_COUNT 3
 static const struct {
     char unit[4];
     float factor;
 } MEASUREMENTS[MEASUREMENTS_COUNT] = {
     { "in", 1.0 },
-    { "cm", 0.393700787 },
-    { "mm", 0.0393700787 }
+    { "cm", CM2IN },
+    { "mm", MM2IN }
 };
 
 // papersize alias names
 #define PAPERSIZES_COUNT 10
-static const char PAPERSIZES[PAPERSIZES_COUNT][2][32] = {
-    { "a5", "14.8cm,21cm" },
-    { "a5-landscape", "21cm,14.8cm" },
-    { "a4", "21cm,29.7cm" },
-    { "a4-landscape", "29.7cm,21cm" },
-    { "a3", "29.7cm,42cm" },
-    { "a3-landscape", "42cm,29.7cm" },
-    { "letter", "8.5in,11in" },
-    { "letter-landscape", "11in,8.5in" },
-    { "legal", "8.5in,14in" },
-    { "legal-landscape", "14in,8.5in" }
+static const struct {
+    char name[24];
+    float width;
+    float height;
+} PAPERSIZES[PAPERSIZES_COUNT] = {
+    { "a5",
+      14.8 * CM2IN,
+      21.0 * CM2IN },
+    { "a5-landscape",
+      21.0 * CM2IN,
+      14.8 * CM2IN },
+    { "a4",
+      21.0 * CM2IN,
+      29.7 * CM2IN },
+    { "a4-landscape",
+      29.7 * CM2IN,
+      21.0 * CM2IN },
+    { "a3",
+      29.7 * CM2IN,
+      42.0 * CM2IN },
+    { "a3-landscape",
+      42.0 * CM2IN,
+      29.7 * CM2IN },
+    { "letter",
+      8.5, 11.0 },
+    { "letter-landscape",
+      11.0, 8.5 },
+    { "legal",
+      8.5, 14.0 },
+    { "legal-landscape",
+      14.0, 8.5 }
 };
 
 /* --- global variable ---------------------------------------------------- */
@@ -838,70 +861,65 @@ static void parseInts(char* s, int i[2]) {
 }
 
 
+static int parseSizeSingle(const char *s, int dpi, int *exitCode) {
+    int j;
+    char *valueEnd;
+    float value;
+
+    value = strtof(s, &valueEnd);
+
+    if ( fabs(value) == HUGE_VAL || s == valueEnd ) {
+        *exitCode = 1;
+        return 0;
+    }
+
+    for (j = 0; j < MEASUREMENTS_COUNT; j++)
+        if ( strcmp(valueEnd, MEASUREMENTS[j].unit) == 0 )
+            return (int)(value * MEASUREMENTS[j].factor * dpi);
+
+    /* if no unit is found, then we have a direct pixel value, do not
+       multiply for dpi. */
+    return (int)value;
+}
+
 /**
  * Parses a pair of size-values and returns it in pixels. 
  * Values may be suffixed by MEASUREMENTS such as 'cm', 'in', in that case
  * conversion to pixels is perfomed based on the dpi-value.
  */            
 static void parseSize(char* s, int i[2], int dpi, int* exitCode) {
-    char str[2][255];
-    char pattern[2][255];
-    float factor[2];
-    float f[2];
-    int j, k;
+    char str[255];
+    int j;
     char* comma;
     int pos;
 
     // is s a papersize name?
     for (j = 0; j < PAPERSIZES_COUNT; j++) {
-        if (strcmp(s, PAPERSIZES[j][0])==0) {
-            s = (char*)PAPERSIZES[j][1]; // replace with size string
+        if (strcmp(s, PAPERSIZES[j].name)==0) {
+            i[0] = PAPERSIZES[j].width * dpi;
+            i[1] = PAPERSIZES[j].height * dpi;
+            return;
         }
     }
 
     // find comma in size string, if there
     comma = strchr(s, ',');    
-    if (comma != NULL) {
-        pos = comma - s;
-        strncpy(str[0], s, pos); 
-        str[0][pos] = 0; // (according to spec of strncpy, no terminating 0 is written)
-        strcpy(str[1], &s[pos+1]); // copy rest after ','
-    } else { // no comma: same value for width, height
-        strcpy(str[0], s);
-        strcpy(str[1], s);
-    }
-    
-    // initial patterns if no measurement
-    strcpy(pattern[0], "%f");
-    strcpy(pattern[1], "%f");
 
-    // look for possible measurement
-    factor[0] = factor[1] = -1.0;
-    for (j = 0; j < MEASUREMENTS_COUNT; j++) {
-        for (k = 0; k < 2; k++) {
-            if ( strstr(str[k], MEASUREMENTS[j].unit) != NULL ) {
-                factor[k] = MEASUREMENTS[j].factor;
-                strncat(pattern[k], MEASUREMENTS[j].unit, sizeof(pattern[k])-sizeof("%f"));
-            }
-        }
+    if (comma == NULL) {
+        i[0] = i[1] = parseSizeSingle(s, dpi, exitCode);
+        return;
     }
-    
-    // get values
-    f[0] = f[1] = -1.0;
-    for (k = 0; k < 2; k++) {
-        sscanf(str[k], pattern[k], &f[k]);
-        if (factor[k] == -1.0) { // direct pixel value
-            i[k] = (int)f[k];
-        } else {
-            i[k] = (int)(f[k] * factor[k] * dpi);
-        }
-        if (f[k] == -1.0) {
-            printf("*** error: cannot parse size value '%s'.\n", s);
-            i[0] = i[1] = 0;
-            *exitCode = 1;
-            return;
-        }
-    }
+
+    pos = comma - s;
+    strncpy(str, s, pos);
+    str[pos] = 0; // (according to spec of strncpy, no terminating 0 is written)
+
+    i[0] = parseSizeSingle(str, dpi, exitCode);
+    if ( *exitCode == 1 ) return;
+
+    strcpy(str, &s[pos+1]); // copy rest after ','
+    i[1] = parseSizeSingle(str, dpi, exitCode);
+    if ( *exitCode == 1 ) return;
 }
 
 
