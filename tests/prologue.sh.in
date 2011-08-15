@@ -1,0 +1,8 @@
+set -e
+
+UNPAPER=@abs_top_builddir@/unpaper
+PNGTOPNM=@PNGTOPNM@
+PNMTOPNG=@PNMTOPNG@
+
+output_file=tests/${0/runtest/results}
+output_file=${output_file/.sh/.txt}

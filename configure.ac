@@ -12,6 +12,13 @@ AC_SEARCH_LIBS([sqrt], [m])
 
 AC_CHECK_FUNCS_ONCE([sincosf])
 
-AC_CONFIG_FILES([Makefile])
+AS_IF([test "$crosscompiling" != "no"], [
+  AC_PATH_PROG([PNGTOPNM], [pngtopnm], [false])
+  AC_PATH_PROG([PNMTOPNG], [pnmtopng], [false])
+
+  AM_CONDITIONAL([TESTS_ENABLED], [test "$PNGTOPNM" != "false" -a "$PNMTOPNG" != "false"])
+])
+
+AC_CONFIG_FILES([Makefile tests/prologue.sh])
 
 AC_OUTPUT
