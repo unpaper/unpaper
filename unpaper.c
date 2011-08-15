@@ -471,13 +471,13 @@ unpaper - written by Jens Gulden 2005-2007                                  */
     "                                     combination with --verbose to get informa-\n" \
     "                                     tion about the input.\n\n"    \
                                                                         \
-    "-in --input-file-sequence            Sequence of input filename patterns which\n" \
+    "-if --input-file-sequence            Sequence of input filename patterns which\n" \
     "      <file-patterns>                is repeatedly traversed while resolving\n" \
     "                                     input filenames. Specifying a single\n" \
     "                                     entry is equivalent to the first filename\n" \
     "                                     argument after the options-list.\n\n" \
                                                                         \
-    "-out --output-file-sequence          Sequence of output filename patterns\n" \
+    "-of --output-file-sequence           Sequence of output filename patterns\n" \
     "       <file-patterns>               which is repeatedly traversed while\n" \
     "                                     resolving output filenames. Specifying a\n" \
     "                                     single entry is equivalent to the second\n" \

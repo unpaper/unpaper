@@ -476,13 +476,13 @@ scan001.pbm, scan002.pbm, scan003.pbm etc.
                                      combination with --verbose to get informa-
                                      tion about the input.
 
--in --input-file-sequence            Sequence of input filename patterns which
+-if --input-file-sequence            Sequence of input filename patterns which
       <file-patterns>                is repeatedly traversed while resolving
                                      input filenames. Specifying a single
                                      entry is equivalent to the first filename
                                      argument after the options-list.
 
--out --output-file-sequence          Sequence of output filename patterns
+-of --output-file-sequence           Sequence of output filename patterns
        <file-patterns>               which is repeatedly traversed while
                                      resolving output filenames. Specifying a
                                      single entry is equivalent to the second
