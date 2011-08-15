@@ -2338,6 +2338,13 @@ static double detectRotation(int deskewScanEdges, int deskewScanRange, float des
     }
 }
 
+#if !HAVE_SINCOSF
+static void sincosf(float x, float *sin_, float *cos_)
+{
+    *sin_ = sin(x);
+    *cos_ = cos(x)
+}
+#endif
 
 /**
  * Rotates a whole image buffer by the specified radians, around its middle-point.
@@ -2377,8 +2384,7 @@ static void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
     midMax = max(midX, midY);
 
     // create 2D rotation matrix
-    sinval = sin(radians); // no use of sincos()-function for compatibility, no performace bottleneck anymore anyway
-    cosval = cos(radians);
+    sincosf(radians, &sinval, &cosval);
     m11 = cosval;
     m12 = sinval;
     m21 = -sinval;
