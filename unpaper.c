@@ -22,12 +22,6 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 # define true TRUE
 #endif
  
-#ifdef TIMESTAMP
-static const char BUILD[] = TIMESTAMP;
-#else
-static const char BUILD[] = "";
-#endif
-
 static const char WELCOME[] =
 "unpaper " VERSION " - written by Jens Gulden 2005-2007.\n"
 "Licensed under the GNU General Public License, this comes with no warranty.\n";
@@ -3783,23 +3777,7 @@ int main(int argc, char* argv[]) {
 
             // --version -V
             } else if (strcmp(argv[i], "-V")==0 || strcmp(argv[i], "--version")==0) {
-                if (BUILD != NULL) {
-                    printf("%s (build %s)\n", VERSION, BUILD);
-                } else {
-                    printf("%s\n", VERSION);
-                }
-                return 0;
-
-            // --version-number (undocumented, used by build-process)
-            } else if (strcmp(argv[i], "--version-number")==0) {
                 printf("%s\n", VERSION);
-                return 0;
-
-            // --version-build (undocumented, used by build-process)
-            } else if (strcmp(argv[i], "--version-build")==0) {
-                if (BUILD != NULL) {
-                    printf("%s\n", BUILD);
-                }
                 return 0;
 
             // --layout  -l
