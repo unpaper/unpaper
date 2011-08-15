@@ -684,15 +684,6 @@ static const char PAPERSIZES[PAPERSIZES_COUNT][2][32] = {
     { "legal-landscape", "14in,8.5in" }
 };
 
-
-// color alias names
-#define COLORS_COUNT 2
-static const char COLORS[COLORS_COUNT][2][8] = {
-    { "black", "#000000" },
-    { "white", "#ffffff" }
-};
-
-
 /* --- global variable ---------------------------------------------------- */
 
 static VERBOSE_LEVEL verbose;
@@ -927,18 +918,11 @@ static void parseSize(char* s, int i[2], int dpi, int* exitCode) {
  * Parses a color. Currently only "black" and "white".
  */            
 static int parseColor(char* s, int* exitCode) {
-    int j;
+    if ( strcmp(s, "black") == 0 )
+        return BLACK;
+    if ( strcmp(s, "white") == 0 )
+        return WHITE;
 
-    // is s a color name?
-    for (j = 0; j < COLORS_COUNT; j++) {
-        if (strcmp(s, COLORS[j][0])==0) {
-            if (j == 0) { // simple
-                return BLACK;
-            } else {
-                return WHITE;
-            }
-        }
-    }
     printf("*** error: cannot parse color '%s'.\n", s);
     *exitCode = 1;
     return WHITE;
