@@ -29,7 +29,7 @@ static const char BUILD[] = "";
 #endif
 
 static const char WELCOME[] =
-"unpaper %s - written by Jens Gulden 2005-2007.\n"
+"unpaper " VERSION " - written by Jens Gulden 2005-2007.\n"
 "Licensed under the GNU General Public License, this comes with no warranty.\n";
               
 static const char USAGE[] =
@@ -3776,7 +3776,7 @@ int main(int argc, char* argv[]) {
 
             // --help
             if (argc==0 || strcmp(argv[i], "--help")==0 || strcmp(argv[i], "-h")==0 || strcmp(argv[i], "-?")==0 || strcmp(argv[i], "/?")==0 || strcmp(argv[i], "?")==0) {
-                printf(WELCOME, VERSION);
+                printf(WELCOME);
                 printf("\n");
                 printf(USAGE);
                 printf("Options are:\n");
@@ -4366,7 +4366,7 @@ int main(int argc, char* argv[]) {
 
         if ( nr == startSheet ) {
             if ( verbose >= VERBOSE_NORMAL ) {
-                printf(WELCOME, VERSION); // welcome message
+                printf(WELCOME); // welcome message
             }
             
             if (startInput == -1) {
