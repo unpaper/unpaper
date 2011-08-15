@@ -2,7 +2,7 @@ bin_PROGRAMS = unpaper
 
 unpaper_SOURCES = unpaper.c
 
-dist_doc_DATA = CHANGELOG LICENSE README
+dist_doc_DATA = NEWS COPYING README
 
 dist_html_DATA = doc/unpaper.html doc/index.html
 imgdir = $(htmldir)/img
