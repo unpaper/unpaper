@@ -4401,8 +4401,7 @@ int main(int argc, char* argv[]) {
                 inputFileSequence[0] = argv[i++];
                 inputFileSequenceCount = 1;
             } else {
-                printf("*** error: Missing input filename.\n");
-                printf(HELP);
+                printf("*** error: Missing input filename.\n%s", HELP);
                 return 1;
             }
         }
@@ -4411,8 +4410,7 @@ int main(int argc, char* argv[]) {
                 outputFileSequence[0] = argv[i++];
                 outputFileSequenceCount = 1;
             } else {
-                printf("*** error: Missing output filename.\n");
-                printf(HELP);
+                printf("*** error: Missing output filename.\n%s", HELP);
                 return 1;
             }
         }                
