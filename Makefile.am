@@ -24,22 +24,34 @@ dist_img_DATA = doc/img/_after.png doc/img/_arrow.png			\
                 doc/img/standard-deviation.png doc/img/style.css	\
                 doc/img/x-click-but04.gif
 
-EXTRA_DIST = tests/imgsrc001.png tests/imgsrc002.png	\
-             tests/imgsrc003.png tests/imgsrc004.png	\
-             tests/imgsrc005.png tests/imgsrcE001.png	\
+TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
+        tests/runtestB3.sh tests/runtestC1.sh tests/runtestC2.sh	\
+        tests/runtestD1.sh tests/runtestD2.sh tests/runtestD3.sh	\
+        tests/runtestE.sh
+
+EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png	\
+             tests/imgsrc003.png tests/imgsrc004.png		\
+             tests/imgsrc005.png tests/imgsrcE001.png		\
              tests/imgsrcE002.png tests/imgsrcE003.png
 
-if TESTS_ENABLED
 check_DATA = tests/imgsrc001.pbm tests/imgsrc002.pbm	\
              tests/imgsrc003.ppm tests/imgsrc004.pgm	\
              tests/imgsrc005.pbm tests/imgsrcE001.pbm	\
              tests/imgsrcE002.pbm tests/imgsrcE003.pbm
 
-TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
-        tests/runtestB3.sh tests/runtestC1.sh tests/runtestC2.sh	\
-        tests/runtestD1.sh tests/runtestD2.sh tests/runtestD3.sh	\
-        tests/runtestE.sh
-endif
+CLEANFILES = $(check_DATA) tests/.dirstamp tests/resultsA1.pbm	\
+             tests/resultsA1.txt tests/resultsB1.ppm		\
+             tests/resultsB1.txt tests/resultsB2.ppm		\
+             tests/resultsB2.txt tests/resultsB3.ppm		\
+             tests/resultsB3.txt tests/resultsC1.pbm		\
+             tests/resultsC1.txt tests/resultsC2.pbm		\
+             tests/resultsC2.txt tests/resultsD1.ppm		\
+             tests/resultsD1.txt tests/resultsD2.ppm		\
+             tests/resultsD2.txt tests/resultsD3.ppm		\
+             tests/resultsD3.txt tests/resultsE001.pbm		\
+             tests/resultsE002.pbm tests/resultsE003.pbm	\
+             tests/resultsE004.pbm tests/resultsE005.pbm	\
+             tests/resultsE006.pbm tests/resultsE.txt
 
 tests/.dirstamp:
 	$(mkdir_p) tests
