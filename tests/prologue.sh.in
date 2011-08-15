@@ -1,9 +1,17 @@
+output_file=$(basename "$0")
+output_file=${output_file/runtest/results}
+output_file=tests/${output_file/.sh/.txt}
+
+exec 3>&1
+exec 4>&2
+exec 1>${output_file}
+exec 2>&1
+
+trap 'cat ${output_file} >&3' INT QUIT TERM EXIT
+
 set -e
+set -x
 
 UNPAPER=@abs_top_builddir@/unpaper
 PNGTOPNM=@PNGTOPNM@
 PNMTOPNG=@PNMTOPNG@
-
-output_file=$(basename "$0")
-output_file=${output_file/runtest/results}
-output_file=tests/${output_file/.sh/.txt}
