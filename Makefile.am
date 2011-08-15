@@ -2,7 +2,7 @@ bin_PROGRAMS = unpaper
 
 unpaper_SOURCES = unpaper.c
 
-dist_doc_DATA = NEWS COPYING README AUTHORS
+dist_doc_DATA = NEWS COPYING README AUTHORS TODO
 
 dist_html_DATA = doc/unpaper.html doc/index.html
 imgdir = $(htmldir)/img
