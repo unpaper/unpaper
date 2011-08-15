@@ -3776,11 +3776,9 @@ int main(int argc, char* argv[]) {
 
             // --help
             if (argc==0 || strcmp(argv[i], "--help")==0 || strcmp(argv[i], "-h")==0 || strcmp(argv[i], "-?")==0 || strcmp(argv[i], "/?")==0 || strcmp(argv[i], "?")==0) {
-                printf(WELCOME);
-                printf("\n");
-                printf(USAGE);
-                printf("Options are:\n");
-                printf(OPTIONS);
+                printf("%s\n%s"
+                       "Options are:\n%s",
+                       WELCOME, USAGE, OPTIONS);
                 return 0;
 
             // --version -V
