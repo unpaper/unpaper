@@ -26,8 +26,8 @@ dist_img_DATA = doc/img/_after.png doc/img/_arrow.png			\
 
 TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
         tests/runtestB3.sh tests/runtestC1.sh tests/runtestC2.sh	\
-        tests/runtestD1.sh tests/runtestD2.sh tests/runtestD3.sh	\
-        tests/runtestE.sh
+        tests/runtestC3.sh tests/runtestD1.sh tests/runtestD2.sh	\
+        tests/runtestD3.sh tests/runtestE.sh
 
 EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png	\
              tests/imgsrc003.png tests/imgsrc004.png		\
@@ -45,7 +45,8 @@ CLEANFILES = $(check_DATA) tests/.dirstamp tests/resultsA1.pbm	\
              tests/resultsB2.txt tests/resultsB3.ppm		\
              tests/resultsB3.txt tests/resultsC1.pbm		\
              tests/resultsC1.txt tests/resultsC2.pbm		\
-             tests/resultsC2.txt tests/resultsD1.ppm		\
+             tests/resultsC2.txt tests/resultsC3.pbm		\
+             tests/resultsC3.txt tests/resultsD1.ppm		\
              tests/resultsD1.txt tests/resultsD2.ppm		\
              tests/resultsD2.txt tests/resultsD3.ppm		\
              tests/resultsD3.txt tests/resultsE001.pbm		\
