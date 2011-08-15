@@ -534,7 +534,6 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 
 /* --- preprocessor macros ------------------------------------------------ */
               
-#define abs(value) ( (value) >=0 ? (value) : -(value) )
 #define max(a, b) ( (a >= b) ? (a) : (b) )
 #define pluralS(i) ( (i > 1) ? "s" : "" )
 #define pixelValue(r, g, b) ( (r)<<16 | (g)<<8 | (b) )
