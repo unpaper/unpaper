@@ -28,11 +28,10 @@ static const char WELCOME[] =
               
 static const char USAGE[] =
 "Usage: unpaper [options] <input-file(s)> <output-file(s)>\n\n"
-"Filenames may contain a formatting placeholder starting with '%%' to insert a\n"
-"page counter for multi-page processing. E.g.: 'scan%%03d.pbm' to process files\n"
-"scan001.pbm, scan002.pbm, scan003.pbm etc.\n";
-
-static const char OPTIONS[] =
+"Filenames may contain a formatting placeholder starting with '%' to insert a\n"
+"page counter for multi-page processing. E.g.: 'scan%03d.pbm' to process files\n"
+"scan001.pbm, scan002.pbm, scan003.pbm etc.\n"
+"Options are:\n"
 "-l --layout single                   Set default layout options for a sheet:\n"
 "           |double                   'single': One page per sheet.\n"
 "           |none                     'double': Two pages per sheet, landscape\n"
@@ -454,7 +453,7 @@ static const char OPTIONS[] =
 "                                     rotating).\n\n"
 
 "--no-multi-pages                     Disable multi-page processing even if the\n"
-"                                     input filename contains a '%%' (usually\n"
+"                                     input filename contains a '%' (usually\n"
 "                                     indicating the start of a placeholder for\n"
 "                                     the page counter).\n\n"
 
@@ -485,13 +484,13 @@ static const char OPTIONS[] =
 "                                     filename argument after the options-list.\n\n"
 
 "-si --start-input <nr>               Set the first page number to substitute\n"
-"                                     for '%%d' in input filenames. Every time\n"
+"                                     for '%d' in input filenames. Every time\n"
 "                                     the input file sequence is repeated, this\n"
 "                                     number gets increased by 1. (default:\n"
 "                                     (startsheet-1)*inputpages+1)\n\n"
 
 "-so --start-output <nr>              Set the first page number to substitute\n"
-"                                     for '%%d' in output filenames. Every time\n"
+"                                     for '%d' in output filenames. Every time\n"
 "                                     the output file sequence is repeated,\n"
 "                                     this number gets increased by 1.\n"
 "                                     (default: (startsheet-1)*outputpages+1)\n\n"
@@ -3770,9 +3769,7 @@ int main(int argc, char* argv[]) {
 
             // --help
             if (argc==0 || strcmp(argv[i], "--help")==0 || strcmp(argv[i], "-h")==0 || strcmp(argv[i], "-?")==0 || strcmp(argv[i], "/?")==0 || strcmp(argv[i], "?")==0) {
-                printf("%s\n%s"
-                       "Options are:\n%s",
-                       WELCOME, USAGE, OPTIONS);
+                printf("%s\n%s", WELCOME, USAGE);
                 return 0;
 
             // --version -V
