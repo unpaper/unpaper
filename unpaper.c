@@ -660,10 +660,13 @@ static const char FILETYPE_NAMES[FILETYPES_COUNT][4] = {
 
 // factors for conversion to inches
 #define MEASUREMENTS_COUNT 3
-static const char MEASUREMENTS[MEASUREMENTS_COUNT][2][16] = {
-    { "in", "1.0" },
-    { "cm", "0.393700787" },
-    { "mm", "0.0393700787" }
+static const struct {
+    char unit[4];
+    float factor;
+} MEASUREMENTS[MEASUREMENTS_COUNT] = {
+    { "in", 1.0 },
+    { "cm", 0.393700787 },
+    { "mm", 0.0393700787 }
 };
 
 // papersize alias names
@@ -894,9 +897,9 @@ static void parseSize(char* s, int i[2], int dpi, int* exitCode) {
     factor[0] = factor[1] = -1.0;
     for (j = 0; j < MEASUREMENTS_COUNT; j++) {
         for (k = 0; k < 2; k++) {
-            if ( strstr(str[k], MEASUREMENTS[j][0]) != NULL ) {
-                sscanf(MEASUREMENTS[j][1], "%f", &factor[k]); // convert string to float
-                sprintf(pattern[k], "%%f%s", (char*)MEASUREMENTS[j][0]);
+            if ( strstr(str[k], MEASUREMENTS[j].unit) != NULL ) {
+                factor[k] = MEASUREMENTS[j].factor;
+                strncat(pattern[k], MEASUREMENTS[j].unit, sizeof(pattern[k])-sizeof("%f"));
             }
         }
     }
