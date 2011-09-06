@@ -269,7 +269,7 @@ static int parseDirections(char* s, int* exitCode) {
         dir |= 1<<VERTICAL;
     }
     if (dir == 0) {
-        printf("*** error: Unknown direction name '%s', expected 'h[orizontal]' or 'v[ertical]'.\n", s);
+        fprintf(stderr, "*** error: Unknown direction name '%s', expected 'h[orizontal]' or 'v[ertical]'.\n", s);
         *exitCode = 1;
     }
     return dir;
@@ -315,7 +315,7 @@ static int parseEdges(char* s, int* exitCode) {
         dir |= 1<<BOTTOM;
     }
     if (dir == 0) {
-        printf("*** error: Unknown edge name '%s', expected 'left', 'top', 'right' or 'bottom'.\n", s);
+        fprintf(stderr, "*** error: Unknown edge name '%s', expected 'left', 'top', 'right' or 'bottom'.\n", s);
         *exitCode = 1;
     }
     return dir;
@@ -442,7 +442,7 @@ static int parseColor(char* s, int* exitCode) {
     if ( strcmp(s, "white") == 0 )
         return WHITE;
 
-    printf("*** error: cannot parse color '%s'.\n", s);
+    fprintf(stderr, "*** error: cannot parse color '%s'.\n", s);
     *exitCode = 1;
     return WHITE;
 }
@@ -1348,7 +1348,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
     // open input file
     f = fopen(filename, "rb");
     if (f == NULL) {
-        printf("*** error: Unable to open file %s.\n", filename);
+        fprintf(stderr, "*** error: Unable to open file %s.\n", filename);
         return false;
     }
 
@@ -1368,7 +1368,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
         image->bitdepth = 8;
         image->color = true;
     } else {
-        printf("*** error: input file format using magic '%s' is unknown.\n", magic);
+        fprintf(stderr, "*** error: input file format using magic '%s' is unknown.\n", magic);
         return false;
     }
 
@@ -1399,7 +1399,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
         sscanf(word, "%d", &maxColorIndex);
         fgetc(f); // skip \n after max color index
         if (maxColorIndex > 255) {
-            printf("*** error: grayscale / color-component bit depths above 8 are not supported.\n");
+            fprintf(stderr, "*** error: grayscale / color-component bit depths above 8 are not supported.\n");
             return false;
         }
         bytesPerLine = image->width;
@@ -1414,7 +1414,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
     image->buffer = (uint8_t*)malloc(inputSize);
     read = fread(image->buffer, 1, inputSize, f);
     if (read != inputSize) {
-        printf("*** error: Only %d out of %d could be read.\n", read, inputSize);
+        fprintf(stderr, "*** error: Only %d out of %d could be read.\n", read, inputSize);
         return false;
     }
     
@@ -1575,11 +1575,11 @@ static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwr
             fwrite(buf, 1, outputSize, outputFile);
             fclose(outputFile);
         } else {
-            printf("*** error: Cannot open output file '%s'.\n", filename);
+            fprintf(stderr, "*** error: Cannot open output file '%s'.\n", filename);
             result = false;
         }
     } else {
-        printf("file %s already exists (use --overwrite to replace).\n", filename);
+        fprintf(stderr, "file %s already exists (use --overwrite to replace).\n", filename);
         result = false;
     }
     if (buf != image->buffer) {
@@ -3232,7 +3232,7 @@ int main(int argc, char* argv[]) {
                 } else if (strcmp(argv[i], "none")==0) {
                     layout = LAYOUT_NONE;
                 } else {
-                    printf("*** error: Unknown layout mode '%s'.", argv[i]);
+                    fprintf(stderr, "*** error: Unknown layout mode '%s'.", argv[i]);
                     exitCode = 1;
                 }
 
@@ -3289,7 +3289,7 @@ int main(int argc, char* argv[]) {
             } else if (strcmp(argv[i], "--pre-rotate")==0) {
                 sscanf(argv[++i],"%d", &preRotate);
                 if ((preRotate != 0) && (abs(preRotate) != 90)) {
-                    printf("Cannot set --pre-rotate value other than -90 or 90, ignoring.\n");
+                    fprintf(stderr, "Cannot set --pre-rotate value other than -90 or 90, ignoring.\n");
                     preRotate = 0;
                 }
 
@@ -3297,7 +3297,7 @@ int main(int argc, char* argv[]) {
             } else if (strcmp(argv[i], "--post-rotate")==0) {
                 sscanf(argv[++i],"%d", &postRotate);
                 if ((postRotate != 0) && (abs(postRotate) != 90)) {
-                    printf("Cannot set --post-rotate value other than -90 or 90, ignoring.\n");
+                    fprintf(stderr, "Cannot set --post-rotate value other than -90 or 90, ignoring.\n");
                     postRotate = 0;
                 }
 
@@ -3650,7 +3650,7 @@ int main(int argc, char* argv[]) {
             } else if (strcmp(argv[i], "-ip")==0 || strcmp(argv[i], "--input-pages")==0) {
                 sscanf(argv[++i],"%d", &inputCount);
                 if ( ! (inputCount >= 1 && inputCount <= 2 ) ) {
-                    printf("Cannot set --input-pages value other than 1 or 2, ignoring.\n");
+                    fprintf(stderr, "Cannot set --input-pages value other than 1 or 2, ignoring.\n");
                     inputCount = 1;
                 }
 
@@ -3658,7 +3658,7 @@ int main(int argc, char* argv[]) {
             } else if (strcmp(argv[i], "-op")==0 || strcmp(argv[i], "--output-pages")==0) {
                 sscanf(argv[++i],"%d", &outputCount);
                 if ( ! (outputCount >= 1 && outputCount <= 2 ) ) {
-                    printf("Cannot set --output-pages value other than 1 or 2, ignoring.\n");
+                    fprintf(stderr, "Cannot set --output-pages value other than 1 or 2, ignoring.\n");
                     outputCount = 1;
                 }
 
@@ -3758,12 +3758,12 @@ int main(int argc, char* argv[]) {
 
             // unkown parameter            
             } else {
-                printf("*** error: Unknown parameter '%s'.\n", argv[i]);
+                fprintf(stderr, "*** error: Unknown parameter '%s'.\n", argv[i]);
                 exitCode = 1;
             }
             
             if (exitCode != 0) {
-                printf("Try 'unpaper --help' for options.\n");
+                fprintf(stderr, "Try 'unpaper --help' for options.\n");
                 return exitCode;
             }
             i++;
@@ -3805,7 +3805,7 @@ int main(int argc, char* argv[]) {
                 inputFileSequence[0] = argv[i++];
                 inputFileSequenceCount = 1;
             } else {
-                printf("*** error: Missing input filename.\n" HELP);
+                fprintf(stderr, "*** error: Missing input filename.\n" HELP);
                 return 1;
             }
         }
@@ -3814,7 +3814,7 @@ int main(int argc, char* argv[]) {
                 outputFileSequence[0] = argv[i++];
                 outputFileSequenceCount = 1;
             } else {
-                printf("*** error: Missing output filename.\n" HELP);
+                fprintf(stderr, "*** error: Missing output filename.\n" HELP);
                 return 1;
             }
         }                
@@ -3876,7 +3876,7 @@ int main(int argc, char* argv[]) {
         // test if (at least one) input file exists
         if ( multisheets && ( allInputFilesMissing ) ) {
             if (nr == startSheet) { // only an error if first file not found, otherwise regular end of multisheet processing
-                printf("*** error: Input file(s) %s not found.\n", implode(s1, (const char **)inputFilenamesResolved, inputCount));
+                fprintf(stderr, "*** error: Input file(s) %s not found.\n", implode(s1, (const char **)inputFilenamesResolved, inputCount));
             }
             endSheet = nr - 1; // exit for-loop
 
@@ -3915,7 +3915,7 @@ int main(int argc, char* argv[]) {
                             saveDebug(debugFilename, &page);
 
                             if (!success) {
-                                printf("*** error: Cannot load image %s.\n", inputFilenamesResolved[j]);
+                                fprintf(stderr, "*** error: Cannot load image %s.\n", inputFilenamesResolved[j]);
                                 exitCode = 2;
                             } else {
                                 // pre-rotate
@@ -4022,7 +4022,7 @@ int main(int argc, char* argv[]) {
                         printf("need to guess sheet size from previous sheet: %dx%d\n", w, h);
                     }
                     if ((w == -1) || (h == -1)) {
-                        printf("*** error: sheet size unknown, use at least one input file per sheet, or force using --sheet-size.\n");
+                        fprintf(stderr, "*** error: sheet size unknown, use at least one input file per sheet, or force using --sheet-size.\n");
                         return 2;
                     } else {
                         initImage(&sheet, w, h, bd, col, sheetBackground);
@@ -4055,7 +4055,7 @@ int main(int argc, char* argv[]) {
                             }
                         }
                         if (outputType == -1) {
-                            printf("*** error: output file format '%s' is not known.\n", outputTypeName);
+                            fprintf(stderr, "*** error: output file format '%s' is not known.\n", outputTypeName);
                             return 2;
                         }
                     }
@@ -4837,7 +4837,7 @@ int main(int argc, char* argv[]) {
                                 freeImage(&page);
                             }
                             if (success == false) {
-                                printf("*** error: Could not save image data to file %s.\n", outputFilenamesResolved[j]);
+                                fprintf(stderr, "*** error: Could not save image data to file %s.\n", outputFilenamesResolved[j]);
                                 exitCode = 2;
                             }
                         }
