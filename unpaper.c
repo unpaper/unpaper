@@ -2356,14 +2356,6 @@ static double detectRotation(int deskewScanEdges, int deskewScanRange, float des
     }
 }
 
-#if !HAVE_SINCOSF
-static void sincosf(float x, float *sin_, float *cos_)
-{
-    *sin_ = sin(x);
-    *cos_ = cos(x)
-}
-#endif
-
 /**
  * Rotates a whole image buffer by the specified radians, around its middle-point.
  * Usually, the buffer should have been converted to a qpixels-representation before, to increase quality.
@@ -2371,61 +2363,44 @@ static void sincosf(float x, float *sin_, float *cos_)
  */
 //void rotate(double radians, struct IMAGE* source, struct IMAGE* target, double* trigonometryCache, int trigonometryCacheBaseSize) {
 static void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
-    int x;
-    int y;
-    int midX;
-    int midY;
-    int midMax;
-    int halfX;
-    int halfY;
-    int dX;
-    int dY;
-    float m11;
-    float m12;
-    float m21;
-    float m22;
-    int diffX;
-    int diffY;
-    int oldX;
-    int oldY;
-    int pixel;
-    float sinval;
-    float cosval;
-    int w, h;
+    const int w = source->width;
+    const int h = source->height;
+    const int halfX = (w-1)/2;
+    const int halfY = (h-1)/2;
+    const int midX = w/2;
+    const int midY = h/2;
+    const int midMax = max(midX,midY);
     
-    w = source->width;
-    h = source->height;
-    halfX = (w-1)/2;
-    halfY = (h-1)/2;    
-    midX = w/2;
-    midY = h/2;    
-    midMax = max(midX, midY);
-
     // create 2D rotation matrix
-    sincosf(radians, &sinval, &cosval);
-    m11 = cosval;
-    m12 = sinval;
-    m21 = -sinval;
-    m22 = cosval;
+    const float sinval = sinf(radians);
+    const float cosval = cosf(radians);
+    const float m11 = cosval;
+    const float m12 = sinval;
+    const float m21 = -sinval;
+    const float m22 = cosval;
 
     // step through all pixels of the target image, 
     // symmetrically in all four quadrants to reduce trigonometric calculations
+    int dX;
+    int dY;
 
     for (dY = 0; dY <= midMax; dY++) {
 
         for (dX = 0; dX <= midMax; dX++) {
-        
             // matrix multiplication to get rotated pixel pos (as in quadrant I)
-            diffX = dX * m11 + dY * m21;
-            diffY = dX * m12 + dY * m22;
+            const int diffX = dX * m11 + dY * m21;
+            const int diffY = dX * m12 + dY * m22;
+
+            int x;
+            int y;
 
             // quadrant I
             x = midX + dX;
             y = midY - dY;
             if ((x < w) && (y >= 0)) {
-                oldX = midX + diffX;
-                oldY = midY - diffY;
-                pixel = getPixel(oldX, oldY, source);
+                const int oldX = midX + diffX;
+                const int oldY = midY - diffY;
+                const int pixel = getPixel(oldX, oldY, source);
                 setPixel(pixel, x, y, target);
             }
             
@@ -2433,9 +2408,9 @@ static void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
             x = halfX - dY;
             y = midY - dX;
             if ((x >=0) && (y >= 0)) {
-                oldX = halfX - diffY;
-                oldY = midY - diffX;
-                pixel = getPixel(oldX, oldY, source);
+                const int oldX = halfX - diffY;
+                const int oldY = midY - diffX;
+                const int pixel = getPixel(oldX, oldY, source);
                 setPixel(pixel, x, y, target);
             }
             
@@ -2443,9 +2418,9 @@ static void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
             x = halfX - dX;
             y = halfY + dY;
             if ((x >=0) && (y < h)) {
-                oldX = halfX - diffX;
-                oldY = halfY + diffY;
-                pixel = getPixel(oldX, oldY, source);
+                const int oldX = halfX - diffX;
+                const int oldY = halfY + diffY;
+                const int pixel = getPixel(oldX, oldY, source);
                 setPixel(pixel, x, y, target);
             }
             
@@ -2453,9 +2428,9 @@ static void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
             x = midX + dY;
             y = halfY + dX;
             if ((x < w) && (y < h)) {
-                oldX = midX + diffY;
-                oldY = halfY + diffX;
-                pixel = getPixel(oldX, oldY, source);
+                const int oldX = midX + diffY;
+                const int oldY = halfY + diffX;
+                const int pixel = getPixel(oldX, oldY, source);
                 setPixel(pixel, x, y, target);
             }
         }
