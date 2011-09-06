@@ -6,6 +6,7 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
@@ -255,12 +256,34 @@ static void limit(int* i, int max) {
 }
 
 
+static void errOutput(const char *fmt, ...)
+    __attribute__((format(printf, 1, 2)))
+    __attribute__((noreturn));
+
+/**
+ * Print an error and exit process
+ */
+static void errOutput(const char *fmt, ...) {
+    va_list vl;
+
+    fprintf(stderr, "unpaper: error: ");
+
+    va_start(vl, fmt);
+    vfprintf(stderr, fmt, vl);
+    va_end(vl);
+
+    fprintf(stderr, "\nTry 'man unpaper' for more information.\n");
+
+    exit(1);
+}
+
+
 /* --- tool functions for parameter parsing and verbose output ------------ */
 
 /**
  * Parses a parameter string on occurrences of 'vertical', 'horizontal' or both.
  */            
-static int parseDirections(char* s, int* exitCode) {
+static int parseDirections(char* s) {
     int dir = 0;
     if (strchr(s, 'h') != 0) { // (there is no 'h' in 'vertical'...)
         dir = 1<<HORIZONTAL;
@@ -268,10 +291,9 @@ static int parseDirections(char* s, int* exitCode) {
     if (strchr(s, 'v') != 0) { // (there is no 'v' in 'horizontal'...)
         dir |= 1<<VERTICAL;
     }
-    if (dir == 0) {
-        fprintf(stderr, "*** error: Unknown direction name '%s', expected 'h[orizontal]' or 'v[ertical]'.\n", s);
-        *exitCode = 1;
-    }
+    if (dir == 0)
+        errOutput("unknown direction name '%s', expected 'h[orizontal]' or 'v[ertical]'.", s);
+
     return dir;
 }
 
@@ -300,7 +322,7 @@ static void printDirections(int d) {
 /**
  * Parses a parameter string on occurrences of 'left', 'top', 'right', 'bottom' or combinations.
  */            
-static int parseEdges(char* s, int* exitCode) {
+static int parseEdges(char* s) {
     int dir = 0;
     if (strstr(s, "left") != 0) {
         dir = 1<<LEFT;
@@ -314,10 +336,8 @@ static int parseEdges(char* s, int* exitCode) {
     if (strstr(s, "bottom") != 0) {
         dir |= 1<<BOTTOM;
     }
-    if (dir == 0) {
-        fprintf(stderr, "*** error: Unknown edge name '%s', expected 'left', 'top', 'right' or 'bottom'.\n", s);
-        *exitCode = 1;
-    }
+    if (dir == 0)
+        errOutput("unknown edge name '%s', expected 'left', 'top', 'right' or 'bottom'.", s);
     return dir;
 }
 
@@ -371,17 +391,15 @@ static void parseInts(char* s, int i[2]) {
 }
 
 
-static int parseSizeSingle(const char *s, int dpi, int *exitCode) {
+static int parseSizeSingle(const char *s, int dpi) {
     int j;
     char *valueEnd;
     float value;
 
     value = strtof(s, &valueEnd);
 
-    if ( fabs(value) == HUGE_VAL || s == valueEnd ) {
-        *exitCode = 1;
-        return 0;
-    }
+    if ( fabs(value) == HUGE_VAL || s == valueEnd )
+        errOutput("invalid size %s", s);
 
     for (j = 0; j < MEASUREMENTS_COUNT; j++)
         if ( strcmp(valueEnd, MEASUREMENTS[j].unit) == 0 )
@@ -397,7 +415,7 @@ static int parseSizeSingle(const char *s, int dpi, int *exitCode) {
  * Values may be suffixed by MEASUREMENTS such as 'cm', 'in', in that case
  * conversion to pixels is perfomed based on the dpi-value.
  */            
-static void parseSize(char* s, int i[2], int dpi, int* exitCode) {
+static void parseSize(char* s, int i[2], int dpi) {
     char str[255];
     int j;
     char* comma;
@@ -416,7 +434,7 @@ static void parseSize(char* s, int i[2], int dpi, int* exitCode) {
     comma = strchr(s, ',');    
 
     if (comma == NULL) {
-        i[0] = i[1] = parseSizeSingle(s, dpi, exitCode);
+        i[0] = i[1] = parseSizeSingle(s, dpi);
         return;
     }
 
@@ -424,27 +442,22 @@ static void parseSize(char* s, int i[2], int dpi, int* exitCode) {
     strncpy(str, s, pos);
     str[pos] = 0; // (according to spec of strncpy, no terminating 0 is written)
 
-    i[0] = parseSizeSingle(str, dpi, exitCode);
-    if ( *exitCode == 1 ) return;
-
+    i[0] = parseSizeSingle(str, dpi);
     strcpy(str, &s[pos+1]); // copy rest after ','
-    i[1] = parseSizeSingle(str, dpi, exitCode);
-    if ( *exitCode == 1 ) return;
+    i[1] = parseSizeSingle(str, dpi);
 }
 
 
 /**
  * Parses a color. Currently only "black" and "white".
  */            
-static int parseColor(char* s, int* exitCode) {
+static int parseColor(char* s) {
     if ( strcmp(s, "black") == 0 )
         return BLACK;
     if ( strcmp(s, "white") == 0 )
         return WHITE;
 
-    fprintf(stderr, "*** error: cannot parse color '%s'.\n", s);
-    *exitCode = 1;
-    return WHITE;
+    errOutput("cannot parse color '%s'.", s);
 }
 
 
@@ -1347,10 +1360,8 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
 
     // open input file
     f = fopen(filename, "rb");
-    if (f == NULL) {
-        fprintf(stderr, "*** error: Unable to open file %s.\n", filename);
-        return false;
-    }
+    if (f == NULL)
+        errOutput("unable to open file '%s'.", filename);
 
     // read magic number
     fread(magic, 1, 2, f);
@@ -1367,10 +1378,8 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
         *type = PPM;
         image->bitdepth = 8;
         image->color = true;
-    } else {
-        fprintf(stderr, "*** error: input file format using magic '%s' is unknown.\n", magic);
-        return false;
-    }
+    } else
+        errOutput("input file format using magic '%s' is unknown.", magic);
 
     // get image info: width, height, optionally depth
     fgetc(f); // skip \n after magic number
@@ -1398,10 +1407,9 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
         // read max color value
         sscanf(word, "%d", &maxColorIndex);
         fgetc(f); // skip \n after max color index
-        if (maxColorIndex > 255) {
-            fprintf(stderr, "*** error: grayscale / color-component bit depths above 8 are not supported.\n");
-            return false;
-        }
+        if (maxColorIndex > 255)
+            errOutput("grayscale / color-component bit depths above 8 are not supported.");
+
         bytesPerLine = image->width;
         if (*type == PPM) {
             bytesPerLine *= 3; // 3 color-components per pixel
@@ -1413,10 +1421,8 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
 
     image->buffer = (uint8_t*)malloc(inputSize);
     read = fread(image->buffer, 1, inputSize, f);
-    if (read != inputSize) {
-        fprintf(stderr, "*** error: Only %d out of %d could be read.\n", read, inputSize);
-        return false;
-    }
+    if (read != inputSize)
+        errOutput("only %d out of %d bytes could be read.", read, inputSize);
     
     if (*type == PBM) { // internally convert b&w to 8-bit for processing
         buffer2 = (uint8_t*)malloc(image->width * image->height);
@@ -1482,7 +1488,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
  * @param blackThreshold threshold for grayscale-to-black&white conversion
  * @return true on success, false on failure
  */
-static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwrite, float blackThreshold) {
+static void saveImage(char* filename, struct IMAGE* image, int type, bool overwrite, float blackThreshold) {
     uint8_t* buf;
     int bytesPerLine;
     int inputSize;
@@ -1500,13 +1506,11 @@ static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwr
     const char* outputMagic;
     FILE* outputFile;
     int blackThresholdAbs;
-    bool result;
 
     if (verbose>=VERBOSE_MORE) {
         printf("saving file %s.\n", filename);
     }
 
-    result = true;
     if (type == PBM) { // convert to pbm
         blackThresholdAbs = WHITE * (1.0 - blackThreshold);
         bytesPerLine = (image->width + 7) >> 3; // / 8;
@@ -1563,29 +1567,24 @@ static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwr
     }
 
     // write to file
-    if ( overwrite || ( ! fileExists( filename ) ) ) {
-        outputFile = fopen(filename, "wb");
-        if (outputFile != 0) {
-            fprintf(outputFile, "%s\n", outputMagic);
-            fprintf(outputFile, "# generated by unpaper\n");
-            fprintf(outputFile, "%u %u\n", image->width, image->height);
-            if ((type == PGM)||(type == PPM)) {
-                fprintf(outputFile, "255\n"); // maximum color index per color-component
-            }
-            fwrite(buf, 1, outputSize, outputFile);
-            fclose(outputFile);
-        } else {
-            fprintf(stderr, "*** error: Cannot open output file '%s'.\n", filename);
-            result = false;
-        }
-    } else {
-        fprintf(stderr, "file %s already exists (use --overwrite to replace).\n", filename);
-        result = false;
+    if ( !overwrite && fileExists(filename) )
+        errOutput("file %s already exists (use --overwrite to replace).", filename);
+
+    outputFile = fopen(filename, "wb");
+    if (outputFile == 0)
+        errOutput("cannot open output file '%s'.", filename);
+
+    fprintf(outputFile, "%s\n", outputMagic);
+    fprintf(outputFile, "# generated by unpaper\n");
+    fprintf(outputFile, "%u %u\n", image->width, image->height);
+    if ((type == PGM)||(type == PPM)) {
+        fprintf(outputFile, "255\n"); // maximum color index per color-component
     }
-    if (buf != image->buffer) {
+    fwrite(buf, 1, outputSize, outputFile);
+    fclose(outputFile);
+
+    if (buf != image->buffer)
         free(buf);
-    }
-    return result;
 }    
 
 
@@ -3056,7 +3055,6 @@ int main(int argc, char* argv[]) {
     int outputDepth;
     int bd;
     bool col;
-    bool success;
     bool done;
     bool anyWildcards;
     bool allInputFilesMissing;
@@ -3072,11 +3070,9 @@ int main(int argc, char* argv[]) {
     bool ins;
     bool repl;
     int blankCount;
-    int exitCode;
 
     sheet.buffer = NULL;
     page.buffer = NULL;
-    exitCode = 0; // error code to return
     bd = 1; // default bitdepth if not resolvable (i.e. usually empty input, so bd=1 is good choice)
     col = false; // default no color if not resolvable
     
@@ -3232,8 +3228,7 @@ int main(int argc, char* argv[]) {
                 } else if (strcmp(argv[i], "none")==0) {
                     layout = LAYOUT_NONE;
                 } else {
-                    fprintf(stderr, "*** error: Unknown layout mode '%s'.", argv[i]);
-                    exitCode = 1;
+                    errOutput("unknown layout mode '%s'.", argv[i]);
                 }
 
             // --sheet -#
@@ -3266,11 +3261,11 @@ int main(int argc, char* argv[]) {
 
             // --sheet-size
             } else if ((strcmp(argv[i], "-S")==0)||(strcmp(argv[i], "--sheet-size")==0)) {
-                parseSize(argv[++i], sheetSize, dpi, &exitCode);
+                parseSize(argv[++i], sheetSize, dpi);
 
             // --sheet-background
             } else if (strcmp(argv[i], "--sheet-background")==0) {
-                sheetBackground = parseColor(argv[++i], &exitCode);
+                sheetBackground = parseColor(argv[++i]);
 
             // --exclude  -x
             } else if (strcmp(argv[i], "-x")==0 || strcmp(argv[i], "--exclude")==0) {
@@ -3303,20 +3298,20 @@ int main(int argc, char* argv[]) {
 
             // --pre-mirror  -M
             } else if (strcmp(argv[i], "-M")==0 || strcmp(argv[i], "--pre-mirror")==0) {
-                preMirror = parseDirections(argv[++i], &exitCode); // s = "v", "v,h", "vertical,horizontal", ...
+                preMirror = parseDirections(argv[++i]); // s = "v", "v,h", "vertical,horizontal", ...
 
             // --post-mirror
             } else if (strcmp(argv[i], "--post-mirror")==0) {
-                postMirror = parseDirections(argv[++i], &exitCode);
+                postMirror = parseDirections(argv[++i]);
 
 
             // --pre-shift
             } else if (strcmp(argv[i], "--pre-shift")==0) {
-                parseSize(argv[++i], preShift, dpi, &exitCode);
+                parseSize(argv[++i], preShift, dpi);
 
             // --post-shift
             } else if (strcmp(argv[i], "--post-shift")==0) {
-                parseSize(argv[++i], postShift, dpi, &exitCode);
+                parseSize(argv[++i], postShift, dpi);
 
 
             // --pre-mask
@@ -3335,19 +3330,19 @@ int main(int argc, char* argv[]) {
 
             // -s --size
             } else if ((strcmp(argv[i], "-s")==0)||(strcmp(argv[i], "--size")==0)) {
-                parseSize(argv[++i], size, dpi, &exitCode);
+                parseSize(argv[++i], size, dpi);
 
             // --post-size
             } else if (strcmp(argv[i], "--post-size")==0) {
-                parseSize(argv[++i], postSize, dpi, &exitCode);
+                parseSize(argv[++i], postSize, dpi);
 
             // --stretch
             } else if (strcmp(argv[i], "--stretch")==0) {
-                parseSize(argv[++i], stretchSize, dpi, &exitCode);
+                parseSize(argv[++i], stretchSize, dpi);
 
             // --post-stretch
             } else if (strcmp(argv[i], "--post-stretch")==0) {
-                parseSize(argv[++i], postStretchSize, dpi, &exitCode);
+                parseSize(argv[++i], postStretchSize, dpi);
 
             // -z --zoom
             } else if (strcmp(argv[i], "--zoom")==0) {
@@ -3446,7 +3441,7 @@ int main(int argc, char* argv[]) {
 
             // --blackfilter-scan-direction  -bn
             } else if (strcmp(argv[i], "-bn")==0 || strcmp(argv[i], "--blackfilter-scan-direction")==0) {
-                blackfilterScanDirections = parseDirections(argv[++i], &exitCode);
+                blackfilterScanDirections = parseDirections(argv[++i]);
 
             // --blackfilter-scan-size  -bs
             } else if (strcmp(argv[i], "-bs")==0 || strcmp(argv[i], "--blackfilter-scan-size")==0) {
@@ -3531,7 +3526,7 @@ int main(int argc, char* argv[]) {
 
             // --mask-scan-direction  -mn
             } else if (strcmp(argv[i], "-mn")==0 || strcmp(argv[i], "--mask-scan-direction")==0) {
-                maskScanDirections = parseDirections(argv[++i], &exitCode);
+                maskScanDirections = parseDirections(argv[++i]);
 
             // --mask-scan-size  -ms
             } else if (strcmp(argv[i], "-ms")==0 || strcmp(argv[i], "--mask-scan-size")==0) {
@@ -3573,7 +3568,7 @@ int main(int argc, char* argv[]) {
 
             // --deskew-scan-direction  -dn
             } else if (strcmp(argv[i], "-dn")==0 || strcmp(argv[i], "--deskew-scan-direction")==0) {
-                deskewScanEdges = parseEdges(argv[++i], &exitCode);
+                deskewScanEdges = parseEdges(argv[++i]);
 
             // --deskew-scan-size  -ds
             } else if (strcmp(argv[i], "-ds")==0 || strcmp(argv[i], "--deskew-scan-size")==0) {
@@ -3601,7 +3596,7 @@ int main(int argc, char* argv[]) {
 
             // --border-scan-direction  -Bn
             } else if (strcmp(argv[i], "-Bn")==0 || strcmp(argv[i], "--border-scan-direction")==0) {
-                borderScanDirections = parseDirections(argv[++i], &exitCode);
+                borderScanDirections = parseDirections(argv[++i]);
 
             // --border-scan-size  -Bs
             } else if (strcmp(argv[i], "-Bs")==0 || strcmp(argv[i], "--border-scan-size")==0) {
@@ -3618,11 +3613,11 @@ int main(int argc, char* argv[]) {
 
             // --border-align  -Ba
             } else if (strcmp(argv[i], "-Ba")==0 || strcmp(argv[i], "--border-align")==0) {
-                borderAlign = parseEdges(argv[++i], &exitCode);
+                borderAlign = parseEdges(argv[++i]);
 
             // --border-margin  -Bm
             } else if (strcmp(argv[i], "-Bm")==0 || strcmp(argv[i], "--border-margin")==0) {
-                parseSize(argv[++i], borderAlignMargin, dpi, &exitCode);
+                parseSize(argv[++i], borderAlignMargin, dpi);
 
             // --no-border-align
             } else if (strcmp(argv[i], "--no-border-align")==0) {
@@ -3758,14 +3753,9 @@ int main(int argc, char* argv[]) {
 
             // unkown parameter            
             } else {
-                fprintf(stderr, "*** error: Unknown parameter '%s'.\n", argv[i]);
-                exitCode = 1;
+                errOutput("unknown parameter '%s'.", argv[i]);
             }
             
-            if (exitCode != 0) {
-                fprintf(stderr, "Try 'unpaper --help' for options.\n");
-                return exitCode;
-            }
             i++;
         }
 
@@ -3804,19 +3794,15 @@ int main(int argc, char* argv[]) {
             if (i < argc) {
                 inputFileSequence[0] = argv[i++];
                 inputFileSequenceCount = 1;
-            } else {
-                fprintf(stderr, "*** error: Missing input filename.\n" HELP);
-                return 1;
-            }
+            } else
+                errOutput("missing input filename.");
         }
         if (outputFileSequenceCount == 0) { // not yet set via option --output-file-sequence
             if (i < argc) {
                 outputFileSequence[0] = argv[i++];
                 outputFileSequenceCount = 1;
-            } else {
-                fprintf(stderr, "*** error: Missing output filename.\n" HELP);
-                return 1;
-            }
+            } else
+                errOutput("missing output filename.");
         }                
 
         // resolve filenames for current sheet
@@ -3901,49 +3887,43 @@ int main(int argc, char* argv[]) {
                 }
 
                 // load input image(s)
-                success = true;
-                for ( j = 0; (success) && (j < inputCount); j++) {
+                for ( j = 0; j < inputCount; j++) {
                 
                     if ( (inputFilenamesResolved[j] == NULL) || fileExists(inputFilenamesResolved[j]) ) {
 
                         if (inputFilenamesResolved[j] != NULL) { // may be null if --insert-blank or --replace-blank
                         
-                            success = loadImage(inputFilenamesResolved[j], &page, &inputType);
+                            loadImage(inputFilenamesResolved[j], &page, &inputType);
                             inputTypeName = FILETYPE_NAMES[inputType];
                             inputTypeNames[j] = inputTypeName;
                             sprintf(debugFilename, "_loaded_%d.pnm", inputNr-inputCount+j);
                             saveDebug(debugFilename, &page);
 
-                            if (!success) {
-                                fprintf(stderr, "*** error: Cannot load image %s.\n", inputFilenamesResolved[j]);
-                                exitCode = 2;
-                            } else {
-                                // pre-rotate
-                                if (preRotate != 0) {
-                                    if (verbose>=VERBOSE_NORMAL) {
-                                        printf("pre-rotating %d degrees.\n", preRotate);
-                                    }
-                                    if (preRotate == 90) {
-                                        flipRotate(1, &page);
-                                    } else if (preRotate == -90) {
-                                        flipRotate(-1, &page);
-                                    }
+                            // pre-rotate
+                            if (preRotate != 0) {
+                                if (verbose>=VERBOSE_NORMAL) {
+                                    printf("pre-rotating %d degrees.\n", preRotate);
                                 }
+                                if (preRotate == 90) {
+                                    flipRotate(1, &page);
+                                } else if (preRotate == -90) {
+                                    flipRotate(-1, &page);
+                                }
+                            }
 
-                                // if sheet-size is not known yet (and not forced by --sheet-size), set now based on size of (first) input image
-                                if ( w == -1 ) {
-                                    if ( sheetSize[WIDTH] != -1 ) {
-                                        w = sheetSize[WIDTH];
-                                    } else {
-                                        w = page.width * inputCount;
-                                    }
+                            // if sheet-size is not known yet (and not forced by --sheet-size), set now based on size of (first) input image
+                            if ( w == -1 ) {
+                                if ( sheetSize[WIDTH] != -1 ) {
+                                    w = sheetSize[WIDTH];
+                                } else {
+                                    w = page.width * inputCount;
                                 }
-                                if ( h == -1 ) {
-                                    if ( sheetSize[HEIGHT] != -1 ) {
-                                        h = sheetSize[HEIGHT];
-                                    } else {
-                                        h = page.height;
-                                    }
+                            }
+                            if ( h == -1 ) {
+                                if ( sheetSize[HEIGHT] != -1 ) {
+                                    h = sheetSize[HEIGHT];
+                                } else {
+                                    h = page.height;
                                 }
                             }
                         } else { // inputFilenamesResolved[j] == NULL
@@ -4005,10 +3985,7 @@ int main(int argc, char* argv[]) {
                             }
                         }
                         
-                    } else {
-                        // allow missing page file (existance of at least one has been made sure before)
                     }
-                    
                 }
                 
                 // the only case that buffer is not yet initialized is if all blank pages have been inserted
@@ -4022,824 +3999,813 @@ int main(int argc, char* argv[]) {
                         printf("need to guess sheet size from previous sheet: %dx%d\n", w, h);
                     }
                     if ((w == -1) || (h == -1)) {
-                        fprintf(stderr, "*** error: sheet size unknown, use at least one input file per sheet, or force using --sheet-size.\n");
-                        return 2;
+                        errOutput("sheet size unknown, use at least one input file per sheet, or force using --sheet-size.");
                     } else {
                         initImage(&sheet, w, h, bd, col, sheetBackground);
                     }
                 }
 
-                if (success) { // sheet loaded successfully, size is known
-
-                    previousWidth = w;
-                    previousHeight = h;
-                    previousBitdepth = bd;
-                    previousColor = col;
-                    // handle file types
-                    if (outputTypeName == NULL) { // auto-set output type according to sheet format, if not explicitly set by user
-                        if (sheet.color) {
-                            outputType = PPM;
+                previousWidth = w;
+                previousHeight = h;
+                previousBitdepth = bd;
+                previousColor = col;
+                // handle file types
+                if (outputTypeName == NULL) { // auto-set output type according to sheet format, if not explicitly set by user
+                    if (sheet.color) {
+                        outputType = PPM;
+                    } else {
+                        if (sheet.bitdepth == 1) {
+                            outputType = PBM;
                         } else {
-                            if (sheet.bitdepth == 1) {
-                                outputType = PBM;
-                            } else {
-                                outputType = PGM;
-                            }
-                        }
-                        outputTypeName = FILETYPE_NAMES[outputType];
-                    } else { // parse user-setting
-                        outputType = -1;
-                        for (i = 0; (outputType == -1) && (i < FILETYPES_COUNT); i++) {
-                            if (strcmp(outputTypeName, FILETYPE_NAMES[i])==0) {
-                                outputType = i;
-                            }
-                        }
-                        if (outputType == -1) {
-                            fprintf(stderr, "*** error: output file format '%s' is not known.\n", outputTypeName);
-                            return 2;
+                            outputType = PGM;
                         }
                     }
-                    if (outputDepth == -1) { // set output depth to be as input depth, if not explicitly set by user
-                        outputDepth = sheet.bitdepth;
+                    outputTypeName = FILETYPE_NAMES[outputType];
+                } else { // parse user-setting
+                    outputType = -1;
+                    for (i = 0; (outputType == -1) && (i < FILETYPES_COUNT); i++) {
+                        if (strcmp(outputTypeName, FILETYPE_NAMES[i])==0) {
+                            outputType = i;
+                        }
+                    }
+                    if (outputType == -1)
+                        errOutput("output file format '%s' is not known.", outputTypeName);
+                }
+                if (outputDepth == -1) { // set output depth to be as input depth, if not explicitly set by user
+                    outputDepth = sheet.bitdepth;
+                }
+
+                if (showTime) {
+                    startTime = clock();
+                }
+
+                // pre-mirroring
+                if (preMirror != 0) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("pre-mirroring ");
+                        printDirections(preMirror);
+                    }
+                    mirror(preMirror, &sheet);
+                }
+
+                // pre-shifting
+                if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("pre-shifting [%d,%d]\n", preShift[WIDTH], preShift[HEIGHT]);
+                    }
+                    shift(preShift[WIDTH], preShift[HEIGHT], &sheet);
+                }
+
+                // pre-masking
+                if (preMaskCount > 0) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("pre-masking\n ");
+                    }
+                    applyMasks(preMask, preMaskCount, maskColor, &sheet);
+                }
+
+
+                // --------------------------------------------------------------
+                // --- verbose parameter output,                              ---
+                // --------------------------------------------------------------
+                    
+                // parameters and size are known now
+                    
+                if (verbose >= VERBOSE_MORE) {
+                    if (layout != LAYOUT_NONE) {
+                        if (layout == LAYOUT_SINGLE) {
+                            layoutStr = "single";
+                        } else if (layout == LAYOUT_DOUBLE) {
+                            layoutStr = "double";
+                        }
+                        printf("layout: %s\n", layoutStr);
                     }
 
-                    if (showTime) {
-                        startTime = clock();
+                    if (preRotate != 0) {
+                        printf("pre-rotate: %d\n", preRotate);
                     }
-
-                    // pre-mirroring
                     if (preMirror != 0) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("pre-mirroring ");
-                            printDirections(preMirror);
-                        }
-                        mirror(preMirror, &sheet);
+                        printf("pre-mirror: ");
+                        printDirections(preMirror);
                     }
-
-                    // pre-shifting
                     if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("pre-shifting [%d,%d]\n", preShift[WIDTH], preShift[HEIGHT]);
-                        }
-                        shift(preShift[WIDTH], preShift[HEIGHT], &sheet);
+                        printf("pre-shift: ");
+                        printInts(preShift);
                     }
-
-                    // pre-masking
-                    if (preMaskCount > 0) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("pre-masking\n ");
-                        }
-                        applyMasks(preMask, preMaskCount, maskColor, &sheet);
-                    }
-
-
-                    // --------------------------------------------------------------
-                    // --- verbose parameter output,                              ---
-                    // --------------------------------------------------------------
-                    
-                    // parameters and size are known now
-                    
-                    if (verbose >= VERBOSE_MORE) {
-                        if (layout != LAYOUT_NONE) {
-                            if (layout == LAYOUT_SINGLE) {
-                                layoutStr = "single";
-                            } else if (layout == LAYOUT_DOUBLE) {
-                                layoutStr = "double";
-                            }
-                            printf("layout: %s\n", layoutStr);
-                        }
-
-                        if (preRotate != 0) {
-                            printf("pre-rotate: %d\n", preRotate);
-                        }
-                        if (preMirror != 0) {
-                            printf("pre-mirror: ");
-                            printDirections(preMirror);
-                        }
-                        if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
-                            printf("pre-shift: ");
-                            printInts(preShift);
-                        }
-                        if (preWipeCount > 0) {
-                            printf("pre-wipe: ");
-                            for (i = 0; i < preWipeCount; i++) {
-                                printf("[%d,%d,%d,%d] ",preWipe[i][LEFT],preWipe[i][TOP],preWipe[i][RIGHT],preWipe[i][BOTTOM]);
-                            }
-                            printf("\n");
-                        }
-                        if (preBorder[LEFT]!=0 || preBorder[TOP]!=0 || preBorder[RIGHT]!=0 || preBorder[BOTTOM]!=0) {
-                            printf("pre-border: [%d,%d,%d,%d]\n", preBorder[LEFT], preBorder[TOP], preBorder[RIGHT], preBorder[BOTTOM]);
-                        }
-                        if (preMaskCount > 0) {
-                            printf("pre-masking: ");
-                            for (i = 0; i < preMaskCount; i++) {
-                                printf("[%d,%d,%d,%d] ",preMask[i][LEFT],preMask[i][TOP],preMask[i][RIGHT],preMask[i][BOTTOM]);
-                            }
-                            printf("\n");
-                        }
-                        if ((stretchSize[WIDTH] != -1) || (stretchSize[HEIGHT] != -1)) {
-                            printf("stretch to: %dx%d\n", stretchSize[WIDTH], stretchSize[HEIGHT]);
-                        }
-                        if ((postStretchSize[WIDTH] != -1) || (postStretchSize[HEIGHT] != -1)) {
-                            printf("post-stretch to: %dx%d\n", postStretchSize[WIDTH], postStretchSize[HEIGHT]);
-                        }
-                        if (zoomFactor != 1.0) {
-                            printf("zoom: %f\n", zoomFactor);
-                        }
-                        if (postZoomFactor != 1.0) {
-                            printf("post-zoom: %f\n", postZoomFactor);
-                        }
-                        if (noBlackfilterMultiIndexCount != -1) {
-                            printf("blackfilter-scan-direction: ");
-                            printDirections(blackfilterScanDirections);
-                            printf("blackfilter-scan-size: ");
-                            printInts(blackfilterScanSize);
-                            printf("blackfilter-scan-depth: ");
-                            printInts(blackfilterScanDepth);
-                            printf("blackfilter-scan-step: ");
-                            printInts(blackfilterScanStep);
-                            printf("blackfilter-scan-threshold: %f\n", blackfilterScanThreshold);
-                            if (blackfilterExcludeCount > 0) {
-                                printf("blackfilter-scan-exclude: ");
-                                for (i = 0; i < blackfilterExcludeCount; i++) {
-                                    printf("[%d,%d,%d,%d] ",blackfilterExclude[i][LEFT],blackfilterExclude[i][TOP],blackfilterExclude[i][RIGHT],blackfilterExclude[i][BOTTOM]);
-                                }
-                                printf("\n");
-                            }
-                            printf("blackfilter-intensity: %d\n", blackfilterIntensity);
-                            if (noBlackfilterMultiIndexCount > 0) {
-                                printf("blackfilter DISABLED for sheets: ");
-                                printMultiIndex(noBlackfilterMultiIndex, noBlackfilterMultiIndexCount);
-                            }
-                        } else {
-                            printf("blackfilter DISABLED for all sheets.\n");
-                        }
-                        if (noNoisefilterMultiIndexCount != -1) {
-                            printf("noisefilter-intensity: %d\n", noisefilterIntensity);
-                            if (noNoisefilterMultiIndexCount > 0) {
-                                printf("noisefilter DISABLED for sheets: ");
-                                printMultiIndex(noNoisefilterMultiIndex, noNoisefilterMultiIndexCount);
-                            }
-                        } else {
-                            printf("noisefilter DISABLED for all sheets.\n");
-                        }
-                        if (noBlurfilterMultiIndexCount != -1) {
-                            printf("blurfilter-size: ");
-                            printInts(blurfilterScanSize);
-                            printf("blurfilter-step: ");
-                            printInts(blurfilterScanStep);
-                            printf("blurfilter-intensity: %f\n", blurfilterIntensity);
-                            if (noBlurfilterMultiIndexCount > 0) {
-                                printf("blurfilter DISABLED for sheets: ");
-                                printMultiIndex(noBlurfilterMultiIndex, noBlurfilterMultiIndexCount);
-                            }
-                        } else {
-                            printf("blurfilter DISABLED for all sheets.\n");
-                        }
-                        if (noGrayfilterMultiIndexCount != -1) {
-                            printf("grayfilter-size: ");
-                            printInts(grayfilterScanSize);
-                            printf("grayfilter-step: ");
-                            printInts(grayfilterScanStep);
-                            printf("grayfilter-threshold: %f\n", grayfilterThreshold);
-                            if (noGrayfilterMultiIndexCount > 0) {
-                                printf("grayfilter DISABLED for sheets: ");
-                                printMultiIndex(noGrayfilterMultiIndex, noGrayfilterMultiIndexCount);
-                            }
-                        } else {
-                            printf("grayfilter DISABLED for all sheets.\n");
-                        }
-                        if (noMaskScanMultiIndexCount != -1) {
-                            printf("mask points: ");
-                            for (i = 0; i < pointCount; i++) {
-                                printf("(%d,%d) ",point[i][X],point[i][Y]);
-                            }
-                            printf("\n");
-                            printf("mask-scan-direction: ");
-                            printDirections(maskScanDirections);
-                            printf("mask-scan-size: ");
-                            printInts(maskScanSize);
-                            printf("mask-scan-depth: ");
-                            printInts(maskScanDepth);
-                            printf("mask-scan-step: ");
-                            printInts(maskScanStep);
-                            printf("mask-scan-threshold: ");//%f\n", maskScanThreshold);
-                            printFloats(maskScanThreshold);
-                            printf("mask-scan-minimum: [%d,%d]\n", maskScanMinimum[WIDTH], maskScanMinimum[HEIGHT]);
-                            printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[WIDTH], maskScanMaximum[HEIGHT]);
-                            printf("mask-color: %d\n", maskColor);
-                            if (noMaskScanMultiIndexCount > 0) {
-                                printf("mask-scan DISABLED for sheets: ");
-                                printMultiIndex(noMaskScanMultiIndex, noMaskScanMultiIndexCount);
-                            }
-                        } else {
-                            printf("mask-scan DISABLED for all sheets.\n");
-                        }
-                        if (noDeskewMultiIndexCount != -1) {
-                            printf("deskew-scan-direction: ");
-                            printEdges(deskewScanEdges);
-                            printf("deskew-scan-size: %d\n", deskewScanSize);
-                            printf("deskew-scan-depth: %f\n", deskewScanDepth);
-                            printf("deskew-scan-range: %f\n", deskewScanRange);
-                            printf("deskew-scan-step: %f\n", deskewScanStep);
-                            printf("deskew-scan-deviation: %f\n", deskewScanDeviation);
-                            if (qpixels==false) {
-                                printf("qpixel-coding DISABLED.\n");
-                            }
-                            if (noDeskewMultiIndexCount > 0) {
-                                printf("deskew-scan DISABLED for sheets: ");
-                                printMultiIndex(noDeskewMultiIndex, noDeskewMultiIndexCount);
-                            }
-                        } else {
-                            printf("deskew-scan DISABLED for all sheets.\n");
-                        }
-                        if (noWipeMultiIndexCount != -1) {
-                            if (wipeCount > 0) {
-                                printf("wipe areas: ");
-                                for (i = 0; i < wipeCount; i++) {
-                                    printf("[%d,%d,%d,%d] ", wipe[i][LEFT], wipe[i][TOP], wipe[i][RIGHT], wipe[i][BOTTOM]);
-                                }
-                                printf("\n");
-                            }
-                        } else {
-                            printf("wipe DISABLED for all sheets.\n");
-                        }
-                        if (middleWipe[0] > 0 || middleWipe[1] > 0) {
-                            printf("middle-wipe (l,r): %d,%d\n", middleWipe[0], middleWipe[1]);
-                        }
-                        if (noBorderMultiIndexCount != -1) {
-                            if (border[LEFT]!=0 || border[TOP]!=0 || border[RIGHT]!=0 || border[BOTTOM]!=0) {
-                                printf("explicit border: [%d,%d,%d,%d]\n", border[LEFT], border[TOP], border[RIGHT], border[BOTTOM]);
-                            }
-                        } else {
-                            printf("border DISABLED for all sheets.\n");
-                        }
-                        if (noBorderScanMultiIndexCount != -1) {
-                            printf("border-scan-direction: ");
-                            printDirections(borderScanDirections);
-                            printf("border-scan-size: ");
-                            printInts(borderScanSize);
-                            printf("border-scan-step: ");
-                            printInts(borderScanStep);
-                            printf("border-scan-threshold: ");//%f\n", maskScanThreshold);
-                            printInts(borderScanThreshold);
-                            if (noBorderScanMultiIndexCount > 0) {
-                                printf("border-scan DISABLED for sheets: ");
-                                printMultiIndex(noBorderScanMultiIndex, noBorderScanMultiIndexCount);
-                            }
-                            printf("border-align: ");
-                            printEdges(borderAlign);
-                            printf("border-margin: ");
-                            printInts(borderAlignMargin);
-                        } else {
-                            printf("border-scan DISABLED for all sheets.\n");
-                        }
-                        if (postWipeCount > 0) {
-                            printf("post-wipe: ");
-                            for (i = 0; i < postWipeCount; i++) {
-                                printf("[%d,%d,%d,%d] ",postWipe[i][LEFT],postWipe[i][TOP],postWipe[i][RIGHT],postWipe[i][BOTTOM]);
-                            }
-                            printf("\n");
-                        }
-                        if (postBorder[LEFT]!=0 || postBorder[TOP]!=0 || postBorder[RIGHT]!=0 || postBorder[BOTTOM]!=0) {
-                            printf("post-border: [%d,%d,%d,%d]\n", postBorder[LEFT], postBorder[TOP], postBorder[RIGHT], postBorder[BOTTOM]);
-                        }
-                        if (postMirror != 0) {
-                            printf("post-mirror: ");
-                            printDirections(postMirror);
-                        }
-                        if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
-                            printf("post-shift: ");
-                            printInts(postShift);
-                        }
-                        if (postRotate != 0) {
-                            printf("post-rotate: %d\n", postRotate);
-                        }
-                        //if (ignoreMultiIndexCount > 0) {
-                        //    printf("EXCLUDE sheets: ");
-                        //    printMultiIndex(ignoreMultiIndex, ignoreMultiIndexCount);
-                        //}
-                        printf("white-threshold: %f\n", whiteThreshold);
-                        printf("black-threshold: %f\n", blackThreshold);
-                        printf("sheet-background: %s\n", ((sheetBackground == BLACK) ? "black" : "white") );
-                        printf("dpi: %d\n", dpi);
-                        printf("input-files per sheet: %d\n", inputCount);
-                        printf("output-files per sheet: %d\n", outputCount);
-                        if ((sheetSize[WIDTH] != -1) || (sheetSize[HEIGHT] != -1)) {
-                            printf("sheet size forced to: %d x %d pixels\n", sheetSize[WIDTH], sheetSize[HEIGHT]);
-                        }
-                        printf("input-file-sequence:  %s\n", implode(s1, (const char **)inputFileSequence, inputFileSequenceCount));
-                        printf("output-file-sequence: %s\n", implode(s1, (const char **)outputFileSequence, outputFileSequenceCount));
-                        if (overwrite) {
-                            printf("OVERWRITING EXISTING FILES\n");
+                    if (preWipeCount > 0) {
+                        printf("pre-wipe: ");
+                        for (i = 0; i < preWipeCount; i++) {
+                            printf("[%d,%d,%d,%d] ",preWipe[i][LEFT],preWipe[i][TOP],preWipe[i][RIGHT],preWipe[i][BOTTOM]);
                         }
                         printf("\n");
                     }
-                    if (verbose >= VERBOSE_NORMAL) {
-                        printf("input-file%s for sheet %d: %s (type%s %s)\n", pluralS(inputCount), nr, implode(s1, (const char **)inputFilenamesResolved, inputCount), pluralS(inputCount), implode(s2, inputTypeNames, inputCount));
-                        printf("output-file%s for sheet %d: %s (type %s)\n", pluralS(outputCount), nr, implode(s1, (const char **)outputFilenamesResolved, outputCount), outputTypeName);
-                        printf("sheet size: %dx%d\n", sheet.width, sheet.height);
-                        printf("...\n");
+                    if (preBorder[LEFT]!=0 || preBorder[TOP]!=0 || preBorder[RIGHT]!=0 || preBorder[BOTTOM]!=0) {
+                        printf("pre-border: [%d,%d,%d,%d]\n", preBorder[LEFT], preBorder[TOP], preBorder[RIGHT], preBorder[BOTTOM]);
                     }
-
-
-                    // -------------------------------------------------------
-                    // --- process image data                              ---
-                    // -------------------------------------------------------
-
-                    // stretch
+                    if (preMaskCount > 0) {
+                        printf("pre-masking: ");
+                        for (i = 0; i < preMaskCount; i++) {
+                            printf("[%d,%d,%d,%d] ",preMask[i][LEFT],preMask[i][TOP],preMask[i][RIGHT],preMask[i][BOTTOM]);
+                        }
+                        printf("\n");
+                    }
                     if ((stretchSize[WIDTH] != -1) || (stretchSize[HEIGHT] != -1)) {
-                        if (stretchSize[WIDTH] != -1) {
-                            w = stretchSize[WIDTH];
-                        } else {
-                            w = sheet.width;
-                        }
-                        if (stretchSize[HEIGHT] != -1) {
-                            h = stretchSize[HEIGHT];
-                        } else {
-                            h = sheet.height;
-                        }
-                        saveDebug("./_before-stretch.pnm", &sheet);
-                        stretch(w, h, &sheet);
-                        saveDebug("./_after-stretch.pnm", &sheet);
-                    } 
-                    
-                    // zoom
+                        printf("stretch to: %dx%d\n", stretchSize[WIDTH], stretchSize[HEIGHT]);
+                    }
+                    if ((postStretchSize[WIDTH] != -1) || (postStretchSize[HEIGHT] != -1)) {
+                        printf("post-stretch to: %dx%d\n", postStretchSize[WIDTH], postStretchSize[HEIGHT]);
+                    }
                     if (zoomFactor != 1.0) {
-                        w = sheet.width * zoomFactor;
-                        h = sheet.height * zoomFactor;
-                        stretch(w, h, &sheet);
+                        printf("zoom: %f\n", zoomFactor);
                     }
+                    if (postZoomFactor != 1.0) {
+                        printf("post-zoom: %f\n", postZoomFactor);
+                    }
+                    if (noBlackfilterMultiIndexCount != -1) {
+                        printf("blackfilter-scan-direction: ");
+                        printDirections(blackfilterScanDirections);
+                        printf("blackfilter-scan-size: ");
+                        printInts(blackfilterScanSize);
+                        printf("blackfilter-scan-depth: ");
+                        printInts(blackfilterScanDepth);
+                        printf("blackfilter-scan-step: ");
+                        printInts(blackfilterScanStep);
+                        printf("blackfilter-scan-threshold: %f\n", blackfilterScanThreshold);
+                        if (blackfilterExcludeCount > 0) {
+                            printf("blackfilter-scan-exclude: ");
+                            for (i = 0; i < blackfilterExcludeCount; i++) {
+                                printf("[%d,%d,%d,%d] ",blackfilterExclude[i][LEFT],blackfilterExclude[i][TOP],blackfilterExclude[i][RIGHT],blackfilterExclude[i][BOTTOM]);
+                            }
+                            printf("\n");
+                        }
+                        printf("blackfilter-intensity: %d\n", blackfilterIntensity);
+                        if (noBlackfilterMultiIndexCount > 0) {
+                            printf("blackfilter DISABLED for sheets: ");
+                            printMultiIndex(noBlackfilterMultiIndex, noBlackfilterMultiIndexCount);
+                        }
+                    } else {
+                        printf("blackfilter DISABLED for all sheets.\n");
+                    }
+                    if (noNoisefilterMultiIndexCount != -1) {
+                        printf("noisefilter-intensity: %d\n", noisefilterIntensity);
+                        if (noNoisefilterMultiIndexCount > 0) {
+                            printf("noisefilter DISABLED for sheets: ");
+                            printMultiIndex(noNoisefilterMultiIndex, noNoisefilterMultiIndexCount);
+                        }
+                    } else {
+                        printf("noisefilter DISABLED for all sheets.\n");
+                    }
+                    if (noBlurfilterMultiIndexCount != -1) {
+                        printf("blurfilter-size: ");
+                        printInts(blurfilterScanSize);
+                        printf("blurfilter-step: ");
+                        printInts(blurfilterScanStep);
+                        printf("blurfilter-intensity: %f\n", blurfilterIntensity);
+                        if (noBlurfilterMultiIndexCount > 0) {
+                            printf("blurfilter DISABLED for sheets: ");
+                            printMultiIndex(noBlurfilterMultiIndex, noBlurfilterMultiIndexCount);
+                        }
+                    } else {
+                        printf("blurfilter DISABLED for all sheets.\n");
+                    }
+                    if (noGrayfilterMultiIndexCount != -1) {
+                        printf("grayfilter-size: ");
+                        printInts(grayfilterScanSize);
+                        printf("grayfilter-step: ");
+                        printInts(grayfilterScanStep);
+                        printf("grayfilter-threshold: %f\n", grayfilterThreshold);
+                        if (noGrayfilterMultiIndexCount > 0) {
+                            printf("grayfilter DISABLED for sheets: ");
+                            printMultiIndex(noGrayfilterMultiIndex, noGrayfilterMultiIndexCount);
+                        }
+                    } else {
+                        printf("grayfilter DISABLED for all sheets.\n");
+                    }
+                    if (noMaskScanMultiIndexCount != -1) {
+                        printf("mask points: ");
+                        for (i = 0; i < pointCount; i++) {
+                            printf("(%d,%d) ",point[i][X],point[i][Y]);
+                        }
+                        printf("\n");
+                        printf("mask-scan-direction: ");
+                        printDirections(maskScanDirections);
+                        printf("mask-scan-size: ");
+                        printInts(maskScanSize);
+                        printf("mask-scan-depth: ");
+                        printInts(maskScanDepth);
+                        printf("mask-scan-step: ");
+                        printInts(maskScanStep);
+                        printf("mask-scan-threshold: ");//%f\n", maskScanThreshold);
+                        printFloats(maskScanThreshold);
+                        printf("mask-scan-minimum: [%d,%d]\n", maskScanMinimum[WIDTH], maskScanMinimum[HEIGHT]);
+                        printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[WIDTH], maskScanMaximum[HEIGHT]);
+                        printf("mask-color: %d\n", maskColor);
+                        if (noMaskScanMultiIndexCount > 0) {
+                            printf("mask-scan DISABLED for sheets: ");
+                            printMultiIndex(noMaskScanMultiIndex, noMaskScanMultiIndexCount);
+                        }
+                    } else {
+                        printf("mask-scan DISABLED for all sheets.\n");
+                    }
+                    if (noDeskewMultiIndexCount != -1) {
+                        printf("deskew-scan-direction: ");
+                        printEdges(deskewScanEdges);
+                        printf("deskew-scan-size: %d\n", deskewScanSize);
+                        printf("deskew-scan-depth: %f\n", deskewScanDepth);
+                        printf("deskew-scan-range: %f\n", deskewScanRange);
+                        printf("deskew-scan-step: %f\n", deskewScanStep);
+                        printf("deskew-scan-deviation: %f\n", deskewScanDeviation);
+                        if (qpixels==false) {
+                            printf("qpixel-coding DISABLED.\n");
+                        }
+                        if (noDeskewMultiIndexCount > 0) {
+                            printf("deskew-scan DISABLED for sheets: ");
+                            printMultiIndex(noDeskewMultiIndex, noDeskewMultiIndexCount);
+                        }
+                    } else {
+                        printf("deskew-scan DISABLED for all sheets.\n");
+                    }
+                    if (noWipeMultiIndexCount != -1) {
+                        if (wipeCount > 0) {
+                            printf("wipe areas: ");
+                            for (i = 0; i < wipeCount; i++) {
+                                printf("[%d,%d,%d,%d] ", wipe[i][LEFT], wipe[i][TOP], wipe[i][RIGHT], wipe[i][BOTTOM]);
+                            }
+                            printf("\n");
+                        }
+                    } else {
+                        printf("wipe DISABLED for all sheets.\n");
+                    }
+                    if (middleWipe[0] > 0 || middleWipe[1] > 0) {
+                        printf("middle-wipe (l,r): %d,%d\n", middleWipe[0], middleWipe[1]);
+                    }
+                    if (noBorderMultiIndexCount != -1) {
+                        if (border[LEFT]!=0 || border[TOP]!=0 || border[RIGHT]!=0 || border[BOTTOM]!=0) {
+                            printf("explicit border: [%d,%d,%d,%d]\n", border[LEFT], border[TOP], border[RIGHT], border[BOTTOM]);
+                        }
+                    } else {
+                        printf("border DISABLED for all sheets.\n");
+                    }
+                    if (noBorderScanMultiIndexCount != -1) {
+                        printf("border-scan-direction: ");
+                        printDirections(borderScanDirections);
+                        printf("border-scan-size: ");
+                        printInts(borderScanSize);
+                        printf("border-scan-step: ");
+                        printInts(borderScanStep);
+                        printf("border-scan-threshold: ");//%f\n", maskScanThreshold);
+                        printInts(borderScanThreshold);
+                        if (noBorderScanMultiIndexCount > 0) {
+                            printf("border-scan DISABLED for sheets: ");
+                            printMultiIndex(noBorderScanMultiIndex, noBorderScanMultiIndexCount);
+                        }
+                        printf("border-align: ");
+                        printEdges(borderAlign);
+                        printf("border-margin: ");
+                        printInts(borderAlignMargin);
+                    } else {
+                        printf("border-scan DISABLED for all sheets.\n");
+                    }
+                    if (postWipeCount > 0) {
+                        printf("post-wipe: ");
+                        for (i = 0; i < postWipeCount; i++) {
+                            printf("[%d,%d,%d,%d] ",postWipe[i][LEFT],postWipe[i][TOP],postWipe[i][RIGHT],postWipe[i][BOTTOM]);
+                        }
+                        printf("\n");
+                    }
+                    if (postBorder[LEFT]!=0 || postBorder[TOP]!=0 || postBorder[RIGHT]!=0 || postBorder[BOTTOM]!=0) {
+                        printf("post-border: [%d,%d,%d,%d]\n", postBorder[LEFT], postBorder[TOP], postBorder[RIGHT], postBorder[BOTTOM]);
+                    }
+                    if (postMirror != 0) {
+                        printf("post-mirror: ");
+                        printDirections(postMirror);
+                    }
+                    if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
+                        printf("post-shift: ");
+                        printInts(postShift);
+                    }
+                    if (postRotate != 0) {
+                        printf("post-rotate: %d\n", postRotate);
+                    }
+                    //if (ignoreMultiIndexCount > 0) {
+                    //    printf("EXCLUDE sheets: ");
+                    //    printMultiIndex(ignoreMultiIndex, ignoreMultiIndexCount);
+                    //}
+                    printf("white-threshold: %f\n", whiteThreshold);
+                    printf("black-threshold: %f\n", blackThreshold);
+                    printf("sheet-background: %s\n", ((sheetBackground == BLACK) ? "black" : "white") );
+                    printf("dpi: %d\n", dpi);
+                    printf("input-files per sheet: %d\n", inputCount);
+                    printf("output-files per sheet: %d\n", outputCount);
+                    if ((sheetSize[WIDTH] != -1) || (sheetSize[HEIGHT] != -1)) {
+                        printf("sheet size forced to: %d x %d pixels\n", sheetSize[WIDTH], sheetSize[HEIGHT]);
+                    }
+                    printf("input-file-sequence:  %s\n", implode(s1, (const char **)inputFileSequence, inputFileSequenceCount));
+                    printf("output-file-sequence: %s\n", implode(s1, (const char **)outputFileSequence, outputFileSequenceCount));
+                    if (overwrite) {
+                        printf("OVERWRITING EXISTING FILES\n");
+                    }
+                    printf("\n");
+                }
+                if (verbose >= VERBOSE_NORMAL) {
+                    printf("input-file%s for sheet %d: %s (type%s %s)\n", pluralS(inputCount), nr, implode(s1, (const char **)inputFilenamesResolved, inputCount), pluralS(inputCount), implode(s2, inputTypeNames, inputCount));
+                    printf("output-file%s for sheet %d: %s (type %s)\n", pluralS(outputCount), nr, implode(s1, (const char **)outputFilenamesResolved, outputCount), outputTypeName);
+                    printf("sheet size: %dx%d\n", sheet.width, sheet.height);
+                    printf("...\n");
+                }
 
-                    // size
-                    if ((size[WIDTH] != -1) || (size[HEIGHT] != -1)) {
-                        if (size[WIDTH] != -1) {
-                            w = size[WIDTH];
-                        } else {
-                            w = sheet.width;
-                        }
-                        if (size[HEIGHT] != -1) {
-                            h = size[HEIGHT];
-                        } else {
-                            h = sheet.height;
-                        }
-                        saveDebug("./_before-resize.pnm", &sheet);
-                        resize(w, h, &sheet);
-                        saveDebug("./_after-resize.pnm", &sheet);
-                    } 
-                    
-                    
-                    // handle sheet layout
-                    
-                    // LAYOUT_SINGLE
-                    if (layout == LAYOUT_SINGLE) {
-                        // set middle of sheet as single starting point for mask detection
-                        if (pointCount == 0) { // no manual settings, use auto-values
-                            point[pointCount][X] = sheet.width / 2;
-                            point[pointCount][Y] = sheet.height / 2;
-                            pointCount++;
-                        }
-                        if (maskScanMaximum[WIDTH] == -1) {
-                            maskScanMaximum[WIDTH] = sheet.width;
-                        }
-                        if (maskScanMaximum[HEIGHT] == -1) {
-                            maskScanMaximum[HEIGHT] = sheet.height;
-                        }
-                        // avoid inner half of the sheet to be blackfilter-detectable
-                        if (blackfilterExcludeCount == 0) { // no manual settings, use auto-values
-                            blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.width / 4;
-                            blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.height / 4;
-                            blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.width / 2 + sheet.width / 4;
-                            blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.height / 2 + sheet.height / 4;
-                            blackfilterExcludeCount++;
-                        }
-                        // set single outside border to start scanning for final border-scan
-                        if (outsideBorderscanMaskCount == 0) { // no manual settings, use auto-values
-                            outsideBorderscanMaskCount = 1;
-                            outsideBorderscanMask[0][LEFT] = 0;
-                            outsideBorderscanMask[0][RIGHT] = sheet.width - 1;
-                            outsideBorderscanMask[0][TOP] = 0;
-                            outsideBorderscanMask[0][BOTTOM] = sheet.height - 1;
-                        }
-                        
-                    // LAYOUT_DOUBLE
-                    } else if (layout == LAYOUT_DOUBLE) {
-                        // set two middle of left/right side of sheet as starting points for mask detection
-                        if (pointCount == 0) { // no manual settings, use auto-values
-                            point[pointCount][X] = sheet.width / 4;
-                            point[pointCount][Y] = sheet.height / 2;
-                            pointCount++;
-                            point[pointCount][X] = sheet.width - sheet.width / 4;
-                            point[pointCount][Y] = sheet.height / 2;
-                            pointCount++;
-                        }
-                        if (maskScanMaximum[WIDTH] == -1) {
-                            maskScanMaximum[WIDTH] = sheet.width / 2;
-                        }
-                        if (maskScanMaximum[HEIGHT] == -1) {
-                            maskScanMaximum[HEIGHT] = sheet.height;
-                        }
-                        if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
-                            wipe[wipeCount][LEFT] = sheet.width / 2 - middleWipe[0];
-                            wipe[wipeCount][TOP] = 0;
-                            wipe[wipeCount][RIGHT] =  sheet.width / 2 + middleWipe[1];
-                            wipe[wipeCount][BOTTOM] = sheet.height - 1;
-                            wipeCount++;
-                        }
-                        // avoid inner half of each page to be blackfilter-detectable
-                        if (blackfilterExcludeCount == 0) { // no manual settings, use auto-values
-                            blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.width / 8;
-                            blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.height / 4;
-                            blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.width / 4 + sheet.width / 8;
-                            blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.height / 2 + sheet.height / 4;
-                            blackfilterExcludeCount++;
-                            blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.width / 2 + sheet.width / 8;
-                            blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.height / 4;
-                            blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.width / 2 + sheet.width / 4 + sheet.width / 8;
-                            blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.height / 2 + sheet.height / 4;
-                            blackfilterExcludeCount++;
-                        }
-                        // set two outside borders to start scanning for final border-scan
-                        if (outsideBorderscanMaskCount == 0) { // no manual settings, use auto-values
-                            outsideBorderscanMaskCount = 2;
-                            outsideBorderscanMask[0][LEFT] = 0;
-                            outsideBorderscanMask[0][RIGHT] = sheet.width / 2;
-                            outsideBorderscanMask[0][TOP] = 0;
-                            outsideBorderscanMask[0][BOTTOM] = sheet.height - 1;
-                            outsideBorderscanMask[1][LEFT] = sheet.width / 2;
-                            outsideBorderscanMask[1][RIGHT] = sheet.width - 1;
-                            outsideBorderscanMask[1][TOP] = 0;
-                            outsideBorderscanMask[1][BOTTOM] = sheet.height - 1;
-                        }
+
+                // -------------------------------------------------------
+                // --- process image data                              ---
+                // -------------------------------------------------------
+
+                // stretch
+                if ((stretchSize[WIDTH] != -1) || (stretchSize[HEIGHT] != -1)) {
+                    if (stretchSize[WIDTH] != -1) {
+                        w = stretchSize[WIDTH];
+                    } else {
+                        w = sheet.width;
                     }
-                    // if maskScanMaximum still unset (no --layout specified), set to full sheet size now
-                    if (maskScanMinimum[WIDTH] == -1) {
+                    if (stretchSize[HEIGHT] != -1) {
+                        h = stretchSize[HEIGHT];
+                    } else {
+                        h = sheet.height;
+                    }
+                    saveDebug("./_before-stretch.pnm", &sheet);
+                    stretch(w, h, &sheet);
+                    saveDebug("./_after-stretch.pnm", &sheet);
+                } 
+                    
+                // zoom
+                if (zoomFactor != 1.0) {
+                    w = sheet.width * zoomFactor;
+                    h = sheet.height * zoomFactor;
+                    stretch(w, h, &sheet);
+                }
+
+                // size
+                if ((size[WIDTH] != -1) || (size[HEIGHT] != -1)) {
+                    if (size[WIDTH] != -1) {
+                        w = size[WIDTH];
+                    } else {
+                        w = sheet.width;
+                    }
+                    if (size[HEIGHT] != -1) {
+                        h = size[HEIGHT];
+                    } else {
+                        h = sheet.height;
+                    }
+                    saveDebug("./_before-resize.pnm", &sheet);
+                    resize(w, h, &sheet);
+                    saveDebug("./_after-resize.pnm", &sheet);
+                } 
+                    
+                    
+                // handle sheet layout
+                    
+                // LAYOUT_SINGLE
+                if (layout == LAYOUT_SINGLE) {
+                    // set middle of sheet as single starting point for mask detection
+                    if (pointCount == 0) { // no manual settings, use auto-values
+                        point[pointCount][X] = sheet.width / 2;
+                        point[pointCount][Y] = sheet.height / 2;
+                        pointCount++;
+                    }
+                    if (maskScanMaximum[WIDTH] == -1) {
                         maskScanMaximum[WIDTH] = sheet.width;
                     }
-                    if (maskScanMinimum[HEIGHT] == -1) {
+                    if (maskScanMaximum[HEIGHT] == -1) {
                         maskScanMaximum[HEIGHT] = sheet.height;
                     }
+                    // avoid inner half of the sheet to be blackfilter-detectable
+                    if (blackfilterExcludeCount == 0) { // no manual settings, use auto-values
+                        blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.width / 4;
+                        blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.height / 4;
+                        blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.width / 2 + sheet.width / 4;
+                        blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.height / 2 + sheet.height / 4;
+                        blackfilterExcludeCount++;
+                    }
+                    // set single outside border to start scanning for final border-scan
+                    if (outsideBorderscanMaskCount == 0) { // no manual settings, use auto-values
+                        outsideBorderscanMaskCount = 1;
+                        outsideBorderscanMask[0][LEFT] = 0;
+                        outsideBorderscanMask[0][RIGHT] = sheet.width - 1;
+                        outsideBorderscanMask[0][TOP] = 0;
+                        outsideBorderscanMask[0][BOTTOM] = sheet.height - 1;
+                    }
+                        
+                    // LAYOUT_DOUBLE
+                } else if (layout == LAYOUT_DOUBLE) {
+                    // set two middle of left/right side of sheet as starting points for mask detection
+                    if (pointCount == 0) { // no manual settings, use auto-values
+                        point[pointCount][X] = sheet.width / 4;
+                        point[pointCount][Y] = sheet.height / 2;
+                        pointCount++;
+                        point[pointCount][X] = sheet.width - sheet.width / 4;
+                        point[pointCount][Y] = sheet.height / 2;
+                        pointCount++;
+                    }
+                    if (maskScanMaximum[WIDTH] == -1) {
+                        maskScanMaximum[WIDTH] = sheet.width / 2;
+                    }
+                    if (maskScanMaximum[HEIGHT] == -1) {
+                        maskScanMaximum[HEIGHT] = sheet.height;
+                    }
+                    if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
+                        wipe[wipeCount][LEFT] = sheet.width / 2 - middleWipe[0];
+                        wipe[wipeCount][TOP] = 0;
+                        wipe[wipeCount][RIGHT] =  sheet.width / 2 + middleWipe[1];
+                        wipe[wipeCount][BOTTOM] = sheet.height - 1;
+                        wipeCount++;
+                    }
+                    // avoid inner half of each page to be blackfilter-detectable
+                    if (blackfilterExcludeCount == 0) { // no manual settings, use auto-values
+                        blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.width / 8;
+                        blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.height / 4;
+                        blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.width / 4 + sheet.width / 8;
+                        blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.height / 2 + sheet.height / 4;
+                        blackfilterExcludeCount++;
+                        blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.width / 2 + sheet.width / 8;
+                        blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.height / 4;
+                        blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.width / 2 + sheet.width / 4 + sheet.width / 8;
+                        blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.height / 2 + sheet.height / 4;
+                        blackfilterExcludeCount++;
+                    }
+                    // set two outside borders to start scanning for final border-scan
+                    if (outsideBorderscanMaskCount == 0) { // no manual settings, use auto-values
+                        outsideBorderscanMaskCount = 2;
+                        outsideBorderscanMask[0][LEFT] = 0;
+                        outsideBorderscanMask[0][RIGHT] = sheet.width / 2;
+                        outsideBorderscanMask[0][TOP] = 0;
+                        outsideBorderscanMask[0][BOTTOM] = sheet.height - 1;
+                        outsideBorderscanMask[1][LEFT] = sheet.width / 2;
+                        outsideBorderscanMask[1][RIGHT] = sheet.width - 1;
+                        outsideBorderscanMask[1][TOP] = 0;
+                        outsideBorderscanMask[1][BOTTOM] = sheet.height - 1;
+                    }
+                }
+                // if maskScanMaximum still unset (no --layout specified), set to full sheet size now
+                if (maskScanMinimum[WIDTH] == -1) {
+                    maskScanMaximum[WIDTH] = sheet.width;
+                }
+                if (maskScanMinimum[HEIGHT] == -1) {
+                    maskScanMaximum[HEIGHT] = sheet.height;
+                }
 
                     
-                    // pre-wipe
-                    if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        applyWipes(preWipe, preWipeCount, maskColor, &sheet);
+                // pre-wipe
+                if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    applyWipes(preWipe, preWipeCount, maskColor, &sheet);
+                }
+
+                // pre-border
+                if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    applyBorder(preBorder, maskColor, &sheet);
+                }
+
+                // black area filter
+                if (!isExcluded(nr, noBlackfilterMultiIndex, noBlackfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    saveDebug("./_before-blackfilter.pnm", &sheet);
+                    blackfilter(blackfilterScanDirections, blackfilterScanSize, blackfilterScanDepth, blackfilterScanStep, blackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, blackThreshold, &sheet);
+                    saveDebug("./_after-blackfilter.pnm", &sheet);
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ blackfilter DISABLED for sheet %d\n", nr);
+                    }
+                }
+
+                // noise filter
+                if (!isExcluded(nr, noNoisefilterMultiIndex, noNoisefilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("noise-filter ...");
+                    }
+                    saveDebug("./_before-noisefilter.pnm", &sheet);
+                    filterResult = noisefilter(noisefilterIntensity, whiteThreshold, &sheet);
+                    saveDebug("./_after-noisefilter.pnm", &sheet);
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf(" deleted %d clusters.\n", filterResult);
+                    }
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ noisefilter DISABLED for sheet %d\n", nr);
+                    }
+                }
+
+                // blur filter
+                if (!isExcluded(nr, noBlurfilterMultiIndex, noBlurfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("blur-filter...");
+                    }
+                    saveDebug("./_before-blurfilter.pnm", &sheet);
+                    filterResult = blurfilter(blurfilterScanSize, blurfilterScanStep, blurfilterIntensity, whiteThreshold, &sheet);
+                    saveDebug("./_after-blurfilter.pnm", &sheet);
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf(" deleted %d pixels.\n", filterResult);
+                    }
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ blurfilter DISABLED for sheet %d\n", nr);
+                    }
+                }
+
+                // mask-detection
+                if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &sheet);
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ mask-scan DISABLED for sheet %d\n", nr);
+                    }
+                }
+
+                // permamently apply masks
+                if (maskCount > 0) {
+                    saveDebug("./_before-masking.pnm", &sheet);
+                    applyMasks(mask, maskCount, maskColor, &sheet);
+                    saveDebug("./_after-masking.pnm", &sheet);
+                }
+
+                // gray filter
+                if (!isExcluded(nr, noGrayfilterMultiIndex, noGrayfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("gray-filter...");
+                    }
+                    saveDebug("./_before-grayfilter.pnm", &sheet);
+                    filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, grayfilterThreshold, blackThreshold, &sheet);
+                    saveDebug("./_after-grayfilter.pnm", &sheet);
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf(" deleted %d pixels.\n", filterResult);
+                    }
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ grayfilter DISABLED for sheet %d\n", nr);
+                    }
+                }
+
+                // rotation-detection
+                if ((!isExcluded(nr, noDeskewMultiIndex, noDeskewMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount))) {
+                    saveDebug("./_before-deskew.pnm", &sheet);
+                    originalSheet = sheet; // copy struct entries ('clone')
+                    // convert to qpixels
+                    if (qpixels==true) {
+                        if (verbose>=VERBOSE_NORMAL) {
+                            printf("converting to qpixels.\n");
+                        }
+                        initImage(&qpixelSheet, sheet.width * 2, sheet.height * 2, sheet.bitdepth, sheet.color, sheetBackground);
+                        convertToQPixels(&sheet, &qpixelSheet);
+                        sheet = qpixelSheet;
+                        q = 2; // qpixel-factor for coordinates in both directions
+                    } else {
+                        q = 1;
                     }
 
-                    // pre-border
-                    if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        applyBorder(preBorder, maskColor, &sheet);
-                    }
-
-                    // black area filter
-                    if (!isExcluded(nr, noBlackfilterMultiIndex, noBlackfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        saveDebug("./_before-blackfilter.pnm", &sheet);
-                        blackfilter(blackfilterScanDirections, blackfilterScanSize, blackfilterScanDepth, blackfilterScanStep, blackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, blackThreshold, &sheet);
-                        saveDebug("./_after-blackfilter.pnm", &sheet);
+                    // detect masks again, we may get more precise results now after first masking and grayfilter
+                    if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                        maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &originalSheet);
                     } else {
                         if (verbose >= VERBOSE_MORE) {
-                            printf("+ blackfilter DISABLED for sheet %d\n", nr);
+                            printf("(mask-scan before deskewing disabled)\n");
                         }
                     }
 
-                    // noise filter
-                    if (!isExcluded(nr, noNoisefilterMultiIndex, noNoisefilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("noise-filter ...");
-                        }
-                        saveDebug("./_before-noisefilter.pnm", &sheet);
-                        filterResult = noisefilter(noisefilterIntensity, whiteThreshold, &sheet);
-                        saveDebug("./_after-noisefilter.pnm", &sheet);
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf(" deleted %d clusters.\n", filterResult);
-                        }
-                    } else {
-                        if (verbose >= VERBOSE_MORE) {
-                            printf("+ noisefilter DISABLED for sheet %d\n", nr);
-                        }
-                    }
+                    // auto-deskew each mask
+                    for (i = 0; i < maskCount; i++) {
 
-                    // blur filter
-                    if (!isExcluded(nr, noBlurfilterMultiIndex, noBlurfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("blur-filter...");
-                        }
-                        saveDebug("./_before-blurfilter.pnm", &sheet);
-                        filterResult = blurfilter(blurfilterScanSize, blurfilterScanStep, blurfilterIntensity, whiteThreshold, &sheet);
-                        saveDebug("./_after-blurfilter.pnm", &sheet);
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf(" deleted %d pixels.\n", filterResult);
-                        }
-                    } else {
-                        if (verbose >= VERBOSE_MORE) {
-                            printf("+ blurfilter DISABLED for sheet %d\n", nr);
-                        }
-                    }
+                        // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
 
-                    // mask-detection
+                        // for rotation detection, original buffer is used (not qpixels)
+                        saveDebug("./_before-deskew-detect.pnm", &originalSheet);
+                        rotation = - detectRotation(deskewScanEdges, deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, deskewScanDeviation, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
+                        saveDebug("./_after-deskew-detect.pnm", &originalSheet);
+
+                        if (rotation != 0.0) {
+                            if (verbose>=VERBOSE_NORMAL) {
+                                printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
+                            }
+                            initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1)*q, (mask[i][BOTTOM]-mask[i][TOP]+1)*q, sheet.bitdepth, sheet.color, sheetBackground);
+                            initImage(&rectTarget, rect.width, rect.height, sheet.bitdepth, sheet.color, sheetBackground);
+
+                            // copy area to rotate into rSource
+                            copyImageArea(mask[i][LEFT]*q, mask[i][TOP]*q, rect.width, rect.height, &sheet, 0, 0, &rect);
+
+                            // rotate
+                            rotate(degreesToRadians(rotation), &rect, &rectTarget);
+
+                            // copy result back into whole image
+                            copyImageArea(0, 0, rectTarget.width, rectTarget.height, &rectTarget, mask[i][LEFT]*q, mask[i][TOP]*q, &sheet);
+
+                            freeImage(&rect);
+                            freeImage(&rectTarget);
+                        } else {
+                            if (verbose >= VERBOSE_NORMAL) {
+                                printf("rotate (%d,%d): -\n", point[i][X], point[i][Y]);
+                            }
+                        }
+
+                        // }
+                    } 
+
+                    // convert back from qpixels
+                    if (qpixels == true) {
+                        if (verbose >= VERBOSE_NORMAL) {
+                            printf("converting back from qpixels.\n");
+                        }
+                        convertFromQPixels(&qpixelSheet, &originalSheet);
+                        freeImage(&qpixelSheet);
+                        sheet = originalSheet;
+                    }
+                    saveDebug("./_after-deskew.pnm", &sheet);
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ deskewing DISABLED for sheet %d\n", nr);
+                    }
+                }
+
+                // auto-center masks on either single-page or double-page layout
+                if ( (!isExcluded(nr, noMaskCenterMultiIndex, noMaskCenterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) && (layout != LAYOUT_NONE) && (maskCount == pointCount) ) { // (maskCount==pointCount to make sure all masks had correctly been detected)
+                    // perform auto-masking again to get more precise masks after rotation                    
                     if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                         maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &sheet);
                     } else {
                         if (verbose >= VERBOSE_MORE) {
-                            printf("+ mask-scan DISABLED for sheet %d\n", nr);
+                            printf("(mask-scan before centering disabled)\n");
                         }
                     }
 
-                    // permamently apply masks
-                    if (maskCount > 0) {
-                        saveDebug("./_before-masking.pnm", &sheet);
-                        applyMasks(mask, maskCount, maskColor, &sheet);
-                        saveDebug("./_after-masking.pnm", &sheet);
+                    saveDebug("./_before-centering.pnm", &sheet);
+                    // center masks on the sheet, according to their page position
+                    for (i = 0; i < maskCount; i++) {
+                        centerMask(point[i][X], point[i][Y], mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &sheet);
                     }
-
-                    // gray filter
-                    if (!isExcluded(nr, noGrayfilterMultiIndex, noGrayfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("gray-filter...");
-                        }
-                        saveDebug("./_before-grayfilter.pnm", &sheet);
-                        filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, grayfilterThreshold, blackThreshold, &sheet);
-                        saveDebug("./_after-grayfilter.pnm", &sheet);
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf(" deleted %d pixels.\n", filterResult);
-                        }
-                    } else {
-                        if (verbose >= VERBOSE_MORE) {
-                            printf("+ grayfilter DISABLED for sheet %d\n", nr);
-                        }
+                    saveDebug("./_after-centering.pnm", &sheet);
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ auto-centering DISABLED for sheet %d\n", nr);
                     }
+                }
 
-                    // rotation-detection
-                    if ((!isExcluded(nr, noDeskewMultiIndex, noDeskewMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount))) {
-                        saveDebug("./_before-deskew.pnm", &sheet);
-                        originalSheet = sheet; // copy struct entries ('clone')
-                        // convert to qpixels
-                        if (qpixels==true) {
-                            if (verbose>=VERBOSE_NORMAL) {
-                                printf("converting to qpixels.\n");
-                            }
-                            initImage(&qpixelSheet, sheet.width * 2, sheet.height * 2, sheet.bitdepth, sheet.color, sheetBackground);
-                            convertToQPixels(&sheet, &qpixelSheet);
-                            sheet = qpixelSheet;
-                            q = 2; // qpixel-factor for coordinates in both directions
-                        } else {
-                            q = 1;
-                        }
+                // explicit wipe
+                if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    applyWipes(wipe, wipeCount, maskColor, &sheet);
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ wipe DISABLED for sheet %d\n", nr);
+                    }
+                }
 
-                        // detect masks again, we may get more precise results now after first masking and grayfilter
-                        if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                            maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &originalSheet);
+                // explicit border
+                if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    applyBorder(border, maskColor, &sheet);
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ border DISABLED for sheet %d\n", nr);
+                    }
+                }
+
+                // border-detection
+                if (!isExcluded(nr, noBorderScanMultiIndex, noBorderScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    saveDebug("./_before-border.pnm", &sheet);
+                    for (i = 0; i < outsideBorderscanMaskCount; i++) {
+                        detectBorder(autoborder[i], borderScanDirections, borderScanSize, borderScanStep, borderScanThreshold, blackThreshold, outsideBorderscanMask[i], &sheet);
+                        borderToMask(autoborder[i], autoborderMask[i], &sheet);
+                    }
+                    applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, &sheet);
+                    for (i = 0; i < outsideBorderscanMaskCount; i++) {
+                        // border-centering
+                        if (!isExcluded(nr, noBorderAlignMultiIndex, noBorderAlignMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                            alignMask(autoborderMask[i], outsideBorderscanMask[i], borderAlign, borderAlignMargin, &sheet);
                         } else {
                             if (verbose >= VERBOSE_MORE) {
-                                printf("(mask-scan before deskewing disabled)\n");
+                                printf("+ border-centering DISABLED for sheet %d\n", nr);
                             }
                         }
-
-                        // auto-deskew each mask
-                        for (i = 0; i < maskCount; i++) {
-
-                            // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
-
-                                // for rotation detection, original buffer is used (not qpixels)
-                                saveDebug("./_before-deskew-detect.pnm", &originalSheet);
-                                rotation = - detectRotation(deskewScanEdges, deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, deskewScanDeviation, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
-                                saveDebug("./_after-deskew-detect.pnm", &originalSheet);
-
-                                if (rotation != 0.0) {
-                                    if (verbose>=VERBOSE_NORMAL) {
-                                        printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
-                                    }
-                                    initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1)*q, (mask[i][BOTTOM]-mask[i][TOP]+1)*q, sheet.bitdepth, sheet.color, sheetBackground);
-                                    initImage(&rectTarget, rect.width, rect.height, sheet.bitdepth, sheet.color, sheetBackground);
-
-                                    // copy area to rotate into rSource
-                                    copyImageArea(mask[i][LEFT]*q, mask[i][TOP]*q, rect.width, rect.height, &sheet, 0, 0, &rect);
-
-                                    // rotate
-                                    rotate(degreesToRadians(rotation), &rect, &rectTarget);
-
-                                    // copy result back into whole image
-                                    copyImageArea(0, 0, rectTarget.width, rectTarget.height, &rectTarget, mask[i][LEFT]*q, mask[i][TOP]*q, &sheet);
-
-                                    freeImage(&rect);
-                                    freeImage(&rectTarget);
-                                } else {
-                                    if (verbose >= VERBOSE_NORMAL) {
-                                        printf("rotate (%d,%d): -\n", point[i][X], point[i][Y]);
-                                    }
-                                }
-
-                            // }
-                        } 
-
-                        // convert back from qpixels
-                        if (qpixels == true) {
-                            if (verbose >= VERBOSE_NORMAL) {
-                                printf("converting back from qpixels.\n");
-                            }
-                            convertFromQPixels(&qpixelSheet, &originalSheet);
-                            freeImage(&qpixelSheet);
-                            sheet = originalSheet;
-                        }
-                        saveDebug("./_after-deskew.pnm", &sheet);
-                    } else {
-                        if (verbose >= VERBOSE_MORE) {
-                            printf("+ deskewing DISABLED for sheet %d\n", nr);
-                        }
                     }
-
-                    // auto-center masks on either single-page or double-page layout
-                    if ( (!isExcluded(nr, noMaskCenterMultiIndex, noMaskCenterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) && (layout != LAYOUT_NONE) && (maskCount == pointCount) ) { // (maskCount==pointCount to make sure all masks had correctly been detected)
-                        // perform auto-masking again to get more precise masks after rotation                    
-                        if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                            maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &sheet);
-                        } else {
-                            if (verbose >= VERBOSE_MORE) {
-                                printf("(mask-scan before centering disabled)\n");
-                            }
-                        }
-
-                        saveDebug("./_before-centering.pnm", &sheet);
-                        // center masks on the sheet, according to their page position
-                        for (i = 0; i < maskCount; i++) {
-                            centerMask(point[i][X], point[i][Y], mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &sheet);
-                        }
-                        saveDebug("./_after-centering.pnm", &sheet);
-                    } else {
-                        if (verbose >= VERBOSE_MORE) {
-                            printf("+ auto-centering DISABLED for sheet %d\n", nr);
-                        }
+                    saveDebug("./_after-border.pnm", &sheet);
+                } else {
+                    if (verbose >= VERBOSE_MORE) {
+                        printf("+ border-scan DISABLED for sheet %d\n", nr);
                     }
+                }
 
-                    // explicit wipe
-                    if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        applyWipes(wipe, wipeCount, maskColor, &sheet);
-                    } else {
-                        if (verbose >= VERBOSE_MORE) {
-                            printf("+ wipe DISABLED for sheet %d\n", nr);
-                        }
+                // post-wipe
+                if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    applyWipes(postWipe, postWipeCount, maskColor, &sheet);
+                }
+
+                // post-border
+                if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    applyBorder(postBorder, maskColor, &sheet);
+                }
+
+                // post-mirroring
+                if (postMirror != 0) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("post-mirroring ");
+                        printDirections(postMirror);
                     }
+                    mirror(postMirror, &sheet);
+                }
 
-                    // explicit border
-                    if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        applyBorder(border, maskColor, &sheet);
-                    } else {
-                        if (verbose >= VERBOSE_MORE) {
-                            printf("+ border DISABLED for sheet %d\n", nr);
-                        }
+                // post-shifting
+                if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("post-shifting [%d,%d]\n", postShift[WIDTH], postShift[HEIGHT]);
                     }
+                    shift(postShift[WIDTH], postShift[HEIGHT], &sheet);
+                }
 
-                    // border-detection
-                    if (!isExcluded(nr, noBorderScanMultiIndex, noBorderScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        saveDebug("./_before-border.pnm", &sheet);
-                        for (i = 0; i < outsideBorderscanMaskCount; i++) {
-                            detectBorder(autoborder[i], borderScanDirections, borderScanSize, borderScanStep, borderScanThreshold, blackThreshold, outsideBorderscanMask[i], &sheet);
-                            borderToMask(autoborder[i], autoborderMask[i], &sheet);
-                        }
-                        applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, &sheet);
-                        for (i = 0; i < outsideBorderscanMaskCount; i++) {
-                            // border-centering
-                            if (!isExcluded(nr, noBorderAlignMultiIndex, noBorderAlignMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                                alignMask(autoborderMask[i], outsideBorderscanMask[i], borderAlign, borderAlignMargin, &sheet);
+                // post-rotating
+                if (postRotate != 0) {
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("post-rotating %d degrees.\n", postRotate);
+                    }
+                    if (postRotate == 90) {
+                        flipRotate(1, &sheet);
+                    } else if (postRotate == -90) {
+                        flipRotate(-1, &sheet);
+                    }
+                }
+
+                // post-stretch
+                if ((postStretchSize[WIDTH] != -1) || (postStretchSize[HEIGHT] != -1)) {
+                    if (postStretchSize[WIDTH] != -1) {
+                        w = postStretchSize[WIDTH];
+                    } else {
+                        w = sheet.width;
+                    }
+                    if (postStretchSize[HEIGHT] != -1) {
+                        h = postStretchSize[HEIGHT];
+                    } else {
+                        h = sheet.height;
+                    }
+                    stretch(w, h, &sheet);
+                } 
+                    
+                // post-zoom
+                if (postZoomFactor != 1.0) {
+                    w = sheet.width * postZoomFactor;
+                    h = sheet.height * postZoomFactor;
+                    stretch(w, h, &sheet);
+                }
+
+                // post-size
+                if ((postSize[WIDTH] != -1) || (postSize[HEIGHT] != -1)) {
+                    if (postSize[WIDTH] != -1) {
+                        w = postSize[WIDTH];
+                    } else {
+                        w = sheet.width;
+                    }
+                    if (postSize[HEIGHT] != -1) {
+                        h = postSize[HEIGHT];
+                    } else {
+                        h = sheet.height;
+                    }
+                    resize(w, h, &sheet);
+                } 
+                    
+                if (showTime) {
+                    endTime = clock();
+                }
+
+                // --- write output file ---
+
+                // write split pages output
+
+                if (writeoutput == true) {    
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("writing output.\n");
+                    }
+                    // write files
+                    saveDebug("./_before-save.pnm", &sheet);
+                    page.width = sheet.width / outputCount;
+                    page.height = sheet.height;
+                    page.bitdepth = sheet.bitdepth;
+                    page.color = sheet.color;
+                    for ( j = 0; j < outputCount; j++) {
+                        // get pagebuffer
+                        if ( outputCount == 1 ) {
+                            page.buffer = sheet.buffer;
+                            page.bufferGrayscale = sheet.bufferGrayscale;
+                            page.bufferLightness = sheet.bufferLightness;
+                            page.bufferDarknessInverse = sheet.bufferDarknessInverse;
+                        } else { // generic case: copy page-part of sheet into own buffer
+                            if (page.color) {
+                                page.buffer = (uint8_t*)malloc( page.width * page.height * 3 );
+                                page.bufferGrayscale = (uint8_t*)malloc( page.width * page.height );
+                                page.bufferLightness = (uint8_t*)malloc( page.width * page.height );
+                                page.bufferDarknessInverse = (uint8_t*)malloc( page.width * page.height );
                             } else {
-                                if (verbose >= VERBOSE_MORE) {
-                                    printf("+ border-centering DISABLED for sheet %d\n", nr);
-                                }
+                                page.buffer = (uint8_t*)malloc( page.width * page.height );
+                                page.bufferGrayscale = page.buffer;
+                                page.bufferLightness = page.buffer;
+                                page.bufferDarknessInverse = page.buffer;
                             }
+                            copyImageArea(page.width * j, 0, page.width, page.height, &sheet, 0, 0, &page);
                         }
-                        saveDebug("./_after-border.pnm", &sheet);
-                    } else {
-                        if (verbose >= VERBOSE_MORE) {
-                            printf("+ border-scan DISABLED for sheet %d\n", nr);
-                        }
-                    }
-
-                    // post-wipe
-                    if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        applyWipes(postWipe, postWipeCount, maskColor, &sheet);
-                    }
-
-                    // post-border
-                    if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                        applyBorder(postBorder, maskColor, &sheet);
-                    }
-
-                    // post-mirroring
-                    if (postMirror != 0) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("post-mirroring ");
-                            printDirections(postMirror);
-                        }
-                        mirror(postMirror, &sheet);
-                    }
-
-                    // post-shifting
-                    if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("post-shifting [%d,%d]\n", postShift[WIDTH], postShift[HEIGHT]);
-                        }
-                        shift(postShift[WIDTH], postShift[HEIGHT], &sheet);
-                    }
-
-                    // post-rotating
-                    if (postRotate != 0) {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("post-rotating %d degrees.\n", postRotate);
-                        }
-                        if (postRotate == 90) {
-                            flipRotate(1, &sheet);
-                        } else if (postRotate == -90) {
-                            flipRotate(-1, &sheet);
-                        }
-                    }
-
-                    // post-stretch
-                    if ((postStretchSize[WIDTH] != -1) || (postStretchSize[HEIGHT] != -1)) {
-                        if (postStretchSize[WIDTH] != -1) {
-                            w = postStretchSize[WIDTH];
-                        } else {
-                            w = sheet.width;
-                        }
-                        if (postStretchSize[HEIGHT] != -1) {
-                            h = postStretchSize[HEIGHT];
-                        } else {
-                            h = sheet.height;
-                        }
-                        stretch(w, h, &sheet);
-                    } 
-                    
-                    // post-zoom
-                    if (postZoomFactor != 1.0) {
-                        w = sheet.width * postZoomFactor;
-                        h = sheet.height * postZoomFactor;
-                        stretch(w, h, &sheet);
-                    }
-
-                    // post-size
-                    if ((postSize[WIDTH] != -1) || (postSize[HEIGHT] != -1)) {
-                        if (postSize[WIDTH] != -1) {
-                            w = postSize[WIDTH];
-                        } else {
-                            w = sheet.width;
-                        }
-                        if (postSize[HEIGHT] != -1) {
-                            h = postSize[HEIGHT];
-                        } else {
-                            h = sheet.height;
-                        }
-                        resize(w, h, &sheet);
-                    } 
-                    
-                    if (showTime) {
-                        endTime = clock();
-                    }
-
-                    // --- write output file ---
-
-                    // write split pages output
-
-                    if (writeoutput == true) {    
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("writing output.\n");
-                        }
-                        // write files
-                        saveDebug("./_before-save.pnm", &sheet);
-                        success = true;
-                        page.width = sheet.width / outputCount;
-                        page.height = sheet.height;
-                        page.bitdepth = sheet.bitdepth;
-                        page.color = sheet.color;
-                        for ( j = 0; success && (j < outputCount); j++) {
-                            // get pagebuffer
-                            if ( outputCount == 1 ) {
-                                page.buffer = sheet.buffer;
-                                page.bufferGrayscale = sheet.bufferGrayscale;
-                                page.bufferLightness = sheet.bufferLightness;
-                                page.bufferDarknessInverse = sheet.bufferDarknessInverse;
-                            } else { // generic case: copy page-part of sheet into own buffer
-                                if (page.color) {
-                                    page.buffer = (uint8_t*)malloc( page.width * page.height * 3 );
-                                    page.bufferGrayscale = (uint8_t*)malloc( page.width * page.height );
-                                    page.bufferLightness = (uint8_t*)malloc( page.width * page.height );
-                                    page.bufferDarknessInverse = (uint8_t*)malloc( page.width * page.height );
-                                } else {
-                                    page.buffer = (uint8_t*)malloc( page.width * page.height );
-                                    page.bufferGrayscale = page.buffer;
-                                    page.bufferLightness = page.buffer;
-                                    page.bufferDarknessInverse = page.buffer;
-                                }
-                                copyImageArea(page.width * j, 0, page.width, page.height, &sheet, 0, 0, &page);
-                            }
                             
-                            success = saveImage(outputFilenamesResolved[j], &page, outputType, overwrite, blackThreshold);
+                        saveImage(outputFilenamesResolved[j], &page, outputType, overwrite, blackThreshold);
                             
-                            if ( outputCount > 1 ) {
-                                freeImage(&page);
-                            }
-                            if (success == false) {
-                                fprintf(stderr, "*** error: Could not save image data to file %s.\n", outputFilenamesResolved[j]);
-                                exitCode = 2;
-                            }
+                        if ( outputCount > 1 ) {
+                            freeImage(&page);
                         }
                     }
 
@@ -4863,5 +4829,5 @@ int main(int argc, char* argv[]) {
     if ( showTime && (totalCount > 1) ) {
        printf("- total processing time of all %d sheets:  %f s  (average:  %f s)\n", totalCount, (double)totalTime/CLOCKS_PER_SEC, (double)totalTime/totalCount/CLOCKS_PER_SEC);
     }
-    return exitCode;
+    return 0;
 }
