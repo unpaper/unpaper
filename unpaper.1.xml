@@ -506,6 +506,653 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
             </listitem>
           </varlistentry>
 
+          <varlistentry>
+            <term>
+              <option>-bn</option>
+              { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+            <term>
+              <option>--blackfilter-scan-direction</option>
+              { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Directions in which to search for solidly black areas. Either <option>v</option>
+                (for vertical mirroring), <option>h</option> (for horizontal mirroring) or
+                <option>v,h</option> (for both) can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-bs</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+            <term>
+              <option>--blackfilter-scan-size</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Width of virtual bar used for mask detection. Two values may be specified to
+                individually set horizontal and vertical size. (default: <option>20,20</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-bd</option>
+              { <replaceable>depth</replaceable> |
+              <replaceable>h-depth</replaceable><option>,</option><replaceable>v-depth</replaceable> }
+            </term>
+            <term>
+              <option>--blackfilter-scan-depth</option>
+              { <replaceable>depth</replaceable> |
+              <replaceable>h-depth</replaceable><option>,</option><replaceable>v-depth</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Size of virtual bar used for black area detection. (default: <option>500,500</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+
+          <varlistentry>
+            <term>
+              <option>-bp</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+            <term>
+              <option>--blackfilter-scan-step</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Steps to move virtual bar for black area detection. (default: <option>5,5</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-bt</option>
+              <replaceable>threshold</replaceable>
+            </term>
+            <term>
+              <option>--blackfilter-scan-threshold</option>
+              <replaceable>threshold</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Ratio of dark pixels above which a black area gets detected. (default:
+                <option>0.95</option>).
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-bx</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+            <term>
+              <option>--blackfilter-scan-exclude</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Area on which the blackfilter should not operate. This can be useful to prevent the
+                blackfilter from working on inner page content. May be specified multiple times to
+                set more than one area.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-bi</option> <replaceable>intensity</replaceable>
+            </term>
+            <term>
+              <option>--blackfilter-intensity</option> <replaceable>intensity</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Intensity with which to delete black areas. Larger values will leave less
+                noise-pixels around former black areas, but may delete page content. (default:
+                <option>20</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-ni</option> <replaceable>intensity</replaceable>
+            </term>
+            <term>
+              <option>-noisefilter-intensity</option> <replaceable>intensity</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Intensity with which to delete individual pixels or tiny clusters of pixels. Any
+                cluster which only contains <replaceable>intensity</replaceable> dark pixels
+                together will be deleted. (default: <option>4</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-ls</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+            <term>
+              <option>--blurfilter-size</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Size of blurfilter area to search for "lonely" clusters of pixels.  (default:
+                <option>100,100</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-lp</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+            <term>
+              <option>--blurfilter-step</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Size of "blurring" steps in each direction. (default: <option>50,50</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-li</option>
+              <replaceable>ratio</replaceable>
+            </term>
+            <term>
+              <option>--blurfilter-intensity</option>
+              <replaceable>ratio</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Relative intensity with which to delete tiny clusters of pixels. Any blurred area
+                which contains at most the <replaceable>ratio</replaceable> of dark pixels will be
+                cleared. (default: <option>0.01</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-gs</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+            <term>
+              <option>--grayfilter-size</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Size of grayfilter mask to search for "gray-only" areas of pixels.  (default:
+                <option>50,50</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-gp</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+            <term>
+              <option>--grayfilter-step</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Size of steps moving the grayfilter mask in each direction. (default:
+                <option>20,20</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-gt</option>
+              <replaceable>ratio</replaceable>
+            </term>
+            <term>
+              <option>--grayfilter-threshold</option>
+              <replaceable>ratio</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Relative intensity of grayness which is accepted before clearing the grayfilter mask
+                in cases where no black pixel is found in the mask. (default: <option>0.5</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-p</option>
+              <replaceable>x</replaceable><option>,</option><replaceable>y</replaceable>
+            </term>
+            <term>
+              <option>--mask-scan-point</option>
+              <replaceable>x</replaceable><option>,</option><replaceable>y</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Manually set starting point for mask-detection. Multiple
+                <option>--mask-scan-point</option> options may be specified to detect multiple
+                masks.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-m</option>
+              <replaceable>x1</replaceable><option>,</option><replaceable>y1</replaceable><option>,</option><replaceable>x2</replaceable><option>,</option><replaceable>y2</replaceable>
+            </term>
+            <term>
+              <option>--mask</option>
+              <replaceable>x1</replaceable><option>,</option><replaceable>y1</replaceable><option>,</option><replaceable>x2</replaceable><option>,</option><replaceable>y2</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Manually add a mask, in addition to masks automatically detected around the
+                <option>--mask-scan-point</option> coordinates (unless
+                <option>--no-mask-scan</option> is specified).
+              </para>
+
+              <para>
+                Any pixel outside a mask will be set to white, unless another mask covers this
+                pixel.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-mn</option>
+              { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+            <term>
+              <option>--mask-scan-direction</option>
+              { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Directions in which to search for mask borders, starting from --mask-scan-point
+                coordinates. Either <option>v</option> (for vertical mirroring), <option>h</option>
+                (for horizontal mirroring) or <option>v,h</option> (for both) can be specified.
+                (default: <option>h</option>, as <option>v</option> may cut text- paragraphs on
+                single-page sheets)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-ms</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+            <term>
+              <option>--mask-scan-size</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Width of the virtual bar used for mask detection. Two values may be specified to
+                individually set horizontal and vertical size. (default: <option>50,50</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-md</option>
+              { <replaceable>depth</replaceable> |
+              <replaceable>h-depth</replaceable><option>,</option><replaceable>v-depth</replaceable> }
+            </term>
+            <term>
+              <option>--mask-scan-depth</option>
+              { <replaceable>depth</replaceable> |
+              <replaceable>h-depth</replaceable><option>,</option><replaceable>v-depth</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Height of the virtual bar used for mask detection. (default: <option>-1,-1</option>,
+                using the total width or height of the sheet)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-mp</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+            <term>
+              <option>--mask-scan-step</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Steps to move the virtual bar for mask detection. (default: <option>5,5</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-mt</option>
+              { <replaceable>threshold</replaceable> |
+              <replaceable>h-threshold</replaceable><option>,</option><replaceable>v-threshold</replaceable> }
+            </term>
+            <term>
+              <option>--mask-scan-threshold</option>
+              { <replaceable>threshold</replaceable> |
+              <replaceable>h-threshold</replaceable><option>,</option><replaceable>v-threshold</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Ratio of dark pixels below which an edge gets detected, relative to maximum
+                blackness when counting from the start coordinate heading towards one
+                edge. (default: <option>0.1</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-mm</option>
+              <replaceable>w</replaceable><option>,</option><replaceable>h</replaceable>
+            </term>
+            <term>
+              <option>--mask-scan-minimum</option>
+              <replaceable>w</replaceable><option>,</option><replaceable>h</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Minimum allowed size of an auto-detected mask. Masks detected below this size will
+                be ignored and set to the size specified by mask-scan-maximum. (default:
+                <option>100,100</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-mM</option>
+              <replaceable>w</replaceable><option>,</option><replaceable>h</replaceable>
+            </term>
+            <term>
+              <option>--mask-scan-maximum</option>
+              <replaceable>w</replaceable><option>,</option><replaceable>h</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Maximum allowed size of an auto-detected mask. Masks detected above this size will
+                be shrunk to the maximum value, each direction individually. (default: sheet size,
+                or page size derived from <option>--layout</option> option)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-mc</option> <replaceable>color</replaceable>
+            </term>
+            <term>
+              <option>--mask-color</option> <replaceable>color</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Color value with which to wipe out pixels not covered by any mask. Maybe useful for
+                testing in order to visualize the effect of masking. (Note that an RGB-value is
+                expected: R*65536 + G*256 + B.)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-dn</option>
+              { <option>left</option> | <option>top</option> | <option>right</option> |
+              <option>bottom</option> }<option>,</option>...
+            </term>
+            <term>
+              <option>--deskew-scan-direction</option>
+              { <option>left</option> | <option>top</option> | <option>right</option> |
+              <option>bottom</option> }<option>,</option>...
+            </term>
+
+            <listitem>
+              <para>
+                Edges from which to scan for rotation.  Each edge of a mask can be used to detect
+                the mask's rotation. If multiple edges are specified, the average value will be
+                used, unless the statistical deviation exceeds
+                <option>--deskew-scan-deviation</option>. Use <option>left</option> for scanning
+                from the left edge, <option>top</option> for scanning from the top edge,
+                <option>right</option> for scanning from the right edge, <option>bottom</option> for
+                scanning from the bottom.  Multiple directions can be separated by commas. (default:
+                <option>left,right</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-ds</option> <replaceable>pixels</replaceable>
+            </term>
+            <term>
+              <option>--deskew-scan-size</option> <replaceable>pixels</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Size of virtual line for rotation detection. (default: <option>1500</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-dd</option> <replaceable>ratio</replaceable>
+            </term>
+            <term>
+              <option>--deskew-scan-depth</option> <replaceable>ratio</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Amount of dark pixels to accumulate until scanning is stopped, relative to scan-bar
+                size. (default: <option>0.5</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-dr</option> <replaceable>degrees</replaceable>
+            </term>
+            <term>
+              <option>--deskew-scan-range</option> <replaceable>degrees</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Range in which to search for rotation, from -<replaceable>degrees</replaceable> to
+                +<replaceable>degrees</replaceable> rotation.  (default: <option>5.0</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-dp</option> <replaceable>degrees</replaceable>
+            </term>
+            <term>
+              <option>--deskew-scan-step</option> <replaceable>degrees</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Steps between single rotation-angle detections.  Lower numbers lead to better
+                results but slow down processing. (default: <option>0.1</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-dv</option> <replaceable>deviation</replaceable>
+            </term>
+            <term>
+              <option>--deskew-scan-deviation</option> <replaceable>deviation</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Maximum statistical deviation allowed among the results from detected edges.  No
+                rotation if exceeded. (default: <option>1.0</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-W</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+            <term>
+              <option>--wipe</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Manually wipe out an area. Any pixel in a wiped area will be set to white.  Multiple
+                <option>--wipe</option> areas may be specified.  This is applied after deskewing and
+                before automatic border-scan.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-mw</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>left</replaceable><option>,</option><replaceable>right</replaceable> }
+            </term>
+            <term>
+              <option>--middle-wipe</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>left</replaceable><option>,</option><replaceable>right</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                If <option>--layout</option> is set to <option>double</option>, this may specify the
+                size of a middle area to wipe out between the two pages on the sheet. This may be
+                useful if the blackfilter fails to remove some black areas (e.g. resulting from
+                photo-copying in the middle between two pages).
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-B</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+            <term>
+              <option>--border</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Manually add a border. Any pixel in the border area will be set to white. This is
+                applied after deskewing and before automatic border-scan.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-Bn</option>
+              { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+            <term>
+              <option>--border-scan-direction</option>
+              { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Directions in which to search for outer border. Either <option>v</option> (for
+                vertical mirroring), <option>h</option> (for horizontal mirroring) or
+                <option>v,h</option> (for both) can be specified.  (default: <option>v</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
         </variablelist>
       </refsection>
     </refentry>
