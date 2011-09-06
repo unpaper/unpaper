@@ -3,6 +3,7 @@ bin_PROGRAMS = unpaper
 unpaper_SOURCES = unpaper.c
 
 dist_doc_DATA = NEWS COPYING README AUTHORS TODO
+dist_man_MANS = unpaper.1
 
 dist_html_DATA = doc/unpaper.html doc/index.html
 imgdir = $(htmldir)/img
@@ -63,3 +64,9 @@ tests/imgsrc%.pbm tests/imgsrc%.ppm tests/imgsrc%.pgm: tests/imgsrc%.png tests/.
 
 tests/results%.png: tests/results%.pbm tests/.dirstamp
 	$(PNMTOPNG) $< > $@
+
+%.1: %.1.xml
+	$(AM_V_GEN)$(XSLTPROC) \
+		--stringparam man.copyright.section.enable 0 \
+		--stringparam man.authors.section.enabled 0 \
+		http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl $<

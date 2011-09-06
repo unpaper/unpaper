@@ -1,0 +1,523 @@
+<?xml version='1.0'?>
+<!--
+Copyright © 2005-2007, Jens Gulden
+Copyright © 2011, Diego Elio Pettenò <flameeyes@flameeyes.eu>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this generator; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+-->
+<article xmlns="http://docbook.org/ns/docbook"
+         xmlns:xl="http://www.w3.org/1999/xlink"
+         version="5.0" xml:lang="en">
+  <info>
+    <title>unpaper</title>
+
+    <authorgroup>
+      <author>
+        <personname>
+          <firstname>Jens Gulden</firstname>
+          <surname>Pettenò</surname>
+        </personname>
+      </author>
+
+      <author>
+        <personname>
+          <firstname>Diego Elio</firstname>
+          <surname>Pettenò</surname>
+        </personname>
+
+        <affiliation>
+          <address><email>flameeyes@flameeyes.eu</email></address>
+        </affiliation>
+      </author>
+    </authorgroup>
+
+    <copyright>
+      <year>2011</year>
+      <holder>Diego Elio Pettenò</holder>
+    </copyright>
+
+    <legalnotice>
+      <para>
+        This program is free software; you can redistribute it and/or
+        modify it under the terms of the GNU General Public License as
+        published by the Free Software Foundation; either version 2 of
+        the License, or (at your option) any later version.
+      </para>
+      
+      <para>
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+      </para>
+
+      <para>
+        You should have received a copy of the GNU General Public
+        License along with this generator; if not, write to the Free
+        Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+        MA 02110-1301 USA
+      </para>
+    </legalnotice>
+  </info>
+
+  <section>
+    <title>Reference</title>
+
+    <refentry>
+      <info>
+        <date>September 2011</date>
+        <productname>unpaper</productname>
+      </info>
+      <refmeta>
+        <refentrytitle>unpaper</refentrytitle>
+        <manvolnum>1</manvolnum>
+      </refmeta>
+      <refnamediv>
+        <refname>unpaper</refname>
+        <refpurpose>Post-processing tool for scanned sheets of paper.</refpurpose>
+      </refnamediv>
+      <refsynopsisdiv>
+        <cmdsynopsis>
+          <command>unpaper</command>
+
+          <arg choice="opt">
+            <replaceable>options</replaceable>
+          </arg>
+
+          <arg choice="req">
+            <replaceable>input-file(s)</replaceable>
+          </arg>
+
+          <arg choice="req">
+            <replaceable>output-file(s)</replaceable>
+          </arg>
+        </cmdsynopsis>
+      </refsynopsisdiv>
+
+      <refsection>
+        <title>Overview</title>
+        <para>
+          unpaper is a post-processing tool for scanned sheets of paper, especially for book pages
+          that have been scanned from previously created photocopies.  The main purpose is to make
+          scanned book pages better readable on screen after conversion to PDF. Additionally,
+          unpaper might be useful to enhance the quality of scanned pages before performing optical
+          character recognition (OCR).
+        </para>
+
+        <para>
+          unpaper tries to clean scanned images by removing dark edges that appeared through
+          scanning or copying on areas outside the actual page content (e.g.  dark areas between the
+          left-hand-side and the right-hand-side of a double- sided book-page scan).  The program
+          also tries to detect disaligned centering and rotation of pages and will automatically
+          straighten each page by rotating it to the correct angle. This process is called
+          "deskewing".  Note that the automatic processing will sometimes fail. It is always a good
+          idea to manually control the results of unpaper and adjust the parameter settings
+          according to the requirements of the input. Each processing step can also be disabled
+          individually for each sheet.
+        </para>
+
+        <para>
+          Input and output files can be in either <filename>.pbm</filename>,
+          <filename>.pgm</filename> or <filename>.ppm</filename> format, thus generally in
+          <filename>.pnm</filename> format, as also used by the Linux scanning tools
+          <command>scanimage</command> and <command>scanadf</command>.  Conversion to PDF can
+          e.g. be achieved with the Linux tools <command>pgm2tiff</command>,
+          <command>tiffcp</command> and <command>tiff2pdf</command>.
+        </para>
+      </refsection>
+
+      <refsection>
+        <title>Options</title>
+
+        <para>
+          Filenames may contain a formatting placeholder starting with <literal>%</literal> to
+          insert a page counter for multi-page processing. E.g.: <literal>scan%03d.pbm</literal> to
+          process files <filename>scan001.pbm</filename>, <filename>scan002.pbm</filename>,
+          <filename>scan003.pbm</filename> etc.
+        </para>
+
+        <variablelist>
+          <varlistentry>
+            <term>
+              <option>-l</option> { <option>single</option> | <option>double</option> |
+              <option>none</option> }
+            </term>
+            <term>
+              <option>--layout</option> { <option>single</option> | <option>double</option> |
+              <option>none</option> }
+            </term>
+            <listitem>
+              <para>
+                Set default layout options for a sheet:
+              </para>
+
+              <variablelist>
+                <varlistentry>
+                  <term><option>single</option></term>
+
+                  <listitem>
+                    <para>One page per sheet.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><option>double</option></term>
+
+                  <listitem>
+                    <para>
+                      Two pages per sheet, landscape orientation (one page on the left half, one
+                      page on the right half).
+                    </para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><option>none</option></term>
+
+                  <listitem>
+                    <para>No auto-layout, mask-scan-points may individually be specified.</para>
+                  </listitem>
+                </varlistentry>
+
+              </variablelist>
+
+              <para>
+                Using <option>single</option> or <option>double</option> automatically sets
+                corresponding <option>--mask-scan-points</option>.  The default is
+                <option>single</option>.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-start</option> <replaceable>sheet</replaceable></term>
+            <term><option>--start-sheet</option> <replaceable>start-sheet</replaceable></term>
+
+            <listitem>
+              <para>
+                Number of first sheet to process in multi-sheet mode. (default: 1)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-end</option> <replaceable>sheet</replaceable></term>
+            <term><option>--end-sheet</option> <replaceable>sheet</replaceable></term>
+
+            <listitem>
+              <para>
+                Number of last sheet to process in multi-sheet mode. -1 indicates processing until
+                no more input file with the corresponding page number is available (default: -1)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-#</option> <replaceable>sheet-range</replaceable></term>
+            <term><option>--sheet</option> <replaceable>sheet-range</replaceable></term>
+
+            <listitem>
+              <para>
+                Optionally specifies which sheets to process in the range between start-sheet and
+                end-sheet.
+              </para>
+            </listitem>
+          </varlistentry>
+
+
+          <varlistentry>
+            <term><option>-x</option> <replaceable>sheet-range</replaceable></term>
+            <term><option>--exclude</option> <replaceable>sheet-range</replaceable></term>
+
+            <listitem>
+              <para>
+                Excludes sheets from processing in the range between start-sheet and end-sheet.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--pre-rotate</option> { <option>-90</option> | <option>90</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Rotates the whole image clockwise (<option>90</option>) or anti-clockwise
+                (<option>-90</option>) before any other processing.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--post-rotate</option> { <option>-90</option> | <option>90</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Rotates the whole image clockwise (<option>90</option>) or anti-clockwise
+                (<option>-90</option>) after any other processing.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-M</option> { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+            <term>
+              <option>--pre-mirror</option> { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Mirror the image, after possible pre-rotation. Either <option>v</option> (for vertical mirroring),
+                <option>h</option> (for horizontal mirroring) or <option>v,h</option> (for both) can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--post-mirror</option> { <option>v</option> | <option>h</option> | <option>v,h</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Mirror the image, after any other processing except possible post-rotation. Either
+                <option>v</option> (for vertical mirroring), <option>h</option> (for horizontal
+                mirroring) or <option>v,h</option> (for both) can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--pre-shift</option> <replaceable>h</replaceable><option>,</option><replaceable>v</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Shift the image before further processing.  Values for <replaceable>h</replaceable>
+                (horizontal shift) and <replaceable>v</replaceable> (vertical shift) can either be
+                positive or negative.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--post-shift</option> <replaceable>h</replaceable><option>,</option><replaceable>v</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Shift the image after other processing.  Values for <replaceable>h</replaceable>
+                (horizontal shift) and <replaceable>v</replaceable> (vertical shift) can either be
+                positive or negative.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--pre-wipe</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Manually wipe out an area before further processing. Any pixel in a wiped area will
+                be set to white. Multiple areas to be wiped may be specified by multiple occurrences
+                of this options.
+              </para>
+            </listitem>
+          </varlistentry>
+
+
+          <varlistentry>
+            <term>
+              <option>--post-wipe</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Manually wipe out an area after processing. Any pixel in a wiped area will be set to
+                white. Multiple areas to be wiped may be specified by multiple occurrences of this
+                options.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--pre-border</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Clear the border-area of the sheet before further processing. Any pixel in the
+                border area will be set to white.
+              </para>
+            </listitem>
+          </varlistentry>
+
+
+          <varlistentry>
+            <term>
+              <option>--post-border</option>
+              <replaceable>left</replaceable><option>,</option><replaceable>top</replaceable><option>,</option><replaceable>right</replaceable><option>,</option><replaceable>bottom</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Clear the border-area of the sheet after other processing. Any pixel in the border
+                area will be set to white.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--pre-mask</option>
+              <replaceable>x1</replaceable><option>,</option><replaceable>y1</replaceable><option>,</option><replaceable>x2</replaceable><option>,</option><replaceable>y2</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Specify masks to apply before any other processing. Any pixel outside a mask will be
+                set to white, unless another mask includes this pixel.
+              </para>
+              <para>
+                Only pixels inside a mask will remain.  Multiple masks may be specified. No
+                deskewing will be applied to the masks specified by <option>--pre-mask</option>.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-s</option>
+              { <replaceable>width</replaceable><option>,</option><replaceable>height</replaceable>
+              | <replaceable>size-name</replaceable> }
+            </term>
+            <term>
+              <option>--size</option>
+              { <replaceable>width</replaceable><option>,</option><replaceable>height</replaceable>
+              | <replaceable>size-name</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Change the sheet size before other processing is applied. Content on the sheet gets
+                zoomed to fit to the appropriate size, but the aspect ratio is preserved.  Instead,
+                if the sheet's aspect ratio changes, the zoomed content gets centered on the
+                sheet.
+              </para>
+
+              <para>
+                Possible values for <replaceable>size-name</replaceable> are: <option>a5</option>,
+                <option>a4</option>, <option>a3</option>, <option>letter</option>,
+                <option>legal</option>.  All size names can also be applied in rotated landscape
+                orientation, use <option>a4-landscape</option>, <option>letter-landscape</option>
+                etc.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--post-size</option>
+              { <replaceable>width</replaceable><option>,</option><replaceable>height</replaceable>
+              | <replaceable>size-name</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Change the sheet size preserving the content's aspect ratio after other processing
+                steps are applied.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--stretch</option>
+              { <replaceable>width</replaceable><option>,</option><replaceable>height</replaceable>
+              | <replaceable>size-name</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Change the sheet size before other processing is applied. Content on the sheet gets
+                stretched to the specified size, possibly changing the aspect ratio.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--post-stretch</option>
+              { <replaceable>width</replaceable><option>,</option><replaceable>height</replaceable>
+              | <replaceable>size-name</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Change the sheet size after other processing is applied. Content on the sheet gets
+                stretched to the specified size, possibly changing the aspect ratio.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-z</option> <replaceable>factor</replaceable></term>
+            <term><option>--zoom</option> <replaceable>factor</replaceable></term>
+
+            <listitem>
+              <para>
+                Change the sheet size according to the given factor before other processing is done.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>--post-zoom</option> <replaceable>factor</replaceable></term>
+
+            <listitem>
+              <para>
+                Change the sheet size according to the given factor after processing is done.
+              </para>
+            </listitem>
+          </varlistentry>
+
+        </variablelist>
+      </refsection>
+    </refentry>
+  </section>
+</article>
+<!--
+    Local Variables:
+    mode: nxml
+    mode: auto-fill
+    mode: flyspell
+    ispell-local-dictionary: "english"
+    fill-column: 100
+    indent-tabs-mode: nil
+    End:
+-->
