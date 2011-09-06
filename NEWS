@@ -1,3 +1,11 @@
+Release 0.4, pending:
+ - New buildsystem, based on standard GNU autotools.
+ - Optimisation of source code to produce slimmer, faster binaries.
+ - The sources now compile using C99, and support GCC, Pathscale and
+   Clang compilers.
+ - Options are now documented in the unpaper(1) man page, rather than
+   in the code.
+
 Release 0.3, 2007-12-31:
 - Moved history-information to CHANGELOG-file.
 - Two distribution archives become part of the release, one source-only
