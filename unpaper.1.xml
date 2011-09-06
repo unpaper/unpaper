@@ -1153,6 +1153,662 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
             </listitem>
           </varlistentry>
 
+          <varlistentry>
+            <term>
+              <option>-Bs</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+            <term>
+              <option>--border-scan-size</option>
+              { <replaceable>size</replaceable> |
+              <replaceable>h-size</replaceable><option>,</option><replaceable>v-size</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Width of virtual bar used for border detection. Two values may be specified to
+                individually set horizontal and vertical size. (default: <option>5,5</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-Bp</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+            <term>
+              <option>--border-scan-step</option>
+              { <replaceable>step</replaceable> |
+              <replaceable>h-step</replaceable><option>,</option><replaceable>v-step</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Steps to move virtual bar for border detection. (default: <option>5,5</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-Bt</option> <replaceable>threshold</replaceable>
+            </term>
+            <term>
+              <option>--border-scan-threshold</option> <replaceable>threshold</replaceable>
+            </term>
+            
+            <listitem>
+              <para>
+                Absolute number of dark pixels covered by the border-scan mask above which a border
+                is detected. (default: <option>5</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-Ba</option>
+              { <option>left</option> | <option>top</option> | <option>right</option> |
+              <option>bottom</option> }
+            </term>
+            <term>
+              <option>--border-align</option>
+              { <option>left</option> | <option>top</option> | <option>right</option> |
+              <option>bottom</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Direction where to shift the detected border-area. Use
+                <option>--border-margin</option> to specify horizontal and vertical distances to be
+                kept from the sheet-edge.  (default: <option>none</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-Bm</option>
+              <replaceable>vertical</replaceable><option>,</option><replaceable>horizontal</replaceable>
+            </term>
+            <term>
+              <option>--border-margin</option>
+              <replaceable>vertical</replaceable><option>,</option><replaceable>horizontal</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Distance to keep from the sheet edge when aligning a border area. May use
+                measurement suffices such as cm, in.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-w</option> <replaceable>threshold</replaceable>
+            </term>
+            <term>
+              <option>--white-threshold</option> <replaceable>threshold</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Brightness ratio above which a pixel is considered white.  (default:
+                <option>0.9</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-b</option> <replaceable>threshold</replaceable>
+            </term>
+            <term>
+              <option>--black-threshold</option> <replaceable>threshold</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Brightness ratio below which a pixel is considered black (non-gray). This is used by
+                the gray-filter. This value is also used when converting a grayscale image to
+                black-and-white mode (default: <option>0.33</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-ip</option>
+              { <option>1</option> | <option>2</option> }
+            </term>
+            <term>
+              <option>--input-pages</option>
+              { <option>1</option> | <option>2</option> }
+            </term>
+
+            <listitem>
+              <para>
+                If <option>2</option> is specified, read two input images instead of one and
+                internally combine them to a doubled-layout sheet before further processing.  Before
+                internally combining, <option>--pre-rotation</option> is optionally applied
+                individually to both input images as the very first processing steps.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-op</option>
+              { <option>1</option> | <option>2</option> }
+            </term>
+            <term>
+              <option>--output-pages</option>
+              { <option>1</option> | <option>2</option> }
+            </term>
+
+            <listitem>
+              <para>
+                If <option>2</option> is specified, write two output images instead of one, as a
+                result of splitting a doubled-layout sheet after processing. After splitting the
+                sheet, <option>--post-rotation</option> is optionally applied individually to both
+                output images as the very last processing step.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-S</option>
+              { <replaceable>width</replaceable><option>,</option><replaceable>height</replaceable>
+              | <replaceable>size-name</replaceable> }
+            </term>
+            <term>
+              <option>--sheet-size</option>
+              { <replaceable>width</replaceable><option>,</option><replaceable>height</replaceable>
+              | <replaceable>size-name</replaceable> }
+            </term>
+
+            <listitem>
+              <para>
+                Force a fix sheet size. Usually, the sheet size is determined by the input image
+                size (if <option>input-pages=1</option>), or by the double size of the first page in
+                a two-page input set (if <option>input-pages=2</option>).  If the input image is
+                smaller than the size specified here, it will appear centered and surrounded with a
+                white border on the sheet. If the input image is bigger, it will be centered and the
+                edges will be cropped. This option may also be helpful to get regular sized output
+                images if the input image sizes differ.  Standard size-names like
+                <option>a4-landscape</option>, <option>letter</option>, etc. may be used (see
+                <option>--size</option>).  (default: as in input file)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--sheet-background</option>
+              { <option>black</option> | <option>white</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Sets a color with which the sheet is filled before any image is loaded and placed
+                onto it. This can be useful when the sheet size and the image size differ.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-blackfilter</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables black area scan. Individual sheet indices can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-noisefilter</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables the noisefilter. Individual sheet indices can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-blurfilter</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables the blurfilter. Individual sheet indices can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-grayfilter</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables the grayfilter. Individual sheet indices can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-mask-scan</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables mask-detection. Masks explicitly set by <option>--mask</option> will still
+                have effect. Individual sheet indices can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-mask-center</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables auto-centering of each mask.  Auto-centering is performed by default if the
+                <option>--layout</option> option has been set. Individual sheet indices can be
+                specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-deskew</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables deskewing. Individual sheet indices can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-wipe</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables explicit wipe-areas.  This means the effect of parameter
+                <option>--wipe</option> can be disabled individually per sheet.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-border</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables explicitly set borders. This means the effect of parameter
+                <option>--border</option> can be disabled individually per sheet.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-border-scan</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables border-scanning from the edges of the sheet. Individual sheet indices can
+                be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-border-align</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Disables aligning of the area detected by border-scanning (see
+                <option>--border-align</option>). Individual sheet indices can be specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-n</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+            <term>
+              <option>--no-processing</option>
+              <replaceable>sheet-range</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Do not perform any processing on a sheet except pre/post rotating and mirroring, and
+                file-depth conversions on saving.  This option has the same effect as setting all
+                <option>--no-xxx</option> options together. Individual sheet indices can be
+                specified.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-qpixels</option>
+            </term>
+
+            <listitem>
+              <para>
+                Disable qpixel-mode for deskewing (do not internally use a 4x bigger image when
+                rotating).
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--no-multi-pages</option>
+            </term>
+
+            <listitem>
+              <para>
+                Disable multi-page processing even if the input filename contains a
+                <literal>%</literal> (usually indicating the start of a placeholder for the page
+                counter).
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--dpi</option> <replaceable>dpi</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Dots per inch used for conversion of measured size values, like
+                e.g. <option>21cm,27.9cm</option>. Mind that this parameter should occur before
+                specifying any size value with measurement suffix. (default: <option>300</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-t</option>
+              { <option>pbm</option> | <option>pgm</option> }
+            </term>
+            <term>
+              <option>--type</option>
+              { <option>pbm</option> | <option>pgm</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Output file type. (default: as input)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-d</option> <replaceable>bits</replaceable>
+            </term>
+            <term>
+              <option>--depth</option> <replaceable>bits</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Output pixel depth. (default: as input)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-T</option>
+            </term>
+            <term>
+              <option>--test-only</option>
+            </term>
+
+            <listitem>
+              <para>
+                Do not write any output. May be useful in combination with
+                <option>--verbose</option> to get information about the input.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-if</option>
+              <replaceable>file-patterns</replaceable>
+            </term>
+            <term>
+              <option>--input-file-sequence</option>
+              <replaceable>file-patterns</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Sequence of input filename patterns which is repeatedly traversed while resolving
+                input filenames. Specifying a single entry is equivalent to the first filename
+                argument after the options-list.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-of</option>
+              <replaceable>file-patterns</replaceable>
+            </term>
+            <term>
+              <option>--output-file-sequence</option>
+              <replaceable>file-patterns</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Sequence of output filename patterns which is repeatedly traversed while resolving
+                output filenames. Specifying a single entry is equivalent to the second filename
+                argument after the options-list
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-si</option>
+              <replaceable>nr</replaceable>
+            </term>
+            <term>
+              <option>--start-input</option>
+              <replaceable>nr</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Set the first page number to substitute for '%d' in input filenames. Every time the
+                input file sequence is repeated, this number gets increased by 1. (default:
+                (startsheet-1)*inputpages+1)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-so</option>
+              <replaceable>nr</replaceable>
+            </term>
+            <term>
+              <option>--start-output</option>
+              <replaceable>nr</replaceable>
+            </term>
+
+            <listitem>
+              <para>
+                Set the first page number to substitute for '%d' in output filenames. Every time the
+                output file sequence is repeated, this number gets increased by 1.  (default:
+                (startsheet-1)*outputpages+1)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--insert-blank</option>
+              <replaceable>nr</replaceable>
+              [<option>,</option><replaceable>nr</replaceable>...]
+            </term>
+
+            <listitem>
+              <para>
+                Use blank input instead of an input file from the input file sequence at the
+                specified index-positions. The input file sequence will be interrupted temporarily
+                and will continue with the next input file afterwards. This can be useful to insert
+                blank content into a sequence of input images.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--replace-blank</option>
+              <replaceable>nr</replaceable>
+              [<option>,</option><replaceable>nr</replaceable>...]
+            </term>
+
+            <listitem>
+              <para>
+                Like <option>--insert-blank</option>, but the input images at the specified index
+                positions get replaced with blank content and thus will be ignored.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--overwrite</option>
+            </term>
+
+            <listitem>
+              <para>
+                Allow overwriting existing files.  Otherwise the program terminates with an error if
+                an output file to be written already exists.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-q</option>
+            </term>
+            <term>
+              <option>--quiet</option>
+            </term>
+
+            <listitem>
+              <para>
+                Quiet mode, no output at all.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-v</option>
+            </term>
+            <term>
+              <option>--verbose</option>
+            </term>
+
+            <listitem>
+              <para>
+                Verbose output, more info messages.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-vv</option>
+            </term>
+
+            <listitem>
+              <para>
+                Even more verbose output, show parameter settings before processing.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>--time</option>
+            </term>
+
+            <listitem>
+              <para>
+                Output processing time consumed.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
+              <option>-V</option>
+            </term>
+            <term>
+              <option>--version</option>
+            </term>
+
+            <listitem>
+              <para>
+                Output version and build information.
+              </para>
+            </listitem>
+          </varlistentry>
         </variablelist>
       </refsection>
     </refentry>
