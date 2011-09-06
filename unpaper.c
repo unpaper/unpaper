@@ -5,6 +5,7 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
@@ -628,10 +629,10 @@ typedef enum {
 /* --- struct ------------------------------------------------------------- */
 
 struct IMAGE {
-    unsigned char* buffer;
-    unsigned char* bufferGrayscale;
-    unsigned char* bufferLightness;
-    unsigned char* bufferDarknessInverse;
+    uint8_t *buffer;
+    uint8_t *bufferGrayscale;
+    uint8_t *bufferLightness;
+    uint8_t *bufferDarknessInverse;
     int width;
     int height;
     int bitdepth;
@@ -1141,15 +1142,15 @@ static void initImage(struct IMAGE* image, int width, int height, int bitdepth, 
     
     size = width * height;
     if ( color ) {
-        image->bufferGrayscale = (unsigned char*)malloc(size);
-        image->bufferLightness = (unsigned char*)malloc(size);
-        image->bufferDarknessInverse = (unsigned char*)malloc(size);
+        image->bufferGrayscale = (uint8_t*)malloc(size);
+        image->bufferLightness = (uint8_t*)malloc(size);
+        image->bufferDarknessInverse = (uint8_t*)malloc(size);
         memset(image->bufferGrayscale, background, size);
         memset(image->bufferLightness, background, size);
         memset(image->bufferDarknessInverse, background, size);
         size *= 3;
     }
-    image->buffer = (unsigned char*)malloc(size);
+    image->buffer = (uint8_t*)malloc(size);
     memset(image->buffer, background, size);
     if ( ! color ) {
         image->bufferGrayscale = image->buffer;
@@ -1193,11 +1194,11 @@ static void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
  * @return true if the pixel has been changed, false if the original color was the one to set
  */ 
 static bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
-    unsigned char* p;
+    uint8_t* p;
     int w, h;
     int pos;
     bool result;
-    unsigned char r, g, b;
+    uint8_t r, g, b;
     
     w = image->width;
     h = image->height;
@@ -1215,8 +1216,8 @@ static bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
             } else {
                 pixel = pixelGrayscale(r, g, b); // convert to gray (will already be in most cases, but we can't be sure)
             }
-            if (*p != (unsigned char)pixel) {
-                *p = (unsigned char)pixel;
+            if (*p != (uint8_t)pixel) {
+                *p = (uint8_t)pixel;
                 return true;
             } else {
                 return false;
@@ -1256,25 +1257,20 @@ static bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
  * @return color or grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
 static int getPixel(int x, int y, struct IMAGE* image) {
-    int w, h;
-    int pos;
-    int pix;
-    unsigned char r, g, b;
-
-    w = image->width;
-    h = image->height;
+    const int w = image->width;
+    const int h = image->height;
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return pixelValue(WHITE, WHITE, WHITE);
     } else {
-        pos = (y * w) + x;
+        int pos = (y * w) + x;
         if ( ! image->color ) {
-            pix = (unsigned char)image->buffer[pos];
+            const int pix = (uint8_t)image->buffer[pos];
             return pixelValue(pix, pix, pix);
         } else { // color
             pos *= 3;
-            r = (unsigned char)image->buffer[pos++];
-            g = (unsigned char)image->buffer[pos++];
-            b = (unsigned char)image->buffer[pos];
+            const uint8_t r = (uint8_t)image->buffer[pos++];
+            const uint8_t g = (uint8_t)image->buffer[pos++];
+            const uint8_t b = (uint8_t)image->buffer[pos];
             return pixelValue(r, g, b);
         }
     }
@@ -1299,9 +1295,9 @@ int getPixelComponent(int x, int y, int colorComponent, struct IMAGE* image) {
     } else {
         pos = (y * w) + x;
         if ( ! image->color ) {
-            return (unsigned char)image->buffer[pos];
+            return (uint8_t)image->buffer[pos];
         } else { // color
-            return (unsigned char)image->buffer[(pos * 3) + colorComponent];
+            return (uint8_t)image->buffer[(pos * 3) + colorComponent];
         }
     }
 }
@@ -1313,15 +1309,13 @@ int getPixelComponent(int x, int y, int colorComponent, struct IMAGE* image) {
  * @return grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
 static int getPixelGrayscale(int x, int y, struct IMAGE* image) {
-    int w, h;
-    int pos;
+    const int w = image->width;
+    const int h = image->height;
+    const int pos = (y * w) + x;
 
-    w = image->width;
-    h = image->height;
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
     } else {
-        pos = (y * w) + x;
         return image->bufferGrayscale[pos];
     }
 }
@@ -1339,15 +1333,13 @@ static int getPixelGrayscale(int x, int y, struct IMAGE* image) {
  * @return lightness-value (the higher, the lighter) of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
 static int getPixelLightness(int x, int y, struct IMAGE* image) {
-    int w, h;
-    int pos;
+    const int w = image->width;
+    const int h = image->height;
+    const int pos = (y * w) + x;
 
-    w = image->width;
-    h = image->height;
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
     } else {
-        pos = (y * w) + x;
         return image->bufferLightness[pos];
     }
 }
@@ -1365,15 +1357,13 @@ static int getPixelLightness(int x, int y, struct IMAGE* image) {
  * @return inverse-darkness-value (the LOWER, the darker) of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
 static int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
-    int w, h;
-    int pos;
+    const int w = image->width;
+    const int h = image->height;
+    const int pos = (y * w) + x;
 
-    w = image->width;
-    h = image->height;
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
     } else {
-        pos = (y * w) + x;
         return image->bufferDarknessInverse[pos];
     }
 }
@@ -1385,19 +1375,15 @@ static int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
  * @return true if the pixel has been changed, false if the original color was the one to set
  */ 
 static bool setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
-    unsigned char* p;
-    int w, h;
-    int pos;
-    bool result;
-    
-    w = image->width;
-    h = image->height;
+    const int w = image->width;
+    const int h = image->height;
+    const int pos = (y * w) + x;
+
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return false; //nop
     } else {
-        pos = (y * w) + x;
         if ( ! image->color ) {
-            p = &image->buffer[pos];
+            uint8_t *p = &image->buffer[pos];
             if (*p != blackwhite) {
                 *p = blackwhite;
                 return true;
@@ -1405,8 +1391,9 @@ static bool setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
                 return false;
             }
         } else { // color
-            p = &image->buffer[pos * 3];
-            result = false;
+            uint8_t *p = &image->buffer[pos * 3];
+            bool result = false;
+
             if (*p != blackwhite) {
                 *p = blackwhite;
                 result = true;
@@ -1444,9 +1431,8 @@ static bool clearPixel(int x, int y, struct IMAGE* image) {
 static int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int blackwhite) {
     int x;
     int y;
-    int count;
+    int count = 0;
 
-    count = 0;
     for (y = top; y <= bottom; y++) {
         for (x = left; x <= right; x++) {
             if (setPixelBW(x, y, image, blackwhite)) {
@@ -1464,11 +1450,11 @@ static int clearRect(int left, int top, int right, int bottom, struct IMAGE* ima
 static void copyImageArea(int x, int y, int width, int height, struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
     int row;
     int col;
-    int pixel;
+
     // naive but generic implementation
     for (row = 0; row < height; row++) {
         for (col = 0; col < width; col++) {
-            pixel = getPixel(x+col, y+row, source);
+            const int pixel = getPixel(x+col, y+row, source);
             setPixel(pixel, toX+col, toY+row, target);
         }
     }
@@ -1525,14 +1511,12 @@ static void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, 
 static int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
     int x;
     int y;
-    int pixel;
-    int total;
-    int count;
-    total = 0;
-    count = (x2-x1+1)*(y2-y1+1);
+    int total = 0;
+    const int count = (x2-x1+1)*(y2-y1+1);
+
     for (x = x1; x <= x2; x++) {
         for (y = y1; y <= y2; y++) {
-            pixel = getPixelGrayscale(x, y, image);
+            const int pixel = getPixelGrayscale(x, y, image);
             total += pixel;
         }
     }
@@ -1546,14 +1530,12 @@ static int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
 static int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
     int x;
     int y;
-    int pixel;
-    int total;
-    int count;
-    total = 0;
-    count = (x2-x1+1)*(y2-y1+1);
+    int total = 0;
+    const int count = (x2-x1+1)*(y2-y1+1);
+
     for (x = x1; x <= x2; x++) {
         for (y = y1; y <= y2; y++) {
-            pixel = getPixelLightness(x, y, image);
+            const int pixel = getPixelLightness(x, y, image);
             total += pixel;
         }
     }
@@ -1567,14 +1549,12 @@ static int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
 static int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
     int x;
     int y;
-    int pixel;
-    int total;
-    int count;
-    total = 0;
-    count = (x2-x1+1)*(y2-y1+1);
+    int total = 0;
+    const int count = (x2-x1+1)*(y2-y1+1);
+
     for (x = x1; x <= x2; x++) {
         for (y = y1; y <= y2; y++) {
-            pixel = getPixelDarknessInverse(x, y, image);
+            const int pixel = getPixelDarknessInverse(x, y, image);
             total += pixel;
         }
     }
@@ -1590,13 +1570,11 @@ static int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* ima
 static int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, struct IMAGE* image) {
     int x;
     int y;
-    int pixel;
-    int count;
+    int count = 0;
     
-    count = 0;
     for (y = top; y <= bottom; y++) {
         for (x = left; x <= right; x++) {
-            pixel = getPixelGrayscale(x, y, image);
+            const int pixel = getPixelGrayscale(x, y, image);
             if ((pixel>=minColor) && (pixel <= maxBrightness)) {
                 if (clear==true) {
                     clearPixel(x, y, image);
@@ -1618,10 +1596,9 @@ static int countPixelsRect(int left, int top, int right, int bottom, int minColo
 static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whiteMin, struct IMAGE* image) {
     int xx;
     int yy;
-    int count;
+    int count = 0;
     int pixel;
     
-    count = 0;
     // upper and lower rows
     for (xx = x - level; xx <= x + level; xx++) {
         // upper row
@@ -1685,11 +1662,9 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
  */
 static int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE* image) {
     int level;
-    int count;
-    int lCount;
+    int count = 1; // assume self as set
+    int lCount = -1;
     
-    count = 1; // assume self as set
-    lCount = -1;
     for (level = 1; (lCount != 0) && (level <= intensity); level++) { // can finish when one level is completely zero
         lCount = countPixelNeighborsLevel(x, y, false, level, whiteMin, image);
         count += lCount;
@@ -1705,10 +1680,10 @@ static int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct
  */
 static void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
     int level;
-    int lCount;
+    int lCount = -1;
 
     clearPixel(x, y, image);    
-    lCount = -1;
+
     for (level = 1; lCount != 0; level++) { // lCount will become 0, otherwise countPixelNeighbors() would previously have delivered a bigger value (and this here would not have been called)
         lCount = countPixelNeighborsLevel(x, y, true, level, whiteMin, image);
     }
@@ -1731,16 +1706,14 @@ static void floodFill(int x, int y, int color, int maskMin, int maskMax, int int
  * @param stepY either -1 or 1, if stepX is 0, else 0
  */
 static int fillLine(int x, int y, int stepX, int stepY, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
-    int pixel;
-    int distance;
-    int intensityCount;
-    int w, h;
+    int distance = 0;
+    int intensityCount = 1; // first pixel must match, otherwise directly exit
+    const int w = image->width;
+    const int h = image->height;
 
-    w = image->width;
-    h = image->height;
-    distance = 0;
-    intensityCount = 1; // first pixel must match, otherwise directly exit
-    while (1==1) { // !
+    while (true) {
+        int pixel;
+
         x += stepX;
         y += stepY;
         pixel = getPixelGrayscale(x, y, image);
@@ -1791,21 +1764,15 @@ static void floodFillAroundLine(int x, int y, int stepX, int stepY, int distance
  * @see earlier header-declaration to enable indirect recursive calls
  */
 static void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
-    int left;
-    int top;
-    int right;
-    int bottom;
-    int pixel;
-    
     // is current pixel to be filled?
-    pixel = getPixelGrayscale(x, y, image);
+    const int pixel = getPixelGrayscale(x, y, image);
     if ((pixel>=maskMin) && (pixel<=maskMax)) {
         // first, fill a 'cross' (both vertical, horizontal line)
         setPixel(color, x, y, image);
-        left = fillLine(x, y, -1, 0, color, maskMin, maskMax, intensity, image);
-        top = fillLine(x, y, 0, -1, color, maskMin, maskMax, intensity, image);
-        right = fillLine(x, y, 1, 0, color, maskMin, maskMax, intensity, image);
-        bottom = fillLine(x, y, 0, 1, color, maskMin, maskMax, intensity, image);
+        const int left = fillLine(x, y, -1, 0, color, maskMin, maskMax, intensity, image);
+        const int top = fillLine(x, y, 0, -1, color, maskMin, maskMax, intensity, image);
+        const int right = fillLine(x, y, 1, 0, color, maskMin, maskMax, intensity, image);
+        const int bottom = fillLine(x, y, 0, 1, color, maskMin, maskMax, intensity, image);
         // now recurse on each neighborhood-pixel of the cross (most recursions will immediately return)
         floodFillAroundLine(x, y, -1, 0, left, color, maskMin, maskMax, intensity, image);
         floodFillAroundLine(x, y, 0, -1, top, color, maskMin, maskMax, intensity, image);
@@ -1850,7 +1817,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
     int maxColorIndex;
     int inputSize;
     int read;
-    unsigned char* buffer2;
+    uint8_t* buffer2;
     int lineOffsetInput;
     int lineOffsetOutput;
     int x;
@@ -1862,8 +1829,8 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
     int pixel;
     int size;
     int pos;
-    unsigned char* p;
-    unsigned char r, g, b;
+    uint8_t* p;
+    uint8_t r, g, b;
 
     if (verbose>=VERBOSE_MORE) {
         printf("loading file %s.\n", filename);
@@ -1935,7 +1902,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
     // read binary image data
     inputSize = bytesPerLine * image->height;
 
-    image->buffer = (unsigned char*)malloc(inputSize);
+    image->buffer = (uint8_t*)malloc(inputSize);
     read = fread(image->buffer, 1, inputSize, f);
     if (read != inputSize) {
         printf("*** error: Only %d out of %d could be read.\n", read, inputSize);
@@ -1943,7 +1910,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
     }
     
     if (*type == PBM) { // internally convert b&w to 8-bit for processing
-        buffer2 = (unsigned char*)malloc(image->width * image->height);
+        buffer2 = (uint8_t*)malloc(image->width * image->height);
         lineOffsetInput = 0;
         lineOffsetOutput = 0;
         for (y = 0; y < image->height; y++) {
@@ -1971,9 +1938,9 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
     if (*type == PPM) {
         // init cached values for grayscale, lightness and darknessInverse
         size = image->width * image->height;
-        image->bufferGrayscale = (unsigned char*)malloc(size);
-        image->bufferLightness = (unsigned char*)malloc(size);
-        image->bufferDarknessInverse = (unsigned char*)malloc(size);
+        image->bufferGrayscale = (uint8_t*)malloc(size);
+        image->bufferLightness = (uint8_t*)malloc(size);
+        image->bufferDarknessInverse = (uint8_t*)malloc(size);
         p = image->buffer;
         for (pos = 0; pos < size; pos++) {
             r = *p;
@@ -2007,7 +1974,7 @@ static bool loadImage(char* filename, struct IMAGE* image, int* type) {
  * @return true on success, false on failure
  */
 static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwrite, float blackThreshold) {
-    unsigned char* buf;
+    uint8_t* buf;
     int bytesPerLine;
     int inputSize;
     int outputSize;
@@ -2019,8 +1986,8 @@ static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwr
     int pixel;
     int b;
     int off;
-    unsigned char bit;
-    unsigned char val;
+    uint8_t bit;
+    uint8_t val;
     const char* outputMagic;
     FILE* outputFile;
     int blackThresholdAbs;
@@ -2035,7 +2002,7 @@ static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwr
         blackThresholdAbs = WHITE * (1.0 - blackThreshold);
         bytesPerLine = (image->width + 7) >> 3; // / 8;
         outputSize = bytesPerLine * image->height;
-        buf = (unsigned char*)malloc(outputSize);
+        buf = (uint8_t*)malloc(outputSize);
         memset(buf, 0, outputSize);
         lineOffsetOutput = 0;
         for (y = 0; y < image->height; y++) {
@@ -2059,7 +2026,7 @@ static bool saveImage(char* filename, struct IMAGE* image, int type, bool overwr
         if (image->color) { // color already
             buf = image->buffer;
         } else { // convert to color
-            buf = (unsigned char*)malloc(outputSize);
+            buf = (uint8_t*)malloc(outputSize);
             inputSize = image->width * image->height;
             offsetOutput = 0;
             for (offsetInput = 0; offsetInput < inputSize; offsetInput++) {
@@ -2448,22 +2415,19 @@ static void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
 static void convertToQPixels(struct IMAGE* image, struct IMAGE* qpixelImage) {
     int x;
     int y;
-    int xx;
-    int yy;
-    int pixel;
     
-    yy = 0;
     for (y = 0; y < image->height; y++) {
-        xx = 0;
+        const int yy = y*2;
         for (x = 0; x < image->width; x++) {
-            pixel = getPixel(x, y, image);
+            const int xx = x*2;
+
+            const int pixel = getPixel(x, y, image);
+
             setPixel(pixel, xx, yy, qpixelImage);
             setPixel(pixel, xx+1, yy, qpixelImage);
             setPixel(pixel, xx, yy+1, qpixelImage);
             setPixel(pixel, xx+1, yy+1, qpixelImage);
-            xx += 2;
         }
-        yy += 2;
     }
 }
 
@@ -2478,28 +2442,25 @@ static void convertToQPixels(struct IMAGE* image, struct IMAGE* qpixelImage) {
 static void convertFromQPixels(struct IMAGE* qpixelImage, struct IMAGE* image) {
     int x;
     int y;
-    int xx;
-    int yy;
-    int pixel;
-    int a,b,c,d;
-    int r, g, bl;
     
-    yy = 0;
     for (y = 0; y < image->height; y++) {
-        xx = 0;
+        const int yy = y*2;
         for (x = 0; x < image->width; x++) {
-            a = getPixel(xx, yy, qpixelImage);
-            b = getPixel(xx+1, yy, qpixelImage);
-            c = getPixel(xx, yy+1, qpixelImage);
-            d = getPixel(xx+1, yy+1, qpixelImage);
-            r = (red(a) + red(b) + red(c) + red(d)) / 4;
-            g = (green(a) + green(b) + green(c) + green(d)) / 4;
-            bl = (blue(a) + blue(b) + blue(c) + blue(d)) / 4;
-            pixel = pixelValue(r, g, bl);
+            const int xx = x*2;
+
+            const int a = getPixel(xx, yy, qpixelImage);
+            const int b = getPixel(xx+1, yy, qpixelImage);
+            const int c = getPixel(xx, yy+1, qpixelImage);
+            const int d = getPixel(xx+1, yy+1, qpixelImage);
+
+            const int r = (red(a) + red(b) + red(c) + red(d)) / 4;
+            const int g = (green(a) + green(b) + green(c) + green(d)) / 4;
+            const int bl = (blue(a) + blue(b) + blue(c) + blue(d)) / 4;
+
+            const int pixel = pixelValue(r, g, bl);
+
             setPixel(pixel, x, y, image);
-            xx += 2;
         }
-        yy += 2;
     }
 }
 
@@ -2718,20 +2679,16 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
     int top;
     int right;
     int bottom;
-    int half;
-    int halfDepth;
-    int blackness;
-    int total;
-    int count;
     
-    half = maskScanSize / 2;
-    total = 0;
-    count = 0;
+    const int half = maskScanSize / 2;
+    int total = 0;
+    int count = 0;
+
     if (shiftY==0) { // vertical border is to be detected, horizontal shifting of scan-bar
         if (maskScanDepth == -1) {
             maskScanDepth = image->height;
         }
-        halfDepth = maskScanDepth / 2;
+        const int halfDepth = maskScanDepth / 2;
         left = startX - half;
         top = startY - halfDepth;
         right = startX + half;
@@ -2740,7 +2697,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
         if (maskScanDepth == -1) {
             maskScanDepth = image->width;
         }
-        halfDepth = maskScanDepth / 2;
+        const int halfDepth = maskScanDepth / 2;
         left = startX - halfDepth;
         top = startY - half;
         right = startX + halfDepth;
@@ -2748,7 +2705,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
     }
     
     while (true) { // !
-        blackness = 255 - brightnessRect(left, top, right, bottom, image);
+        const int blackness = 255 - brightnessRect(left, top, right, bottom, image);
         total += blackness;
         count++;
         // is blackness below threshold*average?
@@ -2867,8 +2824,6 @@ static void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int mask
     int x;
     int y;
     int i;
-    int left, top, right, bottom;
-    bool m;
     
     if (maskCount<=0) {
         return;
@@ -2876,12 +2831,12 @@ static void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int mask
     for (y=0; y < image->height; y++) {
         for (x=0; x < image->width; x++) {
             // in any mask?
-            m = false;
+            bool m = false;
             for (i=0; ((m==false) && (i<maskCount)); i++) {
-                left = mask[i][LEFT];
-                top = mask[i][TOP];
-                right = mask[i][RIGHT];
-                bottom = mask[i][BOTTOM];
+                const int left = mask[i][LEFT];
+                const int top = mask[i][TOP];
+                const int right = mask[i][RIGHT];
+                const int bottom = mask[i][BOTTOM];
                 if (y>=top && y<=bottom && x>=left && x<=right) {
                     m = true;
                 }
@@ -2904,10 +2859,9 @@ static void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, int wipe
     int x;
     int y;
     int i;
-    int count;
 
     for (i = 0; i < areaCount; i++) {
-        count = 0;
+        int count = 0;
         for (y = area[i][TOP]; y <= area[i][BOTTOM]; y++) {
             for (x = area[i][LEFT]; x <= area[i][RIGHT]; x++) {
                 if ( setPixel(wipeColor, x, y, image) ) {
@@ -2930,28 +2884,21 @@ static void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, int wipe
 static void mirror(int directions, struct IMAGE* image) {
     int x;
     int y;
-    int xx;
-    int yy;
-    int pixel1;
-    int pixel2;
-    bool horizontal;
-    bool vertical;
-    int untilX;
-    int untilY;
-    
-    horizontal = ((directions & 1<<HORIZONTAL) != 0) ? true : false;
-    vertical = ((directions & 1<<VERTICAL) != 0) ? true : false;
-    untilX = ((horizontal==true)&&(vertical==false)) ? ((image->width - 1) >> 1) : (image->width - 1);  // w>>1 == (int)(w-0.5)/2
-    untilY = (vertical==true) ? ((image->height - 1) >> 1) : image->height - 1;
+
+    const bool horizontal = !!((directions & 1<<HORIZONTAL) != 0);
+    const bool vertical = !!((directions & 1<<VERTICAL) != 0);
+    int untilX = ((horizontal==true)&&(vertical==false)) ? ((image->width - 1) >> 1) : (image->width - 1);  // w>>1 == (int)(w-0.5)/2
+    int untilY = (vertical==true) ? ((image->height - 1) >> 1) : image->height - 1;
+
     for (y = 0; y <= untilY; y++) {
-        yy = (vertical==true) ? (image->height - y - 1) : y;
+        const int yy = (vertical==true) ? (image->height - y - 1) : y;
         if ((vertical==true) && (horizontal==true) && (y == yy)) { // last middle line in odd-lined image mirrored both h and v
             untilX = ((image->width - 1) >> 1);
         }
         for (x = 0; x <= untilX; x++) {
-            xx = (horizontal==true) ? (image->width - x - 1) : x;
-            pixel1 = getPixel(x, y, image);
-            pixel2 = getPixel(xx, yy, image);
+            const int xx = (horizontal==true) ? (image->width - x - 1) : x;
+            const int pixel1 = getPixel(x, y, image);
+            const int pixel2 = getPixel(xx, yy, image);
             setPixel(pixel2, x, y, image);
             setPixel(pixel1, xx, yy, image);
         }
@@ -2970,16 +2917,13 @@ static void flipRotate(int direction, struct IMAGE* image) {
     struct IMAGE newimage;
     int x;
     int y;
-    int xx;
-    int yy;
-    int pixel;
     
     initImage(&newimage, image->height, image->width, image->bitdepth, image->color, WHITE); // exchanged width and height
     for (y = 0; y < image->height; y++) {
-        xx = ((direction > 0) ? image->height - 1 : 0) - y * direction;
+        const int xx = ((direction > 0) ? image->height - 1 : 0) - y * direction;
         for (x = 0; x < image->width; x++) {
-            yy = ((direction < 0) ? image->width - 1 : 0) + x*direction;
-            pixel = getPixel(x, y, image);
+            const int yy = ((direction < 0) ? image->width - 1 : 0) + x * direction;
+            const int pixel = getPixel(x, y, image);
             setPixel(pixel, xx, yy, &newimage);
         }
     }
@@ -3256,15 +3200,11 @@ static int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterSc
  */
 static void centerMask(int centerX, int centerY, int left, int top, int right, int bottom, struct IMAGE* image) {
     struct IMAGE newimage;
-    int width;
-    int height;
-    int targetX;
-    int targetY;
     
-    width = right - left + 1;
-    height = bottom - top + 1;
-    targetX = centerX - width/2;
-    targetY = centerY - height/2; 
+    const int width = right - left + 1;
+    const int height = bottom - top + 1;
+    const int targetX = centerX - width/2;
+    const int targetY = centerY - height/2;
     if ((targetX >= 0) && (targetY >= 0) && ((targetX+width) <= image->width) && ((targetY+height) <= image->height)) {
         if (verbose >= VERBOSE_NORMAL) {
             printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", left, top, right, bottom, centerX, centerY, targetX-left, targetY-top);
@@ -3287,13 +3227,11 @@ static void centerMask(int centerX, int centerY, int left, int top, int right, i
  */
 static void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, int margin[DIRECTIONS_COUNT], struct IMAGE* image) {
     struct IMAGE newimage;
-    int width;
-    int height;
     int targetX;
     int targetY;
     
-    width = mask[RIGHT] - mask[LEFT] + 1;
-    height = mask[BOTTOM] - mask[TOP] + 1;
+    const int width = mask[RIGHT] - mask[LEFT] + 1;
+    const int height = mask[BOTTOM] - mask[TOP] + 1;
     if (direction & 1<<LEFT) {
         targetX = outside[LEFT] + margin[HORIZONTAL];
     } else if (direction & 1<<RIGHT) {
@@ -5371,12 +5309,12 @@ int main(int argc, char* argv[]) {
                                 page.bufferDarknessInverse = sheet.bufferDarknessInverse;
                             } else { // generic case: copy page-part of sheet into own buffer
                                 if (page.color) {
-                                    page.buffer = (unsigned char*)malloc( page.width * page.height * 3 );
-                                    page.bufferGrayscale = (unsigned char*)malloc( page.width * page.height );
-                                    page.bufferLightness = (unsigned char*)malloc( page.width * page.height );
-                                    page.bufferDarknessInverse = (unsigned char*)malloc( page.width * page.height );
+                                    page.buffer = (uint8_t*)malloc( page.width * page.height * 3 );
+                                    page.bufferGrayscale = (uint8_t*)malloc( page.width * page.height );
+                                    page.bufferLightness = (uint8_t*)malloc( page.width * page.height );
+                                    page.bufferDarknessInverse = (uint8_t*)malloc( page.width * page.height );
                                 } else {
-                                    page.buffer = (unsigned char*)malloc( page.width * page.height );
+                                    page.buffer = (uint8_t*)malloc( page.width * page.height );
                                     page.bufferGrayscale = page.buffer;
                                     page.bufferLightness = page.buffer;
                                     page.bufferDarknessInverse = page.buffer;
