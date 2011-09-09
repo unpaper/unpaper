@@ -1,6 +1,6 @@
 bin_PROGRAMS = unpaper
 
-unpaper_SOURCES = unpaper.c
+unpaper_SOURCES = file.c parse.c tools.c imageprocess.c unpaper.c
 
 dist_doc_DATA = NEWS COPYING README AUTHORS TODO
 dist_man_MANS = unpaper.1
