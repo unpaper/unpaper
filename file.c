@@ -14,10 +14,6 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 #include "tools.h" //only needed for getPixelGrayscale
 
 
-/* --- global variable ---------------------------------------------------- */
-
-static VERBOSE_LEVEL verbose;
-
 
 /**
  * Tests if a file exists.

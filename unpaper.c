@@ -46,10 +46,6 @@ static const char FILETYPE_NAMES[FILETYPES_COUNT][4] = {
 };
 
 
-/* --- global variable ---------------------------------------------------- */
-
-static VERBOSE_LEVEL verbose;
-
 
 /****************************************************************************
  * MAIN()                                                                   *

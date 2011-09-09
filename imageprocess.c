@@ -16,10 +16,6 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 #include "tools.h"
 #include "parse.h" //for maksOverlapAny
 
-/* --- global variable ---------------------------------------------------- */
-
-static VERBOSE_LEVEL verbose;
-
 
 /****************************************************************************
  * image processing functions                                               *

@@ -125,3 +125,8 @@ struct IMAGE {
     int background;
     bool color;
 };
+
+
+/* --- global variable ---------------------------------------------------- */
+
+VERBOSE_LEVEL verbose;
