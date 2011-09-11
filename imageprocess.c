@@ -268,16 +268,12 @@ void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
     int dX;
     int dY;
 
-    float n11 = 0; // dX * m11
-    float n12 = 0; // dX * m12
-    float n21 = 0; // dY * m21
-    float n22 = 0; // dY * m22
     for (dY = 0; dY <= midMax; dY++) {
 
         for (dX = 0; dX <= midMax; dX++) {
             // matrix multiplication to get rotated pixel pos (as in quadrant I)
-            const int diffX = n11 + n21; // dX * m11 + dY * m21;
-            const int diffY = n12 + n22; // dX * m12 + dY * m22;
+            const int diffX = dX * m11 + dY * m21;
+            const int diffY = dX * m12 + dY * m22;
 
             int x;
             int y;
@@ -321,13 +317,7 @@ void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
                 const int pixel = getPixel(oldX, oldY, source);
                 setPixel(pixel, x, y, target);
             }
-
-            n11+=m11;
-            n12+=m12;
         }
-
-        n21+=m21;
-        n22+=m22;
     }
 }
 
