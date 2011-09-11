@@ -8,7 +8,7 @@ unpaper - written by Jens Gulden 2005-2007                                  */
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-//#include <string.h>
+#include <string.h>
 #include <math.h>
 //#include <time.h>
 
@@ -1005,8 +1005,16 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
     int right;
     int bottom;
     int count;
+    int maxLeft;
+    int maxTop;
+    int blocksPerRow;
+    int sizeCounts;
+    int* prevCounts; // Number of dark pixels in previous row
+    int* curCounts; // Number of dark pixels in current row
+    int* nextCounts; // Number of dark pixels in next row
+    int block; // Number of block in row; Counting begins with 1
     int max;
-    int total;
+    int total; // Number of pixels in a block
     int result;
     
     result = 0;
@@ -1015,47 +1023,84 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
     top = 0;
     right = blurfilterScanSize[HORIZONTAL] - 1;
     bottom = blurfilterScanSize[VERTICAL] - 1;
+    maxLeft = image->width - blurfilterScanSize[HORIZONTAL];
+    maxTop = image->height - blurfilterScanSize[VERTICAL];
+
+    blocksPerRow = image->width / blurfilterScanSize[HORIZONTAL];
+    sizeCounts = (blocksPerRow + 2) * sizeof(int); // One extra block left and right
+    prevCounts = (int*) malloc(sizeCounts);
+    curCounts = (int*) malloc(sizeCounts);
+    nextCounts = (int*) malloc(sizeCounts);
+
     total = blurfilterScanSize[HORIZONTAL] * blurfilterScanSize[VERTICAL];
-    
-    while (true) { // !
-        max = 0;
-        count = countPixelsRect(left, top, right, bottom, 0, whiteMin, false, image);
-        if (count > max) {
-            max = count;
-        }
-        count = countPixelsRect(left-blurfilterScanStep[HORIZONTAL], top-blurfilterScanStep[VERTICAL], right-blurfilterScanStep[HORIZONTAL], bottom-blurfilterScanStep[VERTICAL], 0, whiteMin, false, image);
-        if (count > max) {
-            max = count;
-        }
-        count = countPixelsRect(left+blurfilterScanStep[HORIZONTAL], top-blurfilterScanStep[VERTICAL], right+blurfilterScanStep[HORIZONTAL], bottom-blurfilterScanStep[VERTICAL], 0, whiteMin, false, image);
-        if (count > max) {
-            max = count;
-        }
-        count = countPixelsRect(left-blurfilterScanStep[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right-blurfilterScanStep[HORIZONTAL], bottom+blurfilterScanStep[VERTICAL], 0, whiteMin, false, image);
-        if (count > max) {
-            max = count;
-        }
-        count = countPixelsRect(left+blurfilterScanStep[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanStep[HORIZONTAL], bottom+blurfilterScanStep[VERTICAL], 0, whiteMin, false, image);
-        if (count > max) {
-            max = count;
-        }
-        if ((((float)max)/total) <= blurfilterIntensity) {
-            result += countPixelsRect(left, top, right, bottom, 0, whiteMin, true, image); // also clear
-        }
-        if (right < image->width) { // not yet at end of row
-            left += blurfilterScanStep[HORIZONTAL];
-            right += blurfilterScanStep[HORIZONTAL];
-        } else { // end of row
-            if (bottom >= image->height) { // has been last row
-                return result; // exit here
-            }
-            // next row:
-            left = 0;
-            right = blurfilterScanSize[HORIZONTAL] - 1;
-            top += blurfilterScanStep[VERTICAL];
-            bottom += blurfilterScanStep[VERTICAL];
-        }
+
+    //Initialize prevCounts, curCounts and nextCounts
+    memset(prevCounts, total, sizeCounts); // as if the pixels in the blocks of the -1th row were all white
+    block = 1;
+    for (left = 0; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
+	curCounts[block] = countPixelsRect(left, top, right, bottom, 0, whiteMin, false, image);
+	block++;
+	right += blurfilterScanSize[HORIZONTAL];
     }
+    curCounts[0] = total;
+    curCounts[blocksPerRow] = total;
+    nextCounts[0] = total;
+    nextCounts[blocksPerRow] = total;
+
+    // Loop through all blocks. For a block calculate the number of dark pixels in this block, the number of dark pixels in the block in the top-left corner and similarly for the block in the top-right, bottom-left and bottom-right corner. Take the maximum of these values. Clear the block if this number is not large enough compared to the total number of pixels in a block.
+    for (top = 0; top <= maxTop; top += blurfilterScanSize[HORIZONTAL]) {
+	left = 0;
+	right = blurfilterScanSize[HORIZONTAL] - 1;
+	nextCounts[0] = countPixelsRect(left, top+blurfilterScanStep[VERTICAL], right, bottom+blurfilterScanSize[VERTICAL], 0, whiteMin, false, image);
+
+	block = 1;
+	for (left = 0; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
+	    // current block
+	    count = curCounts[block];
+	    max = count;
+	    // top left
+	    count = prevCounts[block-1];
+	    if (count > max) {
+		max = count;
+	    }
+	    // top right
+	    count = prevCounts[block+1];
+	    if (count > max) {
+		max = count;
+	    }
+	    // bottom left
+	    count = nextCounts[block-1];
+	    if (count > max) {
+		max = count;
+	    }
+	    // bottom right (has still to be calculated)
+	    nextCounts[block+1] = countPixelsRect(left+blurfilterScanSize[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanSize[HORIZONTAL], bottom+blurfilterScanSize[VERTICAL], 0, whiteMin, false, image);
+	    if (count > max) {
+		max = count;
+	    }
+	    if ((((float)max)/total) <= blurfilterIntensity) { // Not enough dark pixels
+		clearRect(left, top, right, bottom, image, WHITE);
+		result += curCounts[block];
+		curCounts[block] = total; // Update information
+	    }
+
+	    right += blurfilterScanSize[HORIZONTAL];
+	    block++;
+	}
+
+	bottom += blurfilterScanSize[VERTICAL];
+	//Switch Buffers
+	const int* tmpCounts;
+	tmpCounts = prevCounts;
+	prevCounts = curCounts;
+	curCounts = nextCounts;
+	nextCounts = (int*)tmpCounts;
+    }
+    free(prevCounts);
+    free(curCounts);
+    free(nextCounts);
+
+    return result;
 }
 
 
