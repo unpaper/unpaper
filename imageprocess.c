@@ -1008,7 +1008,6 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
     int maxLeft;
     int maxTop;
     int blocksPerRow;
-    int sizeCounts;
     int* prevCounts; // Number of dark pixels in previous row
     int* curCounts; // Number of dark pixels in current row
     int* nextCounts; // Number of dark pixels in next row
@@ -1027,15 +1026,13 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
     maxTop = image->height - blurfilterScanSize[VERTICAL];
 
     blocksPerRow = image->width / blurfilterScanSize[HORIZONTAL];
-    sizeCounts = (blocksPerRow + 2) * sizeof(int); // One extra block left and right
-    prevCounts = (int*) malloc(sizeCounts);
-    curCounts = (int*) malloc(sizeCounts);
-    nextCounts = (int*) malloc(sizeCounts);
+    // allocate one extra block left and right
+    prevCounts = calloc(blocksPerRow + 2, sizeof(int));
+    curCounts = calloc(blocksPerRow + 2, sizeof(int));
+    nextCounts = calloc(blocksPerRow + 2, sizeof(int));
 
     total = blurfilterScanSize[HORIZONTAL] * blurfilterScanSize[VERTICAL];
 
-    //Initialize prevCounts, curCounts and nextCounts
-    memset(prevCounts, total, sizeCounts); // as if the pixels in the blocks of the -1th row were all white
     block = 1;
     for (left = 0; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
 	curCounts[block] = countPixelsRect(left, top, right, bottom, 0, whiteMin, false, image);
