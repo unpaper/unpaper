@@ -1,4 +1,4 @@
-Release 0.4, pending:
+Release 0.4, 2011-10-08:
  - New buildsystem, based on standard GNU autotools.
  - Optimisation of source code to produce slimmer, faster binaries.
  - The sources now compile using C99, and support GCC, Pathscale and
