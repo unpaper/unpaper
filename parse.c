@@ -304,49 +304,41 @@ char* implode(char* buf, const char* s[], int cnt) {
 }
 
 /**
- * Parses a string at argv[*i] argument consisting of comma-concatenated 
- * integers. The string may also be of a different format, in which case
- * *i remains unchanged and *multiIndexCount is set to -1.
+ * Parses a string consisting of comma-concatenated integers. The
+ * string may also be of a different format, in which case
+ * *multiIndexCount is set to -1.
  *
  * @see isInMultiIndex(..)
  */
-void parseMultiIndex(int* i, char* argv[], int multiIndex[], int* multiIndexCount) {
+void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount) {
     char s1[MAX_MULTI_INDEX * 5]; // buffer
     char s2[MAX_MULTI_INDEX * 5]; // buffer
     char c;
     int index;
     int j;
     
-    (*i)++;
     *multiIndexCount = 0;
-    if (argv[*i][0] != '-') { // not another option directly following
-        strcpy(s1, argv[*i]); // argv[*i] -> s1
-        do {
-            index = -1;
-            s2[0] = (char)0; // = ""
-            sscanf(s1, "%d%c%s", &index, &c, s2);
-            if (index != -1) {
-                multiIndex[(*multiIndexCount)++] = index;
-                if (c=='-') { // range is specified: get range end
-                    strcpy(s1, s2); // s2 -> s1
-                    sscanf(s1, "%d,%s", &index, s2);
-                    for (j = multiIndex[(*multiIndexCount)-1]+1; j <= index; j++) {
-                        multiIndex[(*multiIndexCount)++] = j;
-                    }
+    strcpy(s1, optarg); // argv[*i] -> s1
+    do {
+        index = -1;
+        s2[0] = (char)0; // = ""
+        sscanf(s1, "%d%c%s", &index, &c, s2);
+        if (index != -1) {
+            multiIndex[(*multiIndexCount)++] = index;
+            if (c=='-') { // range is specified: get range end
+                strcpy(s1, s2); // s2 -> s1
+                sscanf(s1, "%d,%s", &index, s2);
+                for (j = multiIndex[(*multiIndexCount)-1]+1; j <= index; j++) {
+                    multiIndex[(*multiIndexCount)++] = j;
                 }
-            } else {
-                // string is not correctly parseable: break without inreasing *i (string may be e.g. input-filename)
-                *multiIndexCount = -1; // disable all
-                (*i)--;
-                return; // exit here
             }
-            strcpy(s1, s2); // s2 -> s1
-        } while ((*multiIndexCount < MAX_MULTI_INDEX) && (strlen(s1) > 0));
-    } else { // no explicit list of sheet-numbers given
-        *multiIndexCount = -1; // disable all
-        (*i)--;
-        return;
-    }
+        } else {
+            // string is not correctly parseable: break without inreasing *i (string may be e.g. input-filename)
+            *multiIndexCount = -1; // disable all
+            return; // exit here
+        }
+        strcpy(s1, s2); // s2 -> s1
+    } while ((*multiIndexCount < MAX_MULTI_INDEX) && (strlen(s1) > 0));
 }
 
 

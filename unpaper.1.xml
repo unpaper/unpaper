@@ -96,13 +96,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
             <replaceable>options</replaceable>
           </arg>
 
-          <arg choice="req">
-            <replaceable>input-file(s)</replaceable>
-          </arg>
+          <group choice="req">
+            <arg choice="plain">
+              <group choice="plain">
+                <replaceable>input-pattern </replaceable>
+                <replaceable>output-pattern</replaceable>
+              </group>
+            </arg>
 
-          <arg choice="req">
-            <replaceable>output-file(s)</replaceable>
-          </arg>
+            <arg choice="plain">
+              <replaceable>input-file(s)</replaceable>
+              <replaceable>output-file(s)</replaceable>
+            </arg>
+          </group>
         </cmdsynopsis>
       </refsynopsisdiv>
 
@@ -139,14 +145,37 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
       </refsection>
 
       <refsection>
-        <title>Options</title>
+        <title>Input and Output files</title>
 
         <para>
-          Filenames may contain a formatting placeholder starting with <literal>%</literal> to
-          insert a page counter for multi-page processing. E.g.: <literal>scan%03d.pbm</literal> to
-          process files <filename>scan001.pbm</filename>, <filename>scan002.pbm</filename>,
-          <filename>scan003.pbm</filename> etc.
+          Input and output files need to be designed either by using patterns or an ordered list of
+          input and output files; if patterns are used, such as <literal>%04d</literal>, then they
+          are substituted for the input and output sheet number before opening the file for input or
+          output.
         </para>
+
+        <para>
+          If you're not using patterns, then the program expects one or two input files depending on
+          what is passed as <option>--input-pages</option> and one or two output files depending on
+          what is passed as <option>--output-pages</option>, in order.
+        </para>
+
+        <para>
+          Missing output file names are fatal and will stop processing; missing initial input file
+          names are fatal, and so is any missing input file if a range of sheets is defined through
+          <option>--sheet</option> or <option>--end-sheet</option>.
+        </para>
+
+        <para>
+          <command>unpaper</command> accepts files in PNM format, which means they might be in
+          <filename>.pbm</filename>, <filename>.pgm</filename>, <filename>.ppm</filename> or
+          <filename>.pnm</filename> format, which is what is produced by Linux command line scanning
+          tools such as <command>scanimage</command> and <command>scanadf</command>.
+        </para>
+      </refsection>
+
+      <refsection>
+        <title>Options</title>
 
         <variablelist>
           <varlistentry>
@@ -1622,44 +1651,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
           <varlistentry>
             <term>
-              <option>-if</option>
-              <replaceable>file-patterns</replaceable>
-            </term>
-            <term>
-              <option>--input-file-sequence</option>
-              <replaceable>file-patterns</replaceable>
-            </term>
-
-            <listitem>
-              <para>
-                Sequence of input filename patterns which is repeatedly traversed while resolving
-                input filenames. Specifying a single entry is equivalent to the first filename
-                argument after the options-list.
-              </para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>
-              <option>-of</option>
-              <replaceable>file-patterns</replaceable>
-            </term>
-            <term>
-              <option>--output-file-sequence</option>
-              <replaceable>file-patterns</replaceable>
-            </term>
-
-            <listitem>
-              <para>
-                Sequence of output filename patterns which is repeatedly traversed while resolving
-                output filenames. Specifying a single entry is equivalent to the second filename
-                argument after the options-list
-              </para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>
               <option>-si</option>
               <replaceable>nr</replaceable>
             </term>
@@ -1810,6 +1801,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
             </listitem>
           </varlistentry>
         </variablelist>
+
       </refsection>
     </refentry>
   </section>

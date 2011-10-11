@@ -1,3 +1,14 @@
+Release 2.0, to be released
+ - Versioning scheme resets to 2.0, to avoid conflicts with the
+   original 1.x releases by Jens.
+ - Source code split in multiple units to make it more manageable.
+ - Options parsing is now performed through getopt_long_only(); this
+   makes it compatible with the old parameters, while avoiding the
+   long-winded original parser.
+ - The --input-sequence and --output-sequence parameters have been
+   removed for ease of porting; man page describes the new input
+   and output file matching.
+
 Release 0.4, 2011-10-08:
  - New buildsystem, based on standard GNU autotools.
  - Optimisation of source code to produce slimmer, faster binaries.

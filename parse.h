@@ -30,7 +30,7 @@ void printFloats(float f[2]);
 
 char* implode(char* buf, const char* s[], int cnt);
 
-void parseMultiIndex(int* i, char* argv[], int multiIndex[], int* multiIndexCount);
+void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount);
 
 bool isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount);
 
