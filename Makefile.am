@@ -1,4 +1,5 @@
 bin_PROGRAMS = unpaper
+MANPAGE_XSL ?= http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl
 
 unpaper_SOURCES = file.c parse.c tools.c imageprocess.c unpaper.c
 
@@ -69,4 +70,4 @@ tests/results%.png: tests/results%.pbm tests/.dirstamp
 	$(AM_V_GEN)$(XSLTPROC) \
 		--stringparam man.copyright.section.enable 0 \
 		--stringparam man.authors.section.enabled 0 \
-		http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl $<
+		$(MANPAGE_XSL) $<
