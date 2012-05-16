@@ -1,6 +1,5 @@
-output_file=$(basename "$0")
-output_file=${output_file/runtest/results}
-output_file=tests/${output_file/.sh/.txt}
+output_file=tests/$(basename "$0" sh)txt
+output_file=`echo ${output_file} | sed 's/runtest/results/'`
 
 exec 3>&1
 exec 4>&2
