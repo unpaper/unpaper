@@ -5,7 +5,7 @@ AC_INIT([unpaper], [0.4])
 AC_PROG_MKDIR_P
 AC_PROG_CC_C99
 
-AM_INIT_AUTOMAKE([dist-xz no-dist-gzip foreign])
+AM_INIT_AUTOMAKE([dist-xz no-dist-gzip foreign parallel-tests])
 AC_USE_SYSTEM_EXTENSIONS
 
 AC_HEADER_STDBOOL
