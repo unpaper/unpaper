@@ -1,13 +1,3 @@
-output_file=tests/$(basename "$0" sh)txt
-output_file=`echo ${output_file} | sed 's/runtest/results/'`
-
-exec 3>&1
-exec 4>&2
-exec 1>${output_file}
-exec 2>&1
-
-trap 'cat ${output_file} >&3' INT QUIT TERM EXIT
-
 set -e
 set -x
 
