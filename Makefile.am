@@ -57,7 +57,7 @@ CLEANFILES = $(check_DATA) tests/.dirstamp tests/resultsA1.pbm	\
              tests/resultsE006.pbm tests/resultsE.txt
 
 tests/.dirstamp:
-	$(mkdir_p) tests
+	$(MKDIR_P) tests
 	touch tests/.dirstamp
 
 tests/imgsrc%.pbm tests/imgsrc%.ppm tests/imgsrc%.pgm: tests/imgsrc%.png tests/.dirstamp
