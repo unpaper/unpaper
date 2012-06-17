@@ -35,7 +35,7 @@
  * @param type returns the type of the loaded image
  * @return true on success, false on failure
  */
-bool loadImage(FILE *f, struct IMAGE* image, int* type) {
+void loadImage(FILE *f, struct IMAGE* image, int* type) {
     int bytesPerLine;
     char magic[10];
     char word[255];
@@ -75,7 +75,7 @@ bool loadImage(FILE *f, struct IMAGE* image, int* type) {
         image->color = true;
     } else {
         printf("*** error: input file format using magic '%s' is unknown.\n", magic);
-        return false;
+        return;
     }
 
     // get image info: width, height, optionally depth
@@ -106,7 +106,7 @@ bool loadImage(FILE *f, struct IMAGE* image, int* type) {
         fgetc(f); // skip \n after max color index
         if (maxColorIndex > 255) {
             printf("*** error: grayscale / color-component bit depths above 8 are not supported.\n");
-            return false;
+            return;
         }
         bytesPerLine = image->width;
         if (*type == PPM) {
@@ -121,7 +121,7 @@ bool loadImage(FILE *f, struct IMAGE* image, int* type) {
     read = fread(image->buffer, 1, inputSize, f);
     if (read != inputSize) {
         printf("*** error: Only %d out of %d could be read.\n", read, inputSize);
-        return false;
+        return;
     }
     
     if (*type == PBM) { // internally convert b&w to 8-bit for processing
@@ -172,8 +172,6 @@ bool loadImage(FILE *f, struct IMAGE* image, int* type) {
         image->bufferLightness = image->buffer;
         image->bufferDarknessInverse = image->buffer;
     }
-    
-    return true;
 }
 
 
@@ -186,7 +184,7 @@ bool loadImage(FILE *f, struct IMAGE* image, int* type) {
  * @param blackThreshold threshold for grayscale-to-black&white conversion
  * @return true on success, false on failure
  */
-bool saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThreshold) {
+void saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThreshold) {
     uint8_t* buf;
     int bytesPerLine;
     int inputSize;
@@ -203,9 +201,7 @@ bool saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThres
     uint8_t val;
     const char* outputMagic;
     int blackThresholdAbs;
-    bool result;
 
-    result = true;
     if (type == PBM) { // convert to pbm
         blackThresholdAbs = WHITE * (1.0 - blackThreshold);
         bytesPerLine = (image->width + 7) >> 3; // / 8;
@@ -273,7 +269,6 @@ bool saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThres
     if (buf != image->buffer) {
         free(buf);
     }
-    return result;
 }    
 
 
