@@ -12,4 +12,6 @@ install-sh
 missing
 test-driver
 test-suite.log
+tests/
 unpaper
+unpaper.1
