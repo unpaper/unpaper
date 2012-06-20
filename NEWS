@@ -1,6 +1,4 @@
-Release 2.0, to be released
- - Versioning scheme resets to 2.0, to avoid conflicts with the
-   original 1.x releases by Jens.
+Release 0.4.1, 2012-06-20
  - Source code split in multiple units to make it more manageable.
  - Options parsing is now performed through getopt_long_only(); this
    makes it compatible with the old parameters, while avoiding the
@@ -8,6 +6,8 @@ Release 2.0, to be released
  - The --input-sequence and --output-sequence parameters have been
    removed for ease of porting; man page describes the new input
    and output file matching.
+ - Tests are executed with the new parallel harness for speed.
+ - Improved blurfilter by Felix Janda.
 
 Release 0.4, 2011-10-08:
  - New buildsystem, based on standard GNU autotools.
