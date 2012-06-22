@@ -242,7 +242,6 @@ int main(int argc, char* argv[]) {
     int outputDepth;
     int bd;
     bool col;
-    bool anyWildcards;
     int nr;
     int inputNr;
     int outputNr;
@@ -1109,10 +1108,6 @@ int main(int argc, char* argv[]) {
     if ( optind + 2 > argc )
         errOutput("no input or output files given.\n");
 
-    /* check whether we have wildcard inputs and outputs, in which
-       case we have to take special care of them */
-    anyWildcards = ( strchr(argv[optind], '%') != NULL && strchr(argv[optind+1], '%') != NULL );
-
     if ( verbose >= VERBOSE_NORMAL )
         printf(WELCOME); // welcome message
 
@@ -1140,6 +1135,7 @@ int main(int argc, char* argv[]) {
         // --- begin processing                                            ---
         // -------------------------------------------------------------------
 
+	bool inputWildcard = (strchr(argv[optind], '%') != NULL);
         for(i = 0; i < inputCount; i++) {
             bool ins = isInMultiIndex(inputNr, insertBlank, insertBlankCount);
             bool repl = isInMultiIndex(inputNr, replaceBlank, replaceBlankCount);
@@ -1151,7 +1147,7 @@ int main(int argc, char* argv[]) {
             } else if ( ins ) {
                 inputFileNames[i] = NULL; /* insert */
                 inputFiles[i] = NULL;
-            } else if ( anyWildcards ) {
+            } else if ( inputWildcard ) {
                 sprintf(inputFilesBuffer[i], argv[optind], inputNr++);
                 inputFileNames[i] = inputFilesBuffer[i];
             } else if ( optind >= argc ) {
@@ -1176,10 +1172,13 @@ int main(int argc, char* argv[]) {
                     }
                 }
         }
+	if ( inputWildcard )
+	    optind++;
 
+	bool outputWildcard = (strchr(argv[optind], '%') != NULL);
         for(i = 0; i < outputCount; i++) {
-            if ( anyWildcards ) {
-                sprintf(outputFilesBuffer[i], argv[optind+1], outputNr++);
+            if ( outputWildcard ) {
+                sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
                 outputFileNames[i] = outputFilesBuffer[i];
             } else if ( optind >= argc ) {
                 errOutput("not enough output files given.");
@@ -1201,6 +1200,8 @@ int main(int argc, char* argv[]) {
                           outputFileNames[i]);
             }
         }
+	if ( outputWildcard )
+	    optind++;
         
         // ---------------------------------------------------------------
         // --- process single sheet                                    ---
