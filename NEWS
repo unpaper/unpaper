@@ -1,3 +1,7 @@
+Release 0.4.2, 2012-06-22
+ - Fix regressions from 0.4.1 on multi-page processing.
+ - Add tests to make sure that multi-page processing works.
+
 Release 0.4.1, 2012-06-20
  - Source code split in multiple units to make it more manageable.
  - Options parsing is now performed through getopt_long_only(); this
