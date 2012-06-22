@@ -34,7 +34,8 @@ dist_img_DATA = doc/img/_after.png doc/img/_arrow.png			\
 TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
         tests/runtestB3.sh tests/runtestC1.sh tests/runtestC2.sh	\
         tests/runtestC3.sh tests/runtestD1.sh tests/runtestD2.sh	\
-        tests/runtestD3.sh tests/runtestE.sh
+        tests/runtestD3.sh tests/runtestE1.sh tests/runtestE2.sh	\
+	tests/runtestE3.sh
 
 EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png	\
              tests/imgsrc003.png tests/imgsrc004.png		\

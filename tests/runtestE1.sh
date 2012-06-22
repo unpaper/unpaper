@@ -1,0 +1,14 @@
+#!/bin/sh
+
+echo "[E1] Splitting 2-page layout into seperate output pages."
+
+. tests/prologue.sh
+
+for i in 1 2 3 4 5 6; do
+    rm -f tests/resultsE00$i.pbm
+done
+$UNPAPER -v --overwrite --layout double --output-pages 2 tests/imgsrcE%03d.pbm tests/resultsE%03d.pbm
+
+for i in 1 2 3 4 5 6; do
+    [ -f tests/resultsE00$i.pbm ]
+done
