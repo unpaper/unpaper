@@ -2186,6 +2186,14 @@ int main(int argc, char* argv[]) {
             if ( outputFiles[i] != NULL )
                 fclose(outputFiles[i]);
         }
+
+	/* if we're not given an input wildcard, and we finished the
+	 * arguments, we don't want to keep looping.
+	 */
+	if ( optind >= argc && !inputWildcard )
+	    break;
+	else if ( inputWildcard && outputWildcard )
+	    optind -= 2;
     }
 
     if ( showTime && (totalCount > 1) ) {
