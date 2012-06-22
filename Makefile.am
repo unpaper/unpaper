@@ -48,19 +48,16 @@ check_DATA = tests/imgsrc001.pbm tests/imgsrc002.pbm	\
              tests/imgsrcE002.pbm tests/imgsrcE003.pbm
 
 CLEANFILES = $(check_DATA) tests/.dirstamp tests/resultsA1.pbm	\
-             tests/resultsA1.txt tests/resultsB1.ppm		\
-             tests/resultsB1.txt tests/resultsB2.ppm		\
-             tests/resultsB2.txt tests/resultsB3.ppm		\
-             tests/resultsB3.txt tests/resultsC1.pbm		\
-             tests/resultsC1.txt tests/resultsC2.pbm		\
-             tests/resultsC2.txt tests/resultsC3.pbm		\
-             tests/resultsC3.txt tests/resultsD1.ppm		\
-             tests/resultsD1.txt tests/resultsD2.ppm		\
-             tests/resultsD2.txt tests/resultsD3.ppm		\
-             tests/resultsD3.txt tests/resultsE001.pbm		\
-             tests/resultsE002.pbm tests/resultsE003.pbm	\
-             tests/resultsE004.pbm tests/resultsE005.pbm	\
-             tests/resultsE006.pbm tests/resultsE.txt
+	      tests/resultsB1.ppm   tests/resultsB2.ppm		\
+	      tests/resultsB3.ppm   tests/resultsC1.pbm		\
+	      tests/resultsC2.pbm   tests/resultsC3.pbm		\
+	      tests/resultsD1.ppm   tests/resultsD2.ppm		\
+	      tests/resultsD3.ppm   tests/resultsE001.pbm	\
+	      tests/resultsE002.pbm tests/resultsE003.pbm	\
+	      tests/resultsE004.pbm tests/resultsE005.pbm	\
+	      tests/resultsE006.pbm tests/resultsE201.pbm	\
+	      tests/resultsE202.pbm tests/resultsE301.pbm	\
+	      tests/resultsE302.pbm
 
 tests/.dirstamp:
 	$(MKDIR_P) tests
