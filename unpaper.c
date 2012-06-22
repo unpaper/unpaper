@@ -1135,7 +1135,7 @@ int main(int argc, char* argv[]) {
         // --- begin processing                                            ---
         // -------------------------------------------------------------------
 
-	bool inputWildcard = (strchr(argv[optind], '%') != NULL);
+	bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
         for(i = 0; i < inputCount; i++) {
             bool ins = isInMultiIndex(inputNr, insertBlank, insertBlankCount);
             bool repl = isInMultiIndex(inputNr, replaceBlank, replaceBlankCount);
@@ -1175,7 +1175,7 @@ int main(int argc, char* argv[]) {
 	if ( inputWildcard )
 	    optind++;
 
-	bool outputWildcard = (strchr(argv[optind], '%') != NULL);
+	bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
         for(i = 0; i < outputCount; i++) {
             if ( outputWildcard ) {
                 sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
