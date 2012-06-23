@@ -22,6 +22,6 @@ AS_IF([test "x$XSLTPROC" = "x"], [
   ])
 ])
 
-AC_CONFIG_FILES([Makefile tests/prologue.sh])
+AC_CONFIG_FILES([Makefile])
 
 AC_OUTPUT
