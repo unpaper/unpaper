@@ -562,11 +562,11 @@ int main(int argc, char* argv[]) {
             }
             break;
 
-        case 0x7f:
+        case 0x7e:
             sscanf(optarg,"%d", &startSheet);
             break;
 
-        case 0x7e:
+        case 0x7f:
             sscanf(optarg,"%d", &endSheet);
             break;
 
