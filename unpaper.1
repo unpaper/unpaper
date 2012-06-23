@@ -1,0 +1,732 @@
+'\" t
+.\"     Title: unpaper
+.\"    Author: 
+.\" Generator: DocBook XSL-NS Stylesheets v1.77.0 <http://docbook.sf.net/>
+.\"      Date: September 2011
+.\"    Manual: Reference
+.\"    Source: unpaper
+.\"  Language: English
+.\"
+.TH "UNPAPER" "1" "September 2011" "unpaper" "Reference"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+unpaper \- Post\-processing tool for scanned sheets of paper\&.
+.SH "SYNOPSIS"
+.HP \w'\fBunpaper\fR\ 'u
+\fBunpaper\fR [\fIoptions\fR] {\fIinput\-pattern\ \fR\fIoutput\-pattern\fR | \fIinput\-file(s)\fR\ \fIoutput\-file(s)\fR}
+.SH "OVERVIEW"
+.PP
+unpaper is a post\-processing tool for scanned sheets of paper, especially for book pages that have been scanned from previously created photocopies\&. The main purpose is to make scanned book pages better readable on screen after conversion to PDF\&. Additionally, unpaper might be useful to enhance the quality of scanned pages before performing optical character recognition (OCR)\&.
+.PP
+unpaper tries to clean scanned images by removing dark edges that appeared through scanning or copying on areas outside the actual page content (e\&.g\&. dark areas between the left\-hand\-side and the right\-hand\-side of a double\- sided book\-page scan)\&. The program also tries to detect disaligned centering and rotation of pages and will automatically straighten each page by rotating it to the correct angle\&. This process is called "deskewing"\&. Note that the automatic processing will sometimes fail\&. It is always a good idea to manually control the results of unpaper and adjust the parameter settings according to the requirements of the input\&. Each processing step can also be disabled individually for each sheet\&.
+.PP
+Input and output files can be in either
+\&.pbm,
+\&.pgm
+or
+\&.ppm
+format, thus generally in
+\&.pnm
+format, as also used by the Linux scanning tools
+\fBscanimage\fR
+and
+\fBscanadf\fR\&. Conversion to PDF can e\&.g\&. be achieved with the Linux tools
+\fBpgm2tiff\fR,
+\fBtiffcp\fR
+and
+\fBtiff2pdf\fR\&.
+.SH "INPUT AND OUTPUT FILES"
+.PP
+Input and output files need to be designed either by using patterns or an ordered list of input and output files; if patterns are used, such as
+%04d, then they are substituted for the input and output sheet number before opening the file for input or output\&.
+.PP
+If you\*(Aqre not using patterns, then the program expects one or two input files depending on what is passed as
+\fB\-\-input\-pages\fR
+and one or two output files depending on what is passed as
+\fB\-\-output\-pages\fR, in order\&.
+.PP
+Missing output file names are fatal and will stop processing; missing initial input file names are fatal, and so is any missing input file if a range of sheets is defined through
+\fB\-\-sheet\fR
+or
+\fB\-\-end\-sheet\fR\&.
+.PP
+
+\fBunpaper\fR
+accepts files in PNM format, which means they might be in
+\&.pbm,
+\&.pgm,
+\&.ppm
+or
+\&.pnm
+format, which is what is produced by Linux command line scanning tools such as
+\fBscanimage\fR
+and
+\fBscanadf\fR\&.
+.SH "OPTIONS"
+.PP
+\fB\-l\fR { \fBsingle\fR | \fBdouble\fR | \fBnone\fR }, \fB\-\-layout\fR { \fBsingle\fR | \fBdouble\fR | \fBnone\fR }
+.RS 4
+Set default layout options for a sheet:
+.PP
+\fBsingle\fR
+.RS 4
+One page per sheet\&.
+.RE
+.PP
+\fBdouble\fR
+.RS 4
+Two pages per sheet, landscape orientation (one page on the left half, one page on the right half)\&.
+.RE
+.PP
+\fBnone\fR
+.RS 4
+No auto\-layout, mask\-scan\-points may individually be specified\&.
+.RE
+.sp
+Using
+\fBsingle\fR
+or
+\fBdouble\fR
+automatically sets corresponding
+\fB\-\-mask\-scan\-points\fR\&. The default is
+\fBsingle\fR\&.
+.RE
+.PP
+\fB\-start\fR \fIsheet\fR, \fB\-\-start\-sheet\fR \fIstart\-sheet\fR
+.RS 4
+Number of first sheet to process in multi\-sheet mode\&. (default: 1)
+.RE
+.PP
+\fB\-end\fR \fIsheet\fR, \fB\-\-end\-sheet\fR \fIsheet\fR
+.RS 4
+Number of last sheet to process in multi\-sheet mode\&. \-1 indicates processing until no more input file with the corresponding page number is available (default: \-1)
+.RE
+.PP
+\fB\-#\fR \fIsheet\-range\fR, \fB\-\-sheet\fR \fIsheet\-range\fR
+.RS 4
+Optionally specifies which sheets to process in the range between start\-sheet and end\-sheet\&.
+.RE
+.PP
+\fB\-x\fR \fIsheet\-range\fR, \fB\-\-exclude\fR \fIsheet\-range\fR
+.RS 4
+Excludes sheets from processing in the range between start\-sheet and end\-sheet\&.
+.RE
+.PP
+\fB\-\-pre\-rotate\fR { \fB\-90\fR | \fB90\fR }
+.RS 4
+Rotates the whole image clockwise (\fB90\fR) or anti\-clockwise (\fB\-90\fR) before any other processing\&.
+.RE
+.PP
+\fB\-\-post\-rotate\fR { \fB\-90\fR | \fB90\fR }
+.RS 4
+Rotates the whole image clockwise (\fB90\fR) or anti\-clockwise (\fB\-90\fR) after any other processing\&.
+.RE
+.PP
+\fB\-M\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }, \fB\-\-pre\-mirror\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }
+.RS 4
+Mirror the image, after possible pre\-rotation\&. Either
+\fBv\fR
+(for vertical mirroring),
+\fBh\fR
+(for horizontal mirroring) or
+\fBv,h\fR
+(for both) can be specified\&.
+.RE
+.PP
+\fB\-\-post\-mirror\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }
+.RS 4
+Mirror the image, after any other processing except possible post\-rotation\&. Either
+\fBv\fR
+(for vertical mirroring),
+\fBh\fR
+(for horizontal mirroring) or
+\fBv,h\fR
+(for both) can be specified\&.
+.RE
+.PP
+\fB\-\-pre\-shift\fR \fIh\fR\fB,\fR\fIv\fR
+.RS 4
+Shift the image before further processing\&. Values for
+\fIh\fR
+(horizontal shift) and
+\fIv\fR
+(vertical shift) can either be positive or negative\&.
+.RE
+.PP
+\fB\-\-post\-shift\fR \fIh\fR\fB,\fR\fIv\fR
+.RS 4
+Shift the image after other processing\&. Values for
+\fIh\fR
+(horizontal shift) and
+\fIv\fR
+(vertical shift) can either be positive or negative\&.
+.RE
+.PP
+\fB\-\-pre\-wipe\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR
+.RS 4
+Manually wipe out an area before further processing\&. Any pixel in a wiped area will be set to white\&. Multiple areas to be wiped may be specified by multiple occurrences of this options\&.
+.RE
+.PP
+\fB\-\-post\-wipe\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR
+.RS 4
+Manually wipe out an area after processing\&. Any pixel in a wiped area will be set to white\&. Multiple areas to be wiped may be specified by multiple occurrences of this options\&.
+.RE
+.PP
+\fB\-\-pre\-border\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR
+.RS 4
+Clear the border\-area of the sheet before further processing\&. Any pixel in the border area will be set to white\&.
+.RE
+.PP
+\fB\-\-post\-border\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR
+.RS 4
+Clear the border\-area of the sheet after other processing\&. Any pixel in the border area will be set to white\&.
+.RE
+.PP
+\fB\-\-pre\-mask\fR \fIx1\fR\fB,\fR\fIy1\fR\fB,\fR\fIx2\fR\fB,\fR\fIy2\fR
+.RS 4
+Specify masks to apply before any other processing\&. Any pixel outside a mask will be set to white, unless another mask includes this pixel\&.
+.sp
+Only pixels inside a mask will remain\&. Multiple masks may be specified\&. No deskewing will be applied to the masks specified by
+\fB\-\-pre\-mask\fR\&.
+.RE
+.PP
+\fB\-s\fR { \fIwidth\fR\fB,\fR\fIheight\fR | \fIsize\-name\fR }, \fB\-\-size\fR { \fIwidth\fR\fB,\fR\fIheight\fR | \fIsize\-name\fR }
+.RS 4
+Change the sheet size before other processing is applied\&. Content on the sheet gets zoomed to fit to the appropriate size, but the aspect ratio is preserved\&. Instead, if the sheet\*(Aqs aspect ratio changes, the zoomed content gets centered on the sheet\&.
+.sp
+Possible values for
+\fIsize\-name\fR
+are:
+\fBa5\fR,
+\fBa4\fR,
+\fBa3\fR,
+\fBletter\fR,
+\fBlegal\fR\&. All size names can also be applied in rotated landscape orientation, use
+\fBa4\-landscape\fR,
+\fBletter\-landscape\fR
+etc\&.
+.RE
+.PP
+\fB\-\-post\-size\fR { \fIwidth\fR\fB,\fR\fIheight\fR | \fIsize\-name\fR }
+.RS 4
+Change the sheet size preserving the content\*(Aqs aspect ratio after other processing steps are applied\&.
+.RE
+.PP
+\fB\-\-stretch\fR { \fIwidth\fR\fB,\fR\fIheight\fR | \fIsize\-name\fR }
+.RS 4
+Change the sheet size before other processing is applied\&. Content on the sheet gets stretched to the specified size, possibly changing the aspect ratio\&.
+.RE
+.PP
+\fB\-\-post\-stretch\fR { \fIwidth\fR\fB,\fR\fIheight\fR | \fIsize\-name\fR }
+.RS 4
+Change the sheet size after other processing is applied\&. Content on the sheet gets stretched to the specified size, possibly changing the aspect ratio\&.
+.RE
+.PP
+\fB\-z\fR \fIfactor\fR, \fB\-\-zoom\fR \fIfactor\fR
+.RS 4
+Change the sheet size according to the given factor before other processing is done\&.
+.RE
+.PP
+\fB\-\-post\-zoom\fR \fIfactor\fR
+.RS 4
+Change the sheet size according to the given factor after processing is done\&.
+.RE
+.PP
+\fB\-bn\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }, \fB\-\-blackfilter\-scan\-direction\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }
+.RS 4
+Directions in which to search for solidly black areas\&. Either
+\fBv\fR
+(for vertical mirroring),
+\fBh\fR
+(for horizontal mirroring) or
+\fBv,h\fR
+(for both) can be specified\&.
+.RE
+.PP
+\fB\-bs\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }, \fB\-\-blackfilter\-scan\-size\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }
+.RS 4
+Width of virtual bar used for mask detection\&. Two values may be specified to individually set horizontal and vertical size\&. (default:
+\fB20,20\fR)
+.RE
+.PP
+\fB\-bd\fR { \fIdepth\fR | \fIh\-depth\fR\fB,\fR\fIv\-depth\fR }, \fB\-\-blackfilter\-scan\-depth\fR { \fIdepth\fR | \fIh\-depth\fR\fB,\fR\fIv\-depth\fR }
+.RS 4
+Size of virtual bar used for black area detection\&. (default:
+\fB500,500\fR)
+.RE
+.PP
+\fB\-bp\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }, \fB\-\-blackfilter\-scan\-step\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }
+.RS 4
+Steps to move virtual bar for black area detection\&. (default:
+\fB5,5\fR)
+.RE
+.PP
+\fB\-bt\fR \fIthreshold\fR, \fB\-\-blackfilter\-scan\-threshold\fR \fIthreshold\fR
+.RS 4
+Ratio of dark pixels above which a black area gets detected\&. (default:
+\fB0\&.95\fR)\&.
+.RE
+.PP
+\fB\-bx\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR, \fB\-\-blackfilter\-scan\-exclude\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR
+.RS 4
+Area on which the blackfilter should not operate\&. This can be useful to prevent the blackfilter from working on inner page content\&. May be specified multiple times to set more than one area\&.
+.RE
+.PP
+\fB\-bi\fR \fIintensity\fR, \fB\-\-blackfilter\-intensity\fR \fIintensity\fR
+.RS 4
+Intensity with which to delete black areas\&. Larger values will leave less noise\-pixels around former black areas, but may delete page content\&. (default:
+\fB20\fR)
+.RE
+.PP
+\fB\-ni\fR \fIintensity\fR, \fB\-noisefilter\-intensity\fR \fIintensity\fR
+.RS 4
+Intensity with which to delete individual pixels or tiny clusters of pixels\&. Any cluster which only contains
+\fIintensity\fR
+dark pixels together will be deleted\&. (default:
+\fB4\fR)
+.RE
+.PP
+\fB\-ls\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }, \fB\-\-blurfilter\-size\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }
+.RS 4
+Size of blurfilter area to search for "lonely" clusters of pixels\&. (default:
+\fB100,100\fR)
+.RE
+.PP
+\fB\-lp\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }, \fB\-\-blurfilter\-step\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }
+.RS 4
+Size of "blurring" steps in each direction\&. (default:
+\fB50,50\fR)
+.RE
+.PP
+\fB\-li\fR \fIratio\fR, \fB\-\-blurfilter\-intensity\fR \fIratio\fR
+.RS 4
+Relative intensity with which to delete tiny clusters of pixels\&. Any blurred area which contains at most the
+\fIratio\fR
+of dark pixels will be cleared\&. (default:
+\fB0\&.01\fR)
+.RE
+.PP
+\fB\-gs\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }, \fB\-\-grayfilter\-size\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }
+.RS 4
+Size of grayfilter mask to search for "gray\-only" areas of pixels\&. (default:
+\fB50,50\fR)
+.RE
+.PP
+\fB\-gp\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }, \fB\-\-grayfilter\-step\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }
+.RS 4
+Size of steps moving the grayfilter mask in each direction\&. (default:
+\fB20,20\fR)
+.RE
+.PP
+\fB\-gt\fR \fIratio\fR, \fB\-\-grayfilter\-threshold\fR \fIratio\fR
+.RS 4
+Relative intensity of grayness which is accepted before clearing the grayfilter mask in cases where no black pixel is found in the mask\&. (default:
+\fB0\&.5\fR)
+.RE
+.PP
+\fB\-p\fR \fIx\fR\fB,\fR\fIy\fR, \fB\-\-mask\-scan\-point\fR \fIx\fR\fB,\fR\fIy\fR
+.RS 4
+Manually set starting point for mask\-detection\&. Multiple
+\fB\-\-mask\-scan\-point\fR
+options may be specified to detect multiple masks\&.
+.RE
+.PP
+\fB\-m\fR \fIx1\fR\fB,\fR\fIy1\fR\fB,\fR\fIx2\fR\fB,\fR\fIy2\fR, \fB\-\-mask\fR \fIx1\fR\fB,\fR\fIy1\fR\fB,\fR\fIx2\fR\fB,\fR\fIy2\fR
+.RS 4
+Manually add a mask, in addition to masks automatically detected around the
+\fB\-\-mask\-scan\-point\fR
+coordinates (unless
+\fB\-\-no\-mask\-scan\fR
+is specified)\&.
+.sp
+Any pixel outside a mask will be set to white, unless another mask covers this pixel\&.
+.RE
+.PP
+\fB\-mn\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }, \fB\-\-mask\-scan\-direction\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }
+.RS 4
+Directions in which to search for mask borders, starting from \-\-mask\-scan\-point coordinates\&. Either
+\fBv\fR
+(for vertical mirroring),
+\fBh\fR
+(for horizontal mirroring) or
+\fBv,h\fR
+(for both) can be specified\&. (default:
+\fBh\fR, as
+\fBv\fR
+may cut text\- paragraphs on single\-page sheets)
+.RE
+.PP
+\fB\-ms\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }, \fB\-\-mask\-scan\-size\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }
+.RS 4
+Width of the virtual bar used for mask detection\&. Two values may be specified to individually set horizontal and vertical size\&. (default:
+\fB50,50\fR)
+.RE
+.PP
+\fB\-md\fR { \fIdepth\fR | \fIh\-depth\fR\fB,\fR\fIv\-depth\fR }, \fB\-\-mask\-scan\-depth\fR { \fIdepth\fR | \fIh\-depth\fR\fB,\fR\fIv\-depth\fR }
+.RS 4
+Height of the virtual bar used for mask detection\&. (default:
+\fB\-1,\-1\fR, using the total width or height of the sheet)
+.RE
+.PP
+\fB\-mp\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }, \fB\-\-mask\-scan\-step\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }
+.RS 4
+Steps to move the virtual bar for mask detection\&. (default:
+\fB5,5\fR)
+.RE
+.PP
+\fB\-mt\fR { \fIthreshold\fR | \fIh\-threshold\fR\fB,\fR\fIv\-threshold\fR }, \fB\-\-mask\-scan\-threshold\fR { \fIthreshold\fR | \fIh\-threshold\fR\fB,\fR\fIv\-threshold\fR }
+.RS 4
+Ratio of dark pixels below which an edge gets detected, relative to maximum blackness when counting from the start coordinate heading towards one edge\&. (default:
+\fB0\&.1\fR)
+.RE
+.PP
+\fB\-mm\fR \fIw\fR\fB,\fR\fIh\fR, \fB\-\-mask\-scan\-minimum\fR \fIw\fR\fB,\fR\fIh\fR
+.RS 4
+Minimum allowed size of an auto\-detected mask\&. Masks detected below this size will be ignored and set to the size specified by mask\-scan\-maximum\&. (default:
+\fB100,100\fR)
+.RE
+.PP
+\fB\-mM\fR \fIw\fR\fB,\fR\fIh\fR, \fB\-\-mask\-scan\-maximum\fR \fIw\fR\fB,\fR\fIh\fR
+.RS 4
+Maximum allowed size of an auto\-detected mask\&. Masks detected above this size will be shrunk to the maximum value, each direction individually\&. (default: sheet size, or page size derived from
+\fB\-\-layout\fR
+option)
+.RE
+.PP
+\fB\-mc\fR \fIcolor\fR, \fB\-\-mask\-color\fR \fIcolor\fR
+.RS 4
+Color value with which to wipe out pixels not covered by any mask\&. Maybe useful for testing in order to visualize the effect of masking\&. (Note that an RGB\-value is expected: R*65536 + G*256 + B\&.)
+.RE
+.PP
+\fB\-dn\fR { \fBleft\fR | \fBtop\fR | \fBright\fR | \fBbottom\fR }\fB,\fR\&.\&.\&., \fB\-\-deskew\-scan\-direction\fR { \fBleft\fR | \fBtop\fR | \fBright\fR | \fBbottom\fR }\fB,\fR\&.\&.\&.
+.RS 4
+Edges from which to scan for rotation\&. Each edge of a mask can be used to detect the mask\*(Aqs rotation\&. If multiple edges are specified, the average value will be used, unless the statistical deviation exceeds
+\fB\-\-deskew\-scan\-deviation\fR\&. Use
+\fBleft\fR
+for scanning from the left edge,
+\fBtop\fR
+for scanning from the top edge,
+\fBright\fR
+for scanning from the right edge,
+\fBbottom\fR
+for scanning from the bottom\&. Multiple directions can be separated by commas\&. (default:
+\fBleft,right\fR)
+.RE
+.PP
+\fB\-ds\fR \fIpixels\fR, \fB\-\-deskew\-scan\-size\fR \fIpixels\fR
+.RS 4
+Size of virtual line for rotation detection\&. (default:
+\fB1500\fR)
+.RE
+.PP
+\fB\-dd\fR \fIratio\fR, \fB\-\-deskew\-scan\-depth\fR \fIratio\fR
+.RS 4
+Amount of dark pixels to accumulate until scanning is stopped, relative to scan\-bar size\&. (default:
+\fB0\&.5\fR)
+.RE
+.PP
+\fB\-dr\fR \fIdegrees\fR, \fB\-\-deskew\-scan\-range\fR \fIdegrees\fR
+.RS 4
+Range in which to search for rotation, from \-\fIdegrees\fR
+to +\fIdegrees\fR
+rotation\&. (default:
+\fB5\&.0\fR)
+.RE
+.PP
+\fB\-dp\fR \fIdegrees\fR, \fB\-\-deskew\-scan\-step\fR \fIdegrees\fR
+.RS 4
+Steps between single rotation\-angle detections\&. Lower numbers lead to better results but slow down processing\&. (default:
+\fB0\&.1\fR)
+.RE
+.PP
+\fB\-dv\fR \fIdeviation\fR, \fB\-\-deskew\-scan\-deviation\fR \fIdeviation\fR
+.RS 4
+Maximum statistical deviation allowed among the results from detected edges\&. No rotation if exceeded\&. (default:
+\fB1\&.0\fR)
+.RE
+.PP
+\fB\-W\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR, \fB\-\-wipe\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR
+.RS 4
+Manually wipe out an area\&. Any pixel in a wiped area will be set to white\&. Multiple
+\fB\-\-wipe\fR
+areas may be specified\&. This is applied after deskewing and before automatic border\-scan\&.
+.RE
+.PP
+\fB\-mw\fR { \fIsize\fR | \fIleft\fR\fB,\fR\fIright\fR }, \fB\-\-middle\-wipe\fR { \fIsize\fR | \fIleft\fR\fB,\fR\fIright\fR }
+.RS 4
+If
+\fB\-\-layout\fR
+is set to
+\fBdouble\fR, this may specify the size of a middle area to wipe out between the two pages on the sheet\&. This may be useful if the blackfilter fails to remove some black areas (e\&.g\&. resulting from photo\-copying in the middle between two pages)\&.
+.RE
+.PP
+\fB\-B\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR, \fB\-\-border\fR \fIleft\fR\fB,\fR\fItop\fR\fB,\fR\fIright\fR\fB,\fR\fIbottom\fR
+.RS 4
+Manually add a border\&. Any pixel in the border area will be set to white\&. This is applied after deskewing and before automatic border\-scan\&.
+.RE
+.PP
+\fB\-Bn\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }, \fB\-\-border\-scan\-direction\fR { \fBv\fR | \fBh\fR | \fBv,h\fR }
+.RS 4
+Directions in which to search for outer border\&. Either
+\fBv\fR
+(for vertical mirroring),
+\fBh\fR
+(for horizontal mirroring) or
+\fBv,h\fR
+(for both) can be specified\&. (default:
+\fBv\fR)
+.RE
+.PP
+\fB\-Bs\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }, \fB\-\-border\-scan\-size\fR { \fIsize\fR | \fIh\-size\fR\fB,\fR\fIv\-size\fR }
+.RS 4
+Width of virtual bar used for border detection\&. Two values may be specified to individually set horizontal and vertical size\&. (default:
+\fB5,5\fR)
+.RE
+.PP
+\fB\-Bp\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }, \fB\-\-border\-scan\-step\fR { \fIstep\fR | \fIh\-step\fR\fB,\fR\fIv\-step\fR }
+.RS 4
+Steps to move virtual bar for border detection\&. (default:
+\fB5,5\fR)
+.RE
+.PP
+\fB\-Bt\fR \fIthreshold\fR, \fB\-\-border\-scan\-threshold\fR \fIthreshold\fR
+.RS 4
+Absolute number of dark pixels covered by the border\-scan mask above which a border is detected\&. (default:
+\fB5\fR)
+.RE
+.PP
+\fB\-Ba\fR { \fBleft\fR | \fBtop\fR | \fBright\fR | \fBbottom\fR }, \fB\-\-border\-align\fR { \fBleft\fR | \fBtop\fR | \fBright\fR | \fBbottom\fR }
+.RS 4
+Direction where to shift the detected border\-area\&. Use
+\fB\-\-border\-margin\fR
+to specify horizontal and vertical distances to be kept from the sheet\-edge\&. (default:
+\fBnone\fR)
+.RE
+.PP
+\fB\-Bm\fR \fIvertical\fR\fB,\fR\fIhorizontal\fR, \fB\-\-border\-margin\fR \fIvertical\fR\fB,\fR\fIhorizontal\fR
+.RS 4
+Distance to keep from the sheet edge when aligning a border area\&. May use measurement suffices such as cm, in\&.
+.RE
+.PP
+\fB\-w\fR \fIthreshold\fR, \fB\-\-white\-threshold\fR \fIthreshold\fR
+.RS 4
+Brightness ratio above which a pixel is considered white\&. (default:
+\fB0\&.9\fR)
+.RE
+.PP
+\fB\-b\fR \fIthreshold\fR, \fB\-\-black\-threshold\fR \fIthreshold\fR
+.RS 4
+Brightness ratio below which a pixel is considered black (non\-gray)\&. This is used by the gray\-filter\&. This value is also used when converting a grayscale image to black\-and\-white mode (default:
+\fB0\&.33\fR)
+.RE
+.PP
+\fB\-ip\fR { \fB1\fR | \fB2\fR }, \fB\-\-input\-pages\fR { \fB1\fR | \fB2\fR }
+.RS 4
+If
+\fB2\fR
+is specified, read two input images instead of one and internally combine them to a doubled\-layout sheet before further processing\&. Before internally combining,
+\fB\-\-pre\-rotation\fR
+is optionally applied individually to both input images as the very first processing steps\&.
+.RE
+.PP
+\fB\-op\fR { \fB1\fR | \fB2\fR }, \fB\-\-output\-pages\fR { \fB1\fR | \fB2\fR }
+.RS 4
+If
+\fB2\fR
+is specified, write two output images instead of one, as a result of splitting a doubled\-layout sheet after processing\&. After splitting the sheet,
+\fB\-\-post\-rotation\fR
+is optionally applied individually to both output images as the very last processing step\&.
+.RE
+.PP
+\fB\-S\fR { \fIwidth\fR\fB,\fR\fIheight\fR | \fIsize\-name\fR }, \fB\-\-sheet\-size\fR { \fIwidth\fR\fB,\fR\fIheight\fR | \fIsize\-name\fR }
+.RS 4
+Force a fix sheet size\&. Usually, the sheet size is determined by the input image size (if
+\fBinput\-pages=1\fR), or by the double size of the first page in a two\-page input set (if
+\fBinput\-pages=2\fR)\&. If the input image is smaller than the size specified here, it will appear centered and surrounded with a white border on the sheet\&. If the input image is bigger, it will be centered and the edges will be cropped\&. This option may also be helpful to get regular sized output images if the input image sizes differ\&. Standard size\-names like
+\fBa4\-landscape\fR,
+\fBletter\fR, etc\&. may be used (see
+\fB\-\-size\fR)\&. (default: as in input file)
+.RE
+.PP
+\fB\-\-sheet\-background\fR { \fBblack\fR | \fBwhite\fR }
+.RS 4
+Sets a color with which the sheet is filled before any image is loaded and placed onto it\&. This can be useful when the sheet size and the image size differ\&.
+.RE
+.PP
+\fB\-\-no\-blackfilter\fR \fIsheet\-range\fR
+.RS 4
+Disables black area scan\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-noisefilter\fR \fIsheet\-range\fR
+.RS 4
+Disables the noisefilter\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-blurfilter\fR \fIsheet\-range\fR
+.RS 4
+Disables the blurfilter\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-grayfilter\fR \fIsheet\-range\fR
+.RS 4
+Disables the grayfilter\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-mask\-scan\fR \fIsheet\-range\fR
+.RS 4
+Disables mask\-detection\&. Masks explicitly set by
+\fB\-\-mask\fR
+will still have effect\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-mask\-center\fR \fIsheet\-range\fR
+.RS 4
+Disables auto\-centering of each mask\&. Auto\-centering is performed by default if the
+\fB\-\-layout\fR
+option has been set\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-deskew\fR \fIsheet\-range\fR
+.RS 4
+Disables deskewing\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-wipe\fR \fIsheet\-range\fR
+.RS 4
+Disables explicit wipe\-areas\&. This means the effect of parameter
+\fB\-\-wipe\fR
+can be disabled individually per sheet\&.
+.RE
+.PP
+\fB\-\-no\-border\fR \fIsheet\-range\fR
+.RS 4
+Disables explicitly set borders\&. This means the effect of parameter
+\fB\-\-border\fR
+can be disabled individually per sheet\&.
+.RE
+.PP
+\fB\-\-no\-border\-scan\fR \fIsheet\-range\fR
+.RS 4
+Disables border\-scanning from the edges of the sheet\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-border\-align\fR \fIsheet\-range\fR
+.RS 4
+Disables aligning of the area detected by border\-scanning (see
+\fB\-\-border\-align\fR)\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-n\fR \fIsheet\-range\fR, \fB\-\-no\-processing\fR \fIsheet\-range\fR
+.RS 4
+Do not perform any processing on a sheet except pre/post rotating and mirroring, and file\-depth conversions on saving\&. This option has the same effect as setting all
+\fB\-\-no\-xxx\fR
+options together\&. Individual sheet indices can be specified\&.
+.RE
+.PP
+\fB\-\-no\-qpixels\fR
+.RS 4
+Disable qpixel\-mode for deskewing (do not internally use a 4x bigger image when rotating)\&.
+.RE
+.PP
+\fB\-\-no\-multi\-pages\fR
+.RS 4
+Disable multi\-page processing even if the input filename contains a
+%
+(usually indicating the start of a placeholder for the page counter)\&.
+.RE
+.PP
+\fB\-\-dpi\fR \fIdpi\fR
+.RS 4
+Dots per inch used for conversion of measured size values, like e\&.g\&.
+\fB21cm,27\&.9cm\fR\&. Mind that this parameter should occur before specifying any size value with measurement suffix\&. (default:
+\fB300\fR)
+.RE
+.PP
+\fB\-t\fR { \fBpbm\fR | \fBpgm\fR }, \fB\-\-type\fR { \fBpbm\fR | \fBpgm\fR }
+.RS 4
+Output file type\&. (default: as input)
+.RE
+.PP
+\fB\-d\fR \fIbits\fR, \fB\-\-depth\fR \fIbits\fR
+.RS 4
+Output pixel depth\&. (default: as input)
+.RE
+.PP
+\fB\-T\fR, \fB\-\-test\-only\fR
+.RS 4
+Do not write any output\&. May be useful in combination with
+\fB\-\-verbose\fR
+to get information about the input\&.
+.RE
+.PP
+\fB\-si\fR \fInr\fR, \fB\-\-start\-input\fR \fInr\fR
+.RS 4
+Set the first page number to substitute for \*(Aq%d\*(Aq in input filenames\&. Every time the input file sequence is repeated, this number gets increased by 1\&. (default: (startsheet\-1)*inputpages+1)
+.RE
+.PP
+\fB\-so\fR \fInr\fR, \fB\-\-start\-output\fR \fInr\fR
+.RS 4
+Set the first page number to substitute for \*(Aq%d\*(Aq in output filenames\&. Every time the output file sequence is repeated, this number gets increased by 1\&. (default: (startsheet\-1)*outputpages+1)
+.RE
+.PP
+\fB\-\-insert\-blank\fR \fInr\fR [\fB,\fR\fInr\fR\&.\&.\&.]
+.RS 4
+Use blank input instead of an input file from the input file sequence at the specified index\-positions\&. The input file sequence will be interrupted temporarily and will continue with the next input file afterwards\&. This can be useful to insert blank content into a sequence of input images\&.
+.RE
+.PP
+\fB\-\-replace\-blank\fR \fInr\fR [\fB,\fR\fInr\fR\&.\&.\&.]
+.RS 4
+Like
+\fB\-\-insert\-blank\fR, but the input images at the specified index positions get replaced with blank content and thus will be ignored\&.
+.RE
+.PP
+\fB\-\-overwrite\fR
+.RS 4
+Allow overwriting existing files\&. Otherwise the program terminates with an error if an output file to be written already exists\&.
+.RE
+.PP
+\fB\-q\fR, \fB\-\-quiet\fR
+.RS 4
+Quiet mode, no output at all\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Verbose output, more info messages\&.
+.RE
+.PP
+\fB\-vv\fR
+.RS 4
+Even more verbose output, show parameter settings before processing\&.
+.RE
+.PP
+\fB\-\-time\fR
+.RS 4
+Output processing time consumed\&.
+.RE
+.PP
+\fB\-V\fR, \fB\-\-version\fR
+.RS 4
+Output version and build information\&.
+.RE
+.SH "COPYRIGHT"
+.br
