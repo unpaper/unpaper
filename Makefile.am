@@ -36,7 +36,10 @@ TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
         tests/runtestC3.sh tests/runtestD1.sh tests/runtestD2.sh	\
         tests/runtestD3.sh tests/runtestE1.sh tests/runtestE2.sh	\
         tests/runtestE3.sh tests/runtestF1.sh tests/runtestF2.sh	\
-        tests/runtestF3.sh
+        tests/runtestF3.sh tests/runtestG1.sh tests/runtestG2.sh	\
+	tests/runtestG3.sh
+
+XFAIL_TESTS = tests/runtestG3.sh
 
 EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png	\
              tests/imgsrc003.png tests/imgsrc004.png		\
