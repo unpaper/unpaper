@@ -390,8 +390,8 @@ int main(int argc, char* argv[]) {
             { "end-sheet",                  required_argument, NULL, 0x7f },
             { "start-input",                required_argument, NULL, 0x80 },
             { "si",                         required_argument, NULL, 0x80 },
-            { "end-input",                  required_argument, NULL, 0x81 },
-            { "ei",                         required_argument, NULL, 0x81 },
+            { "start-ouput",                required_argument, NULL, 0x81 },
+            { "so",                         required_argument, NULL, 0x81 },
             { "sheet-size",                 required_argument, NULL,  'S' },
             { "sheet-background",           required_argument, NULL, 0x82 },
             { "exclude",                    optional_argument, NULL,  'x' },
@@ -1101,7 +1101,7 @@ int main(int argc, char* argv[]) {
     showTime |= (verbose >= VERBOSE_DEBUG); // always show processing time in verbose-debug mode
 
     /* make sure we have at least two arguments after the options, as
-       that's the minimum amount of paramenters we need (one input and
+       that's the minimum amount of parameters we need (one input and
        one output, or a wildcard of inputs and a wildcard of
        outputs.
     */
