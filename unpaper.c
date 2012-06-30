@@ -34,19 +34,13 @@
 #include "tools.h"
 #include "file.h"
 #include "parse.h"
- 
+
+#define PROGRAM_NAME "unpaper"
+#define AUTHORS "Jens Gulden"
 #define WELCOME                                                         \
-    "unpaper " VERSION " - written by Jens Gulden 2005-2007.\n"         \
+    PROGRAM_NAME VERSION " - written by" AUTHORS ".\n"         \
     "Licensed under the GNU General Public License, this comes with no warranty.\n"
               
-#define USAGE                                                           \
-    WELCOME "\n"                                                        \
-    "Usage: unpaper [options] <input-file(s)> <output-file(s)>\n\n"     \
-    "Filenames may contain a formatting placeholder starting with '%%' to insert a\n" \
-    "page counter for multi-page processing. E.g.: 'scan%%03d.pbm' to process files\n" \
-    "scan001.pbm, scan002.pbm, scan003.pbm etc.\n\n"                    \
-    "See 'man unpaper' for options details"
-
 /* --- constants ---------------------------------------------------------- */
 
 // file type names (see typedef FILETYPES)
@@ -61,6 +55,31 @@ static const char FILETYPE_NAMES[FILETYPES_COUNT][4] = {
 VERBOSE_LEVEL verbose;
 
 
+void
+usage (int status)
+{
+  if (status != EXIT_SUCCESS)
+    fprintf (stderr, ("Try 'man %s' for more information.\n"),
+    		PROGRAM_NAME);
+  else
+    {
+      printf (("\
+Usage: %s [options] <input-file(s)> <output-file(s)>\n\
+"), PROGRAM_NAME);
+      printf ("\
+    	 -v, --verbose            be verbose\n\
+         -h, --help               display this help and exit\n\
+         -V, --version            output version information and exit\n\n\
+Filenames may contain a formatting placeholder starting with '%%' to insert a\n\
+page counter for multi-page processing. E.g.: 'scan%%03d.pbm' to process files\n\
+scan001.pbm, scan002.pbm, scan003.pbm etc.\n\n\
+See 'man unpaper' for options details\n\
+Report bugs at https://github.com/Flameeyes/unpaper/issues \n");
+    }
+  exit (status);
+}
+
+
 /**
  * Print an error and exit process
  */
@@ -73,8 +92,7 @@ void errOutput(const char *fmt, ...) {
     vfprintf(stderr, fmt, vl);
     va_end(vl);
 
-    fprintf(stderr, "\nTry 'man unpaper' for more information.\n");
-
+    usage (EXIT_FAILURE);
     exit(1);
 }
 
@@ -379,7 +397,6 @@ int main(int argc, char* argv[]) {
 
         static const struct option long_options[] = {
             { "help",                       no_argument,       NULL,  'h' },
-            { "?",                          no_argument,       NULL,  'h' },
             { "version",                    no_argument,       NULL,  'V' },
             { "layout",                     required_argument, NULL,  'l' },
             { "#",                          required_argument, NULL,  '#' },
@@ -524,6 +541,7 @@ int main(int argc, char* argv[]) {
             { "vvv",                        no_argument,       NULL, 0xcb },
             { "debug-save",                 no_argument,       NULL, 0xcc },
             { "vvvv",                       no_argument,       NULL, 0xcc },
+            {NULL, no_argument, NULL, 0}
         };
 
         c = getopt_long_only(argc, argv, "hVl:S:x::n::M:s:z:p:m:W:B:w:b:Tt:d:qv",
@@ -533,9 +551,9 @@ int main(int argc, char* argv[]) {
 
         switch(c) {
         case 'h':
+        	usage (EXIT_SUCCESS);
         case '?':
-            puts(USAGE);
-            return c == '?' ? 1 : 0;
+        	usage (EXIT_FAILURE);
 
         case 'V':
             puts(VERSION);
