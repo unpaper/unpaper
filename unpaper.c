@@ -59,7 +59,7 @@ void
 usage (int status)
 {
   if (status != EXIT_SUCCESS)
-    fprintf (stderr, ("Try `%s --help' for more information.\n"),
+    fprintf (stderr, ("Try 'man %s' for more information.\n"),
     		PROGRAM_NAME);
   else
     {
@@ -92,8 +92,7 @@ void errOutput(const char *fmt, ...) {
     vfprintf(stderr, fmt, vl);
     va_end(vl);
 
-    fprintf(stderr, "\nTry 'man unpaper' for more information.\n");
-
+    usage (EXIT_FAILURE);
     exit(1);
 }
 
@@ -559,9 +558,6 @@ int main(int argc, char* argv[]) {
         case 'V':
             puts(VERSION);
             return 0;
-
-        default:
-        	errOutput("unrecognized option : s");
 
         case 'l':
             if (strcmp(optarg, "single")==0) {
