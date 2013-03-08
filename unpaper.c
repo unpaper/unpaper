@@ -523,6 +523,7 @@ int main(int argc, char* argv[]) {
             { "debug-save",                 no_argument,       NULL, 0xcc },
             { "vvvv",                       no_argument,       NULL, 0xcc },
             { "interpolate",                required_argument, NULL, 0xcd },
+            { NULL,                         no_argument,       NULL, 0    }
         };
 
         c = getopt_long_only(argc, argv, "hVl:S:x::n::M:s:z:p:m:W:B:w:b:Tt:d:qv",
