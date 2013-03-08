@@ -1,6 +1,6 @@
 AC_PREREQ(2.68)
 
-AC_INIT([unpaper], [0.4.2], [https://github.com/Flameeyes/unpaper/issues], , [https://github.com/Flameeyes/unpaper])
+AC_INIT([unpaper], [0.5], [https://github.com/Flameeyes/unpaper/issues], , [https://github.com/Flameeyes/unpaper])
 
 AC_PROG_MKDIR_P
 AC_PROG_CC_C99
