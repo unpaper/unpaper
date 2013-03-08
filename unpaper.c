@@ -60,6 +60,8 @@ static const char FILETYPE_NAMES[FILETYPES_COUNT][4] = {
 
 VERBOSE_LEVEL verbose;
 
+INTERP_FUNCTIONS interpolateType;
+
 
 /**
  * Print an error and exit process
@@ -166,7 +168,6 @@ int main(int argc, char* argv[]) {
     float whiteThreshold;
     float blackThreshold;
     bool writeoutput;
-    bool qpixels;
     bool multisheets;
     const char* outputTypeName; 
     int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
@@ -227,7 +228,6 @@ int main(int argc, char* argv[]) {
     struct IMAGE sheet;
     struct IMAGE sheetBackup;
     struct IMAGE originalSheet;
-    struct IMAGE qpixelSheet;
     struct IMAGE page;
     const char* layoutStr;
     const char* inputTypeName; 
@@ -235,7 +235,6 @@ int main(int argc, char* argv[]) {
     int inputType;
     int filterResult;
     double rotation;
-    int q;
     struct IMAGE rect;
     struct IMAGE rectTarget;
     int outputType;
@@ -258,7 +257,6 @@ int main(int argc, char* argv[]) {
     col = false; // default no color if not resolvable
     
     // explicitly un-initialize variables that are sometimes not used to avoid compiler warnings
-    qpixelSheet.buffer = NULL; // used optionally, deactivated by --no-qpixels
     startTime = 0;             // used optionally in debug mode -vv or with --time
     endTime = 0;               // used optionally in debug mode -vv or with --time
 
@@ -345,7 +343,6 @@ int main(int argc, char* argv[]) {
     sheetSize[WIDTH] = sheetSize[HEIGHT] = -1;
     sheetBackground = WHITE;
     writeoutput = true;
-    qpixels = true;
     multisheets = true;
     inputCount = 1;
     outputCount = 1;
@@ -369,6 +366,7 @@ int main(int argc, char* argv[]) {
     overwrite = false;
     showTime = false;
     dpi = 300;
+    interpolateType = INTERP_CUBIC;
 
     // -------------------------------------------------------------------
     // --- parse parameters                                            ---
@@ -524,6 +522,7 @@ int main(int argc, char* argv[]) {
             { "vvv",                        no_argument,       NULL, 0xcb },
             { "debug-save",                 no_argument,       NULL, 0xcc },
             { "vvvv",                       no_argument,       NULL, 0xcc },
+            { "interpolate",                required_argument, NULL, 0xcd },
         };
 
         c = getopt_long_only(argc, argv, "hVl:S:x::n::M:s:z:p:m:W:B:w:b:Tt:d:qv",
@@ -1049,7 +1048,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xc5:
-            qpixels = false;
+            // Deprecated function, ignore.
             break;
 
         case 0xc6:
@@ -1094,6 +1093,21 @@ int main(int argc, char* argv[]) {
 
         case 0xcc:
             verbose = VERBOSE_DEBUG_SAVE;
+            break;
+
+        case 0xcd:
+            if (strcmp(optarg, "nearest") == 0) {
+                interpolateType = INTERP_NN;
+            } else if (strcmp(optarg, "linear") == 0) {
+                interpolateType = INTERP_LINEAR;
+            } else if (strcmp(optarg, "cubic") == 0) {
+                interpolateType = INTERP_CUBIC;
+            }
+            else
+            {
+                fprintf(stderr, "Could not parse --interpolate, using cubic as default.\n");
+                interpolateType = INTERP_CUBIC;
+            }
             break;
         }
     }
@@ -1555,9 +1569,6 @@ int main(int argc, char* argv[]) {
                     printf("deskew-scan-range: %f\n", deskewScanRange);
                     printf("deskew-scan-step: %f\n", deskewScanStep);
                     printf("deskew-scan-deviation: %f\n", deskewScanDeviation);
-                    if (qpixels==false) {
-                        printf("qpixel-coding DISABLED.\n");
-                    }
                     if (noDeskewMultiIndexCount > 0) {
                         printf("deskew-scan DISABLED for sheets: ");
                         printMultiIndex(noDeskewMultiIndex, noDeskewMultiIndexCount);
@@ -1889,18 +1900,6 @@ int main(int argc, char* argv[]) {
 
                 saveDebug("./_before-deskew.pnm", &sheet);
                 originalSheet = sheet; // copy struct entries ('clone')
-                // convert to qpixels
-                if (qpixels==true) {
-                    if (verbose>=VERBOSE_NORMAL) {
-                        printf("converting to qpixels.\n");
-                    }
-                    initImage(&qpixelSheet, sheet.width * 2, sheet.height * 2, sheet.bitdepth, sheet.color, sheetBackground);
-                    convertToQPixels(&sheet, &qpixelSheet);
-                    sheet = qpixelSheet;
-                    q = 2; // qpixel-factor for coordinates in both directions
-                } else {
-                    q = 1;
-                }
 
                 // detect masks again, we may get more precise results now after first masking and grayfilter
                 if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
@@ -1925,17 +1924,17 @@ int main(int argc, char* argv[]) {
                         if (verbose>=VERBOSE_NORMAL) {
                             printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
                         }
-                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1)*q, (mask[i][BOTTOM]-mask[i][TOP]+1)*q, sheet.bitdepth, sheet.color, sheetBackground);
+                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet.bitdepth, sheet.color, sheetBackground);
                         initImage(&rectTarget, rect.width, rect.height, sheet.bitdepth, sheet.color, sheetBackground);
 
                         // copy area to rotate into rSource
-                        copyImageArea(mask[i][LEFT]*q, mask[i][TOP]*q, rect.width, rect.height, &sheet, 0, 0, &rect);
+                        copyImageArea(mask[i][LEFT], mask[i][TOP], rect.width, rect.height, &sheet, 0, 0, &rect);
 
                         // rotate
                         rotate(degreesToRadians(rotation), &rect, &rectTarget);
 
                         // copy result back into whole image
-                        copyImageArea(0, 0, rectTarget.width, rectTarget.height, &rectTarget, mask[i][LEFT]*q, mask[i][TOP]*q, &sheet);
+                        copyImageArea(0, 0, rectTarget.width, rectTarget.height, &rectTarget, mask[i][LEFT], mask[i][TOP], &sheet);
 
                         freeImage(&rect);
                         freeImage(&rectTarget);
@@ -1948,15 +1947,6 @@ int main(int argc, char* argv[]) {
                     // }
                 }
 
-                // convert back from qpixels
-                if (qpixels == true) {
-                    if (verbose >= VERBOSE_NORMAL) {
-                        printf("converting back from qpixels.\n");
-                    }
-                    convertFromQPixels(&qpixelSheet, &originalSheet);
-                    freeImage(&qpixelSheet);
-                    sheet = originalSheet;
-                }
                 saveDebug("./_after-deskew.pnm", &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {

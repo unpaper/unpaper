@@ -2,6 +2,7 @@
 <!--
 Copyright © 2005-2007, Jens Gulden
 Copyright © 2011, Diego Elio Pettenò <flameeyes@flameeyes.eu>
+Copyright © 2013 Michael McMaster <michael@codesrc.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,6 +40,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
         <affiliation>
           <address><email>flameeyes@flameeyes.eu</email></address>
+        </affiliation>
+      </author>
+
+      <author>
+        <personname>
+          <firstname>Michael</firstname>
+          <surname>McMaster</surname>
+        </personname>
+
+        <affiliation>
+          <address><email>michael@codesrc.com</email></address>
         </affiliation>
       </author>
     </authorgroup>
@@ -1562,13 +1574,27 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
           <varlistentry>
             <term>
+              <option>--interpolate</option>
+              { <option>nearest</option> | <option>linear</option> | <option>cubic</option> }
+            </term>
+
+            <listitem>
+              <para>
+                Set the interpolation function used for deskewing and stretching.
+                The <option>cubic</option> option provides the best image quality,
+                while <option>nearest</option> is the fastest. (default: <option>cubic</option>)
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
               <option>--no-qpixels</option>
             </term>
 
             <listitem>
               <para>
-                Disable qpixel-mode for deskewing (do not internally use a 4x bigger image when
-                rotating).
+                Ignored for backwards compatibility.
               </para>
             </listitem>
           </varlistentry>

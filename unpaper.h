@@ -125,6 +125,13 @@ typedef enum {
 	FILETYPES_COUNT
 } FILETYPES;
 
+typedef enum {
+	INTERP_NN,
+	INTERP_LINEAR,
+	INTERP_CUBIC,
+	INTERP_FUNCTIONS_COUNT
+} INTERP_FUNCTIONS;
+
 
 /* --- struct ------------------------------------------------------------- */
 
@@ -147,3 +154,4 @@ void errOutput(const char *fmt, ...)
 /* --- global variable ---------------------------------------------------- */
 
 extern VERBOSE_LEVEL verbose;
+extern INTERP_FUNCTIONS interpolateType;

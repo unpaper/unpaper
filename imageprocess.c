@@ -3,6 +3,7 @@
  *
  * Copyright © 2005-2007 Jens Gulden
  * Copyright © 2011-2011 Diego Elio Pettenò
+ * Copyright © 2013 Michael McMaster <michael@codesrc.com>
  *
  * Unpaper is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -255,146 +256,153 @@ double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScan
 }
 
 /**
+ * Nearest-neighbour interpolation.
+ */
+static int nearest(float x, float y, struct IMAGE* source)
+{
+	// Round to nearest location.
+	int x1 = (int) roundf(x);
+	int y1 = (int) roundf(y);
+	return getPixel(x1, y1, source);
+}
+
+/**
+ * 1-D cubic interpolation. Clamps the return value between 0 and 255 to
+ * support 8-bit colour images.
+*/
+static int cubic(float x, int a, int b, int c, int d)
+{
+    int result = b + 0.5f * x * (c - a + x * (2.0f * a - 5.0f * b + 4.0f * c - d + x * (3.0f * (b - c) + d - a)));
+    if (result > 255) result = 255;
+    if (result < 0) result = 0;
+    return result;
+}
+
+/**
+ * 1-D cubic interpolation
+ * This function expects (and returns) colour pixel values.
+*/
+static int cubicPixel(float x, int a, int b, int c, int d)
+{
+    int red = cubic(x, red(a), red(b), red(c), red(d));
+    int green = cubic(x, green(a), green(b), green(c), green(d));
+    int blue = cubic(x, blue(a), blue(b), blue(c), blue(d));
+    return pixelValue(red, green, blue);
+}
+
+/**
+ * 2-D bicubic interpolation
+*/
+static int bicubicInterpolate(float x, float y, struct IMAGE* source)
+{
+    int fx = (int) x;
+    int fy = (int) y;
+
+    int v[4];
+    for (int i = -1; i < 3; ++i) {
+        v[i+1] = cubicPixel(
+            x - fx,
+            getPixel(fx - 1, fy + i, source),
+            getPixel(fx, fy + i, source),
+            getPixel(fx + 1, fy + i, source),
+            getPixel(fx + 2, fy + i, source));
+    }
+    return cubicPixel(y - fy, v[0], v[1], v[2], v[3]);
+}
+
+/**
+ * 1-D linear interpolation.
+*/
+static int linear(float x, int a, int b)
+{
+    return (1.0f - x) * a + x * b;
+}
+
+/**
+ * 1-D linear interpolation
+ * This function expects (and returns) colour pixel values.
+*/
+static int linearPixel(float x, int a, int b)
+{
+    int red = linear(x, red(a), red(b));
+    int green = linear(x, green(a), green(b));
+    int blue = linear(x, blue(a), blue(b));
+    return pixelValue(red, green, blue);
+}
+
+/**
+ * 2-D bilinear interpolation
+*/
+static int bilinearInterpolate(float x, float y, struct IMAGE* source)
+{
+    int x1 = (int) x;
+    int x2 = (int) ceilf(x);
+    int y1 = (int) y;
+    int y2 = (int) ceilf(y);
+
+    // Check edge conditions to avoid divide-by-zero
+    if (x2 > source->width || y2 > source->height)
+        return getPixel(x, y, source);
+    else if (x2 == x1 && y2 == y1)
+        return getPixel(x, y, source);
+    else if (x2 == x1) {
+        int p1 = getPixel(x1, y1, source);
+        int p2 = getPixel(x1, y2, source);
+        return linearPixel(y - y1, p1, p2);
+    } else if (y2 == y1) {
+        int p1 = getPixel(x1, y1, source);
+        int p2 = getPixel(x2, y1, source);
+        return linearPixel(x - x1, p1, p2);
+    }
+
+    int pixel1 = getPixel(x1, y1, source);
+    int pixel2 = getPixel(x2, y1, source);
+    int pixel3 = getPixel(x1, y2, source);
+    int pixel4 = getPixel(x2, y2, source);
+
+    int val1 = linearPixel(x - x1, pixel1, pixel2);
+    int val2 = linearPixel(x - x1, pixel3, pixel4);
+    return linearPixel(y - y1, val1, val2);
+}
+
+/**
+ * 2-D bilinear interpolation
+ * The method chosen depends on the global interpolateType variable.
+*/
+static int interpolate(float x, float y, struct IMAGE* source)
+{
+    if (interpolateType == INTERP_NN) {
+        return nearest(x, y, source);
+    } else if (interpolateType == INTERP_LINEAR) {
+        return bilinearInterpolate(x, y, source);
+    } else {
+        return bicubicInterpolate(x, y, source);
+    }
+}
+
+/**
  * Rotates a whole image buffer by the specified radians, around its middle-point.
- * Usually, the buffer should have been converted to a qpixels-representation before, to increase quality.
  * (To rotate parts of an image, extract the part with copyBuffer, rotate, and re-paste with copyBuffer.)
  */
-//void rotate(double radians, struct IMAGE* source, struct IMAGE* target, double* trigonometryCache, int trigonometryCacheBaseSize) {
 void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
     const int w = source->width;
     const int h = source->height;
-    const int halfX = (w-1)/2;
-    const int halfY = (h-1)/2;
-    const int midX = w/2;
-    const int midY = h/2;
-    const int midMax = max(midX,midY);
-    
+
     // create 2D rotation matrix
     const float sinval = sinf(radians);
     const float cosval = cosf(radians);
-    const float m11 = cosval;
-    const float m12 = sinval;
-    const float m21 = -sinval;
-    const float m22 = cosval;
+    const float midX = w / 2.0f;
+    const float midY = h / 2.0f;
 
-    // step through all pixels of the target image, 
-    // symmetrically in all four quadrants to reduce trigonometric calculations
-    int dX;
-    int dY;
-
-    for (dY = 0; dY <= midMax; dY++) {
-
-        for (dX = 0; dX <= midMax; dX++) {
-            // matrix multiplication to get rotated pixel pos (as in quadrant I)
-            const int diffX = dX * m11 + dY * m21;
-            const int diffY = dX * m12 + dY * m22;
-
-            int x;
-            int y;
-
-            // quadrant I
-            x = midX + dX;
-            y = midY - dY;
-            if ((x < w) && (y >= 0)) {
-                const int oldX = midX + diffX;
-                const int oldY = midY - diffY;
-                const int pixel = getPixel(oldX, oldY, source);
-                setPixel(pixel, x, y, target);
-            }
-            
-            // quadrant II
-            x = halfX - dY;
-            y = midY - dX;
-            if ((x >=0) && (y >= 0)) {
-                const int oldX = halfX - diffY;
-                const int oldY = midY - diffX;
-                const int pixel = getPixel(oldX, oldY, source);
-                setPixel(pixel, x, y, target);
-            }
-            
-            // quadrant III
-            x = halfX - dX;
-            y = halfY + dY;
-            if ((x >=0) && (y < h)) {
-                const int oldX = halfX - diffX;
-                const int oldY = halfY + diffY;
-                const int pixel = getPixel(oldX, oldY, source);
-                setPixel(pixel, x, y, target);
-            }
-            
-            // quadrant IV
-            x = midX + dY;
-            y = halfY + dX;
-            if ((x < w) && (y < h)) {
-                const int oldX = midX + diffY;
-                const int oldY = halfY + diffX;
-                const int pixel = getPixel(oldX, oldY, source);
-                setPixel(pixel, x, y, target);
-            }
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            const float srcX = midX + (x - midX) * cosval + (y - midY) * sinval;
+            const float srcY = midY + (y - midY) * cosval - (x - midX) * sinval;
+            const int pixel = interpolate(srcX, srcY, source);
+            setPixel(pixel, x, y, target);
         }
     }
 }
-
-
-/**
- * Converts an image buffer to a qpixel-representation, i.e. enlarge the whole
- * whole image both horizontally and vertically by factor 2 (leading to a
- * factor 4 increase in total).
- * qpixelBuf must have been allocated before with 4-times amount of memory as
- * buf.
- */
-void convertToQPixels(struct IMAGE* image, struct IMAGE* qpixelImage) {
-    int x;
-    int y;
-    
-    for (y = 0; y < image->height; y++) {
-        const int yy = y*2;
-        for (x = 0; x < image->width; x++) {
-            const int xx = x*2;
-
-            const int pixel = getPixel(x, y, image);
-
-            setPixel(pixel, xx, yy, qpixelImage);
-            setPixel(pixel, xx+1, yy, qpixelImage);
-            setPixel(pixel, xx, yy+1, qpixelImage);
-            setPixel(pixel, xx+1, yy+1, qpixelImage);
-        }
-    }
-}
-
-
-/**
- * Converts an image buffer back from a qpixel-representation to normal, i.e.
- * shrinks the whole image both horizontally and vertically by factor 2
- * (leading to a factor 4 decrease in total).
- * buf must have been allocated before with 1/4-times amount of memory as
- * qpixelBuf.
- */
-void convertFromQPixels(struct IMAGE* qpixelImage, struct IMAGE* image) {
-    int x;
-    int y;
-    
-    for (y = 0; y < image->height; y++) {
-        const int yy = y*2;
-        for (x = 0; x < image->width; x++) {
-            const int xx = x*2;
-
-            const int a = getPixel(xx, yy, qpixelImage);
-            const int b = getPixel(xx+1, yy, qpixelImage);
-            const int c = getPixel(xx, yy+1, qpixelImage);
-            const int d = getPixel(xx+1, yy+1, qpixelImage);
-
-            const int r = (red(a) + red(b) + red(c) + red(d)) / 4;
-            const int g = (green(a) + green(b) + green(c) + green(d)) / 4;
-            const int bl = (blue(a) + blue(b) + blue(c) + blue(d)) / 4;
-
-            const int pixel = pixelValue(r, g, bl);
-
-            setPixel(pixel, x, y, image);
-        }
-    }
-}
-
 
 /* --- stretching / resizing / shifting ------------------------------------ */
 
@@ -408,25 +416,8 @@ void stretch(int w, int h, struct IMAGE* image) {
     struct IMAGE newimage;
     int x;
     int y;
-    int matrixX;
-    int matrixY;
-    int matrixWidth;
-    int matrixHeight;
-    int blockWidth;
-    int blockHeight;
-    int blockWidthRest;
-    int blockHeightRest;
-    int fillIndexWidth;
-    int fillIndexHeight;
-    int fill;
-    int xx;
-    int yy;
-    int sum;
-    int sumR;
-    int sumG;
-    int sumB;
-    int sumCount;
-    int pixel;
+    float xRatio = image->width / (float) w;
+    float yRatio = image->height / (float) h;
 
     if (verbose >= VERBOSE_MORE) {
         printf("stretching %dx%d -> %dx%d\n", image->width, image->height, w, h);
@@ -435,101 +426,14 @@ void stretch(int w, int h, struct IMAGE* image) {
     // allocate new buffer's memory
     initImage(&newimage, w, h, image->bitdepth, image->color, WHITE);
     
-    blockWidth = image->width / w; // (0 if enlarging, i.e. w > image->width)
-    blockHeight = image->height / h;
-
-    if (w <= image->width) {
-        blockWidthRest = (image->width) % w;
-    } else { // modulo-operator doesn't work as expected: (3680 % 7360)==3680 ! (not 7360 as expected)
-             // shouldn't always be a % b = b if a < b ?
-        blockWidthRest = w;
-    }
-
-    if (h <= image->height) {
-        blockHeightRest = (image->height) % h;
-    } else {
-        blockHeightRest = h;
-    }
-
-    // for each new pixel, get a matrix of pixels from which the new pixel should be derived
-    // (when enlarging, this matrix is always of size 1x1)
-    matrixY = 0;
-    fillIndexHeight = 0;
     for (y = 0; y < h; y++) {
-        fillIndexWidth = 0;
-        matrixX = 0;
-        if ( ( (y * blockHeightRest) / h ) == fillIndexHeight ) { // next fill index?
-            // (If our optimizer is cool, the above "* blockHeightRest / h" will disappear
-            // when images are enlarged, because in that case blockHeightRest = h has been set before,
-            // thus we're in a Kripke-branch where blockHeightRest and h are the same variable.
-            // No idea if gcc's optimizer does this...) (See again below.)
-            fillIndexHeight++;
-            fill = 1;
-        } else {
-            fill = 0;
-        }
-        matrixHeight = blockHeight + fill;
         for (x = 0; x < w; x++) {
-            if ( ( (x * blockWidthRest) / w ) == fillIndexWidth ) { // next fill index?
-                fillIndexWidth++;
-                fill = 1;
-            } else {
-                fill = 0;
-            }
-            matrixWidth = blockWidth + fill;
-            // if enlarging, map corrdinates directly
-            if (blockWidth == 0) { // enlarging
-                matrixX = (x * image->width) / w;
-            }
-            if (blockHeight == 0) { // enlarging
-                matrixY = (y * image->height) / h;
-            }
-            
             // calculate average pixel value in source matrix
-            if ((matrixWidth == 1) && (matrixHeight == 1)) { // optimization: quick version
-                pixel = getPixel(matrixX, matrixY, image);
-            } else {
-                sumCount = 0;
-                if (!image->color) {
-                    sum = 0;
-                    for (yy = 0; yy < matrixHeight; yy++) {
-                        for (xx = 0; xx < matrixWidth; xx++) {
-                            sum += getPixelGrayscale(matrixX + xx, matrixY + yy, image);
-                            sumCount++;
-                        }
-                    }
-                    sum = sum / sumCount;
-                    pixel = pixelGrayscaleValue(sum);
-                } else { // color
-                    sumR = 0;
-                    sumG = 0;
-                    sumB = 0;
-                    for (yy = 0; yy < matrixHeight; yy++) {
-                        for (xx = 0; xx < matrixWidth; xx++) {
-                            pixel = getPixel(matrixX + xx, matrixY + yy, image);
-                            sumR += (pixel >> 16) & 0xff;
-                            sumG += (pixel >> 8) & 0xff;
-                            sumB += pixel & 0xff;
-                            //sumR += getPixelComponent(matrixX + xx, matrixY + yy, RED, image);
-                            //sumG += getPixelComponent(matrixX + xx, matrixY + yy, GREEN, image);
-                            //sumB += getPixelComponent(matrixX + xx, matrixY + yy, BLUE, image);
-                            sumCount++;
-                        }
-                    }
-                    pixel = pixelValue( sumR/sumCount, sumG/sumCount, sumB/sumCount );
-                }
-            }
+            int pixel = interpolate(x * xRatio, y * yRatio, image);
             setPixel(pixel, x, y, &newimage);
             
             // pixel may have resulted in a gray value, which will be converted to 1-bit
             // when the file gets saved, if .pbm format requested. black-threshold will apply.
-            
-            if (blockWidth > 0) { // shrinking
-                matrixX += matrixWidth;
-            }
-        }
-        if (blockHeight > 0) { // shrinking
-            matrixY += matrixHeight;
         }
     }
     replaceImage(image, &newimage);

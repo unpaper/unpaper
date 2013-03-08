@@ -505,9 +505,12 @@ scan001.pbm, scan002.pbm, scan003.pbm etc.<pre>
                                      all --no-xxx options together. Individual
                                      sheet indices can be specified.
 
---no-qpixels                         Disable qpixel-mode for deskewing (do not
-                                     internally use a 4x bigger image when
-                                     rotating).
+--no-qpixels                         Ignored for backwards compatibility.
+
+--interpolate  nearest|linear|cubic  Set the interpolation function used for deskewing and stretching
+                                     The cubic option provides the best image quality,
+                                     while nearest is the fastest.
+                                     (default: cubic)
 
 --no-multi-pages                     Disable multi-page processing even if the
                                      input filename contains a '%' (usually
