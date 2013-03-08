@@ -61,7 +61,10 @@ CLEANFILES = $(check_DATA) tests/.dirstamp tests/resultsA1.pbm	\
 	      tests/resultsE004.pbm tests/resultsE005.pbm	\
 	      tests/resultsE006.pbm tests/resultsE201.pbm	\
 	      tests/resultsE202.pbm tests/resultsE301.pbm	\
-	      tests/resultsE302.pbm
+	      tests/resultsE302.pbm tests/resultsF11.pbm	\
+	      tests/resultsF21.pbm  tests/resultsF3.pbm		\
+	      tests/resultsG1.pbm   tests/resultsG2.pbm		\
+	      tests/resultsG3.pbm
 
 tests/.dirstamp:
 	$(MKDIR_P) tests
