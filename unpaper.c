@@ -36,16 +36,21 @@
 #include "parse.h"
  
 #define WELCOME                                                         \
-    "unpaper " VERSION " - written by Jens Gulden 2005-2007.\n"         \
-    "Licensed under the GNU General Public License, this comes with no warranty.\n"
+    PACKAGE_STRING "\n"							\
+    "License GPLv2: GNU GPL version 2.\n"				\
+    "This is free software: you are free to change and redistribute it.\n" \
+    "There is NO WARRANTY, to the extent permitted by law.\n"
               
 #define USAGE                                                           \
     WELCOME "\n"                                                        \
-    "Usage: unpaper [options] <input-file(s)> <output-file(s)>\n\n"     \
+    "Usage: unpaper [options] <input-file(s)> <output-file(s)>\n"	\
+    "\n"								\
     "Filenames may contain a formatting placeholder starting with '%%' to insert a\n" \
     "page counter for multi-page processing. E.g.: 'scan%%03d.pbm' to process files\n" \
-    "scan001.pbm, scan002.pbm, scan003.pbm etc.\n\n"                    \
-    "See 'man unpaper' for options details"
+    "scan001.pbm, scan002.pbm, scan003.pbm etc.\n"			\
+    "\n"								\
+    "See 'man unpaper' for options details\n"				\
+    "Report bugs at " PACKAGE_BUGREPORT "\n"
 
 /* --- constants ---------------------------------------------------------- */
 
