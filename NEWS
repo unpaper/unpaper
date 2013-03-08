@@ -1,3 +1,7 @@
+Release 0.5, 2013-xx-xx
+ - Implement mathematically accurate interpolation, using cubic
+   algorithm by default.
+
 Release 0.4.2, 2012-06-22
  - Fix regressions from 0.4.1 on multi-page processing.
  - Add tests to make sure that multi-page processing works.
