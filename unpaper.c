@@ -31,6 +31,7 @@
 
 #include "unpaper.h"
 #include "imageprocess.h"
+#include "interpolate.h"
 #include "tools.h"
 #include "file.h"
 #include "parse.h"
@@ -64,8 +65,6 @@ static const char FILETYPE_NAMES[FILETYPES_COUNT][4] = {
 /* --- global variable ---------------------------------------------------- */
 
 VERBOSE_LEVEL verbose;
-
-INTERP_FUNCTIONS interpolateType;
 
 
 /**
@@ -371,7 +370,6 @@ int main(int argc, char* argv[]) {
     overwrite = false;
     showTime = false;
     dpi = 300;
-    interpolateType = INTERP_CUBIC;
 
     // -------------------------------------------------------------------
     // --- parse parameters                                            ---
@@ -1103,16 +1101,16 @@ int main(int argc, char* argv[]) {
 
         case 0xcd:
             if (strcmp(optarg, "nearest") == 0) {
-                interpolateType = INTERP_NN;
+                setInterpolateMethod(INTERPOLATE_NN);
             } else if (strcmp(optarg, "linear") == 0) {
-                interpolateType = INTERP_LINEAR;
+                setInterpolateMethod(INTERPOLATE_LINEAR);
             } else if (strcmp(optarg, "cubic") == 0) {
-                interpolateType = INTERP_CUBIC;
+                setInterpolateMethod(INTERPOLATE_CUBIC);
             }
             else
             {
                 fprintf(stderr, "Could not parse --interpolate, using cubic as default.\n");
-                interpolateType = INTERP_CUBIC;
+                setInterpolateMethod(INTERPOLATE_CUBIC);
             }
             break;
         }

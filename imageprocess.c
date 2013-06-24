@@ -25,11 +25,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
-//#include <time.h>
 
 #include "unpaper.h"
 #include "tools.h"
 #include "parse.h" //for maksOverlapAny
+#include "interpolate.h"
 
 
 /****************************************************************************
@@ -256,131 +256,6 @@ double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScan
 }
 
 /**
- * Nearest-neighbour interpolation.
- */
-static int nearest(float x, float y, struct IMAGE* source)
-{
-	// Round to nearest location.
-	int x1 = (int) roundf(x);
-	int y1 = (int) roundf(y);
-	return getPixel(x1, y1, source);
-}
-
-/**
- * 1-D cubic interpolation. Clamps the return value between 0 and 255 to
- * support 8-bit colour images.
-*/
-static int cubic(float x, int a, int b, int c, int d)
-{
-    int result = b + 0.5f * x * (c - a + x * (2.0f * a - 5.0f * b + 4.0f * c - d + x * (3.0f * (b - c) + d - a)));
-    if (result > 255) result = 255;
-    if (result < 0) result = 0;
-    return result;
-}
-
-/**
- * 1-D cubic interpolation
- * This function expects (and returns) colour pixel values.
-*/
-static int cubicPixel(float x, int a, int b, int c, int d)
-{
-    int red = cubic(x, red(a), red(b), red(c), red(d));
-    int green = cubic(x, green(a), green(b), green(c), green(d));
-    int blue = cubic(x, blue(a), blue(b), blue(c), blue(d));
-    return pixelValue(red, green, blue);
-}
-
-/**
- * 2-D bicubic interpolation
-*/
-static int bicubicInterpolate(float x, float y, struct IMAGE* source)
-{
-    int fx = (int) x;
-    int fy = (int) y;
-
-    int v[4];
-    for (int i = -1; i < 3; ++i) {
-        v[i+1] = cubicPixel(
-            x - fx,
-            getPixel(fx - 1, fy + i, source),
-            getPixel(fx, fy + i, source),
-            getPixel(fx + 1, fy + i, source),
-            getPixel(fx + 2, fy + i, source));
-    }
-    return cubicPixel(y - fy, v[0], v[1], v[2], v[3]);
-}
-
-/**
- * 1-D linear interpolation.
-*/
-static int linear(float x, int a, int b)
-{
-    return (1.0f - x) * a + x * b;
-}
-
-/**
- * 1-D linear interpolation
- * This function expects (and returns) colour pixel values.
-*/
-static int linearPixel(float x, int a, int b)
-{
-    int red = linear(x, red(a), red(b));
-    int green = linear(x, green(a), green(b));
-    int blue = linear(x, blue(a), blue(b));
-    return pixelValue(red, green, blue);
-}
-
-/**
- * 2-D bilinear interpolation
-*/
-static int bilinearInterpolate(float x, float y, struct IMAGE* source)
-{
-    int x1 = (int) x;
-    int x2 = (int) ceilf(x);
-    int y1 = (int) y;
-    int y2 = (int) ceilf(y);
-
-    // Check edge conditions to avoid divide-by-zero
-    if (x2 > source->width || y2 > source->height)
-        return getPixel(x, y, source);
-    else if (x2 == x1 && y2 == y1)
-        return getPixel(x, y, source);
-    else if (x2 == x1) {
-        int p1 = getPixel(x1, y1, source);
-        int p2 = getPixel(x1, y2, source);
-        return linearPixel(y - y1, p1, p2);
-    } else if (y2 == y1) {
-        int p1 = getPixel(x1, y1, source);
-        int p2 = getPixel(x2, y1, source);
-        return linearPixel(x - x1, p1, p2);
-    }
-
-    int pixel1 = getPixel(x1, y1, source);
-    int pixel2 = getPixel(x2, y1, source);
-    int pixel3 = getPixel(x1, y2, source);
-    int pixel4 = getPixel(x2, y2, source);
-
-    int val1 = linearPixel(x - x1, pixel1, pixel2);
-    int val2 = linearPixel(x - x1, pixel3, pixel4);
-    return linearPixel(y - y1, val1, val2);
-}
-
-/**
- * 2-D bilinear interpolation
- * The method chosen depends on the global interpolateType variable.
-*/
-static int interpolate(float x, float y, struct IMAGE* source)
-{
-    if (interpolateType == INTERP_NN) {
-        return nearest(x, y, source);
-    } else if (interpolateType == INTERP_LINEAR) {
-        return bilinearInterpolate(x, y, source);
-    } else {
-        return bicubicInterpolate(x, y, source);
-    }
-}
-
-/**
  * Rotates a whole image buffer by the specified radians, around its middle-point.
  * (To rotate parts of an image, extract the part with copyBuffer, rotate, and re-paste with copyBuffer.)
  */
@@ -394,6 +269,9 @@ void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
     const float midX = w / 2.0f;
     const float midY = h / 2.0f;
 
+    interpolateInit(source);
+
+    #pragma omp parallel for
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
             const float srcX = midX + (x - midX) * cosval + (y - midY) * sinval;
@@ -414,8 +292,6 @@ void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
  */
 void stretch(int w, int h, struct IMAGE* image) {
     struct IMAGE newimage;
-    int x;
-    int y;
     float xRatio = image->width / (float) w;
     float yRatio = image->height / (float) h;
 
@@ -426,8 +302,11 @@ void stretch(int w, int h, struct IMAGE* image) {
     // allocate new buffer's memory
     initImage(&newimage, w, h, image->bitdepth, image->color, WHITE);
     
-    for (y = 0; y < h; y++) {
-        for (x = 0; x < w; x++) {
+    interpolateInit(image);
+
+    #pragma omp parallel for
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
             // calculate average pixel value in source matrix
             int pixel = interpolate(x * xRatio, y * yRatio, image);
             setPixel(pixel, x, y, &newimage);
@@ -656,18 +535,17 @@ int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], bool maskValid[MAX_MASKS], int
  * one mask is set to maskColor.
  */
 void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int maskColor, struct IMAGE* image) {
-    int x;
-    int y;
     int i;
     
     if (maskCount<=0) {
         return;
     }
-    for (y=0; y < image->height; y++) {
-        for (x=0; x < image->width; x++) {
+    #pragma omp parallel for
+    for (int y = 0; y < image->height; y++) {
+        for (int x = 0; x < image->width; x++) {
             // in any mask?
             bool m = false;
-            for (i=0; ((m==false) && (i<maskCount)); i++) {
+            for (int i = 0; ((m==false) && (i<maskCount)); i++) {
                 const int left = mask[i][LEFT];
                 const int top = mask[i][TOP];
                 const int right = mask[i][RIGHT];

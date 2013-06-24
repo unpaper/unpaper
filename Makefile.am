@@ -1,9 +1,12 @@
+AM_CFLAGS = $(OPENMP_CFLAGS)
+
 bin_PROGRAMS = unpaper
 MANPAGE_XSL ?= http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl
 
 unpaper_SOURCES = \
 	file.c file.h \
 	imageprocess.c imageprocess.h \
+	interpolate.c interpolate.h \
 	parse.c parse.h \
 	tools.c tools.h \
 	unpaper.c unpaper.h

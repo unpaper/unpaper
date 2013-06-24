@@ -87,6 +87,7 @@ void initImage(struct IMAGE* image, int width, int height, int bitdepth, bool co
         size *= 3;
     }
     image->buffer = (uint8_t*)malloc(size);
+    image->bufferFloat = NULL;
     memset(image->buffer, background, size);
     if ( ! color ) {
         image->bufferGrayscale = image->buffer;
@@ -111,6 +112,7 @@ void freeImage(struct IMAGE* image) {
         free(image->bufferLightness);
         free(image->bufferDarknessInverse);
     }
+    free(image->bufferFloat);
 }
 
 
@@ -365,12 +367,11 @@ static bool clearPixel(int x, int y, struct IMAGE* image) {
  * @return The number of pixels actually changed from black (dark) to white.
  */
 int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int blackwhite) {
-    int x;
-    int y;
     int count = 0;
 
-    for (y = top; y <= bottom; y++) {
-        for (x = left; x <= right; x++) {
+    #pragma omp parallel for reduction(+:count)
+    for (int y = top; y <= bottom; y++) {
+        for (int x = left; x <= right; x++) {
             if (setPixelBW(x, y, image, blackwhite)) {
                 count++;
             }
@@ -384,12 +385,11 @@ int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int
  * Copies one area of an image into another.
  */
 void copyImageArea(int x, int y, int width, int height, struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
-    int row;
-    int col;
 
     // naive but generic implementation
-    for (row = 0; row < height; row++) {
-        for (col = 0; col < width; col++) {
+    #pragma omp parallel for
+    for (int row = 0; row < height; row++) {
+        for (int col = 0; col < width; col++) {
             const int pixel = getPixel(x+col, y+row, source);
             setPixel(pixel, toX+col, toY+row, target);
         }
@@ -445,13 +445,12 @@ void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct 
  * Returns the average brightness of a rectagular area.
  */
 int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
-    int x;
-    int y;
     int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
-    for (x = x1; x <= x2; x++) {
-        for (y = y1; y <= y2; y++) {
+    #pragma omp parallel for reduction(+:total)
+    for (int y = y1; y <= y2; y++) {
+        for (int x = x1; x <= x2; x++) {
             const int pixel = getPixelGrayscale(x, y, image);
             total += pixel;
         }
@@ -464,13 +463,12 @@ int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
  * Returns the average lightness of a rectagular area.
  */
 int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
-    int x;
-    int y;
     int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
-    for (x = x1; x <= x2; x++) {
-        for (y = y1; y <= y2; y++) {
+    #pragma omp parallel for reduction(+:total)
+    for (int y = y1; y <= y2; y++) {
+        for (int x = x1; x <= x2; x++) {
             const int pixel = getPixelLightness(x, y, image);
             total += pixel;
         }
@@ -483,13 +481,12 @@ int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
  * Returns the average darkness of a rectagular area.
  */
 int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
-    int x;
-    int y;
     int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
-    for (x = x1; x <= x2; x++) {
-        for (y = y1; y <= y2; y++) {
+    #pragma omp parallel for reduction(+:total)
+    for (int y = y1; y <= y2; y++) {
+        for (int x = x1; x <= x2; x++) {
             const int pixel = getPixelDarknessInverse(x, y, image);
             total += pixel;
         }
@@ -504,12 +501,11 @@ int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
  * cleared with white color while counting.
  */
 int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, struct IMAGE* image) {
-    int x;
-    int y;
     int count = 0;
     
-    for (y = top; y <= bottom; y++) {
-        for (x = left; x <= right; x++) {
+    #pragma omp parallel for reduction(+:count)
+    for (int y = top; y <= bottom; y++) {
+        for (int x = left; x <= right; x++) {
             const int pixel = getPixelGrayscale(x, y, image);
             if ((pixel>=minColor) && (pixel <= maxBrightness)) {
                 if (clear==true) {

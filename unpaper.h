@@ -33,6 +33,8 @@
 # define true TRUE
 #endif
 
+#include <stdint.h>
+
 /* --- preprocessor macros ------------------------------------------------ */
               
 #define max(a, b) ( (a >= b) ? (a) : (b) )
@@ -125,14 +127,6 @@ typedef enum {
 	FILETYPES_COUNT
 } FILETYPES;
 
-typedef enum {
-	INTERP_NN,
-	INTERP_LINEAR,
-	INTERP_CUBIC,
-	INTERP_FUNCTIONS_COUNT
-} INTERP_FUNCTIONS;
-
-
 /* --- struct ------------------------------------------------------------- */
 
 struct IMAGE {
@@ -140,6 +134,7 @@ struct IMAGE {
     uint8_t *bufferGrayscale;
     uint8_t *bufferLightness;
     uint8_t *bufferDarknessInverse;
+    float   *bufferFloat; // RGBA format for fast interpolation.
     int width;
     int height;
     int bitdepth;
@@ -154,4 +149,3 @@ void errOutput(const char *fmt, ...)
 /* --- global variable ---------------------------------------------------- */
 
 extern VERBOSE_LEVEL verbose;
-extern INTERP_FUNCTIONS interpolateType;

@@ -14,6 +14,20 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_HEADER_STDBOOL
 AC_SEARCH_LIBS([sqrt], [m])
 
+AC_OPENMP
+
+dnl AC_MSG_CHECKING(For GCC SIMD extensions)
+dnl AC_COMPILE_IFELSE([
+dnl   AC_LANG_PROGRAM([[
+dnl     typedef float v4sf __attribute__((vector_size(16)));
+dnl   ]])
+dnl ], [
+dnl   AC_MSG_RESULT(yes)
+dnl   AC_DEFINE([HAVE_V4SF], [], [Use GCC SIMD extensions])
+dnl ], [
+dnl   AC_MSG_RESULT(no)
+dnl ])
+
 AC_PATH_PROG([PNGTOPNM], [pngtopnm], [false])
 AC_PATH_PROG([PNMTOPNG], [pnmtopng], [false])
 
