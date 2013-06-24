@@ -14,6 +14,8 @@ AC_USE_SYSTEM_EXTENSIONS
 AC_HEADER_STDBOOL
 AC_SEARCH_LIBS([sqrt], [m])
 
+AC_OPENMP
+
 AC_PATH_PROG([PNGTOPNM], [pngtopnm], [false])
 AC_PATH_PROG([PNMTOPNG], [pnmtopng], [false])
 

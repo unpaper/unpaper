@@ -1,3 +1,5 @@
+AM_CFLAGS = $(OPENMP_CFLAGS)
+
 bin_PROGRAMS = unpaper
 MANPAGE_XSL ?= http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl
 
