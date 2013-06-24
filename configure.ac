@@ -2,12 +2,12 @@ AC_PREREQ(2.68)
 
 AC_INIT([unpaper], [0.5], [https://github.com/Flameeyes/unpaper/issues], , [https://github.com/Flameeyes/unpaper])
 
-AC_PROG_MKDIR_P
-AC_PROG_CC_C99
-
-AM_INIT_AUTOMAKE([dist-xz no-dist-gzip foreign parallel-tests])
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+AM_INIT_AUTOMAKE([1.13 dist-xz no-dist-gzip foreign])
+AM_SILENT_RULES([yes])
 AM_MAINTAINER_MODE([enable])
+
+AC_PROG_CC_C99
+AC_PROG_MKDIR_P
 
 AC_USE_SYSTEM_EXTENSIONS
 
