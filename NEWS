@@ -1,4 +1,4 @@
-Release 0.5, 2013-xx-xx
+Release 5, 2013-06-28
  - Implement mathematically accurate interpolation, using cubic
    algorithm by default.
 
