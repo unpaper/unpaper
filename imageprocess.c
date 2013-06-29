@@ -414,8 +414,6 @@ void rotate(double radians, struct IMAGE* source, struct IMAGE* target) {
  */
 void stretch(int w, int h, struct IMAGE* image) {
     struct IMAGE newimage;
-    int x;
-    int y;
     float xRatio = image->width / (float) w;
     float yRatio = image->height / (float) h;
 
@@ -426,8 +424,8 @@ void stretch(int w, int h, struct IMAGE* image) {
     // allocate new buffer's memory
     initImage(&newimage, w, h, image->bitdepth, image->color, WHITE);
     
-    for (y = 0; y < h; y++) {
-        for (x = 0; x < w; x++) {
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
             // calculate average pixel value in source matrix
             int pixel = interpolate(x * xRatio, y * yRatio, image);
             setPixel(pixel, x, y, &newimage);
@@ -656,18 +654,16 @@ int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], bool maskValid[MAX_MASKS], int
  * one mask is set to maskColor.
  */
 void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int maskColor, struct IMAGE* image) {
-    int x;
-    int y;
     int i;
     
     if (maskCount<=0) {
         return;
     }
-    for (y=0; y < image->height; y++) {
-        for (x=0; x < image->width; x++) {
+    for (int y = 0; y < image->height; y++) {
+        for (int x = 0; x < image->width; x++) {
             // in any mask?
             bool m = false;
-            for (i=0; ((m==false) && (i<maskCount)); i++) {
+            for (int i = 0; ((m==false) && (i<maskCount)); i++) {
                 const int left = mask[i][LEFT];
                 const int top = mask[i][TOP];
                 const int right = mask[i][RIGHT];
