@@ -26,7 +26,7 @@
 
 double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScanStep, int deskewScanSize, float deskewScanDepth, float deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image);
 
-void rotate(double radians, struct IMAGE* source, struct IMAGE* target);
+void rotate(const double radians, struct IMAGE* source, struct IMAGE* target);
 
 void convertToQPixels(struct IMAGE* image, struct IMAGE* qpixelImage);
 
@@ -48,7 +48,7 @@ void shift(int shiftX, int shiftY, struct IMAGE* image);
 
 int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], bool maskValid[MAX_MASKS], int point[MAX_POINTS][COORDINATES_COUNT], int pointCount, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT],  struct IMAGE* image);
 
-void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], int maskCount, int maskColor, struct IMAGE* image);
+void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int maskColor, struct IMAGE* image);
 
 
 /* --- wiping ------------------------------------------------------------- */

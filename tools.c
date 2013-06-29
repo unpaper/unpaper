@@ -364,7 +364,7 @@ static bool clearPixel(int x, int y, struct IMAGE* image) {
  * Clears a rectangular area of pixels with either black or white.
  * @return The number of pixels actually changed from black (dark) to white.
  */
-int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int blackwhite) {
+int clearRect(const int left, const int top, const int right, const int bottom, struct IMAGE* image, const int blackwhite) {
     int count = 0;
 
     for (int y = top; y <= bottom; y++) {
@@ -381,7 +381,7 @@ int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int
 /**
  * Copies one area of an image into another.
  */
-void copyImageArea(int x, int y, int width, int height, struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
+void copyImageArea(const int x, const int y, const int width, const int height, struct IMAGE* source, const int toX, const int toY, struct IMAGE* target) {
 
     // naive but generic implementation
     for (int row = 0; row < height; row++) {
@@ -440,14 +440,13 @@ void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct 
 /**
  * Returns the average brightness of a rectagular area.
  */
-int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
+int brightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
     int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
-            const int pixel = getPixelGrayscale(x, y, image);
-            total += pixel;
+            total += getPixelGrayscale(x, y, image);
         }
     }
     return total / count;
@@ -457,7 +456,7 @@ int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
 /**
  * Returns the average lightness of a rectagular area.
  */
-int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
+int lightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
     int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
@@ -474,14 +473,13 @@ int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
 /**
  * Returns the average darkness of a rectagular area.
  */
-int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* image) {
+int darknessInverseRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
     int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
-            const int pixel = getPixelDarknessInverse(x, y, image);
-            total += pixel;
+            total += getPixelDarknessInverse(x, y, image);
         }
     }
     return total / count;
