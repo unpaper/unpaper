@@ -8,7 +8,7 @@ unpaper_SOURCES = \
 	tools.c tools.h \
 	unpaper.c unpaper.h
 
-dist_doc_DATA = NEWS COPYING README AUTHORS TODO
+dist_doc_DATA = NEWS COPYING README.md AUTHORS TODO
 dist_man_MANS = unpaper.1
 
 dist_html_DATA = doc/unpaper.html doc/index.html
