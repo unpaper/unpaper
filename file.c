@@ -74,8 +74,7 @@ void loadImage(FILE *f, struct IMAGE* image, int* type) {
         image->bitdepth = 8;
         image->color = true;
     } else {
-        printf("*** error: input file format using magic '%s' is unknown.\n", magic);
-        return;
+        errOutput("input file format using magic '%s' is unknown.\n", magic);
     }
 
     // get image info: width, height, optionally depth
@@ -105,8 +104,7 @@ void loadImage(FILE *f, struct IMAGE* image, int* type) {
         sscanf(word, "%d", &maxColorIndex);
         fgetc(f); // skip \n after max color index
         if (maxColorIndex > 255) {
-            printf("*** error: grayscale / color-component bit depths above 8 are not supported.\n");
-            return;
+	    errOutput("grayscale / color-component bit depths above 8 are not supported.\n");
         }
         bytesPerLine = image->width;
         if (*type == PPM) {
@@ -120,8 +118,7 @@ void loadImage(FILE *f, struct IMAGE* image, int* type) {
     image->buffer = (uint8_t*)malloc(inputSize);
     read = fread(image->buffer, 1, inputSize, f);
     if (read != inputSize) {
-        printf("*** error: Only %d out of %d could be read.\n", read, inputSize);
-        return;
+        errOutput("Only %d out of %d could be read.\n", read, inputSize);
     }
     
     if (*type == PBM) { // internally convert b&w to 8-bit for processing
