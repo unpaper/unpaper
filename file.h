@@ -19,7 +19,7 @@
 
 /* --- tool function for file handling ------------------------------------ */
 
-bool loadImage(FILE *f, struct IMAGE* image, int* type);
+void loadImage(const char *filename, struct IMAGE* image);
 
 bool saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThreshold);
 

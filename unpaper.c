@@ -29,6 +29,9 @@
 
 #include <sys/stat.h>
 
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+
 #include "unpaper.h"
 #include "imageprocess.h"
 #include "tools.h"
@@ -235,9 +238,6 @@ int main(int argc, char* argv[]) {
     struct IMAGE originalSheet;
     struct IMAGE page;
     const char* layoutStr;
-    const char* inputTypeName; 
-    const char* inputTypeNames[MAX_PAGES];
-    int inputType;
     int filterResult;
     double rotation;
     struct IMAGE rect;
@@ -1142,13 +1142,15 @@ int main(int argc, char* argv[]) {
     if ( ! multisheets && endSheet == -1)
         endSheet = startSheet;
 
+    avcodec_register_all();
+    av_register_all();
+
     for (nr = startSheet; (endSheet == -1) || (nr <= endSheet); nr++) {
         int i;
         char inputFilesBuffer[2][255];
         char outputFilesBuffer[2][255];
         char *inputFileNames[2];
         char *outputFileNames[2];
-        FILE *inputFiles[2] = { NULL, NULL };
         FILE *outputFiles[2] = { NULL, NULL };
 
         // -------------------------------------------------------------------
@@ -1162,11 +1164,9 @@ int main(int argc, char* argv[]) {
 
             if ( repl ) {
                 inputFileNames[i] = NULL;
-                inputFiles[i] = NULL;
                 inputNr++; /* replace */
             } else if ( ins ) {
                 inputFileNames[i] = NULL; /* insert */
-                inputFiles[i] = NULL;
             } else if ( inputWildcard ) {
                 sprintf(inputFilesBuffer[i], argv[optind], inputNr++);
                 inputFileNames[i] = inputFilesBuffer[i];
@@ -1181,8 +1181,9 @@ int main(int argc, char* argv[]) {
                 inputFileNames[i] = argv[optind++];
             }
 
-            if ( inputFileNames[i] != NULL )
-                if ( (inputFiles[i] = fopen(inputFileNames[i], "rb")) == NULL ) {
+            if ( inputFileNames[i] != NULL ) {
+		struct stat statBuf;
+		if ( stat(inputFileNames[i], &statBuf) != 0 ) {
                     if ( endSheet == -1 ) {
                         endSheet = nr-1;
                         goto sheet_end;
@@ -1191,6 +1192,7 @@ int main(int argc, char* argv[]) {
                                   inputFileNames[i]);
                     }
                 }
+	    }
         }
 	if ( inputWildcard )
 	    optind++;
@@ -1242,13 +1244,11 @@ int main(int argc, char* argv[]) {
 
             // load input image(s)
             for ( j = 0; j < inputCount; j++) {
-                if (inputFiles[j] != NULL) { // may be null if --insert-blank or --replace-blank
+                if (inputFileNames[j] != NULL) { // may be null if --insert-blank or --replace-blank
                     if (verbose >= VERBOSE_MORE)
                         printf("loading file %s.\n", inputFileNames[j]);
 
-                    loadImage(inputFiles[j], &page, &inputType);
-                    inputTypeName = FILETYPE_NAMES[inputType];
-                    inputTypeNames[j] = inputTypeName;
+                    loadImage(inputFileNames[j], &page);
                     sprintf(debugFilename, "_loaded_%d.pnm", inputNr-inputCount+j);
                     saveDebug(debugFilename, &page);
 
@@ -1281,7 +1281,6 @@ int main(int argc, char* argv[]) {
                     }
                 } else { // inputFiles[j] == NULL
                     page.buffer = NULL;
-                    inputTypeNames[j] = "<none>";
                 }
 
                 // place image into sheet buffer
@@ -1667,7 +1666,7 @@ int main(int argc, char* argv[]) {
                 printf("\n");
             }
             if (verbose >= VERBOSE_NORMAL) {
-                printf("input-file%s for sheet %d: %s (type%s %s)\n", pluralS(inputCount), nr, implode(s1, (const char **)inputFileNames, inputCount), pluralS(inputCount), implode(s2, inputTypeNames, inputCount));
+                printf("input-file%s for sheet %d: %s\n", pluralS(inputCount), nr, implode(s1, (const char **)inputFileNames, inputCount));
                 printf("output-file%s for sheet %d: %s (type %s)\n", pluralS(outputCount), nr, implode(s1, (const char **)outputFileNames, outputCount), outputTypeName);
                 printf("sheet size: %dx%d\n", sheet.width, sheet.height);
                 printf("...\n");
@@ -2173,11 +2172,6 @@ int main(int argc, char* argv[]) {
         }
 
     sheet_end:
-        for(i = 0; i < inputCount; i++) {
-            if ( inputFiles[i] != NULL )
-                fclose(inputFiles[i]);
-        }
-
         for(i = 0; i < outputCount; i++) {
             if ( outputFiles[i] != NULL )
                 fclose(outputFiles[i]);

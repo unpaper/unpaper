@@ -17,6 +17,8 @@ AC_SEARCH_LIBS([sqrt], [m])
 AC_PATH_PROG([PNGTOPNM], [pngtopnm], [false])
 AC_PATH_PROG([PNMTOPNG], [pnmtopng], [false])
 
+PKG_CHECK_MODULES([LIBAV], [libavformat libavcodec libavutil])
+
 AC_ARG_VAR([XSLTPROC], [A libxslt-compatible XSLT processor command])
 AS_IF([test "x$XSLTPROC" = "x"], [
   AC_CHECK_PROGS([XSLTPROC], [xsltproc])

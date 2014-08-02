@@ -7,6 +7,8 @@ unpaper_SOURCES = \
 	parse.c parse.h \
 	tools.c tools.h \
 	unpaper.c unpaper.h
+unpaper_CFLAGS = $(LIBAV_CFLAGS)
+unpaper_LDADD = $(LIBAV_LIBS)
 
 dist_doc_DATA = NEWS COPYING README.md AUTHORS TODO
 dist_man_MANS = unpaper.1
