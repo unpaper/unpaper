@@ -57,7 +57,8 @@ void loadImage(const char *filename, struct IMAGE* image) {
 
     avformat_find_stream_info(s, NULL);
 
-    av_dump_format(s, 0, filename, 0);
+    if (verbose >= VERBOSE_MORE)
+	av_dump_format(s, 0, filename, 0);
 
     if (s->nb_streams < 1)
 	errOutput("unable to open file %s: missing streams", filename);
