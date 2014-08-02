@@ -139,6 +139,24 @@ void loadImage(const char *filename, struct IMAGE* image) {
 	image->bufferDarknessInverse = image->buffer;
 	break;
 
+    case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
+	image->bitdepth = 8;
+	image->color = false;
+	image->buffer = malloc(frame->width * frame->height);
+	src = frame->data[0];
+	dst = image->buffer;
+	for (y = 0; y < frame->height; y++) {
+	    for (x = 0; x < frame->width; x++) {
+		dst[x] = src[x*2];
+	    }
+	    src += frame->linesize[0];
+	    dst += frame->width;
+	}
+	image->bufferGrayscale = image->buffer;
+	image->bufferLightness = image->buffer;
+	image->bufferDarknessInverse = image->buffer;
+	break;
+
     case AV_PIX_FMT_RGB24:
 	image->bitdepth = 8;
 	image->color = true;
