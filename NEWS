@@ -1,3 +1,12 @@
+Release 6, 2014-xx-yy
+ - Use libav for input file parsing, rather than custom code. This
+   adds support for many different input file formats outside of
+   PPM/PBM/PGM, as long as libav can reconduct them to a pixel format
+   that is implemented during parsing.
+ - Tests are now executed against the original PNG files rather than
+   through converted PGM/PPM, this drops the netpbm dependency on the
+   tests.
+
 Release 5, 2013-06-28
  - Implement mathematically accurate interpolation, using cubic
    algorithm by default.
