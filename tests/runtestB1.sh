@@ -6,6 +6,6 @@ set -e
 set -x
 
 rm -f tests/resultsB1.ppm
-./unpaper -v -n --input-pages 2 tests/imgsrc003.ppm tests/imgsrc004.pgm tests/resultsB1.ppm
+./unpaper -v -n --input-pages 2 ${srcdir:-.}/tests/imgsrc003.png ${srcdir:-.}/tests/imgsrc004.png tests/resultsB1.ppm
 
 [ -f tests/resultsB1.ppm ]

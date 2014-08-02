@@ -48,11 +48,6 @@ EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png	\
              tests/imgsrc005.png tests/imgsrcE001.png		\
              tests/imgsrcE002.png tests/imgsrcE003.png
 
-check_DATA = tests/imgsrc001.pbm tests/imgsrc002.pbm	\
-             tests/imgsrc003.ppm tests/imgsrc004.pgm	\
-             tests/imgsrc005.pbm tests/imgsrcE001.pbm	\
-             tests/imgsrcE002.pbm tests/imgsrcE003.pbm
-
 CLEANFILES = $(check_DATA) tests/.dirstamp tests/resultsA1.pbm	\
 	      tests/resultsB1.ppm   tests/resultsB2.ppm		\
 	      tests/resultsB3.ppm   tests/resultsC1.pbm		\
@@ -71,12 +66,6 @@ CLEANFILES = $(check_DATA) tests/.dirstamp tests/resultsA1.pbm	\
 tests/.dirstamp:
 	$(MKDIR_P) tests
 	touch tests/.dirstamp
-
-tests/imgsrc%.pbm tests/imgsrc%.ppm tests/imgsrc%.pgm: tests/imgsrc%.png tests/.dirstamp
-	$(PNGTOPNM) $< > $@
-
-tests/results%.png: tests/results%.pbm tests/.dirstamp
-	$(PNMTOPNG) $< > $@
 
 %.1: %.1.xml
 	$(AM_V_GEN)$(XSLTPROC) \

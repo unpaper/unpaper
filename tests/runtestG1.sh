@@ -7,6 +7,6 @@ set -x
 
 rm -f tests/resultsG1.pbm
 
-./unpaper --overwrite -v --no-processing 1 tests/imgsrc001.pbm tests/resultsG1.pbm
+./unpaper --overwrite -v --no-processing 1 ${srcdir:-.}/tests/imgsrc001.png tests/resultsG1.pbm
 
 [ -f tests/resultsG1.pbm ]

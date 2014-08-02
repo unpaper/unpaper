@@ -6,6 +6,6 @@ set -e
 set -x
 
 rm -f tests/resultsA1.pbm
-./unpaper -v tests/imgsrc001.pbm tests/resultsA1.pbm
+./unpaper -v ${srcdir:-.}/tests/imgsrc001.png tests/resultsA1.pbm
 
 [ -f tests/resultsA1.pbm ]
