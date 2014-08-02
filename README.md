@@ -27,9 +27,11 @@ idea to manually control the results of unpaper and adjust the parameter
 settings according to the requirements of the input. Each processing step can
 also be disabled individually for each sheet.
 
-Input and output files can be in either .pbm, .pgm or .ppm format, thus
-generally in .pnm format, as also used by the Linux scanning tools scanimage
-and scanadf.
+Input files can be in many format, depending on the support coming
+from [libav](https://libav.org). PNM/PBM/PGM format (as used by
+scanning tools such as `scanimage` and `scanadf`) are fully
+supported. Basic support for some variants of TIFF and PNG files is
+also present.
 
-Conversion to PDF can e.g. be achieved with the Linux tools pgm2tiff, tiffcp
-and tiff2pdf.
+Ouput files are generated in PNM rawbits format. Conversion to PDF can
+e.g. be achieved with the Linux tools pgm2tiff, tiffcp and tiff2pdf.
