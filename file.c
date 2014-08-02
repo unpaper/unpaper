@@ -41,6 +41,7 @@
 void loadImage(const char *filename, struct IMAGE* image) {
     uint8_t *src, *dst;
     uint8_t r, g, b;
+    uint8_t bm_zero_color = 0xff; // default for AV_PIX_FMT_MONOWHITE
     int x, y, ret, got_frame = 0, size, pos;
     AVFormatContext *s = NULL;
     AVCodecContext *avctx = NULL;
@@ -97,6 +98,8 @@ void loadImage(const char *filename, struct IMAGE* image) {
     image->height = frame->height;
 
     switch(frame->format) {
+    case AV_PIX_FMT_MONOBLACK:
+	bm_zero_color = 0x00;
     case AV_PIX_FMT_MONOWHITE:
 	image->bitdepth = 1;
 	image->color = false;
@@ -110,8 +113,7 @@ void loadImage(const char *filename, struct IMAGE* image) {
                 int bit = 128 >> off;
                 int bits = src[bb] & bit;
 
-		// 0: white pixel
-		dst[x] = (bits == 0 ? 0xff : 0x00);
+		dst[x] = (bits == 0 ? bm_zero_color : ~bm_zero_color);
 	    }
 	    src += frame->linesize[0];
 	    dst += frame->width;
