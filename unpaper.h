@@ -140,7 +140,6 @@ struct IMAGE {
     int width;
     int height;
     int stride;
-    int bitdepth;
     int background;
     bool color;
 };

@@ -101,7 +101,6 @@ void loadImage(const char *filename, struct IMAGE* image) {
     case AV_PIX_FMT_MONOBLACK:
 	bm_zero_color = 0x00;
     case AV_PIX_FMT_MONOWHITE:
-	image->bitdepth = 1;
 	image->color = false;
 	image->buffer = malloc(frame->width * frame->height);
 	src = frame->data[0];
@@ -121,14 +120,12 @@ void loadImage(const char *filename, struct IMAGE* image) {
 	break;
 
     case AV_PIX_FMT_GRAY8:
-	image->bitdepth = 8;
 	image->color = false;
 	image->stride = frame->linesize[0];
 	image->buffer = frame->data[0];
 	break;
 
     case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
-	image->bitdepth = 8;
 	image->color = false;
 	image->buffer = malloc(frame->width * frame->height);
 	src = frame->data[0];
@@ -143,7 +140,6 @@ void loadImage(const char *filename, struct IMAGE* image) {
 	break;
 
     case AV_PIX_FMT_RGB24:
-	image->bitdepth = 8;
 	image->color = true;
 	image->stride = frame->linesize[0];
 	image->buffer = frame->data[0];
@@ -269,8 +265,6 @@ void saveDebug(char* filename, struct IMAGE* image) {
 
         if (image->color) {
             type = PPM;
-        } else if (image->bitdepth == 1) {
-            type = PBM;
         } else {
             type = PGM;
         }

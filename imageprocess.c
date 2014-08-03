@@ -422,7 +422,7 @@ void stretch(int w, int h, struct IMAGE* image) {
     }
 
     // allocate new buffer's memory
-    initImage(&newimage, w, h, image->bitdepth, image->color, WHITE);
+    initImage(&newimage, w, h, image->color, WHITE);
     
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
@@ -468,7 +468,7 @@ void resize(int w, int h, struct IMAGE* image) {
         hh = h;
     }
     stretch(ww, hh, image);
-    initImage(&newimage, w, h, image->bitdepth, image->color, image->background);
+    initImage(&newimage, w, h, image->color, image->background);
     centerImage(image, 0, 0, w, h, &newimage);
     replaceImage(image, &newimage);
 }
@@ -487,7 +487,7 @@ void shift(int shiftX, int shiftY, struct IMAGE* image) {
     int pixel;
 
     // allocate new buffer's memory
-    initImage(&newimage, image->width, image->height, image->bitdepth, image->color, image->background);
+    initImage(&newimage, image->width, image->height, image->color, image->background);
     
     for (y = 0; y < image->height; y++) {
         for (x = 0; x < image->width; x++) {
@@ -747,7 +747,7 @@ void flipRotate(int direction, struct IMAGE* image) {
     int x;
     int y;
     
-    initImage(&newimage, image->height, image->width, image->bitdepth, image->color, WHITE); // exchanged width and height
+    initImage(&newimage, image->height, image->width, image->color, WHITE); // exchanged width and height
     for (y = 0; y < image->height; y++) {
         const int xx = ((direction > 0) ? image->height - 1 : 0) - y * direction;
         for (x = 0; x < image->width; x++) {
@@ -1080,7 +1080,7 @@ void centerMask(int centerX, int centerY, int left, int top, int right, int bott
         if (verbose >= VERBOSE_NORMAL) {
             printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", left, top, right, bottom, centerX, centerY, targetX-left, targetY-top);
         }
-        initImage(&newimage, width, height, image->bitdepth, image->color, image->background);
+        initImage(&newimage, width, height, image->color, image->background);
         copyImageArea(left, top, width, height, image, 0, 0, &newimage);
         clearRect(left, top, right, bottom, image, image->background);
         copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
@@ -1120,7 +1120,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, i
     if (verbose >= VERBOSE_NORMAL) {
         printf("aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], targetX, targetY, targetX - mask[LEFT], targetY - mask[TOP]);
     }
-    initImage(&newimage, width, height, image->bitdepth, image->color, image->background);
+    initImage(&newimage, width, height, image->color, image->background);
     copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0, &newimage);
     clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, image->background);
     copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);

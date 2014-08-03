@@ -73,7 +73,7 @@ void limit(int* i, int max) {
  * Allocates a memory block for storing image data and fills the IMAGE-struct
  * with the specified values.
  */
-void initImage(struct IMAGE* image, int width, int height, int bitdepth, bool color, int background) {
+void initImage(struct IMAGE* image, int width, int height, bool color, int background) {
     int size;
     
     size = width * height;
@@ -85,7 +85,6 @@ void initImage(struct IMAGE* image, int width, int height, int bitdepth, bool co
     image->width = width;
     image->height = height;
     image->stride = width * (color ? 3 : 1);
-    image->bitdepth = bitdepth;
     image->color = color;
     image->background = background;
 }

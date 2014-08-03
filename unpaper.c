@@ -228,7 +228,6 @@ int main(int argc, char* argv[]) {
     int j;
     int previousWidth;
     int previousHeight;
-    int previousBitdepth;
     bool previousColor;
     char s1[1023]; // buffers for result of implode()
     char s2[1023];
@@ -244,7 +243,6 @@ int main(int argc, char* argv[]) {
     struct IMAGE rectTarget;
     int outputType;
     int outputDepth;
-    int bd;
     bool col;
     int nr;
     int inputNr;
@@ -258,7 +256,6 @@ int main(int argc, char* argv[]) {
 
     sheet.buffer = NULL;
     page.buffer = NULL;
-    bd = 1; // default bitdepth if not resolvable (i.e. usually empty input, so bd=1 is good choice)
     col = false; // default no color if not resolvable
     
     // explicitly un-initialize variables that are sometimes not used to avoid compiler warnings
@@ -277,7 +274,7 @@ int main(int argc, char* argv[]) {
     startOutput = -1;
     totalTime = 0;
     totalCount = 0;
-    previousWidth = previousHeight = previousBitdepth = -1;
+    previousWidth = previousHeight = -1;
     previousColor = false;
     
     // --- default values ---
@@ -1289,30 +1286,21 @@ int main(int argc, char* argv[]) {
                     sheet.width = page.width;
                     sheet.height = page.height;
                     sheet.stride = page.stride;
-                    sheet.bitdepth = page.bitdepth;
                     sheet.color = page.color;
                     sheet.background = sheetBackground;
                 } else { // generic case: place image onto sheet by copying
                     // allocate sheet-buffer if not done yet
                     if ((sheet.buffer == NULL) && (w != -1) && (h != -1)) {
-                        if ((page.buffer != NULL) && (page.bitdepth != 0)) {
-                            bd = page.bitdepth;
+                        if (page.buffer != NULL) {
                             col = page.color;
-                        } else {
-                            if (outputDepth != -1) { // set via --depth
-                                bd = outputDepth;
-                            } else {
-                                // bd remains default
-                            }
                         }
-                        initImage(&sheet, w, h, bd, col, sheetBackground);
+                        initImage(&sheet, w, h, col, sheetBackground);
                                 
-                    } else if ((page.buffer != NULL) && ((page.bitdepth > sheet.bitdepth) || ( (!sheet.color) && page.color ))) { // make sure current sheet buffer has enough bitdepth and color-mode
+                    } else if ((page.buffer != NULL) && ((!sheet.color) && page.color) ) { // make sure current sheet buffer has color-mode
                         sheetBackup = sheet;
                         // re-allocate sheet
-                        bd = page.bitdepth;
                         col = page.color;
-                        initImage(&sheet, w, h, bd, col, sheetBackground);
+                        initImage(&sheet, w, h, col, sheetBackground);
                         // copy old one
                         copyImage(&sheetBackup, 0, 0, &sheet);
                         freeImage(&sheetBackup);
@@ -1341,7 +1329,6 @@ int main(int argc, char* argv[]) {
                 // last chance: try to get previous (unstretched/not zoomed) sheet size
                 w = previousWidth;
                 h = previousHeight;
-                bd = previousBitdepth;
                 col = previousColor;
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("need to guess sheet size from previous sheet: %dx%d\n", w, h);
@@ -1349,24 +1336,21 @@ int main(int argc, char* argv[]) {
                 if ((w == -1) || (h == -1)) {
                     errOutput("sheet size unknown, use at least one input file per sheet, or force using --sheet-size.");
                 } else {
-                    initImage(&sheet, w, h, bd, col, sheetBackground);
+                    initImage(&sheet, w, h, col, sheetBackground);
                 }
             }
 
             previousWidth = w;
             previousHeight = h;
-            previousBitdepth = bd;
             previousColor = col;
             // handle file types
             if (outputTypeName == NULL) { // auto-set output type according to sheet format, if not explicitly set by user
                 if (sheet.color) {
                     outputType = PPM;
+                } else if ( outputDepth == 1 ) {
+                    outputType = PBM;
                 } else {
-                    if (sheet.bitdepth == 1) {
-                        outputType = PBM;
-                    } else {
-                        outputType = PGM;
-                    }
+		    outputType = PGM;
                 }
                 outputTypeName = FILETYPE_NAMES[outputType];
             } else { // parse user-setting
@@ -1379,9 +1363,6 @@ int main(int argc, char* argv[]) {
                 }
                 if (outputType == -1)
                     errOutput("output file format '%s' is not known.", outputTypeName);
-            }
-            if (outputDepth == -1) { // set output depth to be as input depth, if not explicitly set by user
-                outputDepth = sheet.bitdepth;
             }
 
             if (showTime) {
@@ -1927,8 +1908,8 @@ int main(int argc, char* argv[]) {
                         if (verbose>=VERBOSE_NORMAL) {
                             printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
                         }
-                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet.bitdepth, sheet.color, sheetBackground);
-                        initImage(&rectTarget, rect.width, rect.height, sheet.bitdepth, sheet.color, sheetBackground);
+                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet.color, sheetBackground);
+                        initImage(&rectTarget, rect.width, rect.height, sheet.color, sheetBackground);
 
                         // copy area to rotate into rSource
                         copyImageArea(mask[i][LEFT], mask[i][TOP], rect.width, rect.height, &sheet, 0, 0, &rect);
@@ -2118,7 +2099,6 @@ int main(int argc, char* argv[]) {
                 saveDebug("./_before-save.pnm", &sheet);
                 page.stride = page.width = sheet.width / outputCount;
                 page.height = sheet.height;
-                page.bitdepth = sheet.bitdepth;
                 page.color = sheet.color;
                 for ( j = 0; j < outputCount; j++) {
                     // get pagebuffer
