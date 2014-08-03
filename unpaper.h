@@ -139,6 +139,7 @@ struct IMAGE {
     uint8_t *buffer;
     int width;
     int height;
+    int stride;
     int bitdepth;
     int background;
     bool color;

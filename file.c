@@ -95,6 +95,7 @@ void loadImage(const char *filename, struct IMAGE* image) {
 
     image->width = frame->width;
     image->height = frame->height;
+    image->stride = frame->width;
 
     switch(frame->format) {
     case AV_PIX_FMT_MONOBLACK:
@@ -122,14 +123,8 @@ void loadImage(const char *filename, struct IMAGE* image) {
     case AV_PIX_FMT_GRAY8:
 	image->bitdepth = 8;
 	image->color = false;
-	image->buffer = malloc(frame->width * frame->height);
-	src = frame->data[0];
-	dst = image->buffer;
-	for (y = 0; y < frame->height; y++) {
-	    memcpy(dst, src, frame->width);
-	    src += frame->linesize[0];
-	    dst += frame->width;
-	}
+	image->stride = frame->linesize[0];
+	image->buffer = frame->data[0];
 	break;
 
     case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
@@ -150,14 +145,8 @@ void loadImage(const char *filename, struct IMAGE* image) {
     case AV_PIX_FMT_RGB24:
 	image->bitdepth = 8;
 	image->color = true;
-	image->buffer = malloc(frame->width * frame->height * 3);
-	src = frame->data[0];
-	dst = image->buffer;
-	for (y = 0; y < frame->height; y++) {
-	    memcpy(dst, src, frame->width * 3);
-	    src += frame->linesize[0];
-	    dst += frame->width * 3;
-	}
+	image->stride = frame->linesize[0];
+	image->buffer = frame->data[0];
 	break;
 
     default:
@@ -178,10 +167,8 @@ void loadImage(const char *filename, struct IMAGE* image) {
 void saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThreshold) {
     uint8_t* buf;
     int bytesPerLine;
-    int inputSize;
     int outputSize;
     int lineOffsetOutput;
-    int offsetInput;
     int offsetOutput;
     int x;
     int y;
@@ -222,18 +209,26 @@ void saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThres
             buf = image->buffer;
         } else { // convert to color
             buf = (uint8_t*)malloc(outputSize);
-            inputSize = image->width * image->height;
             offsetOutput = 0;
-            for (offsetInput = 0; offsetInput < inputSize; offsetInput++) {
-                pixel = image->buffer[offsetInput];
-                buf[offsetOutput++] = pixel;
-                buf[offsetOutput++] = pixel;
-                buf[offsetOutput++] = pixel;
-            }
+	    for (y = 0; y < image->height; y++) {
+		for (x = 0; x < image->width; x++) {
+		    pixel = getPixelGrayscale(x, y, image);
+		    buf[offsetOutput++] = pixel;
+		    buf[offsetOutput++] = pixel;
+		    buf[offsetOutput++] = pixel;
+		}
+	    }
         }
     } else { // PGM
         outputSize = image->width * image->height;
-        buf = image->buffer;
+	buf = (uint8_t*)malloc(outputSize);
+	offsetOutput = 0;
+	for (y = 0; y < image->height; y++) {
+	    for (x = 0; x < image->width; x++) {
+		pixel = getPixelGrayscale(x, y, image);
+		buf[offsetOutput++] = pixel;
+	    }
+	}
     }
     
     switch (type) {

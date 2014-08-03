@@ -84,6 +84,7 @@ void initImage(struct IMAGE* image, int width, int height, int bitdepth, bool co
     memset(image->buffer, background, size);
     image->width = width;
     image->height = height;
+    image->stride = width * (color ? 3 : 1);
     image->bitdepth = bitdepth;
     image->color = color;
     image->background = background;
@@ -125,12 +126,12 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return false; //nop
     } else {
-        pos = (y * w) + x;
+        pos = (y * image->stride) + x * (image->color ? 3 : 1);
+	p = &image->buffer[pos];
         r = (pixel >> 16) & 0xff;
         g = (pixel >> 8) & 0xff;
         b = pixel & 0xff;
         if ( ! image->color ) {
-            p = &image->buffer[pos];
             if ((r == g) && (r == b)) { // optimization (avoid division by 3)
                 pixel = r;
             } else {
@@ -144,7 +145,6 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
             }
         } else { // color
             result = false;
-            p = &image->buffer[pos*3];
             if (*p != r) {
                 *p = r;
                 result = true;
@@ -177,15 +177,14 @@ int getPixel(int x, int y, struct IMAGE* image) {
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return pixelValue(WHITE, WHITE, WHITE);
     } else {
-        int pos = (y * w) + x;
+        int pos = (y * image->stride) + x * (image->color ? 3 : 1);
         if ( ! image->color ) {
             const int pix = (uint8_t)image->buffer[pos];
             return pixelValue(pix, pix, pix);
         } else { // color
-            pos *= 3;
-            const uint8_t r = (uint8_t)image->buffer[pos++];
-            const uint8_t g = (uint8_t)image->buffer[pos++];
-            const uint8_t b = (uint8_t)image->buffer[pos];
+            const uint8_t r = (uint8_t)image->buffer[pos+0];
+            const uint8_t g = (uint8_t)image->buffer[pos+1];
+            const uint8_t b = (uint8_t)image->buffer[pos+2];
             return pixelValue(r, g, b);
         }
     }
@@ -208,11 +207,11 @@ int getPixelComponent(int x, int y, int colorComponent, struct IMAGE* image) {
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
     } else {
-        pos = (y * w) + x;
+        pos = (y * image->stride) + x * (image->color ? 3 : 1);
         if ( ! image->color ) {
             return (uint8_t)image->buffer[pos];
         } else { // color
-            return (uint8_t)image->buffer[(pos * 3) + colorComponent];
+            return (uint8_t)image->buffer[pos + colorComponent];
         }
     }
 }
@@ -226,7 +225,7 @@ int getPixelComponent(int x, int y, int colorComponent, struct IMAGE* image) {
 int getPixelGrayscale(int x, int y, struct IMAGE* image) {
     const int w = image->width;
     const int h = image->height;
-    int pos = (y * w) + x;
+    const int pos = (y * image->stride) + x * (image->color ? 3 : 1);
 
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
@@ -234,10 +233,9 @@ int getPixelGrayscale(int x, int y, struct IMAGE* image) {
 	if ( !image->color ) {
 	    return image->buffer[pos];
 	} else {
-            pos *= 3;
-            const uint8_t r = (uint8_t)image->buffer[pos++];
-            const uint8_t g = (uint8_t)image->buffer[pos++];
-            const uint8_t b = (uint8_t)image->buffer[pos];
+            const uint8_t r = (uint8_t)image->buffer[pos+0];
+            const uint8_t g = (uint8_t)image->buffer[pos+1];
+            const uint8_t b = (uint8_t)image->buffer[pos+2];
             return pixelGrayscale(r, g, b);
 	}
     }
@@ -258,7 +256,7 @@ int getPixelGrayscale(int x, int y, struct IMAGE* image) {
 static int getPixelLightness(int x, int y, struct IMAGE* image) {
     const int w = image->width;
     const int h = image->height;
-    int pos = (y * w) + x;
+    const int pos = (y * image->stride) + x * (image->color ? 3 : 1);
 
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
@@ -266,10 +264,9 @@ static int getPixelLightness(int x, int y, struct IMAGE* image) {
 	if ( !image->color ) {
 	    return image->buffer[pos];
 	} else {
-            pos *= 3;
-            const uint8_t r = (uint8_t)image->buffer[pos++];
-            const uint8_t g = (uint8_t)image->buffer[pos++];
-            const uint8_t b = (uint8_t)image->buffer[pos];
+            const uint8_t r = (uint8_t)image->buffer[pos+0];
+            const uint8_t g = (uint8_t)image->buffer[pos+1];
+            const uint8_t b = (uint8_t)image->buffer[pos+2];
             return pixelLightness(r, g, b);
 	}
     }
@@ -290,7 +287,7 @@ static int getPixelLightness(int x, int y, struct IMAGE* image) {
 int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
     const int w = image->width;
     const int h = image->height;
-    int pos = (y * w) + x;
+    const int pos = (y * image->stride) + x * (image->color ? 3 : 1);
 
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
@@ -298,10 +295,9 @@ int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
 	if ( !image->color ) {
 	    return image->buffer[pos];
 	} else {
-            pos *= 3;
-            const uint8_t r = (uint8_t)image->buffer[pos++];
-            const uint8_t g = (uint8_t)image->buffer[pos++];
-            const uint8_t b = (uint8_t)image->buffer[pos];
+            const uint8_t r = (uint8_t)image->buffer[pos+0];
+            const uint8_t g = (uint8_t)image->buffer[pos+1];
+            const uint8_t b = (uint8_t)image->buffer[pos+2];
             return pixelDarknessInverse(r, g, b);
 	}
     }
@@ -316,13 +312,13 @@ int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
 static bool setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
     const int w = image->width;
     const int h = image->height;
-    const int pos = (y * w) + x;
+    const int pos = (y * image->stride) + x * (image->color ? 3 : 1);
 
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return false; //nop
     } else {
+        uint8_t *p = &image->buffer[pos];
         if ( ! image->color ) {
-            uint8_t *p = &image->buffer[pos];
             if (*p != blackwhite) {
                 *p = blackwhite;
                 return true;
@@ -330,7 +326,6 @@ static bool setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
                 return false;
             }
         } else { // color
-            uint8_t *p = &image->buffer[pos * 3];
             bool result = false;
 
             if (*p != blackwhite) {

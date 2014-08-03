@@ -1288,6 +1288,7 @@ int main(int argc, char* argv[]) {
                     sheet.buffer = page.buffer;
                     sheet.width = page.width;
                     sheet.height = page.height;
+                    sheet.stride = page.stride;
                     sheet.bitdepth = page.bitdepth;
                     sheet.color = page.color;
                     sheet.background = sheetBackground;
@@ -2115,7 +2116,7 @@ int main(int argc, char* argv[]) {
                 }
                 // write files
                 saveDebug("./_before-save.pnm", &sheet);
-                page.width = sheet.width / outputCount;
+                page.stride = page.width = sheet.width / outputCount;
                 page.height = sheet.height;
                 page.bitdepth = sheet.bitdepth;
                 page.color = sheet.color;
@@ -2123,6 +2124,7 @@ int main(int argc, char* argv[]) {
                     // get pagebuffer
                     if ( outputCount == 1 ) {
                         page.buffer = sheet.buffer;
+                        page.stride = sheet.stride;
                     } else { // generic case: copy page-part of sheet into own buffer
                         if (page.color) {
                             page.buffer = (uint8_t*)malloc( page.width * page.height * 3 );
