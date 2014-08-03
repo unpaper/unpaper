@@ -1286,9 +1286,6 @@ int main(int argc, char* argv[]) {
                 // place image into sheet buffer
                 if ( (inputCount == 1) && (page.buffer != NULL) && (page.width == w) && (page.height == h) ) { // quick case: single input file == whole sheet
                     sheet.buffer = page.buffer;
-                    sheet.bufferGrayscale = page.bufferGrayscale;
-                    sheet.bufferLightness = page.bufferLightness;
-                    sheet.bufferDarknessInverse = page.bufferDarknessInverse;
                     sheet.width = page.width;
                     sheet.height = page.height;
                     sheet.bitdepth = page.bitdepth;
@@ -2126,20 +2123,11 @@ int main(int argc, char* argv[]) {
                     // get pagebuffer
                     if ( outputCount == 1 ) {
                         page.buffer = sheet.buffer;
-                        page.bufferGrayscale = sheet.bufferGrayscale;
-                        page.bufferLightness = sheet.bufferLightness;
-                        page.bufferDarknessInverse = sheet.bufferDarknessInverse;
                     } else { // generic case: copy page-part of sheet into own buffer
                         if (page.color) {
                             page.buffer = (uint8_t*)malloc( page.width * page.height * 3 );
-                            page.bufferGrayscale = (uint8_t*)malloc( page.width * page.height );
-                            page.bufferLightness = (uint8_t*)malloc( page.width * page.height );
-                            page.bufferDarknessInverse = (uint8_t*)malloc( page.width * page.height );
                         } else {
                             page.buffer = (uint8_t*)malloc( page.width * page.height );
-                            page.bufferGrayscale = page.buffer;
-                            page.bufferLightness = page.buffer;
-                            page.bufferDarknessInverse = page.buffer;
                         }
                         copyImageArea(page.width * j, 0, page.width, page.height, &sheet, 0, 0, &page);
                     }

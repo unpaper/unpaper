@@ -78,21 +78,10 @@ void initImage(struct IMAGE* image, int width, int height, int bitdepth, bool co
     
     size = width * height;
     if ( color ) {
-        image->bufferGrayscale = (uint8_t*)malloc(size);
-        image->bufferLightness = (uint8_t*)malloc(size);
-        image->bufferDarknessInverse = (uint8_t*)malloc(size);
-        memset(image->bufferGrayscale, background, size);
-        memset(image->bufferLightness, background, size);
-        memset(image->bufferDarknessInverse, background, size);
         size *= 3;
     }
     image->buffer = (uint8_t*)malloc(size);
     memset(image->buffer, background, size);
-    if ( ! color ) {
-        image->bufferGrayscale = image->buffer;
-        image->bufferLightness = image->buffer;
-        image->bufferDarknessInverse = image->buffer;
-    }
     image->width = width;
     image->height = height;
     image->bitdepth = bitdepth;
@@ -106,11 +95,6 @@ void initImage(struct IMAGE* image, int width, int height, int bitdepth, bool co
  */
 void freeImage(struct IMAGE* image) {    
     free(image->buffer);
-    if (image->color) {
-        free(image->bufferGrayscale);
-        free(image->bufferLightness);
-        free(image->bufferDarknessInverse);
-    }
 }
 
 
@@ -174,11 +158,6 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
             if (*p != b) {
                 *p = b;
                 result = true;
-            }
-            if ( result ) { // modified: update cached grayscale, lightness and brightnessInverse values
-                image->bufferGrayscale[pos] = pixelGrayscale(r, g, b);
-                image->bufferLightness[pos] = pixelLightness(r, g, b);
-                image->bufferDarknessInverse[pos] = pixelDarknessInverse(r, g, b);
             }
             return result;
         }
@@ -247,12 +226,20 @@ int getPixelComponent(int x, int y, int colorComponent, struct IMAGE* image) {
 int getPixelGrayscale(int x, int y, struct IMAGE* image) {
     const int w = image->width;
     const int h = image->height;
-    const int pos = (y * w) + x;
+    int pos = (y * w) + x;
 
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
     } else {
-        return image->bufferGrayscale[pos];
+	if ( !image->color ) {
+	    return image->buffer[pos];
+	} else {
+            pos *= 3;
+            const uint8_t r = (uint8_t)image->buffer[pos++];
+            const uint8_t g = (uint8_t)image->buffer[pos++];
+            const uint8_t b = (uint8_t)image->buffer[pos];
+            return pixelGrayscale(r, g, b);
+	}
     }
 }
 
@@ -271,12 +258,20 @@ int getPixelGrayscale(int x, int y, struct IMAGE* image) {
 static int getPixelLightness(int x, int y, struct IMAGE* image) {
     const int w = image->width;
     const int h = image->height;
-    const int pos = (y * w) + x;
+    int pos = (y * w) + x;
 
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
     } else {
-        return image->bufferLightness[pos];
+	if ( !image->color ) {
+	    return image->buffer[pos];
+	} else {
+            pos *= 3;
+            const uint8_t r = (uint8_t)image->buffer[pos++];
+            const uint8_t g = (uint8_t)image->buffer[pos++];
+            const uint8_t b = (uint8_t)image->buffer[pos];
+            return pixelLightness(r, g, b);
+	}
     }
 }
 
@@ -295,12 +290,20 @@ static int getPixelLightness(int x, int y, struct IMAGE* image) {
 int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
     const int w = image->width;
     const int h = image->height;
-    const int pos = (y * w) + x;
+    int pos = (y * w) + x;
 
     if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
         return WHITE;
     } else {
-        return image->bufferDarknessInverse[pos];
+	if ( !image->color ) {
+	    return image->buffer[pos];
+	} else {
+            pos *= 3;
+            const uint8_t r = (uint8_t)image->buffer[pos++];
+            const uint8_t g = (uint8_t)image->buffer[pos++];
+            const uint8_t b = (uint8_t)image->buffer[pos];
+            return pixelDarknessInverse(r, g, b);
+	}
     }
 }
 

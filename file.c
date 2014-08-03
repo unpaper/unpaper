@@ -40,9 +40,8 @@
  */
 void loadImage(const char *filename, struct IMAGE* image) {
     uint8_t *src, *dst;
-    uint8_t r, g, b;
     uint8_t bm_zero_color = 0xff; // default for AV_PIX_FMT_MONOWHITE
-    int x, y, ret, got_frame = 0, size, pos;
+    int x, y, ret, got_frame = 0;
     AVFormatContext *s = NULL;
     AVCodecContext *avctx = NULL;
     AVCodec *codec;
@@ -118,9 +117,6 @@ void loadImage(const char *filename, struct IMAGE* image) {
 	    src += frame->linesize[0];
 	    dst += frame->width;
 	}
-	image->bufferGrayscale = image->buffer;
-	image->bufferLightness = image->buffer;
-	image->bufferDarknessInverse = image->buffer;
 	break;
 
     case AV_PIX_FMT_GRAY8:
@@ -134,9 +130,6 @@ void loadImage(const char *filename, struct IMAGE* image) {
 	    src += frame->linesize[0];
 	    dst += frame->width;
 	}
-	image->bufferGrayscale = image->buffer;
-	image->bufferLightness = image->buffer;
-	image->bufferDarknessInverse = image->buffer;
 	break;
 
     case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
@@ -152,9 +145,6 @@ void loadImage(const char *filename, struct IMAGE* image) {
 	    src += frame->linesize[0];
 	    dst += frame->width;
 	}
-	image->bufferGrayscale = image->buffer;
-	image->bufferLightness = image->buffer;
-	image->bufferDarknessInverse = image->buffer;
 	break;
 
     case AV_PIX_FMT_RGB24:
@@ -168,22 +158,6 @@ void loadImage(const char *filename, struct IMAGE* image) {
 	    src += frame->linesize[0];
 	    dst += frame->width * 3;
 	}
-	size = frame->width * frame->height;
-	image->bufferGrayscale = malloc(size);
-	image->bufferLightness = malloc(size);
-	image->bufferDarknessInverse = malloc(size);
-        src = image->buffer;
-        for (pos = 0; pos < size; pos++) {
-            r = *src;
-            src++;
-            g = *src;
-            src++;
-            b = *src;
-            src++;            
-            image->bufferGrayscale[pos] = pixelGrayscale(r, g, b);
-            image->bufferLightness[pos] = pixelLightness(r, g, b);
-            image->bufferDarknessInverse[pos] = pixelDarknessInverse(r, g, b);
-        }
 	break;
 
     default:

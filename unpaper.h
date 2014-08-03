@@ -137,9 +137,6 @@ typedef enum {
 
 struct IMAGE {
     uint8_t *buffer;
-    uint8_t *bufferGrayscale;
-    uint8_t *bufferLightness;
-    uint8_t *bufferDarknessInverse;
     int width;
     int height;
     int bitdepth;
