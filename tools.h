@@ -32,7 +32,7 @@ void limit(int* i, int max);
 /* --- tool functions for image handling ---------------------------------- */
 
 
-void initImage(struct IMAGE* image, int width, int height, bool color, int background);
+void initImage(struct IMAGE* image, int width, int height, int color, int background);
 
 void freeImage(struct IMAGE* image);
 

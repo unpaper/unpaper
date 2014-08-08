@@ -21,6 +21,6 @@
 
 void loadImage(const char *filename, struct IMAGE* image);
 
-bool saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThreshold);
+void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blackThreshold);
 
 void saveDebug(char* filename, struct IMAGE* image);

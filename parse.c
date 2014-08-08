@@ -255,9 +255,9 @@ void parseSize(char* s, int i[2], int dpi) {
  */            
 int parseColor(char* s) {
     if ( strcmp(s, "black") == 0 )
-        return BLACK;
+        return BLACK24;
     if ( strcmp(s, "white") == 0 )
-        return WHITE;
+      return WHITE24;
 
     errOutput("cannot parse color '%s'.", s);
 }

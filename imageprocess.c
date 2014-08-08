@@ -341,7 +341,7 @@ static int bilinearInterpolate(float x, float y, struct IMAGE* source)
     int y2 = (int) ceilf(y);
 
     // Check edge conditions to avoid divide-by-zero
-    if (x2 > source->width || y2 > source->height)
+    if (x2 > source->frame->width || y2 > source->frame->height)
         return getPixel(x, y, source);
     else if (x2 == x1 && y2 == y1)
         return getPixel(x, y, source);
@@ -385,8 +385,8 @@ static int interpolate(float x, float y, struct IMAGE* source)
  * (To rotate parts of an image, extract the part with copyBuffer, rotate, and re-paste with copyBuffer.)
  */
 void rotate(const double radians, struct IMAGE* source, struct IMAGE* target) {
-    const int w = source->width;
-    const int h = source->height;
+    const int w = source->frame->width;
+    const int h = source->frame->height;
 
     // create 2D rotation matrix
     const float sinval = sinf(radians);
@@ -414,15 +414,15 @@ void rotate(const double radians, struct IMAGE* source, struct IMAGE* target) {
  */
 void stretch(int w, int h, struct IMAGE* image) {
     struct IMAGE newimage;
-    const float xRatio = image->width / (float) w;
-    const float yRatio = image->height / (float) h;
+    const float xRatio = image->frame->width / (float) w;
+    const float yRatio = image->frame->height / (float) h;
 
     if (verbose >= VERBOSE_MORE) {
-        printf("stretching %dx%d -> %dx%d\n", image->width, image->height, w, h);
+        printf("stretching %dx%d -> %dx%d\n", image->frame->width, image->frame->height, w, h);
     }
 
     // allocate new buffer's memory
-    initImage(&newimage, w, h, image->color, WHITE);
+    initImage(&newimage, w, h, image->frame->format, WHITE24);
     
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
@@ -452,23 +452,23 @@ void resize(int w, int h, struct IMAGE* image) {
     float hRat;
     
     if (verbose >= VERBOSE_NORMAL) {
-        printf("resizing %dx%d -> %dx%d\n", image->width, image->height, w, h);
+        printf("resizing %dx%d -> %dx%d\n", image->frame->width, image->frame->height, w, h);
     }
 
-    wRat = (float)w / image->width;
-    hRat = (float)h / image->height;
+    wRat = (float)w / image->frame->width;
+    hRat = (float)h / image->frame->height;
     if (wRat < hRat) { // horizontally more shrinking/less enlarging is needed: fill width fully, adjust height
         ww = w;
-        hh = image->height * w / image->width;
+        hh = image->frame->height * w / image->frame->width;
     } else if (hRat < wRat) {
-        ww = image->width * h / image->height;
+        ww = image->frame->width * h / image->frame->height;
         hh = h;
     } else { // wRat == hRat
         ww = w;
         hh = h;
     }
     stretch(ww, hh, image);
-    initImage(&newimage, w, h, image->color, image->background);
+    initImage(&newimage, w, h, image->frame->format, image->background);
     centerImage(image, 0, 0, w, h, &newimage);
     replaceImage(image, &newimage);
 }
@@ -487,10 +487,10 @@ void shift(int shiftX, int shiftY, struct IMAGE* image) {
     int pixel;
 
     // allocate new buffer's memory
-    initImage(&newimage, image->width, image->height, image->color, image->background);
+    initImage(&newimage, image->frame->width, image->frame->height, image->frame->format, image->background);
     
-    for (y = 0; y < image->height; y++) {
-        for (x = 0; x < image->width; x++) {
+    for (y = 0; y < image->frame->height; y++) {
+        for (x = 0; x < image->frame->width; x++) {
             pixel = getPixel(x, y, image);
             setPixel(pixel, x + shiftX, y + shiftY, &newimage);
         }
@@ -519,7 +519,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
 
     if (shiftY==0) { // vertical border is to be detected, horizontal shifting of scan-bar
         if (maskScanDepth == -1) {
-            maskScanDepth = image->height;
+            maskScanDepth = image->frame->height;
         }
         const int halfDepth = maskScanDepth / 2;
         left = startX - half;
@@ -528,7 +528,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
         bottom = startY + halfDepth;
     } else { // horizontal border is to be detected, vertical shifting of scan-bar
         if (maskScanDepth == -1) {
-            maskScanDepth = image->width;
+            maskScanDepth = image->frame->width;
         }
         const int halfDepth = maskScanDepth / 2;
         left = startX - halfDepth;
@@ -572,14 +572,14 @@ static bool detectMask(int startX, int startY, int maskScanDirections, int maskS
         *right = startX + maskScanStep[HORIZONTAL] * detectEdge(startX, startY, maskScanStep[HORIZONTAL], 0, maskScanSize[HORIZONTAL], maskScanDepth[HORIZONTAL], maskScanThreshold[HORIZONTAL], image) + half[HORIZONTAL];
     } else { // full range of sheet
         *left = 0;
-        *right = image->width - 1;
+        *right = image->frame->width - 1;
     }
     if ((maskScanDirections & 1<<VERTICAL) != 0) {
         *top = startY - maskScanStep[VERTICAL] * detectEdge(startX, startY, 0, -maskScanStep[VERTICAL], maskScanSize[VERTICAL], maskScanDepth[VERTICAL], maskScanThreshold[VERTICAL], image) - half[VERTICAL];
         *bottom = startY + maskScanStep[VERTICAL] * detectEdge(startX, startY, 0, maskScanStep[VERTICAL], maskScanSize[VERTICAL], maskScanDepth[VERTICAL], maskScanThreshold[VERTICAL], image) + half[VERTICAL];
     } else { // full range of sheet
         *top = 0;
-        *bottom = image->height - 1;
+        *bottom = image->frame->height - 1;
     }
     
     // if below minimum or above maximum, set to maximum
@@ -657,8 +657,8 @@ void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int
     if (maskCount<=0) {
         return;
     }
-    for (int y = 0; y < image->height; y++) {
-        for (int x = 0; x < image->width; x++) {
+    for (int y = 0; y < image->frame->height; y++) {
+        for (int x = 0; x < image->frame->width; x++) {
             // in any mask?
             bool m = false;
             for (int i = 0; ((m==false) && (i<maskCount)); i++) {
@@ -716,16 +716,16 @@ void mirror(int directions, struct IMAGE* image) {
 
     const bool horizontal = !!((directions & 1<<HORIZONTAL) != 0);
     const bool vertical = !!((directions & 1<<VERTICAL) != 0);
-    int untilX = ((horizontal==true)&&(vertical==false)) ? ((image->width - 1) >> 1) : (image->width - 1);  // w>>1 == (int)(w-0.5)/2
-    int untilY = (vertical==true) ? ((image->height - 1) >> 1) : image->height - 1;
+    int untilX = ((horizontal==true)&&(vertical==false)) ? ((image->frame->width - 1) >> 1) : (image->frame->width - 1);  // w>>1 == (int)(w-0.5)/2
+    int untilY = (vertical==true) ? ((image->frame->height - 1) >> 1) : image->frame->height - 1;
 
     for (y = 0; y <= untilY; y++) {
-        const int yy = (vertical==true) ? (image->height - y - 1) : y;
+        const int yy = (vertical==true) ? (image->frame->height - y - 1) : y;
         if ((vertical==true) && (horizontal==true) && (y == yy)) { // last middle line in odd-lined image mirrored both h and v
-            untilX = ((image->width - 1) >> 1);
+            untilX = ((image->frame->width - 1) >> 1);
         }
         for (x = 0; x <= untilX; x++) {
-            const int xx = (horizontal==true) ? (image->width - x - 1) : x;
+            const int xx = (horizontal==true) ? (image->frame->width - x - 1) : x;
             const int pixel1 = getPixel(x, y, image);
             const int pixel2 = getPixel(xx, yy, image);
             setPixel(pixel2, x, y, image);
@@ -747,11 +747,11 @@ void flipRotate(int direction, struct IMAGE* image) {
     int x;
     int y;
     
-    initImage(&newimage, image->height, image->width, image->color, WHITE); // exchanged width and height
-    for (y = 0; y < image->height; y++) {
-        const int xx = ((direction > 0) ? image->height - 1 : 0) - y * direction;
-        for (x = 0; x < image->width; x++) {
-            const int yy = ((direction < 0) ? image->width - 1 : 0) + x * direction;
+    initImage(&newimage, image->frame->height, image->frame->width, image->frame->format, WHITE); // exchanged width and height
+    for (y = 0; y < image->frame->height; y++) {
+        const int xx = ((direction > 0) ? image->frame->height - 1 : 0) - y * direction;
+        for (x = 0; x < image->frame->width; x++) {
+            const int yy = ((direction < 0) ? image->frame->width - 1 : 0) + x * direction;
             const int pixel = getPixel(x, y, image);
             setPixel(pixel, xx, yy, &newimage);
         }
@@ -802,22 +802,22 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
         shiftX = dep;
         shiftY = 0;
     }
-    while ((left < image->width) && (top < image->height)) { // individual scanning "stripes" over the whole sheet
+    while ((left < image->frame->width) && (top < image->frame->height)) { // individual scanning "stripes" over the whole sheet
         l = left;
         t = top;
         r = right;
         b = bottom;
         // make sure last stripe does not reach outside sheet, shift back inside (next +=shift will exit while-loop)
-        if (r >= image->width || b >= image->height) {
-            diffX = r-image->width+1;
-            diffY = b-image->height+1;
+        if (r >= image->frame->width || b >= image->frame->height) {
+            diffX = r-image->frame->width+1;
+            diffY = b-image->frame->height+1;
             l -= diffX;
             t -= diffY;
             r -= diffX;
             b -= diffY;
         }
         alreadyExcludedMessage = false;
-        while ((l < image->width) && (t < image->height)) { // single scanning "stripe"
+        while ((l < image->frame->width) && (t < image->frame->height)) { // single scanning "stripe"
             blackness = 255 - darknessInverseRect(l, t, r, b, image);
             if (blackness >= 255*threshold) { // found a solidly black area
                 mask[LEFT] = l;
@@ -832,7 +832,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
                     // start flood-fill in this area (on each pixel to make sure we get everything, in most cases first flood-fill from first pixel will delete all other black pixels in the area already)
                     for (y = t; y <= b; y++) {
                         for (x = l; x <= r; x++) {
-                            floodFill(x, y, pixelValue(WHITE, WHITE, WHITE), 0, thresholdBlack, intensity, image);
+                            floodFill(x, y, WHITE24, 0, thresholdBlack, intensity, image);
                         }
                     }
                 } else {
@@ -887,8 +887,8 @@ int noisefilter(int intensity, float whiteThreshold, struct IMAGE* image) {
     
     whiteMin = (int)(WHITE * whiteThreshold);
     count = 0;
-    for (y = 0; y < image->height; y++) {
-        for (x = 0; x < image->width; x++) {
+    for (y = 0; y < image->frame->height; y++) {
+        for (x = 0; x < image->frame->width; x++) {
             pixel = getPixelDarknessInverse(x, y, image);
             if (pixel < whiteMin) { // one dark pixel found
                 neighbors = countPixelNeighbors(x, y, intensity, whiteMin, image); // get number of non-light pixels in neighborhood
@@ -934,10 +934,10 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
     top = 0;
     right = blurfilterScanSize[HORIZONTAL] - 1;
     bottom = blurfilterScanSize[VERTICAL] - 1;
-    maxLeft = image->width - blurfilterScanSize[HORIZONTAL];
-    maxTop = image->height - blurfilterScanSize[VERTICAL];
+    maxLeft = image->frame->width - blurfilterScanSize[HORIZONTAL];
+    maxTop = image->frame->height - blurfilterScanSize[VERTICAL];
 
-    blocksPerRow = image->width / blurfilterScanSize[HORIZONTAL];
+    blocksPerRow = image->frame->width / blurfilterScanSize[HORIZONTAL];
     // allocate one extra block left and right
     prevCounts = calloc(blocksPerRow + 2, sizeof(int));
     curCounts = calloc(blocksPerRow + 2, sizeof(int));
@@ -988,7 +988,7 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
 		max = count;
 	    }
 	    if ((((float)max)/total) <= blurfilterIntensity) { // Not enough dark pixels
-		clearRect(left, top, right, bottom, image, WHITE);
+		clearRect(left, top, right, bottom, image, WHITE24);
 		result += curCounts[block];
 		curCounts[block] = total; // Update information
 	    }
@@ -1044,14 +1044,14 @@ int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[
         if (count == 0) {
             lightness = lightnessRect(left, top, right, bottom, image);
             if ((WHITE - lightness) < thresholdAbs) { // (lower threshold->more deletion)
-                result += clearRect(left, top, right, bottom, image, WHITE);
+                result += clearRect(left, top, right, bottom, image, WHITE24);
             }
         }
-        if (left < image->width) { // not yet at end of row
+        if (left < image->frame->width) { // not yet at end of row
             left += grayfilterScanStep[HORIZONTAL];
             right += grayfilterScanStep[HORIZONTAL];
         } else { // end of row
-            if (bottom >= image->height) { // has been last row
+            if (bottom >= image->frame->height) { // has been last row
                 return result; // exit here
             }
             // next row:
@@ -1076,11 +1076,11 @@ void centerMask(int centerX, int centerY, int left, int top, int right, int bott
     const int height = bottom - top + 1;
     const int targetX = centerX - width/2;
     const int targetY = centerY - height/2;
-    if ((targetX >= 0) && (targetY >= 0) && ((targetX+width) <= image->width) && ((targetY+height) <= image->height)) {
+    if ((targetX >= 0) && (targetY >= 0) && ((targetX+width) <= image->frame->width) && ((targetY+height) <= image->frame->height)) {
         if (verbose >= VERBOSE_NORMAL) {
             printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", left, top, right, bottom, centerX, centerY, targetX-left, targetY-top);
         }
-        initImage(&newimage, width, height, image->color, image->background);
+        initImage(&newimage, width, height, image->frame->format, image->background);
         copyImageArea(left, top, width, height, image, 0, 0, &newimage);
         clearRect(left, top, right, bottom, image, image->background);
         copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
@@ -1120,7 +1120,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, i
     if (verbose >= VERBOSE_NORMAL) {
         printf("aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], targetX, targetY, targetX - mask[LEFT], targetY - mask[TOP]);
     }
-    initImage(&newimage, width, height, image->color, image->background);
+    initImage(&newimage, width, height, image->frame->format, image->background);
     copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0, &newimage);
     clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, image->background);
     copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
@@ -1193,8 +1193,8 @@ void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderS
     
     border[LEFT] = outsideMask[LEFT];
     border[TOP] = outsideMask[TOP];
-    border[RIGHT] = image->width - outsideMask[RIGHT];
-    border[BOTTOM] = image->height - outsideMask[BOTTOM];
+    border[RIGHT] = image->frame->width - outsideMask[RIGHT];
+    border[BOTTOM] = image->frame->height - outsideMask[BOTTOM];
     
     blackThresholdAbs = (int)(WHITE * (1.0 - blackThreshold));
     if (borderScanDirections & 1<<HORIZONTAL) {
@@ -1217,8 +1217,8 @@ void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderS
 void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], struct IMAGE* image) {
     mask[LEFT] = border[LEFT];
     mask[TOP] = border[TOP];
-    mask[RIGHT] = image->width - border[RIGHT] - 1;
-    mask[BOTTOM] = image->height - border[BOTTOM] - 1;
+    mask[RIGHT] = image->frame->width - border[RIGHT] - 1;
+    mask[BOTTOM] = image->frame->height - border[BOTTOM] - 1;
     if (verbose >= VERBOSE_DEBUG) {
         printf("border [%d,%d,%d,%d] -> mask [%d,%d,%d,%d]\n", border[LEFT], border[TOP], border[RIGHT], border[BOTTOM], mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM]);
     }

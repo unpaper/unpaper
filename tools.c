@@ -22,7 +22,11 @@
 #include <string.h>
 #include <math.h>
 
+#include <libavutil/avutil.h>
+#include <libavutil/pixfmt.h>
+
 #include "unpaper.h"
+#include "tools.h"
 
 /****************************************************************************
  * tool functions                                                           *
@@ -69,32 +73,69 @@ void limit(int* i, int max) {
 
 /* --- tool functions for image handling ---------------------------------- */
 
+static void getPixelComponents(struct IMAGE *image, int x, int y, int *r, int *g, int *b, int defval) {
+    uint8_t *pix;
+
+    if ( (x < 0) || (x >= image->frame->width) || (y < 0) || (y >= image->frame->height) ) {
+        *r = *g = *b = defval;
+        return;
+    }
+
+    switch(image->frame->format) {
+    case AV_PIX_FMT_GRAY8:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x);
+        *r = *g = *b = *pix;
+        break;
+    case AV_PIX_FMT_RGB24:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x * 3);
+        *r = pix[0];
+        *g = pix[1];
+        *b = pix[2];
+        break;
+    case AV_PIX_FMT_MONOWHITE:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
+        if ( *pix & (128 >> (x % 8)) )
+            *r = *g = *b = BLACK;
+        else
+            *r = *g = *b = WHITE;
+        break;
+    default:
+        errOutput("unknown pixel format.");
+    }
+}
+
 /**
  * Allocates a memory block for storing image data and fills the IMAGE-struct
  * with the specified values.
  */
-void initImage(struct IMAGE* image, int width, int height, bool color, int background) {
-    int size;
-    
-    size = width * height;
-    if ( color ) {
-        size *= 3;
-    }
-    image->buffer = (uint8_t*)malloc(size);
-    memset(image->buffer, background, size);
-    image->width = width;
-    image->height = height;
-    image->stride = width * (color ? 3 : 1);
-    image->color = color;
-    image->background = background;
-}
+void initImage(struct IMAGE* image, int width, int height, int pixel_format, int background) {
+    int ret, x, y;
 
+    image->frame = av_frame_alloc();
+    image->frame->width = width;
+    image->frame->height = height;
+    image->frame->format = pixel_format;
+
+    ret = av_frame_get_buffer(image->frame, 8);
+    if (ret < 0) {
+	char errbuff[1024];
+	av_strerror(ret, errbuff, sizeof(errbuff));
+	errOutput("unable to allocate buffer: %s", errbuff);
+    }
+
+    image->background = background;
+    for (y = 0; y < image->frame->height; y++) {
+        for (x = 0; x < image->frame->width; x++) {
+            setPixel(image->background, x, y, image);
+        }
+    }
+}
 
 /**
  * Frees an image.
  */
-void freeImage(struct IMAGE* image) {    
-    free(image->buffer);
+void freeImage(struct IMAGE* image) {
+    av_frame_free(&image->frame);
 }
 
 
@@ -114,53 +155,42 @@ void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
  * @return true if the pixel has been changed, false if the original color was the one to set
  */ 
 bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
-    uint8_t* p;
-    int w, h;
-    int pos;
-    bool result;
     uint8_t r, g, b;
+    uint8_t *pix;
     
-    w = image->width;
-    h = image->height;
-    if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
+    if ( (x < 0) || (x >= image->frame->width) || (y < 0) || (y >= image->frame->height) ) {
         return false; //nop
-    } else {
-        pos = (y * image->stride) + x * (image->color ? 3 : 1);
-	p = &image->buffer[pos];
-        r = (pixel >> 16) & 0xff;
-        g = (pixel >> 8) & 0xff;
-        b = pixel & 0xff;
-        if ( ! image->color ) {
-            if ((r == g) && (r == b)) { // optimization (avoid division by 3)
-                pixel = r;
-            } else {
-                pixel = pixelGrayscale(r, g, b); // convert to gray (will already be in most cases, but we can't be sure)
-            }
-            if (*p != (uint8_t)pixel) {
-                *p = (uint8_t)pixel;
-                return true;
-            } else {
-                return false;
-            }
-        } else { // color
-            result = false;
-            if (*p != r) {
-                *p = r;
-                result = true;
-            }
-            p++;
-            if (*p != g) {
-                *p = g;
-                result = true;
-            }
-            p++;
-            if (*p != b) {
-                *p = b;
-                result = true;
-            }
-            return result;
-        }
     }
+
+    r = (pixel >> 16) & 0xff;
+    g = (pixel >> 8) & 0xff;
+    b = pixel & 0xff;
+
+    switch(image->frame->format) {
+    case AV_PIX_FMT_GRAY8:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x);
+        *pix = pixelGrayscale(r, g, b);
+        break;
+    case AV_PIX_FMT_RGB24:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x * 3);
+        pix[0] = r;
+        pix[1] = g;
+        pix[2] = b;
+        break;
+    case AV_PIX_FMT_MONOWHITE:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
+        if ( pixel == BLACK24 ) {
+            *pix = *pix | (128 >> (x % 8));
+        } else if ( pixel == WHITE24 ) {
+            *pix = *pix & ~(128 >> (x % 8));
+        } else {
+            errOutput("unable to set non-b/w color for monochrome bitmaps.");
+        }
+        break;
+    default:
+        errOutput("unknown pixel format.");
+    }
+    return true;
 }
 
 
@@ -171,50 +201,10 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
  * @return color or grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
 int getPixel(int x, int y, struct IMAGE* image) {
-    const int w = image->width;
-    const int h = image->height;
-    if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
-        return pixelValue(WHITE, WHITE, WHITE);
-    } else {
-        int pos = (y * image->stride) + x * (image->color ? 3 : 1);
-        if ( ! image->color ) {
-            const int pix = (uint8_t)image->buffer[pos];
-            return pixelValue(pix, pix, pix);
-        } else { // color
-            const uint8_t r = (uint8_t)image->buffer[pos+0];
-            const uint8_t g = (uint8_t)image->buffer[pos+1];
-            const uint8_t b = (uint8_t)image->buffer[pos+2];
-            return pixelValue(r, g, b);
-        }
-    }
+    int r, g, b;
+    getPixelComponents(image, x, y, &r, &g, &b, WHITE);
+    return pixelValue(r, g, b);
 }
-
-
-/**
- * Returns a color component of a single pixel (0-255).
- *
- * @param colorComponent either RED, GREEN or BLUE
- * @return color or grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
- */ 
- /* (currently not used)
-int getPixelComponent(int x, int y, int colorComponent, struct IMAGE* image) {
-    int w, h;
-    int pos;
-
-    w = image->width;
-    h = image->height;
-    if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
-        return WHITE;
-    } else {
-        pos = (y * image->stride) + x * (image->color ? 3 : 1);
-        if ( ! image->color ) {
-            return (uint8_t)image->buffer[pos];
-        } else { // color
-            return (uint8_t)image->buffer[pos + colorComponent];
-        }
-    }
-}
-*/
 
 /**
  * Returns the grayscale (=brightness) value of a single pixel.
@@ -222,22 +212,9 @@ int getPixelComponent(int x, int y, int colorComponent, struct IMAGE* image) {
  * @return grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
 int getPixelGrayscale(int x, int y, struct IMAGE* image) {
-    const int w = image->width;
-    const int h = image->height;
-    const int pos = (y * image->stride) + x * (image->color ? 3 : 1);
-
-    if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
-        return WHITE;
-    } else {
-	if ( !image->color ) {
-	    return image->buffer[pos];
-	} else {
-            const uint8_t r = (uint8_t)image->buffer[pos+0];
-            const uint8_t g = (uint8_t)image->buffer[pos+1];
-            const uint8_t b = (uint8_t)image->buffer[pos+2];
-            return pixelGrayscale(r, g, b);
-	}
-    }
+    int r, g, b;
+    getPixelComponents(image, x, y, &r, &g, &b, WHITE);
+    return pixelGrayscale(r, g, b);
 }
 
 
@@ -253,22 +230,9 @@ int getPixelGrayscale(int x, int y, struct IMAGE* image) {
  * @return lightness-value (the higher, the lighter) of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
 static int getPixelLightness(int x, int y, struct IMAGE* image) {
-    const int w = image->width;
-    const int h = image->height;
-    const int pos = (y * image->stride) + x * (image->color ? 3 : 1);
-
-    if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
-        return WHITE;
-    } else {
-	if ( !image->color ) {
-	    return image->buffer[pos];
-	} else {
-            const uint8_t r = (uint8_t)image->buffer[pos+0];
-            const uint8_t g = (uint8_t)image->buffer[pos+1];
-            const uint8_t b = (uint8_t)image->buffer[pos+2];
-            return pixelLightness(r, g, b);
-	}
-    }
+    int r, g, b;
+    getPixelComponents(image, x, y, &r, &g, &b, WHITE);
+    return pixelLightness(r, g, b);
 }
 
 
@@ -284,68 +248,10 @@ static int getPixelLightness(int x, int y, struct IMAGE* image) {
  * @return inverse-darkness-value (the LOWER, the darker) of the requested pixel, or WHITE if the coordinates are outside the image
  */ 
 int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
-    const int w = image->width;
-    const int h = image->height;
-    const int pos = (y * image->stride) + x * (image->color ? 3 : 1);
-
-    if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
-        return WHITE;
-    } else {
-	if ( !image->color ) {
-	    return image->buffer[pos];
-	} else {
-            const uint8_t r = (uint8_t)image->buffer[pos+0];
-            const uint8_t g = (uint8_t)image->buffer[pos+1];
-            const uint8_t b = (uint8_t)image->buffer[pos+2];
-            return pixelDarknessInverse(r, g, b);
-	}
-    }
+    int r, g, b;
+    getPixelComponents(image, x, y, &r, &g, &b, WHITE);
+    return pixelDarknessInverse(r, g, b);
 }
-
-
-/**
- * Sets the color/grayscale value of a single pixel to either black or white.
- *
- * @return true if the pixel has been changed, false if the original color was the one to set
- */ 
-static bool setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
-    const int w = image->width;
-    const int h = image->height;
-    const int pos = (y * image->stride) + x * (image->color ? 3 : 1);
-
-    if ( (x < 0) || (x >= w) || (y < 0) || (y >= h) ) {
-        return false; //nop
-    } else {
-        uint8_t *p = &image->buffer[pos];
-        if ( ! image->color ) {
-            if (*p != blackwhite) {
-                *p = blackwhite;
-                return true;
-            } else {
-                return false;
-            }
-        } else { // color
-            bool result = false;
-
-            if (*p != blackwhite) {
-                *p = blackwhite;
-                result = true;
-            }
-            p++;
-            if (*p != blackwhite) {
-                *p = blackwhite;
-                result = true;
-            }
-            p++;
-            if (*p != blackwhite) {
-                *p = blackwhite;
-                result = true;
-            }
-            return result;
-        }
-    }
-}
-
 
 /**
  * Sets the color/grayscale value of a single pixel to white.
@@ -353,7 +259,7 @@ static bool setPixelBW(int x, int y, struct IMAGE* image, int blackwhite) {
  * @return true if the pixel has been changed, false if the original color was the one to set
  */ 
 static bool clearPixel(int x, int y, struct IMAGE* image) {
-    return setPixelBW(x, y, image, WHITE);
+    return setPixel(WHITE24, x, y, image);
 }
 
 
@@ -366,7 +272,7 @@ int clearRect(const int left, const int top, const int right, const int bottom, 
 
     for (int y = top; y <= bottom; y++) {
         for (int x = left; x <= right; x++) {
-            if (setPixelBW(x, y, image, blackwhite)) {
+            if (setPixel(blackwhite, x, y, image)) {
                 count++;
             }
         }
@@ -394,7 +300,7 @@ void copyImageArea(const int x, const int y, const int width, const int height, 
  * Copies a whole image into another.
  */
 void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
-    copyImageArea(0, 0, source->width, source->height, source, toX, toY, target);
+    copyImageArea(0, 0, source->frame->width, source->frame->height, source, toX, toY, target);
 }
 
 
@@ -430,7 +336,7 @@ static void centerImageArea(int x, int y, int w, int h, struct IMAGE* source, in
  * Centers a whole image inside an area of another image.
  */
 void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target) {
-    centerImageArea(0, 0, source->width, source->height, source, toX, toY, ww, hh, target);
+    centerImageArea(0, 0, source->frame->width, source->frame->height, source, toX, toY, ww, hh, target);
 }
 
 
@@ -627,8 +533,8 @@ void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity,
 static int fillLine(int x, int y, int stepX, int stepY, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
     int distance = 0;
     int intensityCount = 1; // first pixel must match, otherwise directly exit
-    const int w = image->width;
-    const int h = image->height;
+    const int w = image->frame->width;
+    const int h = image->frame->height;
 
     while (true) {
         int pixel;

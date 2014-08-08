@@ -1630,31 +1630,16 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
           <varlistentry>
             <term>
               <option>-t</option>
-              { <option>pbm</option> | <option>pgm</option> }
+              { <option>pbm</option> | <option>pgm</option> | <option>ppm</option> }
             </term>
             <term>
               <option>--type</option>
-              { <option>pbm</option> | <option>pgm</option> }
+              { <option>pbm</option> | <option>pgm</option>> | <option>ppm</option> }
             </term>
 
             <listitem>
               <para>
-                Output file type. (default: as input)
-              </para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>
-              <option>-d</option> <replaceable>bits</replaceable>
-            </term>
-            <term>
-              <option>--depth</option> <replaceable>bits</replaceable>
-            </term>
-
-            <listitem>
-              <para>
-                Output pixel depth. (default: as input)
+                Output file type (and bit depth). (default: as input)
               </para>
             </listitem>
           </varlistentry>

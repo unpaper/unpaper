@@ -33,6 +33,8 @@
 # define true TRUE
 #endif
 
+#include <libavutil/frame.h>
+
 /* --- preprocessor macros ------------------------------------------------ */
               
 #define max(a, b) ( (a >= b) ? (a) : (b) )
@@ -55,9 +57,12 @@
 #define MAX_POINTS 100
 #define MAX_FILES 100
 #define MAX_PAGES 2
-#define WHITE 255
-#define GRAY 127
-#define BLACK 0
+#define WHITE 0xFF
+#define GRAY 0x1F
+#define BLACK 0x00
+#define WHITE24 0xFFFFFF
+#define GRAY24 0x1F1F1F
+#define BLACK24 0x000000
 #define BLANK_TEXT "<blank>"
 
 
@@ -136,12 +141,8 @@ typedef enum {
 /* --- struct ------------------------------------------------------------- */
 
 struct IMAGE {
-    uint8_t *buffer;
-    int width;
-    int height;
-    int stride;
     int background;
-    bool color;
+    AVFrame *frame;
 };
 
 void errOutput(const char *fmt, ...)
