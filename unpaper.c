@@ -506,7 +506,6 @@ int main(int argc, char* argv[]) {
             { "no-multi-pages",             no_argument,       NULL, 0xc6 },
             { "dpi",                        required_argument, NULL, 0xc7 },
             { "type",                       required_argument, NULL,  't' },
-            { "depth",                      required_argument, NULL,  'd' },
             { "quiet",                      no_argument,       NULL,  'q' },
             { "overwrite",                  no_argument,       NULL, 0xc8 },
             { "time",                       no_argument,       NULL, 0xc9 },
