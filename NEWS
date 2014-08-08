@@ -6,8 +6,6 @@ Release 6, 2014-xx-yy
  - Tests are now executed against the original PNG files rather than
    through converted PGM/PPM, this drops the netpbm dependency on the
    tests.
- - Output now defaults to grayscale for B/W input. You can force the
-   previous behaviour by passing -depth 1 to the command line.
 
 Release 5, 2013-06-28
  - Implement mathematically accurate interpolation, using cubic
