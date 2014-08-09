@@ -364,7 +364,7 @@ static int interpolate(float x, float y, struct IMAGE* source)
  * Rotates a whole image buffer by the specified radians, around its middle-point.
  * (To rotate parts of an image, extract the part with copyBuffer, rotate, and re-paste with copyBuffer.)
  */
-void rotate(const double radians, struct IMAGE* source, struct IMAGE* target) {
+void rotate(const float radians, struct IMAGE* source, struct IMAGE* target) {
     const int w = source->frame->width;
     const int h = source->frame->height;
 

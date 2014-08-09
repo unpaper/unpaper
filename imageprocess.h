@@ -26,7 +26,7 @@
 
 double detectRotation(int deskewScanEdges, double deskewScanRange, double deskewScanStep, int deskewScanSize, float deskewScanDepth, double deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image);
 
-void rotate(const double radians, struct IMAGE* source, struct IMAGE* target);
+void rotate(const float radians, struct IMAGE* source, struct IMAGE* target);
 
 
 /* --- stretching / resizing / shifting ------------------------------------ */
