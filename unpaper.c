@@ -225,7 +225,6 @@ int main(int argc, char* argv[]) {
     struct IMAGE originalSheet;
     struct IMAGE page;
     int filterResult;
-    double rotation;
     struct IMAGE rect;
     struct IMAGE rectTarget;
     int inputNr;
@@ -1691,7 +1690,7 @@ int main(int argc, char* argv[]) {
                     // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
 
                     saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
-                    rotation = - detectRotation(deskewScanEdges, deskewScanRangeRad, deskewScanStepRad, deskewScanSize, deskewScanDepth, deskewScanDeviation, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
+                    double rotation = - detectRotation(deskewScanEdges, deskewScanRangeRad, deskewScanStepRad, deskewScanSize, deskewScanDepth, deskewScanDeviation, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
                     saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
 
                     if (rotation != 0.0) {
