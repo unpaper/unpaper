@@ -249,7 +249,7 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blac
 
     avformat_write_header(out_ctx, NULL);
 
-    AVPacket pkt = { 0 };
+    AVPacket pkt;
     int got_packet;
     av_init_packet(&pkt);
 
