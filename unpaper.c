@@ -1691,7 +1691,7 @@ int main(int argc, char* argv[]) {
                     // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
 
                     saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
-                    double rotation = - detectRotation(deskewScanEdges, deskewScanRangeRad, deskewScanStepRad, deskewScanSize, deskewScanDepth, deskewScanDeviationRad, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
+                    float rotation = detectRotation(deskewScanEdges, deskewScanRangeRad, deskewScanStepRad, deskewScanSize, deskewScanDepth, deskewScanDeviationRad, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
                     saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
 
                     if (rotation != 0.0) {
@@ -1705,7 +1705,7 @@ int main(int argc, char* argv[]) {
                         copyImageArea(mask[i][LEFT], mask[i][TOP], rect.frame->width, rect.frame->height, &sheet, 0, 0, &rect);
 
                         // rotate
-                        rotate(rotation, &rect, &rectTarget);
+                        rotate(-rotation, &rect, &rectTarget);
 
                         // copy result back into whole image
                         copyImageArea(0, 0, rectTarget.frame->width, rectTarget.frame->height, &rectTarget, mask[i][LEFT], mask[i][TOP], &sheet);
