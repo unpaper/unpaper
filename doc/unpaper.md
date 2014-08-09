@@ -1,7 +1,7 @@
 unpaper - User Documentation
 ============================
 
-This document desribes the concept and features of `unpaper`.
+This document describes the concept and features of `unpaper`.
 
 Basic Concepts
 --------------
@@ -58,7 +58,7 @@ The default value both for `--input-pages` and `--output-pages` is 1.
 #### File Formats
 
 The *image-file* formats accepted by `unpaper` are those that
-[libav](http://libav.org) can handle. In particular it supposrts the
+[libav](http://libav.org) can handle. In particular it supports the
 whole PNM-family: **PBM**, **PGM** and **PPM**. This ensures
 interoperability with the [SANE](http://www.sane-project.org/) tools
 under Linux. Support for TIFF and other complex file formats is not
@@ -144,7 +144,7 @@ supposed to have, and the *0* requests leading zeros. Thus "%03d" will
 get replaced with strings in the sequence `001`, `002`, `003`
 etc. This way, a sequence of images named e.g. `input001.pgm`,
 `input002.pgm`, `input003.pgm`... can be specified.  There are two
-seperate index counters for input and output files which get increased
+separate index counters for input and output files which get increased
 independently from each other.
 
 Wildcards in filenames are also useful when combining a sequence of
@@ -271,7 +271,7 @@ some index positions. The `--insert-blank` option allows to specify
 one or more input indices at which no file is read, but instead a
 blank image is inserted into the sequence of input images. The input
 image that would have been loaded at this index position in the
-sequence will be used at the following non-blank index posisiton
+sequence will be used at the following non-blank index position
 instead, thus the following indices get shifted to make room for the
 blank image inserted.
 
@@ -371,7 +371,7 @@ optionally followed by the *sheet* numbers to disable the filter for.
 ### Borders
 
 Unlike *masks*, **borders** are detected by starting at the outer
-edges of the *sheet* (or left/right halfs of the *sheet*, in a
+edges of the *sheet* (or left/right halves of the *sheet*, in a
 double-page *layout*), and then scanning towards the middle until some
 content-pixels are reached. Again, a 'virtual bar' is used for
 detection, the width of which can be set using the option
@@ -649,7 +649,7 @@ order according to the following sequence:
 Each processing step can be disabled individually by a corresponding
 `--no-xxx` option (where `xxx` stands for the feature to disable,
 e.g. `--no-grayfilter`, `--no-mask-scan` etc.).  If such an option is
-followed by a *sheet* number, or a comma-seperated list of multiple
+followed by a *sheet* number, or a comma-separated list of multiple
 *sheet* numbers, the filter gets disabled only for those *sheets*
 specified. Otherwise (if no *sheet* number follows), the filter is
 disabled for all *sheets*. Instead of specifying individual *sheet*

@@ -138,7 +138,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
           unpaper tries to clean scanned images by removing dark edges that appeared through
           scanning or copying on areas outside the actual page content (e.g.  dark areas between the
           left-hand-side and the right-hand-side of a double- sided book-page scan).  The program
-          also tries to detect disaligned centering and rotation of pages and will automatically
+          also tries to detect misaligned centering and rotation of pages and will automatically
           straighten each page by rotating it to the correct angle. This process is called
           "deskewing".  Note that the automatic processing will sometimes fail. It is always a good
           idea to manually control the results of unpaper and adjust the parameter settings

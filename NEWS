@@ -45,7 +45,7 @@ Release 0.3, 2007-12-31:
   binary executable file in folder bin/.
 - The final distribution packages are now created with a standard-tar via
   shell execution. Older versions were tarred and gzipped by ANT 1.6.5's tar-
-  task, which had shown incompatibities on some systems.
+  task, which had shown incompatibilities on some systems.
 - Included a simple makefile make.sh. It runs with minimum requirements to the
   compiler, while being configurable for particular optimizations via $CFLAGS.
 - Common style distribution package naming and content-layout, following the
@@ -55,11 +55,11 @@ Release 0.3, 2007-12-31:
 - Added --sheet-background option.
 - Added --pre-shift and --post-shift options.
 - Removed modes 'single-rotated' and 'double-rotated' for parameter --layout.
-  (The documentation was ambiguous and the functionaity can better be achieved
+  (The documentation was ambiguous and the functionality can better be achieved
   using --pre-rotate in combination with --layout single or --layout double.)
   The default layout mode is 'single' now, the old behaviour, when no --layout
   option was specified, can be achieved using --layout none.
-- Corrected some language flaws in the docmentation. Thanks to Martin Collins.
+- Corrected some language flaws in the documentation. Thanks to Martin Collins.
 - Renamed Readme.txt and License.txt to more common README and LICENSE.
 - Fixed bug #11294: leading zeros in width/height values of pnm-files no longer
   cause problems.
