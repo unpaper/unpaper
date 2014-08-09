@@ -25,10 +25,6 @@ static inline double degreesToRadians(double d) {
     return d * M_PI / 180.0;
 }
 
-static inline double radiansToDegrees(double r) {
-    return r * 180.0 / M_PI;
-}
-
 static inline void limit(int* i, int max) {
     if (*i > max) {
         *i = max;

@@ -24,7 +24,7 @@
 
 /* --- deskewing ---------------------------------------------------------- */
 
-double detectRotation(int deskewScanEdges, double deskewScanRange, double deskewScanStep, int deskewScanSize, float deskewScanDepth, float deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image);
+double detectRotation(int deskewScanEdges, double deskewScanRange, double deskewScanStep, int deskewScanSize, float deskewScanDepth, double deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image);
 
 void rotate(const double radians, struct IMAGE* source, struct IMAGE* target);
 

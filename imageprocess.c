@@ -163,7 +163,7 @@ static double detectEdgeRotation(double rangeRad, double stepRad, int deskewScan
             maxPeak = peak;
         }
     }
-    return radiansToDegrees(detectedRotation);
+    return detectedRotation;
 }
 
 
@@ -172,7 +172,7 @@ static double detectEdgeRotation(double rangeRad, double stepRad, int deskewScan
  * Angles between -deskewScanRange and +deskewScanRange are scanned, at either the
  * horizontal or vertical edges of the area specified by left, top, right, bottom.
  */
-double detectRotation(int deskewScanEdges, double deskewScanRange, double deskewScanStep, int deskewScanSize, float deskewScanDepth, float deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image) {
+double detectRotation(int deskewScanEdges, double deskewScanRange, double deskewScanStep, int deskewScanSize, float deskewScanDepth, double deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image) {
     double rotation[4];
     int count = 0;
     double total;
