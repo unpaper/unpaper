@@ -502,7 +502,6 @@ int main(int argc, char* argv[]) {
             { "insert-blank",               required_argument, NULL, 0xc3 },
             { "replace-blank",              required_argument, NULL, 0xc4 },
             { "test-only",                  no_argument,       NULL,  'T' },
-            { "no-qpixels",                 no_argument,       NULL, 0xc5 },
             { "no-multi-pages",             no_argument,       NULL, 0xc6 },
             { "dpi",                        required_argument, NULL, 0xc7 },
             { "type",                       required_argument, NULL,  't' },
@@ -1846,7 +1845,6 @@ int main(int argc, char* argv[]) {
 
                     // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
 
-                    // for rotation detection, original buffer is used (not qpixels)
                     saveDebug("./_before-deskew-detect.pnm", &originalSheet);
                     rotation = - detectRotation(deskewScanEdges, deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, deskewScanDeviation, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
                     saveDebug("./_after-deskew-detect.pnm", &originalSheet);

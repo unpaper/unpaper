@@ -28,10 +28,6 @@ double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScan
 
 void rotate(const double radians, struct IMAGE* source, struct IMAGE* target);
 
-void convertToQPixels(struct IMAGE* image, struct IMAGE* qpixelImage);
-
-void convertFromQPixels(struct IMAGE* qpixelImage, struct IMAGE* image);
-
 
 /* --- stretching / resizing / shifting ------------------------------------ */
 

@@ -1589,18 +1589,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
           <varlistentry>
             <term>
-              <option>--no-qpixels</option>
-            </term>
-
-            <listitem>
-              <para>
-                Ignored for backwards compatibility.
-              </para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term>
               <option>--no-multi-pages</option>
             </term>
 
