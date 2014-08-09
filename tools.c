@@ -103,6 +103,13 @@ static void getPixelComponents(struct IMAGE *image, int x, int y, int *r, int *g
         else
             *r = *g = *b = WHITE;
         break;
+    case AV_PIX_FMT_MONOBLACK:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
+        if ( *pix & (128 >> (x % 8)) )
+            *r = *g = *b = WHITE;
+        else
+            *r = *g = *b = BLACK;
+        break;
     default:
         errOutput("unknown pixel format.");
     }
@@ -191,6 +198,16 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
         if ( pixel == BLACK24 ) {
             *pix = *pix | (128 >> (x % 8));
         } else if ( pixel == WHITE24 ) {
+            *pix = *pix & ~(128 >> (x % 8));
+        } else {
+            errOutput("unable to set non-b/w color for monochrome bitmaps.");
+        }
+        break;
+    case AV_PIX_FMT_MONOBLACK:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
+        if ( pixel == WHITE24 ) {
+            *pix = *pix | (128 >> (x % 8));
+        } else if ( pixel == BLACK24 ) {
             *pix = *pix & ~(128 >> (x % 8));
         } else {
             errOutput("unable to set non-b/w color for monochrome bitmaps.");

@@ -39,8 +39,7 @@
  * @param type returns the type of the loaded image
  */
 void loadImage(const char *filename, struct IMAGE* image) {
-    uint8_t *src, *dst;
-    int x, y, ret, got_frame = 0;
+    int ret, got_frame = 0;
     AVFormatContext *s = NULL;
     AVCodecContext *avctx = NULL;
     AVCodec *codec;
@@ -93,32 +92,10 @@ void loadImage(const char *filename, struct IMAGE* image) {
     }
 
     switch(frame->format) {
-    case AV_PIX_FMT_MONOBLACK:
-	image->frame = av_frame_alloc();
-	image->frame->width = frame->width;
-	image->frame->height = frame->height;
-	image->frame->format = AV_PIX_FMT_MONOWHITE;
-
-	ret = av_frame_get_buffer(image->frame, 8);
-	if (ret < 0) {
-	    av_strerror(ret, errbuff, sizeof(errbuff));
-	    errOutput("unable to open file %s: %s", filename, errbuff);
-	}
-
-	src = frame->data[0];
-	dst = image->frame->data[0];
-	for (y = 0; y < frame->height; y++) {
-	    for (x = 0; x < frame->linesize[0]; x++) {
-                dst[x] = ~src[x];
-	    }
-	    src += frame->linesize[0];
-	    dst += image->frame->linesize[0];
-	}
-	break;
-
     case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
     case AV_PIX_FMT_GRAY8:
     case AV_PIX_FMT_RGB24:
+    case AV_PIX_FMT_MONOBLACK:
     case AV_PIX_FMT_MONOWHITE:
 	image->frame = frame;
 	break;
@@ -171,7 +148,9 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blac
         outputPixFmt = AV_PIX_FMT_GRAY8;
         output_codec = AV_CODEC_ID_PGM;
         break;
+    case AV_PIX_FMT_MONOBLACK:
     case AV_PIX_FMT_MONOWHITE:
+        outputPixFmt = AV_PIX_FMT_MONOWHITE;
         output_codec = AV_CODEC_ID_PBM;
         break;
     }
