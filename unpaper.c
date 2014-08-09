@@ -1272,16 +1272,12 @@ int main(int argc, char* argv[]) {
                                 
                 }
                 if (page.frame != NULL) {
-                    if (verbose >= VERBOSE_DEBUG_SAVE) {
-                        saveDebug("_page%d.pnm", inputNr-inputCount+j, &page);
-                        saveDebug("_before_center_page%d.pnm", inputNr-inputCount+j, &sheet);
-                    }
+                    saveDebug("_page%d.pnm", inputNr-inputCount+j, &page);
+                    saveDebug("_before_center_page%d.pnm", inputNr-inputCount+j, &sheet);
                                 
                     centerImage(&page, (w * j / inputCount), 0, (w / inputCount), h, &sheet);
                                 
-                    if (verbose >= VERBOSE_DEBUG_SAVE) {
-                        saveDebug("_after_center_page%d.pnm", inputNr-inputCount+j, &sheet);
-                    }
+                    saveDebug("_after_center_page%d.pnm", inputNr-inputCount+j, &sheet);
                 }
             }
                 
@@ -1606,9 +1602,9 @@ int main(int argc, char* argv[]) {
                 } else {
                     h = sheet.frame->height;
                 }
-                saveDebug("./_before-stretch%d.pnm", nr, &sheet);
+                saveDebug("_before-stretch%d.pnm", nr, &sheet);
                 stretch(w, h, &sheet);
-                saveDebug("./_after-stretch%d.pnm", nr, &sheet);
+                saveDebug("_after-stretch%d.pnm", nr, &sheet);
             }
 
             // zoom
@@ -1630,9 +1626,9 @@ int main(int argc, char* argv[]) {
                 } else {
                     h = sheet.frame->height;
                 }
-                saveDebug("./_before-resize%d.pnm", nr, &sheet);
+                saveDebug("_before-resize%d.pnm", nr, &sheet);
                 resize(w, h, &sheet);
-                saveDebug("./_after-resize%d.pnm", nr, &sheet);
+                saveDebug("_after-resize%d.pnm", nr, &sheet);
             }
                     
                     
@@ -1740,9 +1736,9 @@ int main(int argc, char* argv[]) {
 
             // black area filter
             if (!isExcluded(nr, noBlackfilterMultiIndex, noBlackfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                saveDebug("./_before-blackfilter%d.pnm", nr, &sheet);
+                saveDebug("_before-blackfilter%d.pnm", nr, &sheet);
                 blackfilter(blackfilterScanDirections, blackfilterScanSize, blackfilterScanDepth, blackfilterScanStep, blackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, blackThreshold, &sheet);
-                saveDebug("./_after-blackfilter%d.pnm", nr, &sheet);
+                saveDebug("_after-blackfilter%d.pnm", nr, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ blackfilter DISABLED for sheet %d\n", nr);
@@ -1754,9 +1750,9 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("noise-filter ...");
                 }
-                saveDebug("./_before-noisefilter%d.pnm", nr, &sheet);
+                saveDebug("_before-noisefilter%d.pnm", nr, &sheet);
                 filterResult = noisefilter(noisefilterIntensity, whiteThreshold, &sheet);
-                saveDebug("./_after-noisefilter%d.pnm", nr, &sheet);
+                saveDebug("_after-noisefilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d clusters.\n", filterResult);
                 }
@@ -1771,9 +1767,9 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("blur-filter...");
                 }
-                saveDebug("./_before-blurfilter%d.pnm", nr, &sheet);
+                saveDebug("_before-blurfilter%d.pnm", nr, &sheet);
                 filterResult = blurfilter(blurfilterScanSize, blurfilterScanStep, blurfilterIntensity, whiteThreshold, &sheet);
-                saveDebug("./_after-blurfilter%d.pnm", nr, &sheet);
+                saveDebug("_after-blurfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
                 }
@@ -1794,9 +1790,9 @@ int main(int argc, char* argv[]) {
 
             // permamently apply masks
             if (maskCount > 0) {
-                saveDebug("./_before-masking%d.pnm", nr, &sheet);
+                saveDebug("_before-masking%d.pnm", nr, &sheet);
                 applyMasks(mask, maskCount, maskColor, &sheet);
-                saveDebug("./_after-masking%d.pnm", nr, &sheet);
+                saveDebug("_after-masking%d.pnm", nr, &sheet);
             }
 
             // gray filter
@@ -1804,9 +1800,9 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("gray-filter...");
                 }
-                saveDebug("./_before-grayfilter%d.pnm", nr, &sheet);
+                saveDebug("_before-grayfilter%d.pnm", nr, &sheet);
                 filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, grayfilterThreshold, blackThreshold, &sheet);
-                saveDebug("./_after-grayfilter%d.pnm", nr, &sheet);
+                saveDebug("_after-grayfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
                 }
@@ -1820,7 +1816,7 @@ int main(int argc, char* argv[]) {
             if ((!isExcluded(nr, noDeskewMultiIndex, noDeskewMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount))) {
                 int i;
 
-                saveDebug("./_before-deskew%d.pnm", nr, &sheet);
+                saveDebug("_before-deskew%d.pnm", nr, &sheet);
                 originalSheet = sheet; // copy struct entries ('clone')
 
                 // detect masks again, we may get more precise results now after first masking and grayfilter
@@ -1837,9 +1833,9 @@ int main(int argc, char* argv[]) {
 
                     // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
 
-                    saveDebug("./_before-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
+                    saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
                     rotation = - detectRotation(deskewScanEdges, deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, deskewScanDeviation, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
-                    saveDebug("./_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
+                    saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
 
                     if (rotation != 0.0) {
                         if (verbose>=VERBOSE_NORMAL) {
@@ -1868,7 +1864,7 @@ int main(int argc, char* argv[]) {
                     // }
                 }
 
-                saveDebug("./_after-deskew%d.pnm", nr, &sheet);
+                saveDebug("_after-deskew%d.pnm", nr, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ deskewing DISABLED for sheet %d\n", nr);
@@ -1888,12 +1884,12 @@ int main(int argc, char* argv[]) {
                     }
                 }
 
-                saveDebug("./_before-centering%d.pnm", nr, &sheet);
+                saveDebug("_before-centering%d.pnm", nr, &sheet);
                 // center masks on the sheet, according to their page position
                 for (i = 0; i < maskCount; i++) {
                     centerMask(point[i][X], point[i][Y], mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &sheet);
                 }
-                saveDebug("./_after-centering%d.pnm", nr, &sheet);
+                saveDebug("_after-centering%d.pnm", nr, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ auto-centering DISABLED for sheet %d\n", nr);
@@ -1921,7 +1917,7 @@ int main(int argc, char* argv[]) {
             // border-detection
             if (!isExcluded(nr, noBorderScanMultiIndex, noBorderScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                 int i;
-                saveDebug("./_before-border%d.pnm", nr, &sheet);
+                saveDebug("_before-border%d.pnm", nr, &sheet);
                 for (i = 0; i < outsideBorderscanMaskCount; i++) {
                     detectBorder(autoborder[i], borderScanDirections, borderScanSize, borderScanStep, borderScanThreshold, blackThreshold, outsideBorderscanMask[i], &sheet);
                     borderToMask(autoborder[i], autoborderMask[i], &sheet);
@@ -1937,7 +1933,7 @@ int main(int argc, char* argv[]) {
                         }
                     }
                 }
-                saveDebug("./_after-border%d.pnm", nr, &sheet);
+                saveDebug("_after-border%d.pnm", nr, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ border-scan DISABLED for sheet %d\n", nr);
@@ -2033,7 +2029,7 @@ int main(int argc, char* argv[]) {
                     printf("writing output.\n");
                 }
                 // write files
-                saveDebug("./_before-save%d.pnm", nr, &sheet);
+                saveDebug("_before-save%d.pnm", nr, &sheet);
 
                 if ( outputPixFmt == -1 ) {
                     outputPixFmt = sheet.frame->format;
