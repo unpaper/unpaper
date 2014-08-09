@@ -1639,8 +1639,41 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Output file type (and bit depth). (default: as input)
+                Output file type (and bit depth). If not specified, the one with the same, or
+                closest, pixel format as the original input files will be used.
               </para>
+
+              <variablelist>
+                <varlistentry>
+                  <term><option>pbm</option></term>
+
+                  <listitem>
+                    <para>
+                      Portable Bit Map, monochrome raw image.
+                    </para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><option>pgm</option></term>
+
+                  <listitem>
+                    <para>
+                      Portable Grayscale Map, 8-bit per pixel grayscale raw image.
+                    </para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><option>ppm</option></term>
+
+                  <listitem>
+                    <para>
+                      Portable Pixel Map, 24-bit per pixel RGB raw image.
+                    </para>
+                  </listitem>
+                </varlistentry>
+              </variablelist>
             </listitem>
           </varlistentry>
 

@@ -1,8 +1,11 @@
 Release 6, 2014-xx-yy
- - Use libav for input file parsing, rather than custom code. This
-   adds support for many different input file formats outside of
-   PPM/PBM/PGM, as long as libav can reconduct them to a pixel format
-   that is implemented during parsing.
+ - Use libav for both input and output of files, rather than custom
+   code. This adds support for many different input file formats
+   outside of PPM/PBM/PGM, as long as libav can reconduct them to a
+   pixel format that is implemented. Currently that includes most
+   versions of PNM, PNG and some variants of TIFF.
+ - PGM and PPM files with less-than-maximum pixel depth are now fully
+   supported. Previously they would have produced mostly white pages.
  - Tests are now executed against the original PNG files rather than
    through converted PGM/PPM, this drops the netpbm dependency on the
    tests.
