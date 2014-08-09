@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
 #include <getopt.h>
 
 #include <sys/stat.h>
@@ -207,7 +206,6 @@ int main(int argc, char* argv[]) {
     int replaceBlank[MAX_MULTI_INDEX];
     int replaceBlankCount = 0;
     bool overwrite = false;
-    bool showTime = false;
     int dpi = 300;
 
     // --- local variables ---
@@ -232,11 +230,6 @@ int main(int argc, char* argv[]) {
     struct IMAGE rectTarget;
     int inputNr;
     int outputNr;
-    clock_t startTime = 0;
-    clock_t endTime = 0;
-    clock_t time;
-    unsigned long int totalTime = 0;
-    int totalCount = 0;
     int option_index = 0;
     int outputPixFmt = -1;
 
@@ -388,7 +381,6 @@ int main(int argc, char* argv[]) {
             { "type",                       required_argument, NULL,  't' },
             { "quiet",                      no_argument,       NULL,  'q' },
             { "overwrite",                  no_argument,       NULL, 0xc8 },
-            { "time",                       no_argument,       NULL, 0xc9 },
             { "verbose",                    no_argument,       NULL,  'v' },
             { "vv",                         no_argument,       NULL, 0xca },
             { "debug",                      no_argument,       NULL, 0xcb },
@@ -951,10 +943,6 @@ int main(int argc, char* argv[]) {
             overwrite = true;
             break;
 
-        case 0xc9:
-            showTime = true;
-            break;
-
         case 'v':
             verbose = VERBOSE_NORMAL;
             break;
@@ -987,8 +975,6 @@ int main(int argc, char* argv[]) {
             break;
         }
     }
-
-    showTime |= (verbose >= VERBOSE_DEBUG); // always show processing time in verbose-debug mode
 
     /* make sure we have at least two arguments after the options, as
        that's the minimum amount of parameters we need (one input and
@@ -1182,10 +1168,6 @@ int main(int argc, char* argv[]) {
 
             previousWidth = w;
             previousHeight = h;
-
-            if (showTime) {
-                startTime = clock();
-            }
 
             // pre-mirroring
             if (preMirror != 0) {
@@ -1885,10 +1867,6 @@ int main(int argc, char* argv[]) {
                 resize(w, h, &sheet);
             }
 
-            if (showTime) {
-                endTime = clock();
-            }
-
             // --- write output file ---
 
             // write split pages output
@@ -1920,17 +1898,6 @@ int main(int argc, char* argv[]) {
 
                 freeImage(&sheet);
                 sheet.frame = NULL;
-
-                if (showTime) {
-                    if (startTime > endTime) { // clock overflow
-                        endTime -= startTime; // "re-underflow" value again
-                        startTime = 0;
-                    }
-                    time = endTime - startTime;
-                    totalTime += time;
-                    totalCount++;
-                    printf("- processing time:  %f s\n", (float)time/CLOCKS_PER_SEC);
-                }
             }
         }
 
@@ -1944,8 +1911,5 @@ int main(int argc, char* argv[]) {
             optind -= 2;
     }
 
-    if ( showTime && (totalCount > 1) ) {
-       printf("- total processing time of all %d sheets:  %f s  (average:  %f s)\n", totalCount, (double)totalTime/CLOCKS_PER_SEC, (double)totalTime/totalCount/CLOCKS_PER_SEC);
-    }
     return 0;
 }
