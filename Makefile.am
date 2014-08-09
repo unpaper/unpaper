@@ -40,10 +40,10 @@ TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
 
 XFAIL_TESTS = tests/runtestG3.sh
 
-EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png	\
-             tests/imgsrc003.png tests/imgsrc004.png		\
-             tests/imgsrc005.png tests/imgsrcE001.png		\
-             tests/imgsrcE002.png tests/imgsrcE003.png
+EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png		\
+             tests/imgsrc003.png tests/imgsrc004.png			\
+             tests/imgsrc005.png tests/imgsrcE001.png			\
+             tests/imgsrcE002.png tests/imgsrcE003.png .dir-locals.el
 
 CLEANFILES = $(check_DATA) tests/.dirstamp tests/resultsA1.pbm	\
 	      tests/resultsB1.ppm   tests/resultsB2.ppm		\

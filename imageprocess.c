@@ -70,7 +70,7 @@ static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScan
     int maxBlacknessAbs = 255 * deskewScanSize * deskewScanDepth;
     int maxDepth;
     int accumulatedBlackness = 0;
-    
+
     if (shiftY==0) { // horizontal detection
         if (deskewScanSize == -1) {
             deskewScanSize = height;
@@ -103,7 +103,7 @@ static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScan
         stepX = 1.0;
         stepY = -m; // (line goes upwards for negative degrees)
     }
-    
+
     // fill buffer with coordinates for rotated line in first unshifted position
     for (int lineStep = 0; lineStep < deskewScanSize; lineStep++) {
         x[lineStep] = (int)X;
@@ -111,7 +111,7 @@ static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScan
         X += stepX;
         Y += stepY;
     }
-    
+
     // now scan for edge, modify coordinates in buffer to shift line into search direction (towards the middle point of the area)
     // stop either when detectMaxDepth steps are shifted, or when diff falls back to less than detectThreshold*maxDiff
     for (dep = 0; (accumulatedBlackness < maxBlacknessAbs) && (dep < maxDepth) ; dep++) {
@@ -169,7 +169,7 @@ static double detectEdgeRotation(float deskewScanRange, float deskewScanStep, in
 
 
 /**
- * Detect rotation of a whole area. 
+ * Detect rotation of a whole area.
  * Angles between -deskewScanRange and +deskewScanRange are scanned, at either the
  * horizontal or vertical edges of the area specified by left, top, right, bottom.
  */
@@ -179,7 +179,7 @@ double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScan
     double total;
     double average;
     double deviation;
-    
+
     if ((deskewScanEdges & 1<<LEFT) != 0) {
         // left
         rotation[count] = detectEdgeRotation(deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, 1, 0, left, top, right, bottom, image);
@@ -212,7 +212,7 @@ double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScan
         }
         count++;
     }
-    
+
     total = 0.0;
     for (int i = 0; i < count; i++) {
         total += rotation[i];
@@ -241,10 +241,10 @@ double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScan
  */
 static int nearest(float x, float y, struct IMAGE* source)
 {
-	// Round to nearest location.
-	int x1 = (int) roundf(x);
-	int y1 = (int) roundf(y);
-	return getPixel(x1, y1, source);
+        // Round to nearest location.
+        int x1 = (int) roundf(x);
+        int y1 = (int) roundf(y);
+        return getPixel(x1, y1, source);
 }
 
 /**
@@ -404,7 +404,7 @@ void stretch(int w, int h, struct IMAGE* image) {
 
     // allocate new buffer's memory
     initImage(&newimage, w, h, image->frame->format, WHITE24);
-    
+
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
             // calculate average pixel value in source matrix
@@ -428,7 +428,7 @@ void resize(int w, int h, struct IMAGE* image) {
     int hh;
     float wRat = (float)w / image->frame->width;
     float hRat = (float)h / image->frame->height;
-    
+
     if (verbose >= VERBOSE_NORMAL) {
         printf("resizing %dx%d -> %dx%d\n", image->frame->width, image->frame->height, w, h);
     }
@@ -461,7 +461,7 @@ void shift(int shiftX, int shiftY, struct IMAGE* image) {
 
     // allocate new buffer's memory
     initImage(&newimage, image->frame->width, image->frame->height, image->frame->format, image->background);
-    
+
     for (int y = 0; y < image->frame->height; y++) {
         for (int x = 0; x < image->frame->width; x++) {
             const int pixel = getPixel(x, y, image);
@@ -485,7 +485,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
     int top;
     int right;
     int bottom;
-    
+
     const int half = maskScanSize / 2;
     int total = 0;
     int count = 0;
@@ -509,7 +509,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
         right = startX + halfDepth;
         bottom = startY + half;
     }
-    
+
     while (true) { // !
         const int blackness = 255 - brightnessRect(left, top, right, bottom, image);
         total += blackness;
@@ -537,7 +537,7 @@ static bool detectMask(int startX, int startY, int maskScanDirections, int maskS
     int height;
     int half[DIRECTIONS_COUNT];
     bool success;
-    
+
     half[HORIZONTAL] = maskScanSize[HORIZONTAL] / 2;
     half[VERTICAL] = maskScanSize[VERTICAL] / 2;
     if ((maskScanDirections & 1<<HORIZONTAL) != 0) {
@@ -554,7 +554,7 @@ static bool detectMask(int startX, int startY, int maskScanDirections, int maskS
         *top = 0;
         *bottom = image->frame->height - 1;
     }
-    
+
     // if below minimum or above maximum, set to maximum
     width = *right - *left;
     height = *bottom - *top;
@@ -587,7 +587,7 @@ int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], bool maskValid[MAX_MASKS], int
     int right;
     int bottom;
     int maskCount;
-    
+
     maskCount = 0;
     if (maskScanDirections != 0) {
          for (int i = 0; i < pointCount; i++) {
@@ -709,7 +709,7 @@ void mirror(int directions, struct IMAGE* image) {
  */
 void flipRotate(int direction, struct IMAGE* image) {
     struct IMAGE newimage;
-    
+
     initImage(&newimage, image->frame->height, image->frame->width, image->frame->format, WHITE); // exchanged width and height
     for (int y = 0; y < image->frame->height; y++) {
         const int xx = ((direction > 0) ? image->frame->height - 1 : 0) - y * direction;
@@ -818,7 +818,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
 
 /**
  * Filters out solidly black areas, as appearing on bad photocopies.
- * A virtual bar of width 'size' and height 'depth' is horizontally moved 
+ * A virtual bar of width 'size' and height 'depth' is horizontally moved
  * above the middle of the sheet (or the full sheet, if depth ==-1).
  */
 void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], float blackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, float blackThreshold, struct IMAGE* image) {
@@ -843,7 +843,7 @@ int noisefilter(int intensity, float whiteThreshold, struct IMAGE* image) {
     int count;
     int pixel;
     int neighbors;
-    
+
     whiteMin = (int)(WHITE * whiteThreshold);
     count = 0;
     for (int y = 0; y < image->frame->height; y++) {
@@ -889,9 +889,9 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
     int* nextCounts = calloc(blocksPerRow + 2, sizeof(int));
 
     for (int left = 0, block = 1; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
-	curCounts[block] = countPixelsRect(left, top, right, bottom, 0, whiteMin, false, image);
-	block++;
-	right += blurfilterScanSize[HORIZONTAL];
+        curCounts[block] = countPixelsRect(left, top, right, bottom, 0, whiteMin, false, image);
+        block++;
+        right += blurfilterScanSize[HORIZONTAL];
     }
     curCounts[0] = total;
     curCounts[blocksPerRow] = total;
@@ -900,50 +900,50 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
 
     // Loop through all blocks. For a block calculate the number of dark pixels in this block, the number of dark pixels in the block in the top-left corner and similarly for the block in the top-right, bottom-left and bottom-right corner. Take the maximum of these values. Clear the block if this number is not large enough compared to the total number of pixels in a block.
     for (int top = 0; top <= maxTop; top += blurfilterScanSize[HORIZONTAL]) {
-	right = blurfilterScanSize[HORIZONTAL] - 1;
-	nextCounts[0] = countPixelsRect(0, top+blurfilterScanStep[VERTICAL], right, bottom+blurfilterScanSize[VERTICAL], 0, whiteMin, false, image);
+        right = blurfilterScanSize[HORIZONTAL] - 1;
+        nextCounts[0] = countPixelsRect(0, top+blurfilterScanStep[VERTICAL], right, bottom+blurfilterScanSize[VERTICAL], 0, whiteMin, false, image);
 
-	for (int left = 0, block = 1; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
-	    // current block
-	    int count = curCounts[block];
-	    int max = count;
-	    // top left
-	    count = prevCounts[block-1];
-	    if (count > max) {
-		max = count;
-	    }
-	    // top right
-	    count = prevCounts[block+1];
-	    if (count > max) {
-		max = count;
-	    }
-	    // bottom left
-	    count = nextCounts[block-1];
-	    if (count > max) {
-		max = count;
-	    }
-	    // bottom right (has still to be calculated)
-	    nextCounts[block+1] = countPixelsRect(left+blurfilterScanSize[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanSize[HORIZONTAL], bottom+blurfilterScanSize[VERTICAL], 0, whiteMin, false, image);
-	    if (count > max) {
-		max = count;
-	    }
-	    if ((((float)max)/total) <= blurfilterIntensity) { // Not enough dark pixels
-		clearRect(left, top, right, bottom, image, WHITE24);
-		result += curCounts[block];
-		curCounts[block] = total; // Update information
-	    }
+        for (int left = 0, block = 1; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
+            // current block
+            int count = curCounts[block];
+            int max = count;
+            // top left
+            count = prevCounts[block-1];
+            if (count > max) {
+                max = count;
+            }
+            // top right
+            count = prevCounts[block+1];
+            if (count > max) {
+                max = count;
+            }
+            // bottom left
+            count = nextCounts[block-1];
+            if (count > max) {
+                max = count;
+            }
+            // bottom right (has still to be calculated)
+            nextCounts[block+1] = countPixelsRect(left+blurfilterScanSize[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanSize[HORIZONTAL], bottom+blurfilterScanSize[VERTICAL], 0, whiteMin, false, image);
+            if (count > max) {
+                max = count;
+            }
+            if ((((float)max)/total) <= blurfilterIntensity) { // Not enough dark pixels
+                clearRect(left, top, right, bottom, image, WHITE24);
+                result += curCounts[block];
+                curCounts[block] = total; // Update information
+            }
 
-	    right += blurfilterScanSize[HORIZONTAL];
-	    block++;
-	}
+            right += blurfilterScanSize[HORIZONTAL];
+            block++;
+        }
 
-	bottom += blurfilterScanSize[VERTICAL];
-	//Switch Buffers
-	const int* tmpCounts;
-	tmpCounts = prevCounts;
-	prevCounts = curCounts;
-	curCounts = nextCounts;
-	nextCounts = (int*)tmpCounts;
+        bottom += blurfilterScanSize[VERTICAL];
+        //Switch Buffers
+        const int* tmpCounts;
+        tmpCounts = prevCounts;
+        prevCounts = curCounts;
+        curCounts = nextCounts;
+        nextCounts = (int*)tmpCounts;
     }
     free(prevCounts);
     free(curCounts);
@@ -1001,7 +1001,7 @@ int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[
  */
 void centerMask(int centerX, int centerY, int left, int top, int right, int bottom, struct IMAGE* image) {
     struct IMAGE newimage;
-    
+
     const int width = right - left + 1;
     const int height = bottom - top + 1;
     const int targetX = centerX - width/2;
@@ -1030,7 +1030,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, i
     struct IMAGE newimage;
     int targetX;
     int targetY;
-    
+
     const int width = mask[RIGHT] - mask[LEFT] + 1;
     const int height = mask[BOTTOM] - mask[TOP] + 1;
     if (direction & 1<<LEFT) {
@@ -1071,7 +1071,7 @@ static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, 
     int max;
     int cnt;
     int result;
-    
+
     if (stepY == 0) { // horizontal detection
         if (stepX > 0) {
             left = outsideMask[LEFT];
@@ -1120,12 +1120,12 @@ static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, 
  */
 void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], float blackThreshold, int outsideMask[EDGES_COUNT], struct IMAGE* image) {
     int blackThresholdAbs;
-    
+
     border[LEFT] = outsideMask[LEFT];
     border[TOP] = outsideMask[TOP];
     border[RIGHT] = image->frame->width - outsideMask[RIGHT];
     border[BOTTOM] = image->frame->height - outsideMask[BOTTOM];
-    
+
     blackThresholdAbs = (int)(WHITE * (1.0 - blackThreshold));
     if (borderScanDirections & 1<<HORIZONTAL) {
         border[LEFT] += detectBorderEdge(outsideMask, borderScanStep[HORIZONTAL], 0, borderScanSize[HORIZONTAL], borderScanThreshold[HORIZONTAL], blackThresholdAbs, image);
@@ -1161,7 +1161,7 @@ void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], struct IMAGE* 
  */
 void applyBorder(int border[EDGES_COUNT], int borderColor, struct IMAGE* image) {
     int mask[EDGES_COUNT];
-    
+
     if (border[LEFT]!=0 || border[TOP]!=0 || border[RIGHT]!=0 || border[BOTTOM]!=0) {
         borderToMask(border, mask, image);
         if (verbose >= VERBOSE_NORMAL) {

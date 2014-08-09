@@ -38,13 +38,13 @@
 #include "tools.h"
 #include "file.h"
 #include "parse.h"
- 
+
 #define WELCOME                                                         \
     PACKAGE_STRING "\n"							\
     "License GPLv2: GNU GPL version 2.\n"				\
     "This is free software: you are free to change and redistribute it.\n" \
     "There is NO WARRANTY, to the extent permitted by law.\n"
-              
+
 #define USAGE                                                           \
     WELCOME "\n"                                                        \
     "Usage: unpaper [options] <input-file(s)> <output-file(s)>\n"	\
@@ -1025,7 +1025,7 @@ int main(int argc, char* argv[]) {
         // --- begin processing                                            ---
         // -------------------------------------------------------------------
 
-	bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
+        bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
         for (int i = 0; i < inputCount; i++) {
             bool ins = isInMultiIndex(inputNr, insertBlank, insertBlankCount);
             bool repl = isInMultiIndex(inputNr, replaceBlank, replaceBlankCount);
@@ -1050,8 +1050,8 @@ int main(int argc, char* argv[]) {
             }
 
             if ( inputFileNames[i] != NULL ) {
-		struct stat statBuf;
-		if ( stat(inputFileNames[i], &statBuf) != 0 ) {
+                struct stat statBuf;
+                if ( stat(inputFileNames[i], &statBuf) != 0 ) {
                     if ( endSheet == -1 ) {
                         endSheet = nr-1;
                         goto sheet_end;
@@ -1060,12 +1060,12 @@ int main(int argc, char* argv[]) {
                                   inputFileNames[i]);
                     }
                 }
-	    }
+            }
         }
-	if ( inputWildcard )
-	    optind++;
+        if ( inputWildcard )
+            optind++;
 
-	bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
+        bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
         for(int i = 0; i < outputCount; i++) {
             if ( outputWildcard ) {
                 sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
@@ -1085,9 +1085,9 @@ int main(int argc, char* argv[]) {
                 }
             }
         }
-	if ( outputWildcard )
-	    optind++;
-        
+        if ( outputWildcard )
+            optind++;
+
         // ---------------------------------------------------------------
         // --- process single sheet                                    ---
         // ---------------------------------------------------------------
@@ -1153,18 +1153,18 @@ int main(int argc, char* argv[]) {
                 // allocate sheet-buffer if not done yet
                 if ((sheet.frame == NULL) && (w != -1) && (h != -1)) {
                     initImage(&sheet, w, h, AV_PIX_FMT_RGB24, sheetBackground);
-                                
+
                 }
                 if (page.frame != NULL) {
                     saveDebug("_page%d.pnm", inputNr-inputCount+j, &page);
                     saveDebug("_before_center_page%d.pnm", inputNr-inputCount+j, &sheet);
-                                
+
                     centerImage(&page, (w * j / inputCount), 0, (w / inputCount), h, &sheet);
-                                
+
                     saveDebug("_after_center_page%d.pnm", inputNr-inputCount+j, &sheet);
                 }
             }
-                
+
             // the only case that buffer is not yet initialized is if all blank pages have been inserted
             if (sheet.frame == NULL) {
                 // last chance: try to get previous (unstretched/not zoomed) sheet size
@@ -1216,9 +1216,9 @@ int main(int argc, char* argv[]) {
             // --------------------------------------------------------------
             // --- verbose parameter output,                              ---
             // --------------------------------------------------------------
-                    
+
             // parameters and size are known now
-                    
+
             if (verbose >= VERBOSE_MORE) {
                 switch(layout) {
                 case LAYOUT_SINGLE:
@@ -1504,10 +1504,10 @@ int main(int argc, char* argv[]) {
                 resize(w, h, &sheet);
                 saveDebug("_after-resize%d.pnm", nr, &sheet);
             }
-                    
-                    
+
+
             // handle sheet layout
-                    
+
             // LAYOUT_SINGLE
             if (layout == LAYOUT_SINGLE) {
                 // set middle of sheet as single starting point for mask detection
@@ -1597,7 +1597,7 @@ int main(int argc, char* argv[]) {
                 maskScanMaximum[HEIGHT] = sheet.frame->height;
             }
 
-                    
+
             // pre-wipe
             if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                 applyWipes(preWipe, preWipeCount, maskColor, &sheet);
@@ -1862,7 +1862,7 @@ int main(int argc, char* argv[]) {
                 }
                 stretch(w, h, &sheet);
             }
-                    
+
             // post-zoom
             if (postZoomFactor != 1.0) {
                 w = sheet.frame->width * postZoomFactor;
@@ -1914,7 +1914,7 @@ int main(int argc, char* argv[]) {
                     }
 
                     saveImage(outputFileNames[j], &page, outputPixFmt, blackThreshold);
-                            
+
                     freeImage(&page);
                 }
 
@@ -1935,13 +1935,13 @@ int main(int argc, char* argv[]) {
         }
 
     sheet_end:
-	/* if we're not given an input wildcard, and we finished the
-	 * arguments, we don't want to keep looping.
-	 */
-	if ( optind >= argc && !inputWildcard )
-	    break;
-	else if ( inputWildcard && outputWildcard )
-	    optind -= 2;
+        /* if we're not given an input wildcard, and we finished the
+         * arguments, we don't want to keep looping.
+         */
+        if ( optind >= argc && !inputWildcard )
+            break;
+        else if ( inputWildcard && outputWildcard )
+            optind -= 2;
     }
 
     if ( showTime && (totalCount > 1) ) {

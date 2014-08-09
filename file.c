@@ -49,46 +49,46 @@ void loadImage(const char *filename, struct IMAGE* image) {
 
     ret = avformat_open_input(&s, filename, NULL, NULL);
     if (ret < 0) {
-	av_strerror(ret, errbuff, sizeof(errbuff));
-	errOutput("unable to open file %s: %s", filename, errbuff);
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open file %s: %s", filename, errbuff);
     }
 
     avformat_find_stream_info(s, NULL);
 
     if (verbose >= VERBOSE_MORE)
-	av_dump_format(s, 0, filename, 0);
+        av_dump_format(s, 0, filename, 0);
 
     if (s->nb_streams < 1)
-	errOutput("unable to open file %s: missing streams", filename);
+        errOutput("unable to open file %s: missing streams", filename);
 
     if (s->streams[0]->codec->codec_type != AVMEDIA_TYPE_VIDEO)
-	errOutput("unable to open file %s: wrong stream", filename);
+        errOutput("unable to open file %s: wrong stream", filename);
 
     avctx = s->streams[0]->codec;
 
     codec = avcodec_find_decoder(avctx->codec_id);
     if (!codec)
-	errOutput("unable to open file %s: unsupported format", filename);
+        errOutput("unable to open file %s: unsupported format", filename);
 
     ret = avcodec_open2(avctx, codec, NULL);
     if (ret < 0) {
-	av_strerror(ret, errbuff, sizeof(errbuff));
-	errOutput("unable to open file %s: %s", filename, errbuff);
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open file %s: %s", filename, errbuff);
     }
 
     ret = av_read_frame(s, &pkt);
     if (ret < 0) {
-	av_strerror(ret, errbuff, sizeof(errbuff));
-	errOutput("unable to open file %s: %s", filename, errbuff);
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open file %s: %s", filename, errbuff);
     }
 
     if (pkt.stream_index != 0)
-	errOutput("unable to open file %s: invalid stream.", filename);
+        errOutput("unable to open file %s: invalid stream.", filename);
 
     ret = avcodec_decode_video2(s->streams[0]->codec, frame, &got_frame, &pkt);
     if (ret < 0) {
-	av_strerror(ret, errbuff, sizeof(errbuff));
-	errOutput("unable to open file %s: %s", filename, errbuff);
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open file %s: %s", filename, errbuff);
     }
 
     switch(frame->format) {
@@ -97,11 +97,11 @@ void loadImage(const char *filename, struct IMAGE* image) {
     case AV_PIX_FMT_RGB24:
     case AV_PIX_FMT_MONOBLACK:
     case AV_PIX_FMT_MONOWHITE:
-	image->frame = frame;
-	break;
+        image->frame = frame;
+        break;
 
     default:
-	errOutput("unable to open file %s: unsupported pixel format", filename);
+        errOutput("unable to open file %s: unsupported pixel format", filename);
     }
 }
 
@@ -199,7 +199,7 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blac
     }
 
     if (verbose >= VERBOSE_MORE)
-	av_dump_format(out_ctx, 0, filename, 1);
+        av_dump_format(out_ctx, 0, filename, 1);
 
     if (avio_open(&out_ctx->pb, filename, AVIO_FLAG_WRITE) < 0) {
         errOutput("could not open '%s'", filename);

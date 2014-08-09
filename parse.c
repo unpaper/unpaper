@@ -1,4 +1,4 @@
-/* 
+/*
  * This file is part of Unpaper.
  *
  * Copyright © 2005-2007 Jens Gulden
@@ -82,7 +82,7 @@ static const struct {
 
 /**
  * Parses a parameter string on occurrences of 'vertical', 'horizontal' or both.
- */            
+ */
 int parseDirections(char* s) {
     int dir = 0;
     if (strchr(s, 'h') != 0) { // (there is no 'h' in 'vertical'...)
@@ -100,10 +100,10 @@ int parseDirections(char* s) {
 
 /**
  * Prints whether directions are vertical, horizontal, or both.
- */            
+ */
 void printDirections(int d) {
     bool comma = false;
-    
+
     printf("[");
     if ((d & 1<<VERTICAL) != 0) {
         printf("vertical");
@@ -121,7 +121,7 @@ void printDirections(int d) {
 
 /**
  * Parses a parameter string on occurrences of 'left', 'top', 'right', 'bottom' or combinations.
- */            
+ */
 int parseEdges(char* s) {
     int dir = 0;
     if (strstr(s, "left") != 0) {
@@ -145,10 +145,10 @@ int parseEdges(char* s) {
 
 /**
  * Prints whether edges are left, top, right, bottom or combinations.
- */            
+ */
 void printEdges(int d) {
     bool comma = false;
-    
+
     printf("[");
     if ((d & 1<<LEFT) != 0) {
         printf("left");
@@ -181,7 +181,7 @@ void printEdges(int d) {
 /**
  * Parses either a single integer string, of a pair of two integers seperated
  * by a comma.
- */            
+ */
 void parseInts(char* s, int i[2]) {
     i[0] = -1;
     i[1] = -1;
@@ -211,10 +211,10 @@ static int parseSizeSingle(const char *s, int dpi) {
 }
 
 /**
- * Parses a pair of size-values and returns it in pixels. 
+ * Parses a pair of size-values and returns it in pixels.
  * Values may be suffixed by MEASUREMENTS such as 'cm', 'in', in that case
  * conversion to pixels is perfomed based on the dpi-value.
- */            
+ */
 void parseSize(char* s, int i[2], int dpi) {
     char str[255];
     char* comma;
@@ -230,7 +230,7 @@ void parseSize(char* s, int i[2], int dpi) {
     }
 
     // find comma in size string, if there
-    comma = strchr(s, ',');    
+    comma = strchr(s, ',');
 
     if (comma == NULL) {
         i[0] = i[1] = parseSizeSingle(s, dpi);
@@ -250,7 +250,7 @@ void parseSize(char* s, int i[2], int dpi) {
 
 /**
  * Parses a color. Currently only "black" and "white".
- */            
+ */
 int parseColor(char* s) {
     if ( strcmp(s, "black") == 0 )
         return BLACK24;
@@ -263,7 +263,7 @@ int parseColor(char* s) {
 
 /**
  * Outputs a pair of two integers seperated by a comma.
- */            
+ */
 void printInts(int i[2]) {
     printf("[%d,%d]\n", i[0], i[1]);
 }
@@ -272,7 +272,7 @@ void printInts(int i[2]) {
 /**
  * Parses either a single float string, of a pair of two floats seperated
  * by a comma.
- */            
+ */
 void parseFloats(char* s, float f[2]) {
     f[0] = -1.0;
     f[1] = -1.0;
@@ -285,7 +285,7 @@ void parseFloats(char* s, float f[2]) {
 
 /**
  * Outputs a pair of two floats seperated by a comma.
- */            
+ */
 void printFloats(float f[2]) {
     printf("[%f,%f]\n", f[0], f[1]);
 }
@@ -301,7 +301,7 @@ char* implode(char* buf, const char* s[], int cnt) {
         } else {
             strcpy(buf, BLANK_TEXT);
         }
-        for (int i = 1; i < cnt; i++) {        
+        for (int i = 1; i < cnt; i++) {
             if (s[i] != NULL) {
                 sprintf(buf + strlen(buf), ", %s", s[i]);
             } else {
@@ -326,7 +326,7 @@ void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount)
     char s2[MAX_MULTI_INDEX * 5]; // buffer
     char c;
     int index;
-    
+
     *multiIndexCount = 0;
     strcpy(s1, optarg); // argv[*i] -> s1
     do {
@@ -375,7 +375,7 @@ bool isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCo
 
 /**
  * Tests whether 'index' is either part of multiIndex or excludeIndex.
- * (Throughout the application, excludeIndex generalizes several individual 
+ * (Throughout the application, excludeIndex generalizes several individual
  * multi-indices: if an entry is part of excludeIndex, it is treated as being
  * an entry of all other multiIndices, too.)
  */

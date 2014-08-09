@@ -129,9 +129,9 @@ void initImage(struct IMAGE* image, int width, int height, int pixel_format, int
 
     ret = av_frame_get_buffer(image->frame, 8);
     if (ret < 0) {
-	char errbuff[1024];
-	av_strerror(ret, errbuff, sizeof(errbuff));
-	errOutput("unable to allocate buffer: %s", errbuff);
+        char errbuff[1024];
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to allocate buffer: %s", errbuff);
     }
 
     image->background = background;
@@ -153,7 +153,7 @@ void freeImage(struct IMAGE* image) {
 /**
  * Replaces one image with another.
  */
-void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {    
+void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
     freeImage(image);
     // pass-back new image
     *image = *newimage; // copy whole struct
@@ -164,11 +164,11 @@ void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
  * Sets the color/grayscale value of a single pixel.
  *
  * @return true if the pixel has been changed, false if the original color was the one to set
- */ 
+ */
 bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
     uint8_t r, g, b;
     uint8_t *pix;
-    
+
     if ( (x < 0) || (x >= image->frame->width) || (y < 0) || (y >= image->frame->height) ) {
         return false; //nop
     }
@@ -225,7 +225,7 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
  * Always returns a color-compatible value (which may be interpreted as 8-bit grayscale)
  *
  * @return color or grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
- */ 
+ */
 int getPixel(int x, int y, struct IMAGE* image) {
     int r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
@@ -236,7 +236,7 @@ int getPixel(int x, int y, struct IMAGE* image) {
  * Returns the grayscale (=brightness) value of a single pixel.
  *
  * @return grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
- */ 
+ */
 int getPixelGrayscale(int x, int y, struct IMAGE* image) {
     int r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
@@ -254,7 +254,7 @@ int getPixelGrayscale(int x, int y, struct IMAGE* image) {
  * For grayscale images, this value is equal to the pixel brightness.
  *
  * @return lightness-value (the higher, the lighter) of the requested pixel, or WHITE if the coordinates are outside the image
- */ 
+ */
 static int getPixelLightness(int x, int y, struct IMAGE* image) {
     int r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
@@ -272,7 +272,7 @@ static int getPixelLightness(int x, int y, struct IMAGE* image) {
  * For grayscale images, this value is equal to the pixel brightness.
  *
  * @return inverse-darkness-value (the LOWER, the darker) of the requested pixel, or WHITE if the coordinates are outside the image
- */ 
+ */
 int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
     int r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
@@ -283,7 +283,7 @@ int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
  * Sets the color/grayscale value of a single pixel to white.
  *
  * @return true if the pixel has been changed, false if the original color was the one to set
- */ 
+ */
 static bool clearPixel(int x, int y, struct IMAGE* image) {
     return setPixel(WHITE24, x, y, image);
 }
@@ -422,7 +422,7 @@ int darknessInverseRect(const int x1, const int y1, const int x2, const int y2, 
  */
 int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, struct IMAGE* image) {
     int count = 0;
-    
+
     for (int y = top; y <= bottom; y++) {
         for (int x = left; x <= right; x++) {
             const int pixel = getPixelGrayscale(x, y, image);
@@ -447,7 +447,7 @@ int countPixelsRect(int left, int top, int right, int bottom, int minColor, int 
 static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whiteMin, struct IMAGE* image) {
     int count = 0;
     int pixel;
-    
+
     // upper and lower rows
     for (int xx = x - level; xx <= x + level; xx++) {
         // upper row
@@ -457,7 +457,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
                 clearPixel(xx, y - level, image);
             }
             count++;
-        }        
+        }
         // lower row
         pixel = getPixelLightness(xx, y + level, image);
         if (pixel < whiteMin) {
@@ -465,7 +465,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
                 clearPixel(xx, y + level, image);
             }
             count++;
-        }        
+        }
     }
     // middle rows
     for (int yy = y-(level-1); yy <= y+(level-1); yy++) {
@@ -476,7 +476,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
                 clearPixel(x - level, yy, image);
             }
             count++;
-        }        
+        }
         // last col
         pixel = getPixelLightness(x + level, yy, image);
         if (pixel < whiteMin) {
@@ -484,7 +484,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
                 clearPixel(x + level, yy, image);
             }
             count++;
-        }        
+        }
     }
     /* old version, not optimized:
     for (yy = y-level; yy <= y+level; yy++) {
@@ -498,7 +498,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
                     count++;
                 }
             }
-        }    
+        }
     }*/
     return count;
 }
@@ -512,7 +512,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
 int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE* image) {
     int count = 1; // assume self as set
     int lCount = -1;
-    
+
     // can finish when one level is completely zero
     for (int level = 1; (lCount != 0) && (level <= intensity); level++) {
         lCount = countPixelNeighborsLevel(x, y, false, level, whiteMin, image);
@@ -530,7 +530,7 @@ int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE*
 void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
     int lCount = -1;
 
-    clearPixel(x, y, image);    
+    clearPixel(x, y, image);
 
     // lCount will become 0, otherwise countPixelNeighbors() would previously have delivered a bigger value (and this here would not have been called)
     for (int level = 1; lCount != 0; level++) {

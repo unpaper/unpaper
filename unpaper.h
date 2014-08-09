@@ -36,7 +36,7 @@
 #include <libavutil/frame.h>
 
 /* --- preprocessor macros ------------------------------------------------ */
-              
+
 #define max(a, b) ( (a >= b) ? (a) : (b) )
 #define pluralS(i) ( (i > 1) ? "s" : "" )
 #define pixelValue(r, g, b) ( (r)<<16 | (g)<<8 | (b) )
@@ -50,7 +50,7 @@
 
 
 /* --- preprocessor constants ---------------------------------------------- */
-              
+
 #define MAX_MULTI_INDEX 10000 // maximum pixel count of virtual line to detect rotation with
 #define MAX_ROTATION_SCAN_SIZE 10000 // maximum pixel count of virtual line to detect rotation with
 #define MAX_MASKS 100
@@ -78,63 +78,63 @@ typedef enum {
 } VERBOSE_LEVEL;
 
 typedef enum {
-	X,
-	Y,
-	COORDINATES_COUNT
+        X,
+        Y,
+        COORDINATES_COUNT
 } COORDINATES;
 
 typedef enum {
-	WIDTH,
-	HEIGHT,
-	DIMENSIONS_COUNT
+        WIDTH,
+        HEIGHT,
+        DIMENSIONS_COUNT
 } DIMENSIONS;
 
 typedef enum {
-	HORIZONTAL,
-	VERTICAL,
-	DIRECTIONS_COUNT
+        HORIZONTAL,
+        VERTICAL,
+        DIRECTIONS_COUNT
 } DIRECTIONS;
 
 typedef enum {
-	LEFT,
-	TOP,
-	RIGHT,
-	BOTTOM,
-	EDGES_COUNT
+        LEFT,
+        TOP,
+        RIGHT,
+        BOTTOM,
+        EDGES_COUNT
 } EDGES;
 
 typedef enum {
     LAYOUT_NONE,
-	LAYOUT_SINGLE,
-	LAYOUT_DOUBLE,
-	LAYOUTS_COUNT
+        LAYOUT_SINGLE,
+        LAYOUT_DOUBLE,
+        LAYOUTS_COUNT
 } LAYOUTS;
 
 typedef enum {
-	BRIGHT,
-	DARK,
-	SHADINGS_COUNT
+        BRIGHT,
+        DARK,
+        SHADINGS_COUNT
 } SHADINGS;
 
 typedef enum {
-	RED,
-	GREEN,
-	BLUE,
-	COLORCOMPONENTS_COUNT
+        RED,
+        GREEN,
+        BLUE,
+        COLORCOMPONENTS_COUNT
 } COLORCOMPONENTS;
 
 typedef enum {
-	PBM,
-	PGM,
-	PPM,
-	FILETYPES_COUNT
+        PBM,
+        PGM,
+        PPM,
+        FILETYPES_COUNT
 } FILETYPES;
 
 typedef enum {
-	INTERP_NN,
-	INTERP_LINEAR,
-	INTERP_CUBIC,
-	INTERP_FUNCTIONS_COUNT
+        INTERP_NN,
+        INTERP_LINEAR,
+        INTERP_CUBIC,
+        INTERP_FUNCTIONS_COUNT
 } INTERP_FUNCTIONS;
 
 
