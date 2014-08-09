@@ -30,6 +30,7 @@
 #include "unpaper.h"
 #include "tools.h"
 #include "parse.h" //for maksOverlapAny
+#include "imageprocess.h"
 
 
 /****************************************************************************

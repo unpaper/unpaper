@@ -30,6 +30,7 @@
 
 #include "unpaper.h"
 #include "tools.h" //only needed for getPixelGrayscale
+#include "file.h"
 
 /**
  * Loads image data from a file in pnm format.
