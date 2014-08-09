@@ -161,9 +161,8 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blac
                   outputPixFmt, image->background);
         if ( outputPixFmt == AV_PIX_FMT_MONOWHITE ) {
             const int blackThresholdAbs = WHITE * (1.0 - blackThreshold);
-            int x, y;
-            for (y = 0; y < image->frame->height; y++) {
-                for (x = 0; x < image->frame->width; x++) {
+            for (int y = 0; y < image->frame->height; y++) {
+                for (int x = 0; x < image->frame->width; x++) {
                     const int pixel = getPixelGrayscale(x, y, image);
                     setPixel((pixel < blackThresholdAbs ? BLACK24 : WHITE24), x, y, &output);
                 }

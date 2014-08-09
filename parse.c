@@ -193,7 +193,6 @@ void parseInts(char* s, int i[2]) {
 
 
 static int parseSizeSingle(const char *s, int dpi) {
-    int j;
     char *valueEnd;
     float value;
 
@@ -202,7 +201,7 @@ static int parseSizeSingle(const char *s, int dpi) {
     if ( fabs(value) == HUGE_VAL || s == valueEnd )
         errOutput("invalid size %s", s);
 
-    for (j = 0; j < MEASUREMENTS_COUNT; j++)
+    for (int j = 0; j < MEASUREMENTS_COUNT; j++)
         if ( strcmp(valueEnd, MEASUREMENTS[j].unit) == 0 )
             return (int)(value * MEASUREMENTS[j].factor * dpi);
 
@@ -218,12 +217,11 @@ static int parseSizeSingle(const char *s, int dpi) {
  */            
 void parseSize(char* s, int i[2], int dpi) {
     char str[255];
-    int j;
     char* comma;
     int pos;
 
     // is s a papersize name?
-    for (j = 0; j < PAPERSIZES_COUNT; j++) {
+    for (int j = 0; j < PAPERSIZES_COUNT; j++) {
         if (strcmp(s, PAPERSIZES[j].name)==0) {
             i[0] = PAPERSIZES[j].width * dpi;
             i[1] = PAPERSIZES[j].height * dpi;
@@ -297,14 +295,13 @@ void printFloats(float f[2]) {
  * Combines an array of strings to a comma-seperated string.
  */
 char* implode(char* buf, const char* s[], int cnt) {
-    int i;
     if (cnt > 0) {
         if (s[0] != NULL) {
             strcpy(buf, s[0]);
         } else {
             strcpy(buf, BLANK_TEXT);
         }
-        for (i = 1; i < cnt; i++) {        
+        for (int i = 1; i < cnt; i++) {        
             if (s[i] != NULL) {
                 sprintf(buf + strlen(buf), ", %s", s[i]);
             } else {
@@ -329,7 +326,6 @@ void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount)
     char s2[MAX_MULTI_INDEX * 5]; // buffer
     char c;
     int index;
-    int j;
     
     *multiIndexCount = 0;
     strcpy(s1, optarg); // argv[*i] -> s1
@@ -342,7 +338,7 @@ void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount)
             if (c=='-') { // range is specified: get range end
                 strcpy(s1, s2); // s2 -> s1
                 sscanf(s1, "%d,%s", &index, s2);
-                for (j = multiIndex[(*multiIndexCount)-1]+1; j <= index; j++) {
+                for (int j = multiIndex[(*multiIndexCount)-1]+1; j <= index; j++) {
                     multiIndex[(*multiIndexCount)++] = j;
                 }
             }
@@ -364,12 +360,10 @@ void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount)
  * @see parseMultiIndex(..)
  */
 bool isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
-    int i;
-    
     if (multiIndexCount == -1) {
         return true; // all
     } else {
-        for (i = 0; i < multiIndexCount; i++) {
+        for (int i = 0; i < multiIndexCount; i++) {
             if (index == multiIndex[i]) {
                 return true; // found in list
             }
@@ -394,14 +388,12 @@ bool isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount,
  * Outputs all entries in an array of integer to the console.
  */
 void printMultiIndex(int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
-    int i;
-    
     if (multiIndexCount == -1) {
         printf("all");
     } else if (multiIndexCount == 0) {
         printf("none");
     } else {
-        for (i = 0; i < multiIndexCount; i++) {
+        for (int i = 0; i < multiIndexCount; i++) {
             printf("%d", multiIndex[i]);
             if (i < multiIndexCount-1) {
                 printf(",");
@@ -436,9 +428,7 @@ static bool masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
  * Tests if at least one mask in masks overlaps with m.
  */
 bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
-    int i;
-    
-    for ( i = 0; i < masksCount; i++ ) {
+    for (int i = 0; i < masksCount; i++ ) {
         if ( masksOverlap(m, masks[i]) ) {
             return true;
         }

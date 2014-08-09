@@ -219,7 +219,6 @@ int main(int argc, char* argv[]) {
     int top;
     int right;
     int bottom;
-    int j;
     int previousWidth = -1;
     int previousHeight = -1;
     char s1[1023]; // buffers for result of implode()
@@ -231,7 +230,6 @@ int main(int argc, char* argv[]) {
     double rotation;
     struct IMAGE rect;
     struct IMAGE rectTarget;
-    int nr;
     int inputNr;
     int outputNr;
     clock_t startTime = 0;
@@ -1017,8 +1015,7 @@ int main(int argc, char* argv[]) {
     avcodec_register_all();
     av_register_all();
 
-    for (nr = startSheet; (endSheet == -1) || (nr <= endSheet); nr++) {
-        int i;
+    for (int nr = startSheet; (endSheet == -1) || (nr <= endSheet); nr++) {
         char inputFilesBuffer[2][255];
         char outputFilesBuffer[2][255];
         char *inputFileNames[2];
@@ -1029,7 +1026,7 @@ int main(int argc, char* argv[]) {
         // -------------------------------------------------------------------
 
 	bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
-        for(i = 0; i < inputCount; i++) {
+        for (int i = 0; i < inputCount; i++) {
             bool ins = isInMultiIndex(inputNr, insertBlank, insertBlankCount);
             bool repl = isInMultiIndex(inputNr, replaceBlank, replaceBlankCount);
 
@@ -1069,7 +1066,7 @@ int main(int argc, char* argv[]) {
 	    optind++;
 
 	bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
-        for(i = 0; i < outputCount; i++) {
+        for(int i = 0; i < outputCount; i++) {
             if ( outputWildcard ) {
                 sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
                 outputFileNames[i] = outputFilesBuffer[i];
@@ -1109,7 +1106,7 @@ int main(int argc, char* argv[]) {
             }
 
             // load input image(s)
-            for ( j = 0; j < inputCount; j++) {
+            for (int j = 0; j < inputCount; j++) {
                 if (inputFileNames[j] != NULL) { // may be null if --insert-blank or --replace-blank
                     if (verbose >= VERBOSE_MORE)
                         printf("loading file %s.\n", inputFileNames[j]);
@@ -1244,10 +1241,8 @@ int main(int argc, char* argv[]) {
                     printInts(preShift);
                 }
                 if (preWipeCount > 0) {
-                    int i;
-
                     printf("pre-wipe: ");
-                    for (i = 0; i < preWipeCount; i++) {
+                    for (int i = 0; i < preWipeCount; i++) {
                         printf("[%d,%d,%d,%d] ",preWipe[i][LEFT],preWipe[i][TOP],preWipe[i][RIGHT],preWipe[i][BOTTOM]);
                     }
                     printf("\n");
@@ -1256,10 +1251,8 @@ int main(int argc, char* argv[]) {
                     printf("pre-border: [%d,%d,%d,%d]\n", preBorder[LEFT], preBorder[TOP], preBorder[RIGHT], preBorder[BOTTOM]);
                 }
                 if (preMaskCount > 0) {
-                    int i;
-
                     printf("pre-masking: ");
-                    for (i = 0; i < preMaskCount; i++) {
+                    for (int i = 0; i < preMaskCount; i++) {
                         printf("[%d,%d,%d,%d] ",preMask[i][LEFT],preMask[i][TOP],preMask[i][RIGHT],preMask[i][BOTTOM]);
                     }
                     printf("\n");
@@ -1287,10 +1280,8 @@ int main(int argc, char* argv[]) {
                     printInts(blackfilterScanStep);
                     printf("blackfilter-scan-threshold: %f\n", blackfilterScanThreshold);
                     if (blackfilterExcludeCount > 0) {
-                        int i;
-
                         printf("blackfilter-scan-exclude: ");
-                        for (i = 0; i < blackfilterExcludeCount; i++) {
+                        for (int i = 0; i < blackfilterExcludeCount; i++) {
                             printf("[%d,%d,%d,%d] ",blackfilterExclude[i][LEFT],blackfilterExclude[i][TOP],blackfilterExclude[i][RIGHT],blackfilterExclude[i][BOTTOM]);
                         }
                         printf("\n");
@@ -1339,10 +1330,8 @@ int main(int argc, char* argv[]) {
                     printf("grayfilter DISABLED for all sheets.\n");
                 }
                 if (noMaskScanMultiIndexCount != -1) {
-                    int i;
-
                     printf("mask points: ");
-                    for (i = 0; i < pointCount; i++) {
+                    for (int i = 0; i < pointCount; i++) {
                         printf("(%d,%d) ",point[i][X],point[i][Y]);
                     }
                     printf("\n");
@@ -1383,9 +1372,8 @@ int main(int argc, char* argv[]) {
                 }
                 if (noWipeMultiIndexCount != -1) {
                     if (wipeCount > 0) {
-                        int i;
                         printf("wipe areas: ");
-                        for (i = 0; i < wipeCount; i++) {
+                        for (int i = 0; i < wipeCount; i++) {
                             printf("[%d,%d,%d,%d] ", wipe[i][LEFT], wipe[i][TOP], wipe[i][RIGHT], wipe[i][BOTTOM]);
                         }
                         printf("\n");
@@ -1425,8 +1413,7 @@ int main(int argc, char* argv[]) {
                 }
                 if (postWipeCount > 0) {
                     printf("post-wipe: ");
-                    int i;
-                    for (i = 0; i < postWipeCount; i++) {
+                    for (int i = 0; i < postWipeCount; i++) {
                         printf("[%d,%d,%d,%d] ",postWipe[i][LEFT],postWipe[i][TOP],postWipe[i][RIGHT],postWipe[i][BOTTOM]);
                     }
                     printf("\n");
@@ -1701,8 +1688,6 @@ int main(int argc, char* argv[]) {
 
             // rotation-detection
             if ((!isExcluded(nr, noDeskewMultiIndex, noDeskewMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount))) {
-                int i;
-
                 saveDebug("_before-deskew%d.pnm", nr, &sheet);
                 originalSheet = sheet; // copy struct entries ('clone')
 
@@ -1716,7 +1701,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 // auto-deskew each mask
-                for (i = 0; i < maskCount; i++) {
+                for (int i = 0; i < maskCount; i++) {
 
                     // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
 
@@ -1760,8 +1745,6 @@ int main(int argc, char* argv[]) {
 
             // auto-center masks on either single-page or double-page layout
             if ( (!isExcluded(nr, noMaskCenterMultiIndex, noMaskCenterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) && (layout != LAYOUT_NONE) && (maskCount == pointCount) ) { // (maskCount==pointCount to make sure all masks had correctly been detected)
-                int i;
-
                 // perform auto-masking again to get more precise masks after rotation
                 if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                     maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &sheet);
@@ -1773,7 +1756,7 @@ int main(int argc, char* argv[]) {
 
                 saveDebug("_before-centering%d.pnm", nr, &sheet);
                 // center masks on the sheet, according to their page position
-                for (i = 0; i < maskCount; i++) {
+                for (int i = 0; i < maskCount; i++) {
                     centerMask(point[i][X], point[i][Y], mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &sheet);
                 }
                 saveDebug("_after-centering%d.pnm", nr, &sheet);
@@ -1803,14 +1786,13 @@ int main(int argc, char* argv[]) {
 
             // border-detection
             if (!isExcluded(nr, noBorderScanMultiIndex, noBorderScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                int i;
                 saveDebug("_before-border%d.pnm", nr, &sheet);
-                for (i = 0; i < outsideBorderscanMaskCount; i++) {
+                for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     detectBorder(autoborder[i], borderScanDirections, borderScanSize, borderScanStep, borderScanThreshold, blackThreshold, outsideBorderscanMask[i], &sheet);
                     borderToMask(autoborder[i], autoborderMask[i], &sheet);
                 }
                 applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, &sheet);
-                for (i = 0; i < outsideBorderscanMaskCount; i++) {
+                for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     // border-centering
                     if (!isExcluded(nr, noBorderAlignMultiIndex, noBorderAlignMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                         alignMask(autoborderMask[i], outsideBorderscanMask[i], borderAlign, borderAlignMargin, &sheet);
@@ -1922,7 +1904,7 @@ int main(int argc, char* argv[]) {
                     outputPixFmt = sheet.frame->format;
                 }
 
-                for ( j = 0; j < outputCount; j++) {
+                for (int j = 0; j < outputCount; j++) {
                     // get pagebuffer
                     initImage(&page, sheet.frame->width / outputCount, sheet.frame->height, sheet.frame->format, sheet.background);
                     copyImageArea(page.frame->width * j, 0, page.frame->width, page.frame->height, &sheet, 0, 0, &page);

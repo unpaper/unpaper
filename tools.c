@@ -120,7 +120,7 @@ static void getPixelComponents(struct IMAGE *image, int x, int y, int *r, int *g
  * with the specified values.
  */
 void initImage(struct IMAGE* image, int width, int height, int pixel_format, int background) {
-    int ret, x, y;
+    int ret;
 
     image->frame = av_frame_alloc();
     image->frame->width = width;
@@ -135,8 +135,8 @@ void initImage(struct IMAGE* image, int width, int height, int pixel_format, int
     }
 
     image->background = background;
-    for (y = 0; y < image->frame->height; y++) {
-        for (x = 0; x < image->frame->width; x++) {
+    for (int y = 0; y < image->frame->height; y++) {
+        for (int x = 0; x < image->frame->width; x++) {
             setPixel(image->background, x, y, image);
         }
     }
@@ -445,13 +445,11 @@ int countPixelsRect(int left, int top, int right, int bottom, int minColor, int 
  * Optionally, the pixels can get cleared after counting.
  */
 static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whiteMin, struct IMAGE* image) {
-    int xx;
-    int yy;
     int count = 0;
     int pixel;
     
     // upper and lower rows
-    for (xx = x - level; xx <= x + level; xx++) {
+    for (int xx = x - level; xx <= x + level; xx++) {
         // upper row
         pixel = getPixelLightness(xx, y - level, image);
         if (pixel < whiteMin) { // non-light pixel found
@@ -470,7 +468,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
         }        
     }
     // middle rows
-    for (yy = y-(level-1); yy <= y+(level-1); yy++) {
+    for (int yy = y-(level-1); yy <= y+(level-1); yy++) {
         // first col
         pixel = getPixelLightness(x - level, yy, image);
         if (pixel < whiteMin) {
@@ -512,11 +510,11 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
  * pixels.
  */
 int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE* image) {
-    int level;
     int count = 1; // assume self as set
     int lCount = -1;
     
-    for (level = 1; (lCount != 0) && (level <= intensity); level++) { // can finish when one level is completely zero
+    // can finish when one level is completely zero
+    for (int level = 1; (lCount != 0) && (level <= intensity); level++) {
         lCount = countPixelNeighborsLevel(x, y, false, level, whiteMin, image);
         count += lCount;
     }
@@ -530,12 +528,12 @@ int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE*
  * the amount of pixels to clear will be reasonable small.
  */
 void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
-    int level;
     int lCount = -1;
 
     clearPixel(x, y, image);    
 
-    for (level = 1; lCount != 0; level++) { // lCount will become 0, otherwise countPixelNeighbors() would previously have delivered a bigger value (and this here would not have been called)
+    // lCount will become 0, otherwise countPixelNeighbors() would previously have delivered a bigger value (and this here would not have been called)
+    for (int level = 1; lCount != 0; level++) {
         lCount = countPixelNeighborsLevel(x, y, true, level, whiteMin, image);
     }
 }
@@ -593,9 +591,7 @@ static int fillLine(int x, int y, int stepX, int stepY, int color, int maskMin, 
  * @see fillLine()
  */
 static void floodFillAroundLine(int x, int y, int stepX, int stepY, int distance, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
-    int d;
-    
-    for (d = 0; d < distance; d++) {
+    for (int d = 0; d < distance; d++) {
         if (stepX != 0) {
             x += stepX;
             floodFill(x, y + 1, color, maskMin, maskMax, intensity, image); // indirect recursion
