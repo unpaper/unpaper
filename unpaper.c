@@ -58,9 +58,9 @@
 
 /* --- global variable ---------------------------------------------------- */
 
-VERBOSE_LEVEL verbose;
+VERBOSE_LEVEL verbose = VERBOSE_NONE;
 
-INTERP_FUNCTIONS interpolateType;
+INTERP_FUNCTIONS interpolateType = INTERP_CUBIC;
 
 
 /**
@@ -91,134 +91,137 @@ int main(int argc, char* argv[]) {
 
     // --- parameter variables ---
     int layout = LAYOUT_SINGLE;
-    int startSheet;
-    int endSheet;
-    int startInput;
-    int startOutput;
-    int inputCount;
-    int outputCount;
-    int sheetSize[DIMENSIONS_COUNT];
-    int sheetBackground;
-    int preRotate;
-    int postRotate;
-    int preMirror;
-    int postMirror;
-    int preShift[DIRECTIONS_COUNT];
-    int postShift[DIRECTIONS_COUNT];
-    int size[DIRECTIONS_COUNT];
-    int postSize[DIRECTIONS_COUNT];
-    int stretchSize[DIRECTIONS_COUNT];
-    int postStretchSize[DIRECTIONS_COUNT];
-    float zoomFactor;
-    float postZoomFactor;
-    int pointCount;
+    int startSheet = 1;
+    int endSheet = -1;
+    int startInput = -1;
+    int startOutput = -1;
+    int inputCount = 1;
+    int outputCount = 1;
+    int sheetSize[DIMENSIONS_COUNT] = { -1, -1 };
+    int sheetBackground = WHITE24;
+    int preRotate = 0;
+    int postRotate = 0;
+    int preMirror = 0;
+    int postMirror = 0;
+    int preShift[DIRECTIONS_COUNT] = { 0, 0 };
+    int postShift[DIRECTIONS_COUNT] = { 0, 0 };
+    int size[DIRECTIONS_COUNT] = { -1, -1 };
+    int postSize[DIRECTIONS_COUNT] = { -1, -1 };
+    int stretchSize[DIRECTIONS_COUNT] = { -1, -1 };
+    int postStretchSize[DIRECTIONS_COUNT] = { -1, -1 };
+    float zoomFactor = 1.0;
+    float postZoomFactor = 1.0;
+    int pointCount = 0;
     int point[MAX_POINTS][COORDINATES_COUNT];
-    int maskCount;
+    int maskCount = 0;
     int mask[MAX_MASKS][EDGES_COUNT];
-    int wipeCount;
+    int wipeCount = 0;
     int wipe[MAX_MASKS][EDGES_COUNT];
-    int middleWipe[2];
-    int preWipeCount;
+    int middleWipe[2] = { 0, 0 };
+    int preWipeCount = 0;
     int preWipe[MAX_MASKS][EDGES_COUNT];
-    int postWipeCount;
+    int postWipeCount = 0;
     int postWipe[MAX_MASKS][EDGES_COUNT];
-    int preBorder[EDGES_COUNT];
-    int postBorder[EDGES_COUNT];
-    int border[EDGES_COUNT];
+    int preBorder[EDGES_COUNT] = { 0, 0, 0, 0 };
+    int postBorder[EDGES_COUNT] = { 0, 0, 0, 0 };
+    int border[EDGES_COUNT] = { 0, 0, 0, 0 };
     bool maskValid[MAX_MASKS];
-    int preMaskCount;
+    int preMaskCount = 0;
     int preMask[MAX_MASKS][EDGES_COUNT];
-    int blackfilterScanDirections;
-    int blackfilterScanSize[DIRECTIONS_COUNT];
-    int blackfilterScanDepth[DIRECTIONS_COUNT];
-    int blackfilterScanStep[DIRECTIONS_COUNT];
-    float blackfilterScanThreshold;    
-    int blackfilterExcludeCount;
+    int blackfilterScanDirections = (1<<HORIZONTAL) | (1<<VERTICAL);
+    int blackfilterScanSize[DIRECTIONS_COUNT] = { 20, 20 };
+    int blackfilterScanDepth[DIRECTIONS_COUNT] = { 500, 500 };
+    int blackfilterScanStep[DIRECTIONS_COUNT] = { 5, 5 };
+    float blackfilterScanThreshold = 0.95;
+    int blackfilterExcludeCount = 0;
     int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
-    int blackfilterIntensity;
-    int noisefilterIntensity;
-    int blurfilterScanSize[DIRECTIONS_COUNT];
-    int blurfilterScanStep[DIRECTIONS_COUNT];
-    float blurfilterIntensity;
-    int grayfilterScanSize[DIRECTIONS_COUNT];
-    int grayfilterScanStep[DIRECTIONS_COUNT];
-    float grayfilterThreshold;
-    int maskScanDirections;
-    int maskScanSize[DIRECTIONS_COUNT];
-    int maskScanDepth[DIRECTIONS_COUNT];
-    int maskScanStep[DIRECTIONS_COUNT];
-    float maskScanThreshold[DIRECTIONS_COUNT];
-    int maskScanMinimum[DIMENSIONS_COUNT];
-    int maskScanMaximum[DIMENSIONS_COUNT];
-    int maskColor;
-    int deskewScanEdges;
-    int deskewScanSize;
-    float deskewScanDepth;
-    float deskewScanRange;
-    float deskewScanStep;
-    float deskewScanDeviation;
-    int borderScanDirections;
-    int borderScanSize[DIRECTIONS_COUNT];
-    int borderScanStep[DIRECTIONS_COUNT];
-    int borderScanThreshold[DIRECTIONS_COUNT];
-    int borderAlign;
-    int borderAlignMargin[DIRECTIONS_COUNT];
+    int blackfilterIntensity = 20;
+    int noisefilterIntensity = 4;
+    int blurfilterScanSize[DIRECTIONS_COUNT] = { 100, 100 };
+    int blurfilterScanStep[DIRECTIONS_COUNT] = { 50, 50 };
+    float blurfilterIntensity = 0.01;
+    int grayfilterScanSize[DIRECTIONS_COUNT] = { 50, 50 };
+    int grayfilterScanStep[DIRECTIONS_COUNT] = { 20, 20 };
+    float grayfilterThreshold = 0.5;
+    int maskScanDirections = (1<<HORIZONTAL);
+    int maskScanSize[DIRECTIONS_COUNT] = { 50, 50 };
+    int maskScanDepth[DIRECTIONS_COUNT] = { -1, -1 };
+    int maskScanStep[DIRECTIONS_COUNT] = { 5, 5 };
+    float maskScanThreshold[DIRECTIONS_COUNT] = { 0.1, 0.1 };
+    int maskScanMinimum[DIMENSIONS_COUNT] = { 100, 100 };
+    int maskScanMaximum[DIMENSIONS_COUNT] = { -1, -1 }; // set default later
+    int maskColor = WHITE24;
+    int deskewScanEdges = (1<<LEFT) | (1<<RIGHT);
+    int deskewScanSize = 1500;
+    float deskewScanDepth = 0.5;
+    float deskewScanRange = 5.0;
+    float deskewScanStep = 0.1;
+    float deskewScanDeviation = 1.0;
+    int borderScanDirections = (1<<VERTICAL);
+    int borderScanSize[DIRECTIONS_COUNT] = { 5, 5 };
+    int borderScanStep[DIRECTIONS_COUNT] = { 5, 5 };
+    int borderScanThreshold[DIRECTIONS_COUNT] = { 5, 5 };
+    int borderAlign = 0; // center
+    int borderAlignMargin[DIRECTIONS_COUNT] = { 0, 0 }; // center
     int outsideBorderscanMask[MAX_PAGES][EDGES_COUNT]; // set by --layout
-    int outsideBorderscanMaskCount;
-    float whiteThreshold;
-    float blackThreshold;
-    bool writeoutput;
-    bool multisheets;
+    int outsideBorderscanMaskCount = 0;
+    float whiteThreshold = 0.9;
+    float blackThreshold = 0.33;
+    bool writeoutput = true;
+    bool multisheets = true;
+
+    // 0: allow all, -1: disable all, n: individual entries
     int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
-    int noBlackfilterMultiIndexCount;
+    int noBlackfilterMultiIndexCount = 0;
     int noNoisefilterMultiIndex[MAX_MULTI_INDEX];
-    int noNoisefilterMultiIndexCount;
+    int noNoisefilterMultiIndexCount = 0;
     int noBlurfilterMultiIndex[MAX_MULTI_INDEX];
-    int noBlurfilterMultiIndexCount;
+    int noBlurfilterMultiIndexCount = 0;
     int noGrayfilterMultiIndex[MAX_MULTI_INDEX];
-    int noGrayfilterMultiIndexCount;
+    int noGrayfilterMultiIndexCount = 0;
     int noMaskScanMultiIndex[MAX_MULTI_INDEX];
-    int noMaskScanMultiIndexCount;
+    int noMaskScanMultiIndexCount = 0;
     int noMaskCenterMultiIndex[MAX_MULTI_INDEX];
-    int noMaskCenterMultiIndexCount;
+    int noMaskCenterMultiIndexCount = 0;
     int noDeskewMultiIndex[MAX_MULTI_INDEX];
-    int noDeskewMultiIndexCount;
+    int noDeskewMultiIndexCount = 0;
     int noWipeMultiIndex[MAX_MULTI_INDEX];
-    int noWipeMultiIndexCount;
+    int noWipeMultiIndexCount = 0;
     int noBorderMultiIndex[MAX_MULTI_INDEX];
-    int noBorderMultiIndexCount;
+    int noBorderMultiIndexCount = 0;
     int noBorderScanMultiIndex[MAX_MULTI_INDEX];
-    int noBorderScanMultiIndexCount;
+    int noBorderScanMultiIndexCount = 0;
     int noBorderAlignMultiIndex[MAX_MULTI_INDEX];
-    int noBorderAlignMultiIndexCount;
+    int noBorderAlignMultiIndexCount = 0;
+
     int sheetMultiIndex[MAX_MULTI_INDEX];
-    int sheetMultiIndexCount;    
+    int sheetMultiIndexCount = -1; // default: process all between start-sheet and end-sheet
     int excludeMultiIndex[MAX_MULTI_INDEX];
-    int excludeMultiIndexCount;
+    int excludeMultiIndexCount = 0;
     int ignoreMultiIndex[MAX_MULTI_INDEX];
-    int ignoreMultiIndexCount;    
+    int ignoreMultiIndexCount = 0;
     int autoborder[MAX_MASKS][EDGES_COUNT];
     int autoborderMask[MAX_MASKS][EDGES_COUNT];
     int insertBlank[MAX_MULTI_INDEX];
-    int insertBlankCount;    
+    int insertBlankCount = 0;
     int replaceBlank[MAX_MULTI_INDEX];
-    int replaceBlankCount;    
-    bool overwrite;
-    bool showTime;
-    int dpi;
-    
+    int replaceBlankCount = 0;
+    bool overwrite = false;
+    bool showTime = false;
+    int dpi = 300;
+
     // --- local variables ---
     int x;
     int y;
-    int w;
-    int h;
+    int w = -1;
+    int h = -1;
     int left;
     int top;
     int right;
     int bottom;
     int j;
-    int previousWidth;
-    int previousHeight;
+    int previousWidth = -1;
+    int previousHeight = -1;
     char s1[1023]; // buffers for result of implode()
     char s2[1023];
     struct IMAGE sheet;
@@ -231,123 +234,16 @@ int main(int argc, char* argv[]) {
     int nr;
     int inputNr;
     int outputNr;
-    clock_t startTime;
-    clock_t endTime;
+    clock_t startTime = 0;
+    clock_t endTime = 0;
     clock_t time;
-    unsigned long int totalTime;
-    int totalCount;
+    unsigned long int totalTime = 0;
+    int totalCount = 0;
     int option_index = 0;
     int outputPixFmt = -1;
 
     sheet.frame = NULL;
     page.frame = NULL;
-    
-    // explicitly un-initialize variables that are sometimes not used to avoid compiler warnings
-    startTime = 0;             // used optionally in debug mode -vv or with --time
-    endTime = 0;               // used optionally in debug mode -vv or with --time
-
-
-    // -----------------------------------------------------------------------    
-    // --- process all sheets                                              ---
-    // -----------------------------------------------------------------------    
-    
-    // count from start sheet to end sheet
-    startSheet = 1; // defaults, may be changed in first run of for-loop
-    endSheet = -1;
-    startInput = -1;
-    startOutput = -1;
-    totalTime = 0;
-    totalCount = 0;
-    previousWidth = previousHeight = -1;
-    
-    // --- default values ---
-    w = h = -1;
-    preRotate = 0;
-    postRotate = 0;
-    preMirror = 0;
-    postMirror = 0;
-    preShift[WIDTH] = preShift[HEIGHT] = 0;
-    postShift[WIDTH] = postShift[HEIGHT] = 0;
-    size[WIDTH] = size[HEIGHT] = -1;
-    postSize[WIDTH] = postSize[HEIGHT] = -1;
-    stretchSize[WIDTH] = stretchSize[HEIGHT] = -1;
-    postStretchSize[WIDTH] = postStretchSize[HEIGHT] = -1;
-    zoomFactor = 1.0;
-    postZoomFactor = 1.0;
-    pointCount = 0;
-    maskCount = 0;
-    preMaskCount = 0;
-    wipeCount = 0;
-    preWipeCount = 0;
-    postWipeCount = 0;
-    middleWipe[0] = middleWipe[1] = 0; // left/right
-    border[LEFT] = border[TOP] = border[RIGHT] = border[BOTTOM] = 0;
-    preBorder[LEFT] = preBorder[TOP] = preBorder[RIGHT] = preBorder[BOTTOM] = 0;
-    postBorder[LEFT] = postBorder[TOP] = postBorder[RIGHT] = postBorder[BOTTOM] = 0;
-    blackfilterScanDirections = (1<<HORIZONTAL) | (1<<VERTICAL);
-    blackfilterScanSize[HORIZONTAL] = blackfilterScanSize[VERTICAL] = 20;
-    blackfilterScanDepth[HORIZONTAL] = blackfilterScanDepth[VERTICAL] = 500;
-    blackfilterScanStep[HORIZONTAL] = blackfilterScanStep[VERTICAL] = 5;
-    blackfilterScanThreshold = 0.95;
-    blackfilterExcludeCount = 0;
-    blackfilterIntensity = 20;
-    noisefilterIntensity = 4;
-    blurfilterScanSize[HORIZONTAL] = blurfilterScanSize[VERTICAL] = 100;
-    blurfilterScanStep[HORIZONTAL] = blurfilterScanStep[VERTICAL] = 50;
-    blurfilterIntensity = 0.01;
-    grayfilterScanSize[HORIZONTAL] = grayfilterScanSize[VERTICAL] = 50;
-    grayfilterScanStep[HORIZONTAL] = grayfilterScanStep[VERTICAL] = 20;
-    grayfilterThreshold = 0.5;
-    maskScanDirections = (1<<HORIZONTAL);
-    maskScanSize[HORIZONTAL] = maskScanSize[VERTICAL] = 50;
-    maskScanDepth[HORIZONTAL] = maskScanDepth[VERTICAL] = -1;
-    maskScanStep[HORIZONTAL] = maskScanStep[VERTICAL] = 5;
-    maskScanThreshold[HORIZONTAL] = maskScanThreshold[VERTICAL] = 0.1;
-    maskScanMinimum[WIDTH] = maskScanMinimum[HEIGHT] = 100;
-    maskScanMaximum[WIDTH] = maskScanMaximum[HEIGHT] = -1; // set default later
-    maskColor = WHITE24;
-    deskewScanEdges = (1<<LEFT) | (1<<RIGHT);
-    deskewScanSize = 1500;
-    deskewScanDepth = 0.5;
-    deskewScanRange = 5.0;
-    deskewScanStep = 0.1;
-    deskewScanDeviation = 1.0;
-    borderScanDirections = (1<<VERTICAL);
-    borderScanSize[HORIZONTAL] = borderScanSize[VERTICAL] = 5;
-    borderScanStep[HORIZONTAL] = borderScanStep[VERTICAL] = 5;
-    borderScanThreshold[HORIZONTAL] = borderScanThreshold[VERTICAL] = 5;
-    borderAlign = 0; // center
-    borderAlignMargin[HORIZONTAL] = borderAlignMargin[VERTICAL] = 0; // center
-    outsideBorderscanMaskCount = 0;
-    whiteThreshold = 0.9;
-    blackThreshold = 0.33;
-    sheetSize[WIDTH] = sheetSize[HEIGHT] = -1;
-    sheetBackground = WHITE24;
-    writeoutput = true;
-    multisheets = true;
-    inputCount = 1;
-    outputCount = 1;
-    verbose = VERBOSE_NONE;
-    noBlackfilterMultiIndexCount = 0; // 0: allow all, -1: disable all, n: individual entries
-    noNoisefilterMultiIndexCount = 0;
-    noBlurfilterMultiIndexCount = 0;
-    noGrayfilterMultiIndexCount = 0;
-    noMaskScanMultiIndexCount = 0;
-    noMaskCenterMultiIndexCount = 0;
-    noDeskewMultiIndexCount = 0;
-    noWipeMultiIndexCount = 0;
-    noBorderMultiIndexCount = 0;
-    noBorderScanMultiIndexCount = 0;
-    noBorderAlignMultiIndexCount = 0;
-    sheetMultiIndexCount = -1; // default: process all between start-sheet and end-sheet
-    excludeMultiIndexCount = 0;
-    ignoreMultiIndexCount = 0;
-    insertBlankCount = 0;
-    replaceBlankCount = 0;
-    overwrite = false;
-    showTime = false;
-    dpi = 300;
-    interpolateType = INTERP_CUBIC;
 
     // -------------------------------------------------------------------
     // --- parse parameters                                            ---
