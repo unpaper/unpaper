@@ -35,7 +35,7 @@
 
 /* --- tool functions for image handling ---------------------------------- */
 
-static void getPixelComponents(struct IMAGE *image, int x, int y, int *r, int *g, int *b, int defval) {
+static void getPixelComponents(struct IMAGE *image, int x, int y, uint8_t *r, uint8_t *g, uint8_t *b, uint8_t defval) {
     uint8_t *pix;
 
     if ( (x < 0) || (x >= image->frame->width) || (y < 0) || (y >= image->frame->height) ) {
@@ -189,7 +189,7 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
  * @return color or grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */
 int getPixel(int x, int y, struct IMAGE* image) {
-    int r, g, b;
+    uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return pixelValue(r, g, b);
 }
@@ -200,7 +200,7 @@ int getPixel(int x, int y, struct IMAGE* image) {
  * @return grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */
 int getPixelGrayscale(int x, int y, struct IMAGE* image) {
-    int r, g, b;
+    uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return pixelGrayscale(r, g, b);
 }
@@ -218,7 +218,7 @@ int getPixelGrayscale(int x, int y, struct IMAGE* image) {
  * @return lightness-value (the higher, the lighter) of the requested pixel, or WHITE if the coordinates are outside the image
  */
 static int getPixelLightness(int x, int y, struct IMAGE* image) {
-    int r, g, b;
+    uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return pixelLightness(r, g, b);
 }
@@ -236,7 +236,7 @@ static int getPixelLightness(int x, int y, struct IMAGE* image) {
  * @return inverse-darkness-value (the LOWER, the darker) of the requested pixel, or WHITE if the coordinates are outside the image
  */
 int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
-    int r, g, b;
+    uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return pixelDarknessInverse(r, g, b);
 }
