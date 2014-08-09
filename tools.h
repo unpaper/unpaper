@@ -19,15 +19,25 @@
 
 /* --- arithmetic tool functions ------------------------------------------ */
 
+#include <math.h>
 
-double sqr(double d);
+static inline double sqr(double d) {
+    return d * d;
+}
 
-double degreesToRadians(double d);
+static inline double degreesToRadians(double d) {
+    return d * M_PI / 180.0;
+}
 
-double radiansToDegrees(double r);
+static inline double radiansToDegrees(double r) {
+    return r * 180.0 / M_PI;
+}
 
-void limit(int* i, int max);
-
+static inline void limit(int* i, int max) {
+    if (*i > max) {
+        *i = max;
+    }
+}
 
 /* --- tool functions for image handling ---------------------------------- */
 

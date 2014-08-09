@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <math.h>
 
 #include <libavutil/avutil.h>
 #include <libavutil/pixfmt.h>
@@ -33,43 +32,6 @@
  *   - arithmetic tool functions                                            *
  *   - tool functions for image handling                                    *
  ****************************************************************************/
-
-
-/* --- arithmetic tool functions ------------------------------------------ */
-
-/**
- * Returns the quadratic square of a number.
- */
-double sqr(double d) {
-    return d*d;
-}
-
-
-/**
- * Converts degrees to radians.
- */
-double degreesToRadians(double d) {
-    return d * M_PI / 180.0;
-}
-
-
-/**
- * Converts radians to degrees.
- */
-double radiansToDegrees(double r) {
-    return r * 180.0 / M_PI;
-}
-
-
-/**
- * Limits an integer value to a maximum.
- */
-void limit(int* i, int max) {
-    if (*i > max) {
-        *i = max;
-    }
-}
-
 
 /* --- tool functions for image handling ---------------------------------- */
 
