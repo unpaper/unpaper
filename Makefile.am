@@ -13,10 +13,9 @@ unpaper_LDADD = $(LIBAV_LIBS)
 dist_doc_DATA = NEWS COPYING README.md AUTHORS TODO
 dist_man_MANS = unpaper.1
 
-dist_html_DATA = doc/unpaper.html doc/index.html
+dist_html_DATA = doc/unpaper.md
 imgdir = $(htmldir)/img
-dist_img_DATA = doc/img/_after.png doc/img/_arrow.png			\
-                doc/img/_before.png doc/img/blackfilter-detail.png	\
+dist_img_DATA = doc/img/blackfilter-detail.png				\
                 doc/img/blackfilter.png doc/img/blurfilter-detail.png	\
                 doc/img/blurfilter.png doc/img/border-align.png		\
                 doc/img/border-scan.png doc/img/deskew-detail1.png	\
@@ -27,11 +26,9 @@ dist_img_DATA = doc/img/_after.png doc/img/_arrow.png			\
                 doc/img/mask-scan-detail2.png doc/img/mask-scan.png	\
                 doc/img/multiple-input-files.png			\
                 doc/img/multiple-output-files.png			\
-                doc/img/noisefilter.png doc/img/nospam.js		\
-                doc/img/output-pages.png doc/img/processing-order.png	\
-                doc/img/sheetspages.png					\
-                doc/img/standard-deviation.png doc/img/style.css	\
-                doc/img/x-click-but04.gif
+                doc/img/noisefilter.png doc/img/output-pages.png	\
+                doc/img/processing-order.png doc/img/sheetspages.png	\
+                doc/img/standard-deviation.png
 
 TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
         tests/runtestB3.sh tests/runtestC1.sh tests/runtestC2.sh	\
