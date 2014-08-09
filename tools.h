@@ -21,10 +21,6 @@
 
 #include <math.h>
 
-static inline double sqr(double d) {
-    return d * d;
-}
-
 static inline double degreesToRadians(double d) {
     return d * M_PI / 180.0;
 }

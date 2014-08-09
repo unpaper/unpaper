@@ -220,7 +220,7 @@ double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScan
     average = total / count;
     total = 0.0;
     for (int i = 0; i < count; i++) {
-        total += sqr(rotation[i]-average);
+        total += pow(rotation[i]-average, 2);
     }
     deviation = sqrt(total);
     if (verbose >= VERBOSE_NORMAL) {
