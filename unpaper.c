@@ -56,15 +56,6 @@
     "See 'man unpaper' for options details\n"				\
     "Report bugs at " PACKAGE_BUGREPORT "\n"
 
-/* --- constants ---------------------------------------------------------- */
-
-// file type names (see typedef FILETYPES)
-static const char FILETYPE_NAMES[FILETYPES_COUNT][4] = {
-    "pbm",
-    "pgm",
-    "ppm"
-};
-
 /* --- global variable ---------------------------------------------------- */
 
 VERBOSE_LEVEL verbose;
