@@ -99,7 +99,7 @@ void errOutput(const char *fmt, ...) {
 int main(int argc, char* argv[]) {
 
     // --- parameter variables ---
-    int layout;
+    int layout = LAYOUT_SINGLE;
     int startSheet;
     int endSheet;
     int startInput;
@@ -234,7 +234,6 @@ int main(int argc, char* argv[]) {
     struct IMAGE sheet;
     struct IMAGE originalSheet;
     struct IMAGE page;
-    const char* layoutStr;
     int filterResult;
     double rotation;
     struct IMAGE rect;
@@ -273,8 +272,6 @@ int main(int argc, char* argv[]) {
     
     // --- default values ---
     w = h = -1;
-    layout = LAYOUT_SINGLE;
-    layoutStr = "single";
     preRotate = 0;
     postRotate = 0;
     preMirror = 0;
@@ -1348,13 +1345,13 @@ int main(int argc, char* argv[]) {
             // parameters and size are known now
                     
             if (verbose >= VERBOSE_MORE) {
-                if (layout != LAYOUT_NONE) {
-                    if (layout == LAYOUT_SINGLE) {
-                        layoutStr = "single";
-                    } else if (layout == LAYOUT_DOUBLE) {
-                        layoutStr = "double";
-                    }
-                    printf("layout: %s\n", layoutStr);
+                switch(layout) {
+                case LAYOUT_SINGLE:
+                    printf("layout: single\n");
+                    break;
+                case LAYOUT_DOUBLE:
+                    printf("layout: double\n");
+                    break;
                 }
 
                 if (preRotate != 0) {
