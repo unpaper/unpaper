@@ -86,6 +86,10 @@ static void getPixelComponents(struct IMAGE *image, int x, int y, int *r, int *g
         pix = image->frame->data[0] + (y * image->frame->linesize[0] + x);
         *r = *g = *b = *pix;
         break;
+    case AV_PIX_FMT_Y400A:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x *2);
+        *r = *g = *b = *pix;
+        break;
     case AV_PIX_FMT_RGB24:
         pix = image->frame->data[0] + (y * image->frame->linesize[0] + x * 3);
         *r = pix[0];
@@ -170,6 +174,11 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
     case AV_PIX_FMT_GRAY8:
         pix = image->frame->data[0] + (y * image->frame->linesize[0] + x);
         *pix = pixelGrayscale(r, g, b);
+        break;
+    case AV_PIX_FMT_Y400A:
+        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x * 2);
+        pix[0] = pixelGrayscale(r, g, b);
+        pix[1] = 0xFF; // no alpha.
         break;
     case AV_PIX_FMT_RGB24:
         pix = image->frame->data[0] + (y * image->frame->linesize[0] + x * 3);

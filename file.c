@@ -117,28 +117,6 @@ void loadImage(const char *filename, struct IMAGE* image) {
 	break;
 
     case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
-	image->frame = av_frame_alloc();
-	image->frame->width = frame->width;
-	image->frame->height = frame->height;
-	image->frame->format = AV_PIX_FMT_GRAY8;
-
-	ret = av_frame_get_buffer(image->frame, 8);
-	if (ret < 0) {
-	    av_strerror(ret, errbuff, sizeof(errbuff));
-	    errOutput("unable to open file %s: %s", filename, errbuff);
-	}
-
-	src = frame->data[0];
-	dst = image->frame->data[0];
-	for (y = 0; y < frame->height; y++) {
-	    for (x = 0; x < frame->width; x++) {
-		dst[x] = src[x*2];
-	    }
-	    src += frame->linesize[0];
-	    dst += image->frame->linesize[0];
-	}
-	break;
-
     case AV_PIX_FMT_GRAY8:
     case AV_PIX_FMT_RGB24:
     case AV_PIX_FMT_MONOWHITE:
@@ -184,6 +162,20 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blac
     out_ctx->oformat = fmt;
     snprintf(out_ctx->filename, sizeof(out_ctx->filename), "%s", filename);
 
+    switch (outputPixFmt) {
+    case AV_PIX_FMT_RGB24:
+        output_codec = AV_CODEC_ID_PPM;
+        break;
+    case AV_PIX_FMT_Y400A:
+    case AV_PIX_FMT_GRAY8:
+        outputPixFmt = AV_PIX_FMT_GRAY8;
+        output_codec = AV_CODEC_ID_PGM;
+        break;
+    case AV_PIX_FMT_MONOWHITE:
+        output_codec = AV_CODEC_ID_PBM;
+        break;
+    }
+
     if ( image->frame->format != outputPixFmt ) {
         struct IMAGE output;
         initImage(&output, image->frame->width, image->frame->height,
@@ -202,18 +194,6 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blac
                           image, 0, 0, &output);
         }
         replaceImage(image, &output);
-    }
-
-    switch (outputPixFmt) {
-    case AV_PIX_FMT_RGB24:
-        output_codec = AV_CODEC_ID_PPM;
-        break;
-    case AV_PIX_FMT_GRAY8:
-        output_codec = AV_CODEC_ID_PGM;
-        break;
-    case AV_PIX_FMT_MONOWHITE:
-        output_codec = AV_CODEC_ID_PBM;
-        break;
     }
 
     codec = avcodec_find_encoder(output_codec);
