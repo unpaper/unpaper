@@ -235,5 +235,5 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blac
  * Saves the image if full debugging mode is enabled.
  */
 void saveDebug(char* filename, struct IMAGE* image) {
-    //saveImage(filename, image);
+    saveImage(filename, image, image->frame->format, 0.33);
 }
