@@ -23,4 +23,5 @@ void loadImage(const char *filename, struct IMAGE* image);
 
 void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blackThreshold);
 
-void saveDebug(char* filename, struct IMAGE* image);
+void saveDebug(char *filenameTemplate, int index, struct IMAGE* image)
+    __attribute__((format(printf, 1, 0)));
