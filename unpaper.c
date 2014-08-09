@@ -1683,12 +1683,15 @@ int main(int argc, char* argv[]) {
                 }
 
                 // auto-deskew each mask
+                const double deskewScanRangeRad = degreesToRadians(deskewScanRange);
+                const double deskewScanStepRad = degreesToRadians(deskewScanStep);
+
                 for (int i = 0; i < maskCount; i++) {
 
                     // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
 
                     saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
-                    rotation = - detectRotation(deskewScanEdges, deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, deskewScanDeviation, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
+                    rotation = - detectRotation(deskewScanEdges, deskewScanRangeRad, deskewScanStepRad, deskewScanSize, deskewScanDepth, deskewScanDeviation, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
                     saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
 
                     if (rotation != 0.0) {

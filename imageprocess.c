@@ -147,11 +147,9 @@ static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScan
  * Which of the four edges to take depends on whether shiftX or shiftY is non-zero,
  * and what sign this shifting value has.
  */
-static double detectEdgeRotation(float deskewScanRange, float deskewScanStep, int deskewScanSize, float deskewScanDepth, int shiftX, int shiftY, int left, int top, int right, int bottom, struct IMAGE* image) {
+static double detectEdgeRotation(double rangeRad, double stepRad, int deskewScanSize, float deskewScanDepth, int shiftX, int shiftY, int left, int top, int right, int bottom, struct IMAGE* image) {
     // either shiftX or shiftY is 0, the other value is -i|+i
     // depending on shiftX/shiftY the start edge for shifting is determined
-    double rangeRad = degreesToRadians((double)deskewScanRange);
-    double stepRad = degreesToRadians((double)deskewScanStep);
     int maxPeak = 0;
     double detectedRotation = 0.0;
 
@@ -173,7 +171,7 @@ static double detectEdgeRotation(float deskewScanRange, float deskewScanStep, in
  * Angles between -deskewScanRange and +deskewScanRange are scanned, at either the
  * horizontal or vertical edges of the area specified by left, top, right, bottom.
  */
-double detectRotation(int deskewScanEdges, int deskewScanRange, float deskewScanStep, int deskewScanSize, float deskewScanDepth, float deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image) {
+double detectRotation(int deskewScanEdges, double deskewScanRange, double deskewScanStep, int deskewScanSize, float deskewScanDepth, float deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image) {
     double rotation[4];
     int count = 0;
     double total;
