@@ -34,34 +34,11 @@ typedef enum {
 #endif
 
 #include <libavutil/frame.h>
+#include <math.h>
 
 /* --- preprocessor macros ------------------------------------------------ */
 
-#define max(a, b)                               \
-    ({ __typeof__ (a) _a = (a);                 \
-        __typeof__ (b) _b = (b);                \
-        _a > _b ? _a : _b; })
-
-#define max3(a, b, c)                                                   \
-    ({ __typeof__ (a) _a = (a);                                         \
-        __typeof__ (b) _b = (b);                                        \
-        __typeof__ (c) _c = (c);                                        \
-        ( _a > _b ? ( _a > _c ? _a : _c ) : ( _b > _c ? _b : _c ) ); })
-
-#define min3(a, b, c)                                                   \
-    ({ __typeof__ (a) _a = (a);                                         \
-        __typeof__ (b) _b = (b);                                        \
-        __typeof__ (c) _c = (c);                                        \
-        ( _a < _b ? ( _a < _c ? _a : _c ) : ( _b < _c ? _b : _c ) ); })
-
 #define pluralS(i) ( (i > 1) ? "s" : "" )
-#define red(pixel) ( (pixel >> 16) & 0xff )
-#define green(pixel) ( (pixel >> 8) & 0xff )
-#define blue(pixel) ( pixel & 0xff )
-
-static inline int pixelValue(uint8_t r, uint8_t g, uint8_t b) {
-    return (r)<<16 | (g)<<8 | (b);
-}
 
 /* --- preprocessor constants ---------------------------------------------- */
 
@@ -148,3 +125,49 @@ void errOutput(const char *fmt, ...)
 extern VERBOSE_LEVEL verbose;
 extern INTERP_FUNCTIONS interpolateType;
 extern unsigned int absBlackThreshold;
+
+/* --- tool function for file handling ------------------------------------ */
+
+void loadImage(const char *filename, struct IMAGE* image);
+
+void saveImage(char *filename, struct IMAGE* image, int outputPixFmt);
+
+void saveDebug(char *filenameTemplate, int index, struct IMAGE* image)
+    __attribute__((format(printf, 1, 0)));
+
+/* --- arithmetic tool functions ------------------------------------------ */
+
+static inline double degreesToRadians(double d) {
+    return d * M_PI / 180.0;
+}
+
+static inline void limit(int* i, int max) {
+    if (*i > max) {
+        *i = max;
+    }
+}
+
+#define max(a, b)                               \
+    ({ __typeof__ (a) _a = (a);                 \
+        __typeof__ (b) _b = (b);                \
+        _a > _b ? _a : _b; })
+
+#define max3(a, b, c)                                                   \
+    ({ __typeof__ (a) _a = (a);                                         \
+        __typeof__ (b) _b = (b);                                        \
+        __typeof__ (c) _c = (c);                                        \
+        ( _a > _b ? ( _a > _c ? _a : _c ) : ( _b > _c ? _b : _c ) ); })
+
+#define min3(a, b, c)                                                   \
+    ({ __typeof__ (a) _a = (a);                                         \
+        __typeof__ (b) _b = (b);                                        \
+        __typeof__ (c) _c = (c);                                        \
+        ( _a < _b ? ( _a < _c ? _a : _c ) : ( _b < _c ? _b : _c ) ); })
+
+#define red(pixel) ( (pixel >> 16) & 0xff )
+#define green(pixel) ( (pixel >> 8) & 0xff )
+#define blue(pixel) ( pixel & 0xff )
+
+static inline int pixelValue(uint8_t r, uint8_t g, uint8_t b) {
+    return (r)<<16 | (g)<<8 | (b);
+}

@@ -35,7 +35,6 @@
 #include "unpaper.h"
 #include "imageprocess.h"
 #include "tools.h"
-#include "file.h"
 #include "parse.h"
 
 #define WELCOME                                                         \
@@ -1626,9 +1625,6 @@ int main(int argc, char* argv[]) {
 
                 // auto-deskew each mask
                 for (int i = 0; i < maskCount; i++) {
-
-                    // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
-
                     saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
                     float rotation = detectRotation(deskewScanEdges, deskewScanRangeRad, deskewScanStepRad, deskewScanSize, deskewScanDepth, deskewScanDeviationRad, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
                     saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
@@ -1655,8 +1651,6 @@ int main(int argc, char* argv[]) {
                         freeImage(&rect);
                         freeImage(&rectTarget);
                     }
-
-                    // }
                 }
 
                 saveDebug("_after-deskew%d.pnm", nr, &sheet);

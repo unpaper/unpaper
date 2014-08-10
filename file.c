@@ -30,7 +30,6 @@
 
 #include "unpaper.h"
 #include "tools.h"
-#include "file.h"
 
 /**
  * Loads image data from a file in pnm format.
