@@ -56,11 +56,11 @@ void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target);
 
 void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target);
 
-int brightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
+uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
 
-uint8_t lightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
+uint8_t inverseLightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
 
-int darknessInverseRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
+uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
 
 int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, struct IMAGE* image);
 

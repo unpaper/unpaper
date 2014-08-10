@@ -486,8 +486,8 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
     int bottom;
 
     const int half = maskScanSize / 2;
-    int total = 0;
-    int count = 0;
+    unsigned int total = 0;
+    unsigned int count = 0;
 
     if (shiftY==0) { // vertical border is to be detected, horizontal shifting of scan-bar
         if (maskScanDepth == -1) {
@@ -510,7 +510,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
     }
 
     while (true) { // !
-        const int blackness = 255 - brightnessRect(left, top, right, bottom, image);
+        const uint8_t blackness = inverseBrightnessRect(left, top, right, bottom, image);
         total += blackness;
         count++;
         // is blackness below threshold*average?
@@ -738,7 +738,6 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
     int top;
     int right;
     int bottom;
-    unsigned int blackness;
     int shiftX;
     int shiftY;
     int l, t, r, b;
@@ -778,7 +777,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
         }
         alreadyExcludedMessage = false;
         while ((l < image->frame->width) && (t < image->frame->height)) { // single scanning "stripe"
-            blackness = WHITE - darknessInverseRect(l, t, r, b, image);
+            uint8_t blackness = darknessRect(l, t, r, b, image);
             if (blackness >= absBlackfilterScanThreshold) { // found a solidly black area
                 mask[LEFT] = l;
                 mask[TOP] = t;
@@ -965,8 +964,8 @@ int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[
     while (true) {
         int count = countPixelsRect(left, top, right, bottom, 0, absBlackThreshold, false, image);
         if (count == 0) {
-            uint8_t lightness = lightnessRect(left, top, right, bottom, image);
-            if ((WHITE - lightness) < absGrayfilterThreshold) { // (lower threshold->more deletion)
+            uint8_t lightness = inverseLightnessRect(left, top, right, bottom, image);
+            if (lightness < absGrayfilterThreshold) { // (lower threshold->more deletion)
                 result += clearRect(left, top, right, bottom, image, WHITE24);
             }
         }

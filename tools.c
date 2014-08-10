@@ -340,7 +340,7 @@ void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct 
 /**
  * Returns the average brightness of a rectagular area.
  */
-int brightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
+uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
     unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
@@ -349,31 +349,30 @@ int brightnessRect(const int x1, const int y1, const int x2, const int y2, struc
             total += getPixelGrayscale(x, y, image);
         }
     }
-    return total / count;
+    return WHITE - (total / count);
 }
 
 
 /**
- * Returns the average lightness of a rectagular area.
+ * Returns the inverseaverage lightness of a rectagular area.
  */
-uint8_t lightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
+uint8_t inverseLightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
     unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
     for (int y = y1; y <= y2; y++) {
         for (int x = x1; x <= x2; x++) {
-            const int pixel = getPixelLightness(x, y, image);
-            total += pixel;
+            total += getPixelLightness(x, y, image);
         }
     }
-    return total / count;
+    return WHITE - (total / count);
 }
 
 
 /**
  * Returns the average darkness of a rectagular area.
  */
-int darknessInverseRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
+uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
     unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
@@ -382,7 +381,7 @@ int darknessInverseRect(const int x1, const int y1, const int x2, const int y2, 
             total += getPixelDarknessInverse(x, y, image);
         }
     }
-    return total / count;
+    return WHITE - (total / count);
 }
 
 
