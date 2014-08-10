@@ -101,21 +101,17 @@ int parseDirections(char* s) {
 /**
  * Prints whether directions are vertical, horizontal, or both.
  */
-void printDirections(int d) {
-    bool comma = false;
+const char *getDirections(int d) {
+    switch(d) {
+    case (1<<VERTICAL)|(1<<HORIZONTAL):
+        return "[vertical,horizontal]";
+    case (1<<VERTICAL):
+        return "[vertical]";
+    case (1<<HORIZONTAL):
+        return "[horizontal]";
+    }
 
-    printf("[");
-    if ((d & 1<<VERTICAL) != 0) {
-        printf("vertical");
-        comma = true;
-    }
-    if ((d & 1<<HORIZONTAL) != 0) {
-        if (comma == true) {
-            printf(",");
-        }
-        printf("horizontal");
-    }
-    printf("]\n");
+    return "[none]";
 }
 
 

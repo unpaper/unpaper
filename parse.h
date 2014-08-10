@@ -22,7 +22,7 @@
 
 int parseDirections(char* s);
 
-void printDirections(int d);
+const char *getDirections(int d);
 
 int parseEdges(char* s);
 

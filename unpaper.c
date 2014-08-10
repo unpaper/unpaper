@@ -1175,8 +1175,7 @@ int main(int argc, char* argv[]) {
             // pre-mirroring
             if (preMirror != 0) {
                 if (verbose >= VERBOSE_NORMAL) {
-                    printf("pre-mirroring ");
-                    printDirections(preMirror);
+                    printf("pre-mirroring %s\n", getDirections(preMirror));
                 }
                 mirror(preMirror, &sheet);
             }
@@ -1218,8 +1217,7 @@ int main(int argc, char* argv[]) {
                     printf("pre-rotate: %d\n", preRotate);
                 }
                 if (preMirror != 0) {
-                    printf("pre-mirror: ");
-                    printDirections(preMirror);
+                    printf("pre-mirror: %s\n", getDirections(preMirror));
                 }
                 if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
                     printf("pre-shift: [%d,%d]\n", preShift[WIDTH], preShift[HEIGHT]);
@@ -1254,8 +1252,7 @@ int main(int argc, char* argv[]) {
                     printf("post-zoom: %f\n", postZoomFactor);
                 }
                 if (noBlackfilterMultiIndexCount != -1) {
-                    printf("blackfilter-scan-direction: ");
-                    printDirections(blackfilterScanDirections);
+                    printf("blackfilter-scan-direction: %s\n", getDirections(blackfilterScanDirections));
                     printf("blackfilter-scan-size: [%d,%d]\n", blackfilterScanSize[0], blackfilterScanSize[1]);
                     printf("blackfilter-scan-depth: [%d,%d]\n", blackfilterScanDepth[0], blackfilterScanDepth[1]);
                     printf("blackfilter-scan-step: [%d,%d]\n", blackfilterScanStep[0], blackfilterScanStep[1]);
@@ -1312,8 +1309,7 @@ int main(int argc, char* argv[]) {
                         printf("(%d,%d) ",point[i][X],point[i][Y]);
                     }
                     printf("\n");
-                    printf("mask-scan-direction: ");
-                    printDirections(maskScanDirections);
+                    printf("mask-scan-direction: %s\n", getDirections(maskScanDirections));
                     printf("mask-scan-size: [%d,%d]\n", maskScanSize[0], maskScanSize[1]);
                     printf("mask-scan-depth: [%d,%d]\n", maskScanDepth[0], maskScanDepth[1]);
                     printf("mask-scan-step: [%d,%d]\n", maskScanStep[0], maskScanStep[1]);
@@ -1365,8 +1361,7 @@ int main(int argc, char* argv[]) {
                     printf("border DISABLED for all sheets.\n");
                 }
                 if (noBorderScanMultiIndexCount != -1) {
-                    printf("border-scan-direction: ");
-                    printDirections(borderScanDirections);
+                    printf("border-scan-direction: %s\n", getDirections(borderScanDirections));
                     printf("border-scan-size: [%d,%d]\n", borderScanSize[0], borderScanSize[1]);
                     printf("border-scan-step: [%d,%d]\n", borderScanStep[0], borderScanStep[1]);
                     printf("border-scan-threshold: [%d,%d]\n", borderScanThreshold[0], borderScanThreshold[1]);
@@ -1391,8 +1386,7 @@ int main(int argc, char* argv[]) {
                     printf("post-border: [%d,%d,%d,%d]\n", postBorder[LEFT], postBorder[TOP], postBorder[RIGHT], postBorder[BOTTOM]);
                 }
                 if (postMirror != 0) {
-                    printf("post-mirror: ");
-                    printDirections(postMirror);
+                    printf("post-mirror: %s\n", getDirections(postMirror));
                 }
                 if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
                     printf("post-shift: [%d,%d]\n", postShift[WIDTH], postShift[HEIGHT]);
@@ -1789,8 +1783,7 @@ int main(int argc, char* argv[]) {
             // post-mirroring
             if (postMirror != 0) {
                 if (verbose >= VERBOSE_NORMAL) {
-                    printf("post-mirroring ");
-                    printDirections(postMirror);
+                    printf("post-mirroring %s\n", getDirections(postMirror));
                 }
                 mirror(postMirror, &sheet);
             }
