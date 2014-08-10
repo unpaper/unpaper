@@ -125,26 +125,6 @@ typedef enum {
 } LAYOUTS;
 
 typedef enum {
-        BRIGHT,
-        DARK,
-        SHADINGS_COUNT
-} SHADINGS;
-
-typedef enum {
-        RED,
-        GREEN,
-        BLUE,
-        COLORCOMPONENTS_COUNT
-} COLORCOMPONENTS;
-
-typedef enum {
-        PBM,
-        PGM,
-        PPM,
-        FILETYPES_COUNT
-} FILETYPES;
-
-typedef enum {
         INTERP_NN,
         INTERP_LINEAR,
         INTERP_CUBIC,
