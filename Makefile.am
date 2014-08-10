@@ -10,7 +10,7 @@ unpaper_SOURCES = \
 unpaper_CFLAGS = $(LIBAV_CFLAGS)
 unpaper_LDADD = $(LIBAV_LIBS)
 
-dist_doc_DATA = NEWS COPYING README.md AUTHORS TODO
+dist_doc_DATA = NEWS COPYING README.md AUTHORS
 dist_man_MANS = unpaper.1
 
 dist_html_DATA = doc/basic-concepts.md doc/image-processing.md
