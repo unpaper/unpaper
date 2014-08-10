@@ -209,8 +209,6 @@ int main(int argc, char* argv[]) {
     int dpi = 300;
 
     // --- local variables ---
-    int x;
-    int y;
     int w = -1;
     int h = -1;
     int left;
@@ -219,14 +217,9 @@ int main(int argc, char* argv[]) {
     int bottom;
     int previousWidth = -1;
     int previousHeight = -1;
-    char s1[1023]; // buffers for result of implode()
-    char s2[1023];
     struct IMAGE sheet;
     struct IMAGE originalSheet;
     struct IMAGE page;
-    int filterResult;
-    struct IMAGE rect;
-    struct IMAGE rectTarget;
     int inputNr;
     int outputNr;
     int option_index = 0;
@@ -540,8 +533,8 @@ int main(int argc, char* argv[]) {
 
         case 'p':
             if ( pointCount < MAX_POINTS ) {
-                x = -1;
-                y = -1;
+                int x = -1;
+                int y = -1;
                 sscanf(optarg,"%d,%d", &x, &y);
                 point[pointCount][X] = x;
                 point[pointCount][Y] = y;
@@ -1087,6 +1080,8 @@ int main(int argc, char* argv[]) {
         // ---------------------------------------------------------------
 
         if (isInMultiIndex(nr, sheetMultiIndex, sheetMultiIndexCount) && (!isInMultiIndex(nr, excludeMultiIndex, excludeMultiIndexCount))) {
+            char s1[1023]; // buffers for result of implode()
+            char s2[1023];
 
             if (verbose >= VERBOSE_NORMAL) {
                 printf("\n-------------------------------------------------------------------------------\n");
@@ -1615,7 +1610,7 @@ int main(int argc, char* argv[]) {
                     printf("noise-filter ...");
                 }
                 saveDebug("_before-noisefilter%d.pnm", nr, &sheet);
-                filterResult = noisefilter(noisefilterIntensity, absWhiteThreshold, &sheet);
+                int filterResult = noisefilter(noisefilterIntensity, absWhiteThreshold, &sheet);
                 saveDebug("_after-noisefilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d clusters.\n", filterResult);
@@ -1632,7 +1627,7 @@ int main(int argc, char* argv[]) {
                     printf("blur-filter...");
                 }
                 saveDebug("_before-blurfilter%d.pnm", nr, &sheet);
-                filterResult = blurfilter(blurfilterScanSize, blurfilterScanStep, blurfilterIntensity, absWhiteThreshold, &sheet);
+                int filterResult = blurfilter(blurfilterScanSize, blurfilterScanStep, blurfilterIntensity, absWhiteThreshold, &sheet);
                 saveDebug("_after-blurfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
@@ -1665,7 +1660,7 @@ int main(int argc, char* argv[]) {
                     printf("gray-filter...");
                 }
                 saveDebug("_before-grayfilter%d.pnm", nr, &sheet);
-                filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, absGrayfilterThreshold, absBlackThreshold, &sheet);
+                int filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, absGrayfilterThreshold, absBlackThreshold, &sheet);
                 saveDebug("_after-grayfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
@@ -1700,6 +1695,8 @@ int main(int argc, char* argv[]) {
                     saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
 
                     if (rotation != 0.0) {
+                        struct IMAGE rect;
+                        struct IMAGE rectTarget;
                         if (verbose>=VERBOSE_NORMAL) {
                             printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
                         }
