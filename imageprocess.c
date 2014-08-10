@@ -778,7 +778,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
         }
         alreadyExcludedMessage = false;
         while ((l < image->frame->width) && (t < image->frame->height)) { // single scanning "stripe"
-            blackness = 255 - darknessInverseRect(l, t, r, b, image);
+            blackness = WHITE - darknessInverseRect(l, t, r, b, image);
             if (blackness >= absBlackfilterScanThreshold) { // found a solidly black area
                 mask[LEFT] = l;
                 mask[TOP] = t;
