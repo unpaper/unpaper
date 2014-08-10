@@ -1694,12 +1694,13 @@ int main(int argc, char* argv[]) {
                     float rotation = detectRotation(deskewScanEdges, deskewScanRangeRad, deskewScanStepRad, deskewScanSize, deskewScanDepth, deskewScanDeviationRad, mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &originalSheet);
                     saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
 
+                    if (verbose >= VERBOSE_NORMAL) {
+                        printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
+                    }
+
                     if (rotation != 0.0) {
                         struct IMAGE rect;
                         struct IMAGE rectTarget;
-                        if (verbose>=VERBOSE_NORMAL) {
-                            printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
-                        }
                         initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet.frame->format, sheetBackground);
                         initImage(&rectTarget, rect.frame->width, rect.frame->height, sheet.frame->format, sheetBackground);
 
@@ -1714,10 +1715,6 @@ int main(int argc, char* argv[]) {
 
                         freeImage(&rect);
                         freeImage(&rectTarget);
-                    } else {
-                        if (verbose >= VERBOSE_NORMAL) {
-                            printf("rotate (%d,%d): -\n", point[i][X], point[i][Y]);
-                        }
                     }
 
                     // }
