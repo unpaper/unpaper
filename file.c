@@ -113,10 +113,10 @@ void loadImage(const char *filename, struct IMAGE* image) {
  * @param filename file name to save image to
  * @param image image to save
  * @param type filetype of the image to save
- * @param blackThreshold threshold for grayscale-to-black&white conversion
+ * @param absBlackThreshold threshold for black&white conversion
  * @return true on success, false on failure
  */
-void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blackThreshold) {
+void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, int absBlackThreshold) {
     AVOutputFormat *fmt = NULL;
     enum AVCodecID output_codec = -1;
     AVCodec *codec;
@@ -161,11 +161,10 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, float blac
         initImage(&output, image->frame->width, image->frame->height,
                   outputPixFmt, image->background);
         if ( outputPixFmt == AV_PIX_FMT_MONOWHITE ) {
-            const int blackThresholdAbs = WHITE * (1.0 - blackThreshold);
             for (int y = 0; y < image->frame->height; y++) {
                 for (int x = 0; x < image->frame->width; x++) {
                     const int pixel = getPixelGrayscale(x, y, image);
-                    setPixel((pixel < blackThresholdAbs ? BLACK24 : WHITE24), x, y, &output);
+                    setPixel((pixel < absBlackThreshold ? BLACK24 : WHITE24), x, y, &output);
                 }
             }
         } else {
@@ -238,6 +237,6 @@ void saveDebug(char *filenameTemplate, int index, struct IMAGE* image) {
     if ( verbose >= VERBOSE_DEBUG_SAVE ) {
         char debugFilename[100];
         sprintf(debugFilename, filenameTemplate, index);
-        saveImage(debugFilename, image, image->frame->format, 0.33);
+        saveImage(debugFilename, image, image->frame->format, -1);
     }
 }
