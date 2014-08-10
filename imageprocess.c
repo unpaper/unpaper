@@ -898,29 +898,12 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
         nextCounts[0] = countPixelsRect(0, top+blurfilterScanStep[VERTICAL], right, bottom+blurfilterScanSize[VERTICAL], 0, absWhiteThreshold, false, image);
 
         for (int left = 0, block = 1; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
-            // current block
-            int count = curCounts[block];
-            int max = count;
-            // top left
-            count = prevCounts[block-1];
-            if (count > max) {
-                max = count;
-            }
-            // top right
-            count = prevCounts[block+1];
-            if (count > max) {
-                max = count;
-            }
-            // bottom left
-            count = nextCounts[block-1];
-            if (count > max) {
-                max = count;
-            }
             // bottom right (has still to be calculated)
             nextCounts[block+1] = countPixelsRect(left+blurfilterScanSize[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanSize[HORIZONTAL], bottom+blurfilterScanSize[VERTICAL], 0, absWhiteThreshold, false, image);
-            if (count > max) {
-                max = count;
-            }
+
+            int max = max3(nextCounts[block-1], nextCounts[block+1],
+                           max3(prevCounts[block-1], prevCounts[block+1], curCounts[block]));
+
             if ((((float)max)/total) <= blurfilterIntensity) { // Not enough dark pixels
                 clearRect(left, top, right, bottom, image, WHITE24);
                 result += curCounts[block];
