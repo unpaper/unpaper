@@ -36,3 +36,12 @@ for some variants of TIFF and PNG files is also present.
 Output files are generated in PNM rawbits format. Conversion to PDF
 can be achieved with Linux tools such as `pgm2tiff`, `tiffcp` and
 `tiff2pdf`.
+
+Further Information
+-------------------
+
+You can find more information on the [basic concepts][1] and the
+[image processing][2] in the available documentation.
+
+[1]: doc/basic-concepts.md
+[2]: doc/image-processing.md
