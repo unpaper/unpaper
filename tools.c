@@ -33,6 +33,10 @@
  *   - tool functions for image handling                                    *
  ****************************************************************************/
 
+static inline uint8_t pixelGrayscale(uint8_t r, uint8_t g, uint8_t b) {
+    return (r + g + b) / 3;
+}
+
 /* --- tool functions for image handling ---------------------------------- */
 
 static void getPixelComponents(struct IMAGE *image, int x, int y, uint8_t *r, uint8_t *g, uint8_t *b, uint8_t defval) {
@@ -204,7 +208,7 @@ int getPixel(int x, int y, struct IMAGE* image) {
  *
  * @return grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */
-int getPixelGrayscale(int x, int y, struct IMAGE* image) {
+uint8_t getPixelGrayscale(int x, int y, struct IMAGE* image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return pixelGrayscale(r, g, b);
@@ -222,10 +226,10 @@ int getPixelGrayscale(int x, int y, struct IMAGE* image) {
  *
  * @return lightness-value (the higher, the lighter) of the requested pixel, or WHITE if the coordinates are outside the image
  */
-static int getPixelLightness(int x, int y, struct IMAGE* image) {
+static uint8_t getPixelLightness(int x, int y, struct IMAGE* image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
-    return pixelLightness(r, g, b);
+    return ( r < g ? ( r < b ? r : b ) : ( g < b ? g : b ) ); // min3
 }
 
 
@@ -240,10 +244,10 @@ static int getPixelLightness(int x, int y, struct IMAGE* image) {
  *
  * @return inverse-darkness-value (the LOWER, the darker) of the requested pixel, or WHITE if the coordinates are outside the image
  */
-int getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
+uint8_t getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
-    return pixelDarknessInverse(r, g, b);
+    return ( r > g ? ( r > b ? r : b ) : ( g > b ? g : b ) ); // max3
 }
 
 /**
@@ -337,7 +341,7 @@ void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct 
  * Returns the average brightness of a rectagular area.
  */
 int brightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
-    int total = 0;
+    unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
     for (int y = y1; y <= y2; y++) {
@@ -353,7 +357,7 @@ int brightnessRect(const int x1, const int y1, const int x2, const int y2, struc
  * Returns the average lightness of a rectagular area.
  */
 int lightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
-    int total = 0;
+    unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
     for (int y = y1; y <= y2; y++) {
@@ -370,7 +374,7 @@ int lightnessRect(const int x1, const int y1, const int x2, const int y2, struct
  * Returns the average darkness of a rectagular area.
  */
 int darknessInverseRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
-    int total = 0;
+    unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
     for (int y = y1; y <= y2; y++) {
@@ -418,7 +422,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
     // upper and lower rows
     for (int xx = x - level; xx <= x + level; xx++) {
         // upper row
-        pixel = getPixelLightness(xx, y - level, image);
+        uint8_t pixel = getPixelLightness(xx, y - level, image);
         if (pixel < whiteMin) { // non-light pixel found
             if (clear == true) {
                 clearPixel(xx, y - level, image);
@@ -437,7 +441,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
     // middle rows
     for (int yy = y-(level-1); yy <= y+(level-1); yy++) {
         // first col
-        pixel = getPixelLightness(x - level, yy, image);
+        uint8_t pixel = getPixelLightness(x - level, yy, image);
         if (pixel < whiteMin) {
             if (clear == true) {
                 clearPixel(x - level, yy, image);
@@ -521,18 +525,16 @@ void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity,
  * @param stepX either -1 or 1, if stepY is 0, else 0
  * @param stepY either -1 or 1, if stepX is 0, else 0
  */
-static int fillLine(int x, int y, int stepX, int stepY, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
+static int fillLine(int x, int y, int stepX, int stepY, int color, uint8_t maskMin, uint8_t maskMax, int intensity, struct IMAGE* image) {
     int distance = 0;
     int intensityCount = 1; // first pixel must match, otherwise directly exit
     const int w = image->frame->width;
     const int h = image->frame->height;
 
     while (true) {
-        int pixel;
-
         x += stepX;
         y += stepY;
-        pixel = getPixelGrayscale(x, y, image);
+        uint8_t pixel = getPixelGrayscale(x, y, image);
         if ((pixel>=maskMin) && (pixel<=maskMax)) {
             intensityCount = intensity; // reset counter
         } else {

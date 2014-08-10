@@ -39,15 +39,13 @@
 
 #define max(a, b) ( (a >= b) ? (a) : (b) )
 #define pluralS(i) ( (i > 1) ? "s" : "" )
-#define pixelValue(r, g, b) ( (r)<<16 | (g)<<8 | (b) )
-#define pixelGrayscaleValue(g) ( (g)<<16 | (g)<<8 | (g) )
-#define pixelGrayscale(r, g, b) ( ( ( r == g ) && ( r == b ) ) ? r : ( ( r + g + b ) / 3 ) ) // average (optimized for already gray values)
-#define pixelLightness(r, g, b) ( r < g ? ( r < b ? r : b ) : ( g < b ? g : b ) ) // minimum
-#define pixelDarknessInverse(r, g, b) ( r > g ? ( r > b ? r : b ) : ( g > b ? g : b ) ) // maximum
 #define red(pixel) ( (pixel >> 16) & 0xff )
 #define green(pixel) ( (pixel >> 8) & 0xff )
 #define blue(pixel) ( pixel & 0xff )
 
+static inline int pixelValue(uint8_t r, uint8_t g, uint8_t b) {
+    return (r)<<16 | (g)<<8 | (b);
+}
 
 /* --- preprocessor constants ---------------------------------------------- */
 
