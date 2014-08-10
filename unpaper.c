@@ -412,12 +412,10 @@ int main(int argc, char* argv[]) {
             break;
 
         case '#':
-            if ( optarg != NULL ) {
-                parseMultiIndex(optarg, sheetMultiIndex, &sheetMultiIndexCount);
-                // allow 0 as start sheet, might be overwritten by --start-sheet again
-                if (sheetMultiIndexCount > 0 && startSheet > sheetMultiIndex[0] )
-                    startSheet = sheetMultiIndex[0];
-            }
+            parseMultiIndex(optarg, sheetMultiIndex, &sheetMultiIndexCount);
+            // allow 0 as start sheet, might be overwritten by --start-sheet again
+            if (sheetMultiIndexCount > 0 && startSheet > sheetMultiIndex[0] )
+                startSheet = sheetMultiIndex[0];
             break;
 
         case 0x7e:
@@ -445,17 +443,13 @@ int main(int argc, char* argv[]) {
             break;
 
         case 'x':
-            if ( optarg != NULL )
-                parseMultiIndex(optarg, excludeMultiIndex, &excludeMultiIndexCount);
+            parseMultiIndex(optarg, excludeMultiIndex, &excludeMultiIndexCount);
             if (excludeMultiIndexCount == -1)
                 excludeMultiIndexCount = 0; // 'exclude all' makes no sense
             break;
 
         case 'n':
-            if ( optarg == NULL )
-                ignoreMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, ignoreMultiIndex, &ignoreMultiIndexCount);
+            parseMultiIndex(optarg, ignoreMultiIndex, &ignoreMultiIndexCount);
             break;
 
         case 0x83:
@@ -636,10 +630,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x92:
-            if ( optarg == NULL )
-                noBlackfilterMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noBlackfilterMultiIndex, &noBlackfilterMultiIndexCount);
+            parseMultiIndex(optarg, noBlackfilterMultiIndex, &noBlackfilterMultiIndexCount);
             break;
 
         case 0x93:
@@ -685,10 +676,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x9a:
-            if ( optarg == NULL )
-                noNoisefilterMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noNoisefilterMultiIndex, &noNoisefilterMultiIndexCount);
+            parseMultiIndex(optarg, noNoisefilterMultiIndex, &noNoisefilterMultiIndexCount);
             break;
 
         case 0x9b:
@@ -696,10 +684,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x9c:
-            if ( optarg == NULL )
-                noBlurfilterMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noBlurfilterMultiIndex, &noBlurfilterMultiIndexCount);
+            parseMultiIndex(optarg, noBlurfilterMultiIndex, &noBlurfilterMultiIndexCount);
             break;
 
         case 0x9d:
@@ -715,10 +700,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xa0:
-            if ( optarg == NULL )
-                noGrayfilterMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noGrayfilterMultiIndex, &noGrayfilterMultiIndexCount);
+            parseMultiIndex(optarg, noGrayfilterMultiIndex, &noGrayfilterMultiIndexCount);
             break;
 
         case 0xa1:
@@ -734,10 +716,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xa4:
-            if ( optarg == NULL )
-                noMaskScanMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noMaskScanMultiIndex, &noMaskScanMultiIndexCount);
+            parseMultiIndex(optarg, noMaskScanMultiIndex, &noMaskScanMultiIndexCount);
             break;
 
         case 0xa5:
@@ -773,17 +752,11 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xad:
-            if ( optarg == NULL )
-                noMaskCenterMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noMaskCenterMultiIndex, &noMaskCenterMultiIndexCount);
+            parseMultiIndex(optarg, noMaskCenterMultiIndex, &noMaskCenterMultiIndexCount);
             break;
 
         case 0xae:
-            if ( optarg == NULL )
-                noDeskewMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noDeskewMultiIndex, &noDeskewMultiIndexCount);
+            parseMultiIndex(optarg, noDeskewMultiIndex, &noDeskewMultiIndexCount);
             break;
 
         case 0xaf:
@@ -811,10 +784,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xb5:
-            if ( optarg == NULL )
-                noBorderScanMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noBorderScanMultiIndex, &noBorderScanMultiIndexCount);
+            parseMultiIndex(optarg, noBorderScanMultiIndex, &noBorderScanMultiIndexCount);
             break;
 
         case 0xb6:
@@ -842,24 +812,15 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xbc:
-            if ( optarg == NULL )
-                noBorderAlignMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noBorderAlignMultiIndex, &noBorderAlignMultiIndexCount);
+            parseMultiIndex(optarg, noBorderAlignMultiIndex, &noBorderAlignMultiIndexCount);
             break;
 
         case 0xbd:
-            if ( optarg == NULL )
-                noWipeMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noWipeMultiIndex, &noWipeMultiIndexCount);
+            parseMultiIndex(optarg, noWipeMultiIndex, &noWipeMultiIndexCount);
             break;
 
         case 0xbe:
-            if ( optarg == NULL )
-                noBorderMultiIndexCount = -1;
-            else
-                parseMultiIndex(optarg, noBorderMultiIndex, &noBorderMultiIndexCount);
+            parseMultiIndex(optarg, noBorderMultiIndex, &noBorderMultiIndexCount);
             break;
 
         case 'w':

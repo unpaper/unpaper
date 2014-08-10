@@ -306,6 +306,11 @@ void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount)
     char c;
     int index;
 
+    if ( optarg == NULL ) {
+        *multiIndexCount = -1;
+        return;
+    }
+
     *multiIndexCount = 0;
     strcpy(s1, optarg); // argv[*i] -> s1
     do {
