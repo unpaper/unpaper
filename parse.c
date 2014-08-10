@@ -262,14 +262,6 @@ int parseColor(char* s) {
 
 
 /**
- * Outputs a pair of two integers seperated by a comma.
- */
-void printInts(int i[2]) {
-    printf("[%d,%d]\n", i[0], i[1]);
-}
-
-
-/**
  * Parses either a single float string, of a pair of two floats seperated
  * by a comma.
  */
@@ -281,15 +273,6 @@ void parseFloats(char* s, float f[2]) {
         f[1] = f[0]; // if second value is unset, copy first one into
     }
 }
-
-
-/**
- * Outputs a pair of two floats seperated by a comma.
- */
-void printFloats(float f[2]) {
-    printf("[%f,%f]\n", f[0], f[1]);
-}
-
 
 /**
  * Combines an array of strings to a comma-seperated string.

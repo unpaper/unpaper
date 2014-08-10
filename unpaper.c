@@ -1222,8 +1222,7 @@ int main(int argc, char* argv[]) {
                     printDirections(preMirror);
                 }
                 if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
-                    printf("pre-shift: ");
-                    printInts(preShift);
+                    printf("pre-shift: [%d,%d]\n", preShift[WIDTH], preShift[HEIGHT]);
                 }
                 if (preWipeCount > 0) {
                     printf("pre-wipe: ");
@@ -1257,12 +1256,9 @@ int main(int argc, char* argv[]) {
                 if (noBlackfilterMultiIndexCount != -1) {
                     printf("blackfilter-scan-direction: ");
                     printDirections(blackfilterScanDirections);
-                    printf("blackfilter-scan-size: ");
-                    printInts(blackfilterScanSize);
-                    printf("blackfilter-scan-depth: ");
-                    printInts(blackfilterScanDepth);
-                    printf("blackfilter-scan-step: ");
-                    printInts(blackfilterScanStep);
+                    printf("blackfilter-scan-size: [%d,%d]\n", blackfilterScanSize[0], blackfilterScanSize[1]);
+                    printf("blackfilter-scan-depth: [%d,%d]\n", blackfilterScanDepth[0], blackfilterScanDepth[1]);
+                    printf("blackfilter-scan-step: [%d,%d]\n", blackfilterScanStep[0], blackfilterScanStep[1]);
                     printf("blackfilter-scan-threshold: %f\n", blackfilterScanThreshold);
                     if (blackfilterExcludeCount > 0) {
                         printf("blackfilter-scan-exclude: ");
@@ -1289,10 +1285,8 @@ int main(int argc, char* argv[]) {
                     printf("noisefilter DISABLED for all sheets.\n");
                 }
                 if (noBlurfilterMultiIndexCount != -1) {
-                    printf("blurfilter-size: ");
-                    printInts(blurfilterScanSize);
-                    printf("blurfilter-step: ");
-                    printInts(blurfilterScanStep);
+                    printf("blurfilter-size: [%d,%d]\n", blurfilterScanSize[0], blurfilterScanSize[1]);
+                    printf("blurfilter-step: [%d,%d]\n", blurfilterScanStep[0], blurfilterScanStep[1]);
                     printf("blurfilter-intensity: %f\n", blurfilterIntensity);
                     if (noBlurfilterMultiIndexCount > 0) {
                         printf("blurfilter DISABLED for sheets: ");
@@ -1302,10 +1296,8 @@ int main(int argc, char* argv[]) {
                     printf("blurfilter DISABLED for all sheets.\n");
                 }
                 if (noGrayfilterMultiIndexCount != -1) {
-                    printf("grayfilter-size: ");
-                    printInts(grayfilterScanSize);
-                    printf("grayfilter-step: ");
-                    printInts(grayfilterScanStep);
+                    printf("grayfilter-size: [%d,%d]\n", grayfilterScanSize[0], grayfilterScanSize[1]);
+                    printf("grayfilter-step: [%d,%d]\n", grayfilterScanStep[0], grayfilterScanStep[1]);
                     printf("grayfilter-threshold: %f\n", grayfilterThreshold);
                     if (noGrayfilterMultiIndexCount > 0) {
                         printf("grayfilter DISABLED for sheets: ");
@@ -1322,16 +1314,12 @@ int main(int argc, char* argv[]) {
                     printf("\n");
                     printf("mask-scan-direction: ");
                     printDirections(maskScanDirections);
-                    printf("mask-scan-size: ");
-                    printInts(maskScanSize);
-                    printf("mask-scan-depth: ");
-                    printInts(maskScanDepth);
-                    printf("mask-scan-step: ");
-                    printInts(maskScanStep);
-                    printf("mask-scan-threshold: ");//%f\n", maskScanThreshold);
-                    printFloats(maskScanThreshold);
-                    printf("mask-scan-minimum: [%d,%d]\n", maskScanMinimum[WIDTH], maskScanMinimum[HEIGHT]);
-                    printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[WIDTH], maskScanMaximum[HEIGHT]);
+                    printf("mask-scan-size: [%d,%d]\n", maskScanSize[0], maskScanSize[1]);
+                    printf("mask-scan-depth: [%d,%d]\n", maskScanDepth[0], maskScanDepth[1]);
+                    printf("mask-scan-step: [%d,%d]\n", maskScanStep[0], maskScanStep[1]);
+                    printf("mask-scan-threshold: [%f,%f]\n", maskScanThreshold[0], maskScanThreshold[1]);
+                    printf("mask-scan-minimum: [%d,%d]\n", maskScanMinimum[0], maskScanMinimum[1]);
+                    printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[0], maskScanMaximum[1]);
                     printf("mask-color: %d\n", maskColor);
                     if (noMaskScanMultiIndexCount > 0) {
                         printf("mask-scan DISABLED for sheets: ");
@@ -1379,20 +1367,16 @@ int main(int argc, char* argv[]) {
                 if (noBorderScanMultiIndexCount != -1) {
                     printf("border-scan-direction: ");
                     printDirections(borderScanDirections);
-                    printf("border-scan-size: ");
-                    printInts(borderScanSize);
-                    printf("border-scan-step: ");
-                    printInts(borderScanStep);
-                    printf("border-scan-threshold: ");//%f\n", maskScanThreshold);
-                    printInts(borderScanThreshold);
+                    printf("border-scan-size: [%d,%d]\n", borderScanSize[0], borderScanSize[1]);
+                    printf("border-scan-step: [%d,%d]\n", borderScanStep[0], borderScanStep[1]);
+                    printf("border-scan-threshold: [%d,%d]\n", borderScanThreshold[0], borderScanThreshold[1]);
                     if (noBorderScanMultiIndexCount > 0) {
                         printf("border-scan DISABLED for sheets: ");
                         printMultiIndex(noBorderScanMultiIndex, noBorderScanMultiIndexCount);
                     }
                     printf("border-align: ");
                     printEdges(borderAlign);
-                    printf("border-margin: ");
-                    printInts(borderAlignMargin);
+                    printf("border-margin: [%d,%d]\n", borderAlignMargin[0], borderAlignMargin[1]);
                 } else {
                     printf("border-scan DISABLED for all sheets.\n");
                 }
@@ -1411,8 +1395,7 @@ int main(int argc, char* argv[]) {
                     printDirections(postMirror);
                 }
                 if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
-                    printf("post-shift: ");
-                    printInts(postShift);
+                    printf("post-shift: [%d,%d]\n", postShift[WIDTH], postShift[HEIGHT]);
                 }
                 if (postRotate != 0) {
                     printf("post-rotate: %d\n", postRotate);

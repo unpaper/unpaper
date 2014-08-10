@@ -34,11 +34,7 @@ void parseSize(char* s, int i[2], int dpi);
 
 int parseColor(char* s);
 
-void printInts(int i[2]);
-
 void parseFloats(char* s, float f[2]);
-
-void printFloats(float f[2]);
 
 char* implode(char* buf, const char* s[], int cnt);
 
