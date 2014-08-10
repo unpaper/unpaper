@@ -21,7 +21,7 @@
 
 void loadImage(const char *filename, struct IMAGE* image);
 
-void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, int absBlackThreshold);
+void saveImage(char *filename, struct IMAGE* image, int outputPixFmt);
 
 void saveDebug(char *filenameTemplate, int index, struct IMAGE* image)
     __attribute__((format(printf, 1, 0)));

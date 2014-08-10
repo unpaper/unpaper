@@ -61,6 +61,7 @@ VERBOSE_LEVEL verbose = VERBOSE_NONE;
 
 INTERP_FUNCTIONS interpolateType = INTERP_CUBIC;
 
+unsigned int absBlackThreshold;
 
 /**
  * Print an error and exit process
@@ -991,7 +992,7 @@ int main(int argc, char* argv[]) {
         endSheet = startSheet;
 
     // Calculate the constant absolute values based on the relative parameters.
-    const unsigned int absBlackThreshold = WHITE * (1.0 - blackThreshold);
+    absBlackThreshold = WHITE * (1.0 - blackThreshold);
     const unsigned int absWhiteThreshold = WHITE * (whiteThreshold);
     const unsigned int absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
     const unsigned int absGrayfilterThreshold = WHITE * (grayfilterThreshold);
@@ -1573,7 +1574,7 @@ int main(int argc, char* argv[]) {
             // black area filter
             if (!isExcluded(nr, noBlackfilterMultiIndex, noBlackfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                 saveDebug("_before-blackfilter%d.pnm", nr, &sheet);
-                blackfilter(blackfilterScanDirections, blackfilterScanSize, blackfilterScanDepth, blackfilterScanStep, absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, &sheet);
+                blackfilter(blackfilterScanDirections, blackfilterScanSize, blackfilterScanDepth, blackfilterScanStep, absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, &sheet);
                 saveDebug("_after-blackfilter%d.pnm", nr, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
@@ -1637,7 +1638,7 @@ int main(int argc, char* argv[]) {
                     printf("gray-filter...");
                 }
                 saveDebug("_before-grayfilter%d.pnm", nr, &sheet);
-                int filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, absGrayfilterThreshold, absBlackThreshold, &sheet);
+                int filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, absGrayfilterThreshold, &sheet);
                 saveDebug("_after-grayfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
@@ -1749,7 +1750,7 @@ int main(int argc, char* argv[]) {
             if (!isExcluded(nr, noBorderScanMultiIndex, noBorderScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                 saveDebug("_before-border%d.pnm", nr, &sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
-                    detectBorder(autoborder[i], borderScanDirections, borderScanSize, borderScanStep, borderScanThreshold, absBlackThreshold, outsideBorderscanMask[i], &sheet);
+                    detectBorder(autoborder[i], borderScanDirections, borderScanSize, borderScanStep, borderScanThreshold, outsideBorderscanMask[i], &sheet);
                     borderToMask(autoborder[i], autoborderMask[i], &sheet);
                 }
                 applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, &sheet);
@@ -1869,7 +1870,7 @@ int main(int argc, char* argv[]) {
                         printf("saving file %s.\n", outputFileNames[j]);
                     }
 
-                    saveImage(outputFileNames[j], &page, outputPixFmt, absBlackThreshold);
+                    saveImage(outputFileNames[j], &page, outputPixFmt);
 
                     freeImage(&page);
                 }

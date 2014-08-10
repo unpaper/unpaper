@@ -733,7 +733,7 @@ void flipRotate(int direction, struct IMAGE* image) {
  * @param stepY is 0 if stepX!=0
  * @see blackfilter()
  */
-static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned int absBlackfilterScanThreshold, int exclude[MAX_MASKS][EDGES_COUNT], int excludeCount, int intensity, unsigned int absBlackThreshold, struct IMAGE* image) {
+static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned int absBlackfilterScanThreshold, int exclude[MAX_MASKS][EDGES_COUNT], int excludeCount, int intensity, struct IMAGE* image) {
     int left;
     int top;
     int right;
@@ -819,12 +819,12 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
  * A virtual bar of width 'size' and height 'depth' is horizontally moved
  * above the middle of the sheet (or the full sheet, if depth ==-1).
  */
-void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], unsigned int absBlackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, unsigned int absBlackThreshold, struct IMAGE* image) {
+void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], unsigned int absBlackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, struct IMAGE* image) {
     if ((blackfilterScanDirections & 1<<HORIZONTAL) != 0) { // left-to-right scan
-        blackfilterScan(blackfilterScanStep[HORIZONTAL], 0, blackfilterScanSize[HORIZONTAL], blackfilterScanDepth[HORIZONTAL], absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, image);
+        blackfilterScan(blackfilterScanStep[HORIZONTAL], 0, blackfilterScanSize[HORIZONTAL], blackfilterScanDepth[HORIZONTAL], absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, image);
     }
     if ((blackfilterScanDirections & 1<<VERTICAL) != 0) { // top-to-bottom scan
-        blackfilterScan(0, blackfilterScanStep[VERTICAL], blackfilterScanSize[VERTICAL], blackfilterScanDepth[VERTICAL], absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, image);
+        blackfilterScan(0, blackfilterScanStep[VERTICAL], blackfilterScanSize[VERTICAL], blackfilterScanDepth[VERTICAL], absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, image);
     }
 }
 
@@ -937,7 +937,7 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
  * Two conditions have to apply before an area gets deleted: first, not a single black pixel may be contained,
  * second, a minimum threshold of blackness must not be exceeded.
  */
-int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], unsigned int absGrayfilterThreshold, unsigned int absBlackThreshold, struct IMAGE* image) {
+int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], unsigned int absGrayfilterThreshold, struct IMAGE* image) {
     int left = 0;
     int top = 0;
     int right = grayfilterScanSize[HORIZONTAL] - 1;
@@ -1038,7 +1038,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, i
  *
  * @param x1..y2 area inside of which border is to be detected
  */
-static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, int size, int threshold, int maxBlack, struct IMAGE* image) {
+static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, int size, int threshold, struct IMAGE* image) {
     int left;
     int top;
     int right;
@@ -1076,7 +1076,7 @@ static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, 
     }
     result = 0;
     while (result < max) {
-        cnt = countPixelsRect(left, top, right, bottom, 0, maxBlack, false, image);
+        cnt = countPixelsRect(left, top, right, bottom, 0, absBlackThreshold, false, image);
         if (cnt >= threshold) {
             return result; // border has been found: regular exit here
         }
@@ -1093,19 +1093,19 @@ static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, 
 /**
  * Detects a border of completely non-black pixels around the area outsideBorder[LEFT],outsideBorder[TOP]-outsideBorder[RIGHT],outsideBorder[BOTTOM].
  */
-void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], unsigned int absBlackThreshold, int outsideMask[EDGES_COUNT], struct IMAGE* image) {
+void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], int outsideMask[EDGES_COUNT], struct IMAGE* image) {
     border[LEFT] = outsideMask[LEFT];
     border[TOP] = outsideMask[TOP];
     border[RIGHT] = image->frame->width - outsideMask[RIGHT];
     border[BOTTOM] = image->frame->height - outsideMask[BOTTOM];
 
     if (borderScanDirections & 1<<HORIZONTAL) {
-        border[LEFT] += detectBorderEdge(outsideMask, borderScanStep[HORIZONTAL], 0, borderScanSize[HORIZONTAL], borderScanThreshold[HORIZONTAL], absBlackThreshold, image);
-        border[RIGHT] += detectBorderEdge(outsideMask, -borderScanStep[HORIZONTAL], 0, borderScanSize[HORIZONTAL], borderScanThreshold[HORIZONTAL], absBlackThreshold, image);
+        border[LEFT] += detectBorderEdge(outsideMask, borderScanStep[HORIZONTAL], 0, borderScanSize[HORIZONTAL], borderScanThreshold[HORIZONTAL], image);
+        border[RIGHT] += detectBorderEdge(outsideMask, -borderScanStep[HORIZONTAL], 0, borderScanSize[HORIZONTAL], borderScanThreshold[HORIZONTAL], image);
     }
     if (borderScanDirections & 1<<VERTICAL) {
-        border[TOP] += detectBorderEdge(outsideMask, 0, borderScanStep[VERTICAL], borderScanSize[VERTICAL], borderScanThreshold[VERTICAL], absBlackThreshold, image);
-        border[BOTTOM] += detectBorderEdge(outsideMask, 0, -borderScanStep[VERTICAL], borderScanSize[VERTICAL], borderScanThreshold[VERTICAL], absBlackThreshold, image);
+        border[TOP] += detectBorderEdge(outsideMask, 0, borderScanStep[VERTICAL], borderScanSize[VERTICAL], borderScanThreshold[VERTICAL], image);
+        border[BOTTOM] += detectBorderEdge(outsideMask, 0, -borderScanStep[VERTICAL], borderScanSize[VERTICAL], borderScanThreshold[VERTICAL], image);
     }
     if (verbose >= VERBOSE_NORMAL) {
         printf("border detected: (%d,%d,%d,%d) in [%d,%d,%d,%d]\n", border[LEFT], border[TOP], border[RIGHT], border[BOTTOM], outsideMask[LEFT], outsideMask[TOP], outsideMask[RIGHT], outsideMask[BOTTOM]);

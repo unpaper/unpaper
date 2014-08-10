@@ -147,3 +147,4 @@ void errOutput(const char *fmt, ...)
 
 extern VERBOSE_LEVEL verbose;
 extern INTERP_FUNCTIONS interpolateType;
+extern unsigned int absBlackThreshold;
