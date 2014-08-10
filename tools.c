@@ -229,7 +229,7 @@ uint8_t getPixelGrayscale(int x, int y, struct IMAGE* image) {
 static uint8_t getPixelLightness(int x, int y, struct IMAGE* image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
-    return ( r < g ? ( r < b ? r : b ) : ( g < b ? g : b ) ); // min3
+    return min3(r, g, b);
 }
 
 
@@ -247,7 +247,7 @@ static uint8_t getPixelLightness(int x, int y, struct IMAGE* image) {
 uint8_t getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
-    return ( r > g ? ( r > b ? r : b ) : ( g > b ? g : b ) ); // max3
+    return max3(r, g, b);
 }
 
 /**
