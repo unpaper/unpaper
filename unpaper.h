@@ -23,10 +23,10 @@
 #if HAVE_STDBOOL_H
 # include <stdbool.h>
 #else
- typedef enum {
-   FALSE,
-   TRUE
- } BOOLEAN;
+typedef enum {
+    FALSE,
+    TRUE
+} BOOLEAN;
 
 # define bool BOOLEAN
 # define false FALSE
@@ -37,22 +37,22 @@
 
 /* --- preprocessor macros ------------------------------------------------ */
 
-#define max(a, b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
+#define max(a, b)                               \
+    ({ __typeof__ (a) _a = (a);                 \
+        __typeof__ (b) _b = (b);                \
+        _a > _b ? _a : _b; })
 
 #define max3(a, b, c)                                                   \
     ({ __typeof__ (a) _a = (a);                                         \
-       __typeof__ (b) _b = (b);                                         \
-       __typeof__ (c) _c = (c);                                         \
-       ( _a > _b ? ( _a > _c ? _a : _c ) : ( _b > _c ? _b : _c ) ); })
+        __typeof__ (b) _b = (b);                                        \
+        __typeof__ (c) _c = (c);                                        \
+        ( _a > _b ? ( _a > _c ? _a : _c ) : ( _b > _c ? _b : _c ) ); })
 
 #define min3(a, b, c)                                                   \
     ({ __typeof__ (a) _a = (a);                                         \
-       __typeof__ (b) _b = (b);                                         \
-       __typeof__ (c) _c = (c);                                         \
-       ( _a < _b ? ( _a < _c ? _a : _c ) : ( _b < _c ? _b : _c ) ); })
+        __typeof__ (b) _b = (b);                                        \
+        __typeof__ (c) _c = (c);                                        \
+        ( _a < _b ? ( _a < _c ? _a : _c ) : ( _b < _c ? _b : _c ) ); })
 
 #define pluralS(i) ( (i > 1) ? "s" : "" )
 #define red(pixel) ( (pixel >> 16) & 0xff )
@@ -92,43 +92,43 @@ typedef enum {
 } VERBOSE_LEVEL;
 
 typedef enum {
-        X,
-        Y,
-        COORDINATES_COUNT
+    X,
+    Y,
+    COORDINATES_COUNT
 } COORDINATES;
 
 typedef enum {
-        WIDTH,
-        HEIGHT,
-        DIMENSIONS_COUNT
+    WIDTH,
+    HEIGHT,
+    DIMENSIONS_COUNT
 } DIMENSIONS;
 
 typedef enum {
-        HORIZONTAL,
-        VERTICAL,
-        DIRECTIONS_COUNT
+    HORIZONTAL,
+    VERTICAL,
+    DIRECTIONS_COUNT
 } DIRECTIONS;
 
 typedef enum {
-        LEFT,
-        TOP,
-        RIGHT,
-        BOTTOM,
-        EDGES_COUNT
+    LEFT,
+    TOP,
+    RIGHT,
+    BOTTOM,
+    EDGES_COUNT
 } EDGES;
 
 typedef enum {
     LAYOUT_NONE,
-        LAYOUT_SINGLE,
-        LAYOUT_DOUBLE,
-        LAYOUTS_COUNT
+    LAYOUT_SINGLE,
+    LAYOUT_DOUBLE,
+    LAYOUTS_COUNT
 } LAYOUTS;
 
 typedef enum {
-        INTERP_NN,
-        INTERP_LINEAR,
-        INTERP_CUBIC,
-        INTERP_FUNCTIONS_COUNT
+    INTERP_NN,
+    INTERP_LINEAR,
+    INTERP_CUBIC,
+    INTERP_FUNCTIONS_COUNT
 } INTERP_FUNCTIONS;
 
 
