@@ -44,8 +44,6 @@ bool setPixel(int pixel, const int x, const int y, struct IMAGE* image);
 
 int getPixel(int x, int y, struct IMAGE* image);
 
-uint8_t getPixelGrayscale(int x, int y, struct IMAGE* image);
-
 uint8_t getPixelDarknessInverse(int x, int y, struct IMAGE* image);
 
 int clearRect(const int left, const int top, const int right, const int bottom, struct IMAGE* image, const int blackwhite);

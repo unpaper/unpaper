@@ -29,7 +29,7 @@
 #include <libavutil/avutil.h>
 
 #include "unpaper.h"
-#include "tools.h" //only needed for getPixelGrayscale
+#include "tools.h"
 #include "file.h"
 
 /**
@@ -159,17 +159,8 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt) {
         struct IMAGE output;
         initImage(&output, image->frame->width, image->frame->height,
                   outputPixFmt, -1);
-        if ( outputPixFmt == AV_PIX_FMT_MONOWHITE ) {
-            for (int y = 0; y < image->frame->height; y++) {
-                for (int x = 0; x < image->frame->width; x++) {
-                    const uint8_t pixel = getPixelGrayscale(x, y, image);
-                    setPixel((pixel < absBlackThreshold ? BLACK24 : WHITE24), x, y, &output);
-                }
-            }
-        } else {
-            copyImageArea(0, 0, image->frame->width, image->frame->height,
-                          image, 0, 0, &output);
-        }
+        copyImageArea(0, 0, image->frame->width, image->frame->height,
+                      image, 0, 0, &output);
         replaceImage(image, &output);
     }
 

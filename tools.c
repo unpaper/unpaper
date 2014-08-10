@@ -137,16 +137,17 @@ void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
  * @return true if the pixel has been changed, false if the original color was the one to set
  */
 bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
-    uint8_t r, g, b;
     uint8_t *pix;
 
     if ( (x < 0) || (x >= image->frame->width) || (y < 0) || (y >= image->frame->height) ) {
         return false; //nop
     }
 
-    r = (pixel >> 16) & 0xff;
-    g = (pixel >> 8) & 0xff;
-    b = pixel & 0xff;
+    uint8_t r = (pixel >> 16) & 0xff;
+    uint8_t g = (pixel >> 8) & 0xff;
+    uint8_t b = pixel & 0xff;
+
+    uint8_t pixelbw = pixelGrayscale(r, g, b) < absBlackThreshold ? BLACK : WHITE;
 
     switch(image->frame->format) {
     case AV_PIX_FMT_GRAY8:
@@ -165,23 +166,13 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
         pix[2] = b;
         break;
     case AV_PIX_FMT_MONOWHITE:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
-        if ( pixel == BLACK24 ) {
-            *pix = *pix | (128 >> (x % 8));
-        } else if ( pixel == WHITE24 ) {
-            *pix = *pix & ~(128 >> (x % 8));
-        } else {
-            errOutput("unable to set non-b/w color for monochrome bitmaps.");
-        }
-        break;
+        pixelbw = ~pixelbw; // reverse compared to following case
     case AV_PIX_FMT_MONOBLACK:
         pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
-        if ( pixel == WHITE24 ) {
+        if ( pixelbw == WHITE ) {
             *pix = *pix | (128 >> (x % 8));
-        } else if ( pixel == BLACK24 ) {
+        } else if ( pixelbw == BLACK ) {
             *pix = *pix & ~(128 >> (x % 8));
-        } else {
-            errOutput("unable to set non-b/w color for monochrome bitmaps.");
         }
         break;
     default:
@@ -208,7 +199,7 @@ int getPixel(int x, int y, struct IMAGE* image) {
  *
  * @return grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */
-uint8_t getPixelGrayscale(int x, int y, struct IMAGE* image) {
+static uint8_t getPixelGrayscale(int x, int y, struct IMAGE* image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return pixelGrayscale(r, g, b);
