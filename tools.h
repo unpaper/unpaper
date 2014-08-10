@@ -58,7 +58,7 @@ void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct 
 
 int brightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
 
-int lightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
+uint8_t lightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
 
 int darknessInverseRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image);
 

@@ -991,10 +991,10 @@ int main(int argc, char* argv[]) {
         endSheet = startSheet;
 
     // Calculate the constant absolute values based on the relative parameters.
-    const int absBlackThreshold = WHITE * (1.0 - blackThreshold);
-    const int absWhiteThreshold = WHITE * (whiteThreshold);
-    const int absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
-    const int absGrayfilterThreshold = WHITE * (grayfilterThreshold);
+    const unsigned int absBlackThreshold = WHITE * (1.0 - blackThreshold);
+    const unsigned int absWhiteThreshold = WHITE * (whiteThreshold);
+    const unsigned int absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
+    const unsigned int absGrayfilterThreshold = WHITE * (grayfilterThreshold);
     const double deskewScanRangeRad = degreesToRadians(deskewScanRange);
     const double deskewScanStepRad = degreesToRadians(deskewScanStep);
     const double deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);

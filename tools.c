@@ -356,7 +356,7 @@ int brightnessRect(const int x1, const int y1, const int x2, const int y2, struc
 /**
  * Returns the average lightness of a rectagular area.
  */
-int lightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
+uint8_t lightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
     unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
@@ -417,7 +417,6 @@ int countPixelsRect(int left, int top, int right, int bottom, int minColor, int 
  */
 static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whiteMin, struct IMAGE* image) {
     int count = 0;
-    int pixel;
 
     // upper and lower rows
     for (int xx = x - level; xx <= x + level; xx++) {

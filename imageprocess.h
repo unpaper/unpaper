@@ -68,24 +68,24 @@ void flipRotate(int direction, struct IMAGE* image);
 /* --- blackfilter -------------------------------------------------------- */
 
 
-void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], int absBlackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, int thresholdBlack, struct IMAGE* image);
+void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], unsigned int absBlackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, unsigned int absBlackThreshold, struct IMAGE* image);
 
 
 /* --- noisefilter -------------------------------------------------------- */
 
 
-int noisefilter(int intensity, int absWhiteThreshold, struct IMAGE* image);
+int noisefilter(int intensity, unsigned int absWhiteThreshold, struct IMAGE* image);
 
 
 /* --- blurfilter --------------------------------------------------------- */
 
-int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, int absWhiteThreshold, struct IMAGE* image);
+int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, unsigned int absWhiteThreshold, struct IMAGE* image);
 
 
 /* --- grayfilter --------------------------------------------------------- */
 
 
-int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], int absGrayfilterThreshold, int absBlackThreshold, struct IMAGE* image);
+int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], unsigned int absGrayfilterThreshold, unsigned int absBlackThreshold, struct IMAGE* image);
 
 
 /* --- border-detection --------------------------------------------------- */
@@ -95,7 +95,7 @@ void centerMask(int centerX, int centerY, int left, int top, int right, int bott
 
 void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, int margin[DIRECTIONS_COUNT], struct IMAGE* image);
 
-void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], int absBlackThreshold, int outsideMask[EDGES_COUNT], struct IMAGE* image);
+void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], unsigned int absBlackThreshold, int outsideMask[EDGES_COUNT], struct IMAGE* image);
 
 void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], struct IMAGE* image);
 
