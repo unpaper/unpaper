@@ -1000,6 +1000,9 @@ int main(int argc, char* argv[]) {
     // Calculate the constant absolute values based on the relative parameters.
     const int absBlackThreshold = WHITE * (1.0 - blackThreshold);
     const int absWhiteThreshold = WHITE * (whiteThreshold);
+    const double deskewScanRangeRad = degreesToRadians(deskewScanRange);
+    const double deskewScanStepRad = degreesToRadians(deskewScanStep);
+    const double deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
 
     avcodec_register_all();
     av_register_all();
@@ -1686,10 +1689,6 @@ int main(int argc, char* argv[]) {
                 }
 
                 // auto-deskew each mask
-                const double deskewScanRangeRad = degreesToRadians(deskewScanRange);
-                const double deskewScanStepRad = degreesToRadians(deskewScanStep);
-                const double deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
-
                 for (int i = 0; i < maskCount; i++) {
 
                     // if ( maskValid[i] == true ) { // point may have been invalidated if mask has not been auto-detected
