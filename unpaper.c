@@ -999,6 +999,7 @@ int main(int argc, char* argv[]) {
 
     // Calculate the constant absolute values based on the relative parameters.
     const int absBlackThreshold = WHITE * (1.0 - blackThreshold);
+    const int absWhiteThreshold = WHITE * (whiteThreshold);
 
     avcodec_register_all();
     av_register_all();
@@ -1609,7 +1610,7 @@ int main(int argc, char* argv[]) {
                     printf("noise-filter ...");
                 }
                 saveDebug("_before-noisefilter%d.pnm", nr, &sheet);
-                filterResult = noisefilter(noisefilterIntensity, whiteThreshold, &sheet);
+                filterResult = noisefilter(noisefilterIntensity, absWhiteThreshold, &sheet);
                 saveDebug("_after-noisefilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d clusters.\n", filterResult);
@@ -1626,7 +1627,7 @@ int main(int argc, char* argv[]) {
                     printf("blur-filter...");
                 }
                 saveDebug("_before-blurfilter%d.pnm", nr, &sheet);
-                filterResult = blurfilter(blurfilterScanSize, blurfilterScanStep, blurfilterIntensity, whiteThreshold, &sheet);
+                filterResult = blurfilter(blurfilterScanSize, blurfilterScanStep, blurfilterIntensity, absWhiteThreshold, &sheet);
                 saveDebug("_after-blurfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);

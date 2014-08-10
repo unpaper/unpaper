@@ -74,12 +74,12 @@ void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIO
 /* --- noisefilter -------------------------------------------------------- */
 
 
-int noisefilter(int intensity, float whiteThreshold, struct IMAGE* image);
+int noisefilter(int intensity, int absWhiteThreshold, struct IMAGE* image);
 
 
 /* --- blurfilter --------------------------------------------------------- */
 
-int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, float whiteThreshold, struct IMAGE* image);
+int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, int absWhiteThreshold, struct IMAGE* image);
 
 
 /* --- grayfilter --------------------------------------------------------- */

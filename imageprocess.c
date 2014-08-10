@@ -835,21 +835,19 @@ void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIO
  *
  * @param intensity maximum cluster size to delete
  */
-int noisefilter(int intensity, float whiteThreshold, struct IMAGE* image) {
-    int whiteMin;
+int noisefilter(int intensity, int absWhiteThreshold, struct IMAGE* image) {
     int count;
     int pixel;
     int neighbors;
 
-    whiteMin = (int)(WHITE * whiteThreshold);
     count = 0;
     for (int y = 0; y < image->frame->height; y++) {
         for (int x = 0; x < image->frame->width; x++) {
             pixel = getPixelDarknessInverse(x, y, image);
-            if (pixel < whiteMin) { // one dark pixel found
-                neighbors = countPixelNeighbors(x, y, intensity, whiteMin, image); // get number of non-light pixels in neighborhood
+            if (pixel < absWhiteThreshold) { // one dark pixel found
+                neighbors = countPixelNeighbors(x, y, intensity, absWhiteThreshold, image); // get number of non-light pixels in neighborhood
                 if (neighbors <= intensity) { // ...not more than 'intensity'?
-                    clearPixelNeighbors(x, y, whiteMin, image); // delete area
+                    clearPixelNeighbors(x, y, absWhiteThreshold, image); // delete area
                     count++;
                 }
             }
@@ -866,8 +864,7 @@ int noisefilter(int intensity, float whiteThreshold, struct IMAGE* image) {
  * filter. This algoithm counts pixels while 'shaking' the area to detect,
  * and clears the area if the amount of white pixels exceeds whiteTreshold.
  */
-int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, float whiteThreshold, struct IMAGE* image) {
-    const int whiteMin = (WHITE * whiteThreshold);
+int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, int absWhiteThreshold, struct IMAGE* image) {
     const int blocksPerRow = image->frame->width / blurfilterScanSize[HORIZONTAL];
     const int total = blurfilterScanSize[HORIZONTAL] * blurfilterScanSize[VERTICAL]; // Number of pixels in a block
     int top = 0;
@@ -886,7 +883,7 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
     int* nextCounts = calloc(blocksPerRow + 2, sizeof(int));
 
     for (int left = 0, block = 1; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
-        curCounts[block] = countPixelsRect(left, top, right, bottom, 0, whiteMin, false, image);
+        curCounts[block] = countPixelsRect(left, top, right, bottom, 0, absWhiteThreshold, false, image);
         block++;
         right += blurfilterScanSize[HORIZONTAL];
     }
@@ -898,7 +895,7 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
     // Loop through all blocks. For a block calculate the number of dark pixels in this block, the number of dark pixels in the block in the top-left corner and similarly for the block in the top-right, bottom-left and bottom-right corner. Take the maximum of these values. Clear the block if this number is not large enough compared to the total number of pixels in a block.
     for (int top = 0; top <= maxTop; top += blurfilterScanSize[HORIZONTAL]) {
         right = blurfilterScanSize[HORIZONTAL] - 1;
-        nextCounts[0] = countPixelsRect(0, top+blurfilterScanStep[VERTICAL], right, bottom+blurfilterScanSize[VERTICAL], 0, whiteMin, false, image);
+        nextCounts[0] = countPixelsRect(0, top+blurfilterScanStep[VERTICAL], right, bottom+blurfilterScanSize[VERTICAL], 0, absWhiteThreshold, false, image);
 
         for (int left = 0, block = 1; left <= maxLeft; left += blurfilterScanSize[HORIZONTAL]) {
             // current block
@@ -920,7 +917,7 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
                 max = count;
             }
             // bottom right (has still to be calculated)
-            nextCounts[block+1] = countPixelsRect(left+blurfilterScanSize[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanSize[HORIZONTAL], bottom+blurfilterScanSize[VERTICAL], 0, whiteMin, false, image);
+            nextCounts[block+1] = countPixelsRect(left+blurfilterScanSize[HORIZONTAL], top+blurfilterScanStep[VERTICAL], right+blurfilterScanSize[HORIZONTAL], bottom+blurfilterScanSize[VERTICAL], 0, absWhiteThreshold, false, image);
             if (count > max) {
                 max = count;
             }
