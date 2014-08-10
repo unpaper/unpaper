@@ -97,9 +97,11 @@ void initImage(struct IMAGE* image, int width, int height, int pixel_format, int
     }
 
     image->background = background;
-    for (int y = 0; y < image->frame->height; y++) {
-        for (int x = 0; x < image->frame->width; x++) {
-            setPixel(image->background, x, y, image);
+    if ( background != -1 ) {
+        for (int y = 0; y < image->frame->height; y++) {
+            for (int x = 0; x < image->frame->width; x++) {
+                setPixel(image->background, x, y, image);
+            }
         }
     }
 }
@@ -116,6 +118,9 @@ void freeImage(struct IMAGE* image) {
  * Replaces one image with another.
  */
 void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
+    if ( newimage->background == -1 )
+        newimage->background = image->background;
+
     freeImage(image);
     // pass-back new image
     *image = *newimage; // copy whole struct

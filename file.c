@@ -159,7 +159,7 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt, int absBla
     if ( image->frame->format != outputPixFmt ) {
         struct IMAGE output;
         initImage(&output, image->frame->width, image->frame->height,
-                  outputPixFmt, image->background);
+                  outputPixFmt, -1);
         if ( outputPixFmt == AV_PIX_FMT_MONOWHITE ) {
             for (int y = 0; y < image->frame->height; y++) {
                 for (int x = 0; x < image->frame->width; x++) {

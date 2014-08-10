@@ -1701,7 +1701,7 @@ int main(int argc, char* argv[]) {
                     if (rotation != 0.0) {
                         struct IMAGE rect;
                         struct IMAGE rectTarget;
-                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet.frame->format, sheetBackground);
+                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet.frame->format, -1);
                         initImage(&rectTarget, rect.frame->width, rect.frame->height, sheet.frame->format, sheetBackground);
 
                         // copy area to rotate into rSource

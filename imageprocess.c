@@ -709,7 +709,9 @@ void mirror(int directions, struct IMAGE* image) {
 void flipRotate(int direction, struct IMAGE* image) {
     struct IMAGE newimage;
 
-    initImage(&newimage, image->frame->height, image->frame->width, image->frame->format, WHITE); // exchanged width and height
+    // exchanged width and height
+    initImage(&newimage, image->frame->height, image->frame->width, image->frame->format, -1);
+
     for (int y = 0; y < image->frame->height; y++) {
         const int xx = ((direction > 0) ? image->frame->height - 1 : 0) - y * direction;
         for (int x = 0; x < image->frame->width; x++) {
@@ -1002,7 +1004,7 @@ void centerMask(int centerX, int centerY, int left, int top, int right, int bott
         if (verbose >= VERBOSE_NORMAL) {
             printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", left, top, right, bottom, centerX, centerY, targetX-left, targetY-top);
         }
-        initImage(&newimage, width, height, image->frame->format, image->background);
+        initImage(&newimage, width, height, image->frame->format, -1);
         copyImageArea(left, top, width, height, image, 0, 0, &newimage);
         clearRect(left, top, right, bottom, image, image->background);
         copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
