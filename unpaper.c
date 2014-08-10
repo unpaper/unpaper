@@ -1000,6 +1000,8 @@ int main(int argc, char* argv[]) {
     // Calculate the constant absolute values based on the relative parameters.
     const int absBlackThreshold = WHITE * (1.0 - blackThreshold);
     const int absWhiteThreshold = WHITE * (whiteThreshold);
+    const int absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
+    const int absGrayfilterThreshold = WHITE * (grayfilterThreshold);
     const double deskewScanRangeRad = degreesToRadians(deskewScanRange);
     const double deskewScanStepRad = degreesToRadians(deskewScanStep);
     const double deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
@@ -1599,7 +1601,7 @@ int main(int argc, char* argv[]) {
             // black area filter
             if (!isExcluded(nr, noBlackfilterMultiIndex, noBlackfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                 saveDebug("_before-blackfilter%d.pnm", nr, &sheet);
-                blackfilter(blackfilterScanDirections, blackfilterScanSize, blackfilterScanDepth, blackfilterScanStep, blackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, &sheet);
+                blackfilter(blackfilterScanDirections, blackfilterScanSize, blackfilterScanDepth, blackfilterScanStep, absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, &sheet);
                 saveDebug("_after-blackfilter%d.pnm", nr, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
@@ -1663,7 +1665,7 @@ int main(int argc, char* argv[]) {
                     printf("gray-filter...");
                 }
                 saveDebug("_before-grayfilter%d.pnm", nr, &sheet);
-                filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, grayfilterThreshold, absBlackThreshold, &sheet);
+                filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, absGrayfilterThreshold, absBlackThreshold, &sheet);
                 saveDebug("_after-grayfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);

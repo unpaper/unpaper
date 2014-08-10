@@ -731,7 +731,7 @@ void flipRotate(int direction, struct IMAGE* image) {
  * @param stepY is 0 if stepX!=0
  * @see blackfilter()
  */
-static void blackfilterScan(int stepX, int stepY, int size, int dep, float threshold, int exclude[MAX_MASKS][EDGES_COUNT], int excludeCount, int intensity, int absBlackThreshold, struct IMAGE* image) {
+static void blackfilterScan(int stepX, int stepY, int size, int dep, int absBlackfilterScanThreshold, int exclude[MAX_MASKS][EDGES_COUNT], int excludeCount, int intensity, int absBlackThreshold, struct IMAGE* image) {
     int left;
     int top;
     int right;
@@ -777,7 +777,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
         alreadyExcludedMessage = false;
         while ((l < image->frame->width) && (t < image->frame->height)) { // single scanning "stripe"
             blackness = 255 - darknessInverseRect(l, t, r, b, image);
-            if (blackness >= 255*threshold) { // found a solidly black area
+            if (blackness >= absBlackfilterScanThreshold) { // found a solidly black area
                 mask[LEFT] = l;
                 mask[TOP] = t;
                 mask[RIGHT] = r;
@@ -818,12 +818,12 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, float thres
  * A virtual bar of width 'size' and height 'depth' is horizontally moved
  * above the middle of the sheet (or the full sheet, if depth ==-1).
  */
-void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], float blackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, int absBlackThreshold, struct IMAGE* image) {
+void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], int absBlackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, int absBlackThreshold, struct IMAGE* image) {
     if ((blackfilterScanDirections & 1<<HORIZONTAL) != 0) { // left-to-right scan
-        blackfilterScan(blackfilterScanStep[HORIZONTAL], 0, blackfilterScanSize[HORIZONTAL], blackfilterScanDepth[HORIZONTAL], blackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, image);
+        blackfilterScan(blackfilterScanStep[HORIZONTAL], 0, blackfilterScanSize[HORIZONTAL], blackfilterScanDepth[HORIZONTAL], absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, image);
     }
     if ((blackfilterScanDirections & 1<<VERTICAL) != 0) { // top-to-bottom scan
-        blackfilterScan(0, blackfilterScanStep[VERTICAL], blackfilterScanSize[VERTICAL], blackfilterScanDepth[VERTICAL], blackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, image);
+        blackfilterScan(0, blackfilterScanStep[VERTICAL], blackfilterScanSize[VERTICAL], blackfilterScanDepth[VERTICAL], absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, absBlackThreshold, image);
     }
 }
 
@@ -954,19 +954,18 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
  * Two conditions have to apply before an area gets deleted: first, not a single black pixel may be contained,
  * second, a minimum threshold of blackness must not be exceeded.
  */
-int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], float grayfilterThreshold, int absBlackThreshold, struct IMAGE* image) {
+int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], int absGrayfilterThreshold, int absBlackThreshold, struct IMAGE* image) {
     int left = 0;
     int top = 0;
     int right = grayfilterScanSize[HORIZONTAL] - 1;
     int bottom = grayfilterScanSize[VERTICAL] - 1;
-    int thresholdAbs = (WHITE * grayfilterThreshold);
     int result = 0;
 
     while (true) {
         int count = countPixelsRect(left, top, right, bottom, 0, absBlackThreshold, false, image);
         if (count == 0) {
             int lightness = lightnessRect(left, top, right, bottom, image);
-            if ((WHITE - lightness) < thresholdAbs) { // (lower threshold->more deletion)
+            if ((WHITE - lightness) < absGrayfilterThreshold) { // (lower threshold->more deletion)
                 result += clearRect(left, top, right, bottom, image, WHITE24);
             }
         }
