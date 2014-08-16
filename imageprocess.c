@@ -47,9 +47,9 @@
  *
  * @param m ascending slope of the virtually shifted (m=tan(angle)). Mind that this is negative for negative radians.
  */
-static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScanDepth, int shiftX, int shiftY, int left, int top, int right, int bottom, struct IMAGE* image) {
-    int width = right-left+1;
-    int height = bottom-top+1;
+static int detectEdgeRotationPeak(double m, int shiftX, int shiftY, struct IMAGE* image, int mask[EDGES_COUNT]) {
+    int width = mask[RIGHT] - mask[LEFT] + 1;
+    int height = mask[BOTTOM] - mask[TOP] + 1;
     int mid;
     int half;
     int sideOffset;
@@ -83,9 +83,9 @@ static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScan
         half = deskewScanSize/2;
         outerOffset = (int)(abs(m) * half);
         mid = height/2;
-        sideOffset = shiftX > 0 ? left-outerOffset : right+outerOffset;
+        sideOffset = shiftX > 0 ? mask[LEFT]-outerOffset : mask[RIGHT]+outerOffset;
         X = sideOffset + half * m;
-        Y = top + mid - half;
+        Y = mask[TOP] + mid - half;
         stepX = -m;
         stepY = 1.0;
     } else { // vertical detection
@@ -98,8 +98,8 @@ static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScan
         half = deskewScanSize/2;
         outerOffset = (int)(abs(m) * half);
         mid = width/2;
-        sideOffset = shiftY > 0 ? top-outerOffset : bottom+outerOffset;
-        X = left + mid - half;
+        sideOffset = shiftY > 0 ? mask[TOP]-outerOffset : mask[BOTTOM]+outerOffset;
+        X = mask[LEFT] + mid - half;
         Y = sideOffset - (half * m);
         stepX = 1.0;
         stepY = -m; // (line goes upwards for negative degrees)
@@ -123,7 +123,7 @@ static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScan
             x[lineStep] += shiftX;
             yy = y[lineStep];
             y[lineStep] += shiftY;
-            if ((xx >= left) && (xx <= right) && (yy >= top) && (yy <= bottom)) {
+            if ((xx >= mask[LEFT]) && (xx <= mask[RIGHT]) && (yy >= mask[TOP]) && (yy <= mask[BOTTOM])) {
                 pixel = getPixelDarknessInverse(xx, yy, image);
                 blackness += (255 - pixel);
             }
@@ -148,16 +148,16 @@ static int detectEdgeRotationPeak(double m, int deskewScanSize, float deskewScan
  * Which of the four edges to take depends on whether shiftX or shiftY is non-zero,
  * and what sign this shifting value has.
  */
-static double detectEdgeRotation(double rangeRad, double stepRad, int deskewScanSize, float deskewScanDepth, int shiftX, int shiftY, int left, int top, int right, int bottom, struct IMAGE* image) {
+static double detectEdgeRotation(int shiftX, int shiftY, struct IMAGE* image, int mask[EDGES_COUNT]) {
     // either shiftX or shiftY is 0, the other value is -i|+i
     // depending on shiftX/shiftY the start edge for shifting is determined
     int maxPeak = 0;
     double detectedRotation = 0.0;
 
     // iteratively increase test angle,  alterating between +/- sign while increasing absolute value
-    for (double rotation = 0.0; rotation <= rangeRad; rotation = (rotation>=0.0) ? -(rotation + stepRad) : -rotation ) {
+    for (double rotation = 0.0; rotation <= deskewScanRangeRad; rotation = (rotation>=0.0) ? -(rotation + deskewScanStepRad) : -rotation ) {
         double m = tan(rotation);
-        int peak = detectEdgeRotationPeak(m, deskewScanSize, deskewScanDepth, shiftX, shiftY, left, top, right, bottom, image);
+        int peak = detectEdgeRotationPeak(m, shiftX, shiftY, image, mask);
         if (peak > maxPeak) {
             detectedRotation = rotation;
             maxPeak = peak;
@@ -172,7 +172,7 @@ static double detectEdgeRotation(double rangeRad, double stepRad, int deskewScan
  * Angles between -deskewScanRange and +deskewScanRange are scanned, at either the
  * horizontal or vertical edges of the area specified by left, top, right, bottom.
  */
-double detectRotation(int deskewScanEdges, double deskewScanRange, double deskewScanStep, int deskewScanSize, float deskewScanDepth, double deskewScanDeviation, int left, int top, int right, int bottom, struct IMAGE* image) {
+double detectRotation(struct IMAGE *image, int mask[EDGES_COUNT]) {
     double rotation[4];
     int count = 0;
     double total;
@@ -181,33 +181,33 @@ double detectRotation(int deskewScanEdges, double deskewScanRange, double deskew
 
     if ((deskewScanEdges & 1<<LEFT) != 0) {
         // left
-        rotation[count] = detectEdgeRotation(deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, 1, 0, left, top, right, bottom, image);
+        rotation[count] = detectEdgeRotation(1, 0, image, mask);
         if (verbose >= VERBOSE_NORMAL) {
-            printf("detected rotation left: [%d,%d,%d,%d]: %f\n", left,top,right,bottom, rotation[count]);
+            printf("detected rotation left: [%d,%d,%d,%d]: %f\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
         }
         count++;
     }
     if ((deskewScanEdges & 1<<TOP) != 0) {
         // top
-        rotation[count] = - detectEdgeRotation(deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, 0, 1, left, top, right, bottom, image);
+        rotation[count] = - detectEdgeRotation(0, 1, image, mask);
         if (verbose >= VERBOSE_NORMAL) {
-            printf("detected rotation top: [%d,%d,%d,%d]: %f\n", left,top,right,bottom, rotation[count]);
+            printf("detected rotation top: [%d,%d,%d,%d]: %f\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
         }
         count++;
     }
     if ((deskewScanEdges & 1<<RIGHT) != 0) {
         // right
-        rotation[count] = detectEdgeRotation(deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, -1, 0, left, top, right, bottom, image);
+        rotation[count] = detectEdgeRotation(-1, 0, image, mask);
         if (verbose >= VERBOSE_NORMAL) {
-            printf("detected rotation right: [%d,%d,%d,%d]: %f\n", left,top,right,bottom, rotation[count]);
+            printf("detected rotation right: [%d,%d,%d,%d]: %f\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
         }
         count++;
     }
     if ((deskewScanEdges & 1<<BOTTOM) != 0) {
         // bottom
-        rotation[count] = - detectEdgeRotation(deskewScanRange, deskewScanStep, deskewScanSize, deskewScanDepth, 0, -1, left, top, right, bottom, image);
+        rotation[count] = - detectEdgeRotation(0, -1, image, mask);
         if (verbose >= VERBOSE_NORMAL) {
-            printf("detected rotation bottom: [%d,%d,%d,%d]: %f\n", left,top,right,bottom, rotation[count]);
+            printf("detected rotation bottom: [%d,%d,%d,%d]: %f\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
         }
         count++;
     }
@@ -223,9 +223,9 @@ double detectRotation(int deskewScanEdges, double deskewScanRange, double deskew
     }
     deviation = sqrt(total);
     if (verbose >= VERBOSE_NORMAL) {
-        printf("rotation average: %f  deviation: %f  rotation-scan-deviation (maximum): %f  [%d,%d,%d,%d]\n", average, deviation, deskewScanDeviation, left,top,right,bottom);
+        printf("rotation average: %f  deviation: %f  rotation-scan-deviation (maximum): %f  [%d,%d,%d,%d]\n", average, deviation, deskewScanDeviationRad, mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM]);
     }
-    if (deviation <= deskewScanDeviation) {
+    if (deviation <= deskewScanDeviationRad) {
         return average;
     } else {
         if (verbose >= VERBOSE_NONE) {
