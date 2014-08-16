@@ -207,16 +207,16 @@ int main(int argc, char* argv[]) {
     int bottom;
     int previousWidth = -1;
     int previousHeight = -1;
-    struct IMAGE sheet;
-    struct IMAGE originalSheet;
-    struct IMAGE page;
+    AVFrame *sheet;
+    AVFrame *originalSheet;
+    AVFrame *page;
     int inputNr;
     int outputNr;
     int option_index = 0;
     int outputPixFmt = -1;
 
-    sheet.frame = NULL;
-    page.frame = NULL;
+    sheet = NULL;
+    page = NULL;
 
     // -------------------------------------------------------------------
     // --- parse parameters                                            ---
@@ -1052,10 +1052,10 @@ int main(int argc, char* argv[]) {
                         printf("loading file %s.\n", inputFileNames[j]);
 
                     loadImage(inputFileNames[j], &page);
-                    saveDebug("_loaded_%d.pnm", inputNr-inputCount+j, &page);
+                    saveDebug("_loaded_%d.pnm", inputNr-inputCount+j, page);
 
-                    if (outputPixFmt == -1 && page.frame != NULL) {
-                          outputPixFmt = page.frame->format;
+                    if (outputPixFmt == -1 && page != NULL) {
+                          outputPixFmt = page->format;
                     }
 
                     // pre-rotate
@@ -1071,38 +1071,38 @@ int main(int argc, char* argv[]) {
                         if ( sheetSize[WIDTH] != -1 ) {
                             w = sheetSize[WIDTH];
                         } else {
-                            w = page.frame->width * inputCount;
+                            w = page->width * inputCount;
                         }
                     }
                     if ( h == -1 ) {
                         if ( sheetSize[HEIGHT] != -1 ) {
                             h = sheetSize[HEIGHT];
                         } else {
-                            h = page.frame->height;
+                            h = page->height;
                         }
                     }
                 } else { // inputFiles[j] == NULL
-                    page.frame = NULL;
+                    page = NULL;
                 }
 
                 // place image into sheet buffer
                 // allocate sheet-buffer if not done yet
-                if ((sheet.frame == NULL) && (w != -1) && (h != -1)) {
+                if ((sheet == NULL) && (w != -1) && (h != -1)) {
                     initImage(&sheet, w, h, AV_PIX_FMT_RGB24, sheetBackground);
 
                 }
-                if (page.frame != NULL) {
-                    saveDebug("_page%d.pnm", inputNr-inputCount+j, &page);
-                    saveDebug("_before_center_page%d.pnm", inputNr-inputCount+j, &sheet);
+                if (page != NULL) {
+                    saveDebug("_page%d.pnm", inputNr-inputCount+j, page);
+                    saveDebug("_before_center_page%d.pnm", inputNr-inputCount+j, sheet);
 
                     centerImage(&page, (w * j / inputCount), 0, (w / inputCount), h, &sheet);
 
-                    saveDebug("_after_center_page%d.pnm", inputNr-inputCount+j, &sheet);
+                    saveDebug("_after_center_page%d.pnm", inputNr-inputCount+j, sheet);
                 }
             }
 
             // the only case that buffer is not yet initialized is if all blank pages have been inserted
-            if (sheet.frame == NULL) {
+            if (sheet == NULL) {
                 // last chance: try to get previous (unstretched/not zoomed) sheet size
                 w = previousWidth;
                 h = previousHeight;
@@ -1364,7 +1364,7 @@ int main(int argc, char* argv[]) {
             if (verbose >= VERBOSE_NORMAL) {
                 printf("input-file%s for sheet %d: %s\n", pluralS(inputCount), nr, implode(s1, (const char **)inputFileNames, inputCount));
                 printf("output-file%s for sheet %d: %s\n", pluralS(outputCount), nr, implode(s1, (const char **)outputFileNames, outputCount));
-                printf("sheet size: %dx%d\n", sheet.frame->width, sheet.frame->height);
+                printf("sheet size: %dx%d\n", sheet->width, sheet->height);
                 printf("...\n");
             }
 
@@ -1378,22 +1378,22 @@ int main(int argc, char* argv[]) {
                 if (stretchSize[WIDTH] != -1) {
                     w = stretchSize[WIDTH];
                 } else {
-                    w = sheet.frame->width;
+                    w = sheet->width;
                 }
                 if (stretchSize[HEIGHT] != -1) {
                     h = stretchSize[HEIGHT];
                 } else {
-                    h = sheet.frame->height;
+                    h = sheet->height;
                 }
-                saveDebug("_before-stretch%d.pnm", nr, &sheet);
+                saveDebug("_before-stretch%d.pnm", nr, sheet);
                 stretch(w, h, &sheet);
-                saveDebug("_after-stretch%d.pnm", nr, &sheet);
+                saveDebug("_after-stretch%d.pnm", nr, sheet);
             }
 
             // zoom
             if (zoomFactor != 1.0) {
-                w = sheet.frame->width * zoomFactor;
-                h = sheet.frame->height * zoomFactor;
+                w = sheet->width * zoomFactor;
+                h = sheet->height * zoomFactor;
                 stretch(w, h, &sheet);
             }
 
@@ -1402,16 +1402,16 @@ int main(int argc, char* argv[]) {
                 if (size[WIDTH] != -1) {
                     w = size[WIDTH];
                 } else {
-                    w = sheet.frame->width;
+                    w = sheet->width;
                 }
                 if (size[HEIGHT] != -1) {
                     h = size[HEIGHT];
                 } else {
-                    h = sheet.frame->height;
+                    h = sheet->height;
                 }
-                saveDebug("_before-resize%d.pnm", nr, &sheet);
+                saveDebug("_before-resize%d.pnm", nr, sheet);
                 resize(w, h, &sheet);
-                saveDebug("_after-resize%d.pnm", nr, &sheet);
+                saveDebug("_after-resize%d.pnm", nr, sheet);
             }
 
 
@@ -1421,89 +1421,89 @@ int main(int argc, char* argv[]) {
             if (layout == LAYOUT_SINGLE) {
                 // set middle of sheet as single starting point for mask detection
                 if (pointCount == 0) { // no manual settings, use auto-values
-                    point[pointCount][X] = sheet.frame->width / 2;
-                    point[pointCount][Y] = sheet.frame->height / 2;
+                    point[pointCount][X] = sheet->width / 2;
+                    point[pointCount][Y] = sheet->height / 2;
                     pointCount++;
                 }
                 if (maskScanMaximum[WIDTH] == -1) {
-                    maskScanMaximum[WIDTH] = sheet.frame->width;
+                    maskScanMaximum[WIDTH] = sheet->width;
                 }
                 if (maskScanMaximum[HEIGHT] == -1) {
-                    maskScanMaximum[HEIGHT] = sheet.frame->height;
+                    maskScanMaximum[HEIGHT] = sheet->height;
                 }
                 // avoid inner half of the sheet to be blackfilter-detectable
                 if (blackfilterExcludeCount == 0) { // no manual settings, use auto-values
-                    blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.frame->width / 4;
-                    blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.frame->height / 4;
-                    blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.frame->width / 2 + sheet.frame->width / 4;
-                    blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.frame->height / 2 + sheet.frame->height / 4;
+                    blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet->width / 4;
+                    blackfilterExclude[blackfilterExcludeCount][TOP] = sheet->height / 4;
+                    blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet->width / 2 + sheet->width / 4;
+                    blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet->height / 2 + sheet->height / 4;
                     blackfilterExcludeCount++;
                 }
                 // set single outside border to start scanning for final border-scan
                 if (outsideBorderscanMaskCount == 0) { // no manual settings, use auto-values
                     outsideBorderscanMaskCount = 1;
                     outsideBorderscanMask[0][LEFT] = 0;
-                    outsideBorderscanMask[0][RIGHT] = sheet.frame->width - 1;
+                    outsideBorderscanMask[0][RIGHT] = sheet->width - 1;
                     outsideBorderscanMask[0][TOP] = 0;
-                    outsideBorderscanMask[0][BOTTOM] = sheet.frame->height - 1;
+                    outsideBorderscanMask[0][BOTTOM] = sheet->height - 1;
                 }
 
                 // LAYOUT_DOUBLE
             } else if (layout == LAYOUT_DOUBLE) {
                 // set two middle of left/right side of sheet as starting points for mask detection
                 if (pointCount == 0) { // no manual settings, use auto-values
-                    point[pointCount][X] = sheet.frame->width / 4;
-                    point[pointCount][Y] = sheet.frame->height / 2;
+                    point[pointCount][X] = sheet->width / 4;
+                    point[pointCount][Y] = sheet->height / 2;
                     pointCount++;
-                    point[pointCount][X] = sheet.frame->width - sheet.frame->width / 4;
-                    point[pointCount][Y] = sheet.frame->height / 2;
+                    point[pointCount][X] = sheet->width - sheet->width / 4;
+                    point[pointCount][Y] = sheet->height / 2;
                     pointCount++;
                 }
                 if (maskScanMaximum[WIDTH] == -1) {
-                    maskScanMaximum[WIDTH] = sheet.frame->width / 2;
+                    maskScanMaximum[WIDTH] = sheet->width / 2;
                 }
                 if (maskScanMaximum[HEIGHT] == -1) {
-                    maskScanMaximum[HEIGHT] = sheet.frame->height;
+                    maskScanMaximum[HEIGHT] = sheet->height;
                 }
                 if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
-                    wipe[wipeCount][LEFT] = sheet.frame->width / 2 - middleWipe[0];
+                    wipe[wipeCount][LEFT] = sheet->width / 2 - middleWipe[0];
                     wipe[wipeCount][TOP] = 0;
-                    wipe[wipeCount][RIGHT] =  sheet.frame->width / 2 + middleWipe[1];
-                    wipe[wipeCount][BOTTOM] = sheet.frame->height - 1;
+                    wipe[wipeCount][RIGHT] =  sheet->width / 2 + middleWipe[1];
+                    wipe[wipeCount][BOTTOM] = sheet->height - 1;
                     wipeCount++;
                 }
                 // avoid inner half of each page to be blackfilter-detectable
                 if (blackfilterExcludeCount == 0) { // no manual settings, use auto-values
-                    blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.frame->width / 8;
-                    blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.frame->height / 4;
-                    blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.frame->width / 4 + sheet.frame->width / 8;
-                    blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.frame->height / 2 + sheet.frame->height / 4;
+                    blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet->width / 8;
+                    blackfilterExclude[blackfilterExcludeCount][TOP] = sheet->height / 4;
+                    blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet->width / 4 + sheet->width / 8;
+                    blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet->height / 2 + sheet->height / 4;
                     blackfilterExcludeCount++;
-                    blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet.frame->width / 2 + sheet.frame->width / 8;
-                    blackfilterExclude[blackfilterExcludeCount][TOP] = sheet.frame->height / 4;
-                    blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet.frame->width / 2 + sheet.frame->width / 4 + sheet.frame->width / 8;
-                    blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet.frame->height / 2 + sheet.frame->height / 4;
+                    blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet->width / 2 + sheet->width / 8;
+                    blackfilterExclude[blackfilterExcludeCount][TOP] = sheet->height / 4;
+                    blackfilterExclude[blackfilterExcludeCount][RIGHT] = sheet->width / 2 + sheet->width / 4 + sheet->width / 8;
+                    blackfilterExclude[blackfilterExcludeCount][BOTTOM] = sheet->height / 2 + sheet->height / 4;
                     blackfilterExcludeCount++;
                 }
                 // set two outside borders to start scanning for final border-scan
                 if (outsideBorderscanMaskCount == 0) { // no manual settings, use auto-values
                     outsideBorderscanMaskCount = 2;
                     outsideBorderscanMask[0][LEFT] = 0;
-                    outsideBorderscanMask[0][RIGHT] = sheet.frame->width / 2;
+                    outsideBorderscanMask[0][RIGHT] = sheet->width / 2;
                     outsideBorderscanMask[0][TOP] = 0;
-                    outsideBorderscanMask[0][BOTTOM] = sheet.frame->height - 1;
-                    outsideBorderscanMask[1][LEFT] = sheet.frame->width / 2;
-                    outsideBorderscanMask[1][RIGHT] = sheet.frame->width - 1;
+                    outsideBorderscanMask[0][BOTTOM] = sheet->height - 1;
+                    outsideBorderscanMask[1][LEFT] = sheet->width / 2;
+                    outsideBorderscanMask[1][RIGHT] = sheet->width - 1;
                     outsideBorderscanMask[1][TOP] = 0;
-                    outsideBorderscanMask[1][BOTTOM] = sheet.frame->height - 1;
+                    outsideBorderscanMask[1][BOTTOM] = sheet->height - 1;
                 }
             }
             // if maskScanMaximum still unset (no --layout specified), set to full sheet size now
             if (maskScanMinimum[WIDTH] == -1) {
-                maskScanMaximum[WIDTH] = sheet.frame->width;
+                maskScanMaximum[WIDTH] = sheet->width;
             }
             if (maskScanMinimum[HEIGHT] == -1) {
-                maskScanMaximum[HEIGHT] = sheet.frame->height;
+                maskScanMaximum[HEIGHT] = sheet->height;
             }
 
 
@@ -1519,9 +1519,9 @@ int main(int argc, char* argv[]) {
 
             // black area filter
             if (!isExcluded(nr, noBlackfilterMultiIndex, ignoreMultiIndex)) {
-                saveDebug("_before-blackfilter%d.pnm", nr, &sheet);
+                saveDebug("_before-blackfilter%d.pnm", nr, sheet);
                 blackfilter(&sheet);
-                saveDebug("_after-blackfilter%d.pnm", nr, &sheet);
+                saveDebug("_after-blackfilter%d.pnm", nr, sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ blackfilter DISABLED for sheet %d\n", nr);
@@ -1533,9 +1533,9 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("noise-filter ...");
                 }
-                saveDebug("_before-noisefilter%d.pnm", nr, &sheet);
+                saveDebug("_before-noisefilter%d.pnm", nr, sheet);
                 int filterResult = noisefilter(&sheet);
-                saveDebug("_after-noisefilter%d.pnm", nr, &sheet);
+                saveDebug("_after-noisefilter%d.pnm", nr, sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d clusters.\n", filterResult);
                 }
@@ -1550,9 +1550,9 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("blur-filter...");
                 }
-                saveDebug("_before-blurfilter%d.pnm", nr, &sheet);
+                saveDebug("_before-blurfilter%d.pnm", nr, sheet);
                 int filterResult = blurfilter(&sheet);
-                saveDebug("_after-blurfilter%d.pnm", nr, &sheet);
+                saveDebug("_after-blurfilter%d.pnm", nr, sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
                 }
@@ -1573,9 +1573,9 @@ int main(int argc, char* argv[]) {
 
             // permamently apply masks
             if (maskCount > 0) {
-                saveDebug("_before-masking%d.pnm", nr, &sheet);
+                saveDebug("_before-masking%d.pnm", nr, sheet);
                 applyMasks(mask, maskCount, maskColor, &sheet);
-                saveDebug("_after-masking%d.pnm", nr, &sheet);
+                saveDebug("_after-masking%d.pnm", nr, sheet);
             }
 
             // gray filter
@@ -1583,9 +1583,9 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("gray-filter...");
                 }
-                saveDebug("_before-grayfilter%d.pnm", nr, &sheet);
+                saveDebug("_before-grayfilter%d.pnm", nr, sheet);
                 int filterResult = grayfilter(&sheet);
-                saveDebug("_after-grayfilter%d.pnm", nr, &sheet);
+                saveDebug("_after-grayfilter%d.pnm", nr, sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
                 }
@@ -1597,7 +1597,7 @@ int main(int argc, char* argv[]) {
 
             // rotation-detection
             if ((!isExcluded(nr, noDeskewMultiIndex, ignoreMultiIndex))) {
-                saveDebug("_before-deskew%d.pnm", nr, &sheet);
+                saveDebug("_before-deskew%d.pnm", nr, sheet);
                 originalSheet = sheet; // copy struct entries ('clone')
 
                 // detect masks again, we may get more precise results now after first masking and grayfilter
@@ -1611,35 +1611,35 @@ int main(int argc, char* argv[]) {
 
                 // auto-deskew each mask
                 for (int i = 0; i < maskCount; i++) {
-                    saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
+                    saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, originalSheet);
                     float rotation = detectRotation(&originalSheet, mask[i]);
-                    saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, &originalSheet);
+                    saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, originalSheet);
 
                     if (verbose >= VERBOSE_NORMAL) {
                         printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
                     }
 
                     if (rotation != 0.0) {
-                        struct IMAGE rect;
-                        struct IMAGE rectTarget;
-                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet.frame->format, -1);
-                        initImage(&rectTarget, rect.frame->width, rect.frame->height, sheet.frame->format, sheetBackground);
+                        AVFrame *rect;
+                        AVFrame *rectTarget;
+                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet->format, -1);
+                        initImage(&rectTarget, rect->width, rect->height, sheet->format, sheetBackground);
 
                         // copy area to rotate into rSource
-                        copyImageArea(mask[i][LEFT], mask[i][TOP], rect.frame->width, rect.frame->height, &sheet, 0, 0, &rect);
+                        copyImageArea(mask[i][LEFT], mask[i][TOP], rect->width, rect->height, &sheet, 0, 0, &rect);
 
                         // rotate
                         rotate(-rotation, &rect, &rectTarget);
 
                         // copy result back into whole image
-                        copyImageArea(0, 0, rectTarget.frame->width, rectTarget.frame->height, &rectTarget, mask[i][LEFT], mask[i][TOP], &sheet);
+                        copyImageArea(0, 0, rectTarget->width, rectTarget->height, &rectTarget, mask[i][LEFT], mask[i][TOP], &sheet);
 
                         freeImage(&rect);
                         freeImage(&rectTarget);
                     }
                 }
 
-                saveDebug("_after-deskew%d.pnm", nr, &sheet);
+                saveDebug("_after-deskew%d.pnm", nr, sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ deskewing DISABLED for sheet %d\n", nr);
@@ -1657,12 +1657,12 @@ int main(int argc, char* argv[]) {
                     }
                 }
 
-                saveDebug("_before-centering%d.pnm", nr, &sheet);
+                saveDebug("_before-centering%d.pnm", nr, sheet);
                 // center masks on the sheet, according to their page position
                 for (int i = 0; i < maskCount; i++) {
                     centerMask(&sheet, point[i], mask[i]);
                 }
-                saveDebug("_after-centering%d.pnm", nr, &sheet);
+                saveDebug("_after-centering%d.pnm", nr, sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ auto-centering DISABLED for sheet %d\n", nr);
@@ -1689,7 +1689,7 @@ int main(int argc, char* argv[]) {
 
             // border-detection
             if (!isExcluded(nr, noBorderScanMultiIndex, ignoreMultiIndex)) {
-                saveDebug("_before-border%d.pnm", nr, &sheet);
+                saveDebug("_before-border%d.pnm", nr, sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     detectBorder(autoborder[i], outsideBorderscanMask[i], &sheet);
                     borderToMask(autoborder[i], autoborderMask[i], &sheet);
@@ -1705,7 +1705,7 @@ int main(int argc, char* argv[]) {
                         }
                     }
                 }
-                saveDebug("_after-border%d.pnm", nr, &sheet);
+                saveDebug("_after-border%d.pnm", nr, sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ border-scan DISABLED for sheet %d\n", nr);
@@ -1751,20 +1751,20 @@ int main(int argc, char* argv[]) {
                 if (postStretchSize[WIDTH] != -1) {
                     w = postStretchSize[WIDTH];
                 } else {
-                    w = sheet.frame->width;
+                    w = sheet->width;
                 }
                 if (postStretchSize[HEIGHT] != -1) {
                     h = postStretchSize[HEIGHT];
                 } else {
-                    h = sheet.frame->height;
+                    h = sheet->height;
                 }
                 stretch(w, h, &sheet);
             }
 
             // post-zoom
             if (postZoomFactor != 1.0) {
-                w = sheet.frame->width * postZoomFactor;
-                h = sheet.frame->height * postZoomFactor;
+                w = sheet->width * postZoomFactor;
+                h = sheet->height * postZoomFactor;
                 stretch(w, h, &sheet);
             }
 
@@ -1773,12 +1773,12 @@ int main(int argc, char* argv[]) {
                 if (postSize[WIDTH] != -1) {
                     w = postSize[WIDTH];
                 } else {
-                    w = sheet.frame->width;
+                    w = sheet->width;
                 }
                 if (postSize[HEIGHT] != -1) {
                     h = postSize[HEIGHT];
                 } else {
-                    h = sheet.frame->height;
+                    h = sheet->height;
                 }
                 resize(w, h, &sheet);
             }
@@ -1792,28 +1792,28 @@ int main(int argc, char* argv[]) {
                     printf("writing output.\n");
                 }
                 // write files
-                saveDebug("_before-save%d.pnm", nr, &sheet);
+                saveDebug("_before-save%d.pnm", nr, sheet);
 
                 if ( outputPixFmt == -1 ) {
-                    outputPixFmt = sheet.frame->format;
+                    outputPixFmt = sheet->format;
                 }
 
                 for (int j = 0; j < outputCount; j++) {
                     // get pagebuffer
-                    initImage(&page, sheet.frame->width / outputCount, sheet.frame->height, sheet.frame->format, -1);
-                    copyImageArea(page.frame->width * j, 0, page.frame->width, page.frame->height, &sheet, 0, 0, &page);
+                    initImage(&page, sheet->width / outputCount, sheet->height, sheet->format, -1);
+                    copyImageArea(page->width * j, 0, page->width, page->height, &sheet, 0, 0, &page);
 
                     if (verbose >= VERBOSE_MORE) {
                         printf("saving file %s.\n", outputFileNames[j]);
                     }
 
-                    saveImage(outputFileNames[j], &page, outputPixFmt);
+                    saveImage(outputFileNames[j], page, outputPixFmt);
 
                     freeImage(&page);
                 }
 
                 freeImage(&sheet);
-                sheet.frame = NULL;
+                sheet = NULL;
             }
         }
 

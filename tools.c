@@ -39,38 +39,38 @@ static inline uint8_t pixelGrayscale(uint8_t r, uint8_t g, uint8_t b) {
 
 /* --- tool functions for image handling ---------------------------------- */
 
-static void getPixelComponents(struct IMAGE *image, int x, int y, uint8_t *r, uint8_t *g, uint8_t *b, uint8_t defval) {
+static void getPixelComponents(AVFrame **image, int x, int y, uint8_t *r, uint8_t *g, uint8_t *b, uint8_t defval) {
     uint8_t *pix;
 
-    if ( (x < 0) || (x >= image->frame->width) || (y < 0) || (y >= image->frame->height) ) {
+    if ( (x < 0) || (x >= (*image)->width) || (y < 0) || (y >= (*image)->height) ) {
         *r = *g = *b = defval;
         return;
     }
 
-    switch(image->frame->format) {
+    switch((*image)->format) {
     case AV_PIX_FMT_GRAY8:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x);
         *r = *g = *b = *pix;
         break;
     case AV_PIX_FMT_Y400A:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x *2);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x *2);
         *r = *g = *b = *pix;
         break;
     case AV_PIX_FMT_RGB24:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x * 3);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x * 3);
         *r = pix[0];
         *g = pix[1];
         *b = pix[2];
         break;
     case AV_PIX_FMT_MONOWHITE:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x / 8);
         if ( *pix & (128 >> (x % 8)) )
             *r = *g = *b = BLACK;
         else
             *r = *g = *b = WHITE;
         break;
     case AV_PIX_FMT_MONOBLACK:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x / 8);
         if ( *pix & (128 >> (x % 8)) )
             *r = *g = *b = WHITE;
         else
@@ -85,15 +85,15 @@ static void getPixelComponents(struct IMAGE *image, int x, int y, uint8_t *r, ui
  * Allocates a memory block for storing image data and fills the IMAGE-struct
  * with the specified values.
  */
-void initImage(struct IMAGE* image, int width, int height, int pixel_format, int background) {
+void initImage(AVFrame **image, int width, int height, int pixel_format, int background) {
     int ret;
 
-    image->frame = av_frame_alloc();
-    image->frame->width = width;
-    image->frame->height = height;
-    image->frame->format = pixel_format;
+    (*image) = av_frame_alloc();
+    (*image)->width = width;
+    (*image)->height = height;
+    (*image)->format = pixel_format;
 
-    ret = av_frame_get_buffer(image->frame, 8);
+    ret = av_frame_get_buffer(*image, 8);
     if (ret < 0) {
         char errbuff[1024];
         av_strerror(ret, errbuff, sizeof(errbuff));
@@ -101,8 +101,8 @@ void initImage(struct IMAGE* image, int width, int height, int pixel_format, int
     }
 
     if ( background != -1 ) {
-        for (int y = 0; y < image->frame->height; y++) {
-            for (int x = 0; x < image->frame->width; x++) {
+        for (int y = 0; y < (*image)->height; y++) {
+            for (int x = 0; x < (*image)->width; x++) {
                 setPixel(background, x, y, image);
             }
         }
@@ -112,15 +112,15 @@ void initImage(struct IMAGE* image, int width, int height, int pixel_format, int
 /**
  * Frees an image.
  */
-void freeImage(struct IMAGE* image) {
-    av_frame_free(&image->frame);
+void freeImage(AVFrame **image) {
+    av_frame_free(image);
 }
 
 
 /**
  * Replaces one image with another.
  */
-void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
+void replaceImage(AVFrame **image, AVFrame **newimage) {
     freeImage(image);
     // pass-back new image
     *image = *newimage; // copy whole struct
@@ -132,10 +132,10 @@ void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
  *
  * @return true if the pixel has been changed, false if the original color was the one to set
  */
-bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
+bool setPixel(int pixel, int x, int y, AVFrame **image) {
     uint8_t *pix;
 
-    if ( (x < 0) || (x >= image->frame->width) || (y < 0) || (y >= image->frame->height) ) {
+    if ( (x < 0) || (x >= (*image)->width) || (y < 0) || (y >= (*image)->height) ) {
         return false; //nop
     }
 
@@ -145,18 +145,18 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
 
     uint8_t pixelbw = pixelGrayscale(r, g, b) < absBlackThreshold ? BLACK : WHITE;
 
-    switch(image->frame->format) {
+    switch((*image)->format) {
     case AV_PIX_FMT_GRAY8:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x);
         *pix = pixelGrayscale(r, g, b);
         break;
     case AV_PIX_FMT_Y400A:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x * 2);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x * 2);
         pix[0] = pixelGrayscale(r, g, b);
         pix[1] = 0xFF; // no alpha.
         break;
     case AV_PIX_FMT_RGB24:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x * 3);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x * 3);
         pix[0] = r;
         pix[1] = g;
         pix[2] = b;
@@ -164,7 +164,7 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
     case AV_PIX_FMT_MONOWHITE:
         pixelbw = ~pixelbw; // reverse compared to following case
     case AV_PIX_FMT_MONOBLACK:
-        pix = image->frame->data[0] + (y * image->frame->linesize[0] + x / 8);
+        pix = (*image)->data[0] + (y * (*image)->linesize[0] + x / 8);
         if ( pixelbw == WHITE ) {
             *pix = *pix | (128 >> (x % 8));
         } else if ( pixelbw == BLACK ) {
@@ -184,7 +184,7 @@ bool setPixel(int pixel, int x, int y, struct IMAGE* image) {
  *
  * @return color or grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */
-int getPixel(int x, int y, struct IMAGE* image) {
+int getPixel(int x, int y, AVFrame **image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return pixelValue(r, g, b);
@@ -195,7 +195,7 @@ int getPixel(int x, int y, struct IMAGE* image) {
  *
  * @return grayscale-value of the requested pixel, or WHITE if the coordinates are outside the image
  */
-static uint8_t getPixelGrayscale(int x, int y, struct IMAGE* image) {
+static uint8_t getPixelGrayscale(int x, int y, AVFrame **image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return pixelGrayscale(r, g, b);
@@ -213,7 +213,7 @@ static uint8_t getPixelGrayscale(int x, int y, struct IMAGE* image) {
  *
  * @return lightness-value (the higher, the lighter) of the requested pixel, or WHITE if the coordinates are outside the image
  */
-static uint8_t getPixelLightness(int x, int y, struct IMAGE* image) {
+static uint8_t getPixelLightness(int x, int y, AVFrame **image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return min3(r, g, b);
@@ -231,7 +231,7 @@ static uint8_t getPixelLightness(int x, int y, struct IMAGE* image) {
  *
  * @return inverse-darkness-value (the LOWER, the darker) of the requested pixel, or WHITE if the coordinates are outside the image
  */
-uint8_t getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
+uint8_t getPixelDarknessInverse(int x, int y, AVFrame **image) {
     uint8_t r, g, b;
     getPixelComponents(image, x, y, &r, &g, &b, WHITE);
     return max3(r, g, b);
@@ -242,7 +242,7 @@ uint8_t getPixelDarknessInverse(int x, int y, struct IMAGE* image) {
  *
  * @return true if the pixel has been changed, false if the original color was the one to set
  */
-static bool clearPixel(int x, int y, struct IMAGE* image) {
+static bool clearPixel(int x, int y, AVFrame **image) {
     return setPixel(WHITE24, x, y, image);
 }
 
@@ -251,7 +251,7 @@ static bool clearPixel(int x, int y, struct IMAGE* image) {
  * Clears a rectangular area of pixels with either black or white.
  * @return The number of pixels actually changed from black (dark) to white.
  */
-int clearRect(const int left, const int top, const int right, const int bottom, struct IMAGE* image, const int blackwhite) {
+int clearRect(const int left, const int top, const int right, const int bottom, AVFrame **image, const int blackwhite) {
     int count = 0;
 
     for (int y = top; y <= bottom; y++) {
@@ -268,7 +268,7 @@ int clearRect(const int left, const int top, const int right, const int bottom, 
 /**
  * Copies one area of an image into another.
  */
-void copyImageArea(const int x, const int y, const int width, const int height, struct IMAGE* source, const int toX, const int toY, struct IMAGE* target) {
+void copyImageArea(const int x, const int y, const int width, const int height, AVFrame **source, const int toX, const int toY, AVFrame **target) {
 
     // naive but generic implementation
     for (int row = 0; row < height; row++) {
@@ -283,8 +283,8 @@ void copyImageArea(const int x, const int y, const int width, const int height, 
 /**
  * Copies a whole image into another.
  */
-void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
-    copyImageArea(0, 0, source->frame->width, source->frame->height, source, toX, toY, target);
+void copyImage(AVFrame **source, int toX, int toY, AVFrame **target) {
+    copyImageArea(0, 0, (*source)->width, (*source)->height, source, toX, toY, target);
 }
 
 
@@ -294,7 +294,7 @@ void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
  * surrounded by a white border, if it is bigger, it gets equally cropped
  * at the edges.
  */
-static void centerImageArea(int x, int y, int w, int h, struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target) {
+static void centerImageArea(int x, int y, int w, int h, AVFrame **source, int toX, int toY, int ww, int hh, AVFrame **target) {
     if ((w < ww) || (h < hh)) { // white rest-border will remain, so clear first
         clearRect(toX, toY, toX + ww - 1, toY + hh - 1, target, sheetBackground);
     }
@@ -319,15 +319,15 @@ static void centerImageArea(int x, int y, int w, int h, struct IMAGE* source, in
 /**
  * Centers a whole image inside an area of another image.
  */
-void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target) {
-    centerImageArea(0, 0, source->frame->width, source->frame->height, source, toX, toY, ww, hh, target);
+void centerImage(AVFrame **source, int toX, int toY, int ww, int hh, AVFrame **target) {
+    centerImageArea(0, 0, (*source)->width, (*source)->height, source, toX, toY, ww, hh, target);
 }
 
 
 /**
  * Returns the average brightness of a rectagular area.
  */
-uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
+uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2, const int y2, AVFrame **image) {
     unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
@@ -343,7 +343,7 @@ uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2, const in
 /**
  * Returns the inverseaverage lightness of a rectagular area.
  */
-uint8_t inverseLightnessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
+uint8_t inverseLightnessRect(const int x1, const int y1, const int x2, const int y2, AVFrame **image) {
     unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
@@ -359,7 +359,7 @@ uint8_t inverseLightnessRect(const int x1, const int y1, const int x2, const int
 /**
  * Returns the average darkness of a rectagular area.
  */
-uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2, struct IMAGE* image) {
+uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2, AVFrame **image) {
     unsigned int total = 0;
     const int count = (x2-x1+1)*(y2-y1+1);
 
@@ -377,7 +377,7 @@ uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2, str
  * values ranges between minColor and maxBrightness. Optionally, the area can get
  * cleared with white color while counting.
  */
-int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, struct IMAGE* image) {
+int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, AVFrame **image) {
     int count = 0;
 
     for (int y = top; y <= bottom; y++) {
@@ -401,7 +401,7 @@ int countPixelsRect(int left, int top, int right, int bottom, int minColor, int 
  * of 9 pixels if level==1, 16 pixels if level==2 and so on).
  * Optionally, the pixels can get cleared after counting.
  */
-static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whiteMin, struct IMAGE* image) {
+static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whiteMin, AVFrame **image) {
     int count = 0;
 
     // upper and lower rows
@@ -465,7 +465,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level, int whi
  * reachable from the dark pixel at (x,y), without having to cross bright
  * pixels.
  */
-int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE* image) {
+int countPixelNeighbors(int x, int y, int intensity, int whiteMin, AVFrame **image) {
     int count = 1; // assume self as set
     int lCount = -1;
 
@@ -483,7 +483,7 @@ int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE*
  * (x,y). This should be called only if it has previously been detected that
  * the amount of pixels to clear will be reasonable small.
  */
-void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
+void clearPixelNeighbors(int x, int y, int whiteMin, AVFrame **image) {
     int lCount = -1;
 
     clearPixel(x, y, image);
@@ -502,11 +502,11 @@ void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
  * @param stepX either -1 or 1, if stepY is 0, else 0
  * @param stepY either -1 or 1, if stepX is 0, else 0
  */
-static int fillLine(int x, int y, int stepX, int stepY, int color, uint8_t maskMin, uint8_t maskMax, int intensity, struct IMAGE* image) {
+static int fillLine(int x, int y, int stepX, int stepY, int color, uint8_t maskMin, uint8_t maskMax, int intensity, AVFrame **image) {
     int distance = 0;
     int intensityCount = 1; // first pixel must match, otherwise directly exit
-    const int w = image->frame->width;
-    const int h = image->frame->height;
+    const int w = (*image)->width;
+    const int h = (*image)->height;
 
     while (true) {
         x += stepX;
@@ -536,7 +536,7 @@ static int fillLine(int x, int y, int stepX, int stepY, int color, uint8_t maskM
  * @param stepY either -1 or 1, if stepX is 0, else 0
  * @see fillLine()
  */
-static void floodFillAroundLine(int x, int y, int stepX, int stepY, int distance, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
+static void floodFillAroundLine(int x, int y, int stepX, int stepY, int distance, int color, int maskMin, int maskMax, int intensity, AVFrame **image) {
     for (int d = 0; d < distance; d++) {
         if (stepX != 0) {
             x += stepX;
@@ -556,7 +556,7 @@ static void floodFillAroundLine(int x, int y, int stepX, int stepY, int distance
  *
  * @see earlier header-declaration to enable indirect recursive calls
  */
-void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image) {
+void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, AVFrame **image) {
     // is current pixel to be filled?
     const int pixel = getPixelGrayscale(x, y, image);
     if ((pixel>=maskMin) && (pixel<=maskMax)) {

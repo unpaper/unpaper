@@ -38,7 +38,7 @@
  * @param image structure to hold loaded image
  * @param type returns the type of the loaded image
  */
-void loadImage(const char *filename, struct IMAGE* image) {
+void loadImage(const char *filename, AVFrame **image) {
     int ret, got_frame = 0;
     AVFormatContext *s = NULL;
     AVCodecContext *avctx = NULL;
@@ -97,7 +97,7 @@ void loadImage(const char *filename, struct IMAGE* image) {
     case AV_PIX_FMT_RGB24:
     case AV_PIX_FMT_MONOBLACK:
     case AV_PIX_FMT_MONOWHITE:
-        image->frame = frame;
+        *image = frame;
         break;
 
     default:
@@ -114,7 +114,7 @@ void loadImage(const char *filename, struct IMAGE* image) {
  * @param type filetype of the image to save
  * @return true on success, false on failure
  */
-void saveImage(char *filename, struct IMAGE* image, int outputPixFmt) {
+void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     AVOutputFormat *fmt = NULL;
     enum AVCodecID output_codec = -1;
     AVCodec *codec;
@@ -154,13 +154,13 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt) {
         break;
     }
 
-    if ( image->frame->format != outputPixFmt ) {
-        struct IMAGE output;
-        initImage(&output, image->frame->width, image->frame->height,
+    if ( image->format != outputPixFmt ) {
+        AVFrame *output;
+        initImage(&output, image->width, image->height,
                   outputPixFmt, -1);
-        copyImageArea(0, 0, image->frame->width, image->frame->height,
-                      image, 0, 0, &output);
-        replaceImage(image, &output);
+        copyImageArea(0, 0, image->width, image->height,
+                      &image, 0, 0, &output);
+        image = output;
     }
 
     codec = avcodec_find_encoder(output_codec);
@@ -174,9 +174,9 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt) {
     }
 
     codec_ctx = video_st->codec;
-    codec_ctx->width = image->frame->width;
-    codec_ctx->height = image->frame->height;
-    codec_ctx->pix_fmt = image->frame->format;
+    codec_ctx->width = image->width;
+    codec_ctx->height = image->height;
+    codec_ctx->pix_fmt = image->format;
     codec_ctx->time_base.den = 1;
     codec_ctx->time_base.num = 1;
 
@@ -201,7 +201,7 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt) {
     av_init_packet(&pkt);
 
     /* encode the image */
-    ret = avcodec_encode_video2(video_st->codec, &pkt, image->frame, &got_packet);
+    ret = avcodec_encode_video2(video_st->codec, &pkt, image, &got_packet);
 
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
@@ -222,10 +222,10 @@ void saveImage(char *filename, struct IMAGE* image, int outputPixFmt) {
 /**
  * Saves the image if full debugging mode is enabled.
  */
-void saveDebug(char *filenameTemplate, int index, struct IMAGE* image) {
+void saveDebug(char *filenameTemplate, int index, AVFrame *image) {
     if ( verbose >= VERBOSE_DEBUG_SAVE ) {
         char debugFilename[100];
         sprintf(debugFilename, filenameTemplate, index);
-        saveImage(debugFilename, image, image->frame->format);
+        saveImage(debugFilename, image, image->format);
     }
 }

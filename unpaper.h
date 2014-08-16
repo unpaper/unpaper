@@ -109,12 +109,6 @@ typedef enum {
 } INTERP_FUNCTIONS;
 
 
-/* --- struct ------------------------------------------------------------- */
-
-struct IMAGE {
-    AVFrame *frame;
-};
-
 void errOutput(const char *fmt, ...)
     __attribute__((format(printf, 1, 2)))
     __attribute__((noreturn));
@@ -236,11 +230,11 @@ extern int dpi;
 
 /* --- tool function for file handling ------------------------------------ */
 
-void loadImage(const char *filename, struct IMAGE* image);
+void loadImage(const char *filename, AVFrame **image);
 
-void saveImage(char *filename, struct IMAGE* image, int outputPixFmt);
+void saveImage(char *filename, AVFrame *image, int outputPixFmt);
 
-void saveDebug(char *filenameTemplate, int index, struct IMAGE* image)
+void saveDebug(char *filenameTemplate, int index, AVFrame *image)
     __attribute__((format(printf, 1, 0)));
 
 /* --- arithmetic tool functions ------------------------------------------ */

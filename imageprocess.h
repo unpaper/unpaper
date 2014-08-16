@@ -24,79 +24,79 @@
 
 /* --- deskewing ---------------------------------------------------------- */
 
-double detectRotation(struct IMAGE* image, int mask[EDGES_COUNT]);
+double detectRotation(AVFrame **image, int mask[EDGES_COUNT]);
 
-void rotate(const float radians, struct IMAGE* source, struct IMAGE* target);
+void rotate(const float radians, AVFrame **source, AVFrame **target);
 
 
 /* --- stretching / resizing / shifting ------------------------------------ */
 
 
-void stretch(int w, int h, struct IMAGE* image);
+void stretch(int w, int h, AVFrame **image);
 
-void resize(int w, int h, struct IMAGE* image);
+void resize(int w, int h, AVFrame **image);
 
-void shift(int shiftX, int shiftY, struct IMAGE* image);
+void shift(int shiftX, int shiftY, AVFrame **image);
 
 
 /* --- mask-detection ----------------------------------------------------- */
 
 
-void detectMasks(struct IMAGE* image);
+void detectMasks(AVFrame **image);
 
-void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int maskColor, struct IMAGE* image);
+void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int maskColor, AVFrame **image);
 
 
 /* --- wiping ------------------------------------------------------------- */
 
 
-void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, struct IMAGE* image);
+void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, AVFrame **image);
 
 
 /* --- mirroring ---------------------------------------------------------- */
 
 
-void mirror(int directions, struct IMAGE* image);
+void mirror(int directions, AVFrame **image);
 
 
 /* --- flip-rotating ------------------------------------------------------ */
 
 
-void flipRotate(int direction, struct IMAGE* image);
+void flipRotate(int direction, AVFrame **image);
 
 
 /* --- blackfilter -------------------------------------------------------- */
 
 
-void blackfilter(struct IMAGE* image);
+void blackfilter(AVFrame **image);
 
 
 /* --- noisefilter -------------------------------------------------------- */
 
 
-int noisefilter(struct IMAGE* image);
+int noisefilter(AVFrame **image);
 
 
 /* --- blurfilter --------------------------------------------------------- */
 
-int blurfilter(struct IMAGE* image);
+int blurfilter(AVFrame **image);
 
 
 /* --- grayfilter --------------------------------------------------------- */
 
 
-int grayfilter(struct IMAGE* image);
+int grayfilter(AVFrame **image);
 
 
 /* --- border-detection --------------------------------------------------- */
 
 
-void centerMask(struct IMAGE* image, int center[COORDINATES_COUNT], int mask[EDGES_COUNT]);
+void centerMask(AVFrame **image, int center[COORDINATES_COUNT], int mask[EDGES_COUNT]);
 
-void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], struct IMAGE* image);
+void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], AVFrame **image);
 
-void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], struct IMAGE* image);
+void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], AVFrame **image);
 
-void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], struct IMAGE* image);
+void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], AVFrame **image);
 
-void applyBorder(int border[EDGES_COUNT], int borderColor, struct IMAGE* image);
+void applyBorder(int border[EDGES_COUNT], int borderColor, AVFrame **image);
