@@ -124,7 +124,133 @@ void errOutput(const char *fmt, ...)
 
 extern VERBOSE_LEVEL verbose;
 extern INTERP_FUNCTIONS interpolateType;
+
 extern unsigned int absBlackThreshold;
+extern unsigned int absWhiteThreshold;
+extern unsigned int absBlackfilterScanThreshold;
+extern unsigned int absGrayfilterThreshold;
+extern double deskewScanRangeRad;
+extern double deskewScanStepRad;
+extern double deskewScanDeviationRad;
+
+extern int layout;
+extern int startSheet;
+extern int endSheet;
+extern int startInput;
+extern int startOutput;
+extern int inputCount;
+extern int outputCount;
+extern int sheetSize[DIMENSIONS_COUNT];
+extern int sheetBackground;
+extern int preRotate;
+extern int postRotate;
+extern int preMirror;
+extern int postMirror;
+extern int preShift[DIRECTIONS_COUNT];
+extern int postShift[DIRECTIONS_COUNT];
+extern int size[DIRECTIONS_COUNT];
+extern int postSize[DIRECTIONS_COUNT];
+extern int stretchSize[DIRECTIONS_COUNT];
+extern int postStretchSize[DIRECTIONS_COUNT];
+extern float zoomFactor;
+extern float postZoomFactor;
+extern int pointCount;
+extern int point[MAX_POINTS][COORDINATES_COUNT];
+extern int maskCount;
+extern int mask[MAX_MASKS][EDGES_COUNT];
+extern int wipeCount;
+extern int wipe[MAX_MASKS][EDGES_COUNT];
+extern int middleWipe[2];
+extern int preWipeCount;
+extern int preWipe[MAX_MASKS][EDGES_COUNT];
+extern int postWipeCount;
+extern int postWipe[MAX_MASKS][EDGES_COUNT];
+extern int preBorder[EDGES_COUNT];
+extern int postBorder[EDGES_COUNT];
+extern int border[EDGES_COUNT];
+extern bool maskValid[MAX_MASKS];
+extern int preMaskCount;
+extern int preMask[MAX_MASKS][EDGES_COUNT];
+extern int blackfilterScanDirections;
+extern int blackfilterScanSize[DIRECTIONS_COUNT];
+extern int blackfilterScanDepth[DIRECTIONS_COUNT];
+extern int blackfilterScanStep[DIRECTIONS_COUNT];
+extern float blackfilterScanThreshold;
+extern int blackfilterExcludeCount;
+extern int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
+extern int blackfilterIntensity;
+extern int noisefilterIntensity;
+extern int blurfilterScanSize[DIRECTIONS_COUNT];
+extern int blurfilterScanStep[DIRECTIONS_COUNT];
+extern float blurfilterIntensity;
+extern int grayfilterScanSize[DIRECTIONS_COUNT];
+extern int grayfilterScanStep[DIRECTIONS_COUNT];
+extern float grayfilterThreshold;
+extern int maskScanDirections;
+extern int maskScanSize[DIRECTIONS_COUNT];
+extern int maskScanDepth[DIRECTIONS_COUNT];
+extern int maskScanStep[DIRECTIONS_COUNT];
+extern float maskScanThreshold[DIRECTIONS_COUNT];
+extern int maskScanMinimum[DIMENSIONS_COUNT];
+extern int maskScanMaximum[DIMENSIONS_COUNT]; // set default later
+extern int maskColor;
+extern int deskewScanEdges;
+extern int deskewScanSize;
+extern float deskewScanDepth;
+extern float deskewScanRange;
+extern float deskewScanStep;
+extern float deskewScanDeviation;
+extern int borderScanDirections;
+extern int borderScanSize[DIRECTIONS_COUNT];
+extern int borderScanStep[DIRECTIONS_COUNT];
+extern int borderScanThreshold[DIRECTIONS_COUNT];
+extern int borderAlign; // center
+extern int borderAlignMargin[DIRECTIONS_COUNT]; // center
+extern int outsideBorderscanMask[MAX_PAGES][EDGES_COUNT]; // set by --layout
+extern int outsideBorderscanMaskCount;
+extern float whiteThreshold;
+extern float blackThreshold;
+extern bool writeoutput;
+extern bool multisheets;
+
+// 0: allow all, -1: disable all, n: individual entries
+extern int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
+extern int noBlackfilterMultiIndexCount;
+extern int noNoisefilterMultiIndex[MAX_MULTI_INDEX];
+extern int noNoisefilterMultiIndexCount;
+extern int noBlurfilterMultiIndex[MAX_MULTI_INDEX];
+extern int noBlurfilterMultiIndexCount;
+extern int noGrayfilterMultiIndex[MAX_MULTI_INDEX];
+extern int noGrayfilterMultiIndexCount;
+extern int noMaskScanMultiIndex[MAX_MULTI_INDEX];
+extern int noMaskScanMultiIndexCount;
+extern int noMaskCenterMultiIndex[MAX_MULTI_INDEX];
+extern int noMaskCenterMultiIndexCount;
+extern int noDeskewMultiIndex[MAX_MULTI_INDEX];
+extern int noDeskewMultiIndexCount;
+extern int noWipeMultiIndex[MAX_MULTI_INDEX];
+extern int noWipeMultiIndexCount;
+extern int noBorderMultiIndex[MAX_MULTI_INDEX];
+extern int noBorderMultiIndexCount;
+extern int noBorderScanMultiIndex[MAX_MULTI_INDEX];
+extern int noBorderScanMultiIndexCount;
+extern int noBorderAlignMultiIndex[MAX_MULTI_INDEX];
+extern int noBorderAlignMultiIndexCount;
+
+extern int sheetMultiIndex[MAX_MULTI_INDEX];
+extern int sheetMultiIndexCount; // default: process all between start-sheet and end-sheet
+extern int excludeMultiIndex[MAX_MULTI_INDEX];
+extern int excludeMultiIndexCount;
+extern int ignoreMultiIndex[MAX_MULTI_INDEX];
+extern int ignoreMultiIndexCount;
+extern int autoborder[MAX_MASKS][EDGES_COUNT];
+extern int autoborderMask[MAX_MASKS][EDGES_COUNT];
+extern int insertBlank[MAX_MULTI_INDEX];
+extern int insertBlankCount;
+extern int replaceBlank[MAX_MULTI_INDEX];
+extern int replaceBlankCount;
+extern bool overwrite;
+extern int dpi;
 
 /* --- tool function for file handling ------------------------------------ */
 

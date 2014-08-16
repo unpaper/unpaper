@@ -61,6 +61,131 @@ VERBOSE_LEVEL verbose = VERBOSE_NONE;
 INTERP_FUNCTIONS interpolateType = INTERP_CUBIC;
 
 unsigned int absBlackThreshold;
+unsigned int absWhiteThreshold;
+unsigned int absBlackfilterScanThreshold;
+unsigned int absGrayfilterThreshold;
+double deskewScanRangeRad;
+double deskewScanStepRad;
+double deskewScanDeviationRad;
+
+int layout = LAYOUT_SINGLE;
+int startSheet = 1;
+int endSheet = -1;
+int startInput = -1;
+int startOutput = -1;
+int inputCount = 1;
+int outputCount = 1;
+int sheetSize[DIMENSIONS_COUNT] = { -1, -1 };
+int sheetBackground = WHITE24;
+int preRotate = 0;
+int postRotate = 0;
+int preMirror = 0;
+int postMirror = 0;
+int preShift[DIRECTIONS_COUNT] = { 0, 0 };
+int postShift[DIRECTIONS_COUNT] = { 0, 0 };
+int size[DIRECTIONS_COUNT] = { -1, -1 };
+int postSize[DIRECTIONS_COUNT] = { -1, -1 };
+int stretchSize[DIRECTIONS_COUNT] = { -1, -1 };
+int postStretchSize[DIRECTIONS_COUNT] = { -1, -1 };
+float zoomFactor = 1.0;
+float postZoomFactor = 1.0;
+int pointCount = 0;
+int point[MAX_POINTS][COORDINATES_COUNT];
+int maskCount = 0;
+int mask[MAX_MASKS][EDGES_COUNT];
+int wipeCount = 0;
+int wipe[MAX_MASKS][EDGES_COUNT];
+int middleWipe[2] = { 0, 0 };
+int preWipeCount = 0;
+int preWipe[MAX_MASKS][EDGES_COUNT];
+int postWipeCount = 0;
+int postWipe[MAX_MASKS][EDGES_COUNT];
+int preBorder[EDGES_COUNT] = { 0, 0, 0, 0 };
+int postBorder[EDGES_COUNT] = { 0, 0, 0, 0 };
+int border[EDGES_COUNT] = { 0, 0, 0, 0 };
+bool maskValid[MAX_MASKS];
+int preMaskCount = 0;
+int preMask[MAX_MASKS][EDGES_COUNT];
+int blackfilterScanDirections = (1<<HORIZONTAL) | (1<<VERTICAL);
+int blackfilterScanSize[DIRECTIONS_COUNT] = { 20, 20 };
+int blackfilterScanDepth[DIRECTIONS_COUNT] = { 500, 500 };
+int blackfilterScanStep[DIRECTIONS_COUNT] = { 5, 5 };
+float blackfilterScanThreshold = 0.95;
+int blackfilterExcludeCount = 0;
+int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
+int blackfilterIntensity = 20;
+int noisefilterIntensity = 4;
+int blurfilterScanSize[DIRECTIONS_COUNT] = { 100, 100 };
+int blurfilterScanStep[DIRECTIONS_COUNT] = { 50, 50 };
+float blurfilterIntensity = 0.01;
+int grayfilterScanSize[DIRECTIONS_COUNT] = { 50, 50 };
+int grayfilterScanStep[DIRECTIONS_COUNT] = { 20, 20 };
+float grayfilterThreshold = 0.5;
+int maskScanDirections = (1<<HORIZONTAL);
+int maskScanSize[DIRECTIONS_COUNT] = { 50, 50 };
+int maskScanDepth[DIRECTIONS_COUNT] = { -1, -1 };
+int maskScanStep[DIRECTIONS_COUNT] = { 5, 5 };
+float maskScanThreshold[DIRECTIONS_COUNT] = { 0.1, 0.1 };
+int maskScanMinimum[DIMENSIONS_COUNT] = { 100, 100 };
+int maskScanMaximum[DIMENSIONS_COUNT] = { -1, -1 }; // set default later
+int maskColor = WHITE24;
+int deskewScanEdges = (1<<LEFT) | (1<<RIGHT);
+int deskewScanSize = 1500;
+float deskewScanDepth = 0.5;
+float deskewScanRange = 5.0;
+float deskewScanStep = 0.1;
+float deskewScanDeviation = 1.0;
+int borderScanDirections = (1<<VERTICAL);
+int borderScanSize[DIRECTIONS_COUNT] = { 5, 5 };
+int borderScanStep[DIRECTIONS_COUNT] = { 5, 5 };
+int borderScanThreshold[DIRECTIONS_COUNT] = { 5, 5 };
+int borderAlign = 0; // center
+int borderAlignMargin[DIRECTIONS_COUNT] = { 0, 0 }; // center
+int outsideBorderscanMask[MAX_PAGES][EDGES_COUNT]; // set by --layout
+int outsideBorderscanMaskCount = 0;
+float whiteThreshold = 0.9;
+float blackThreshold = 0.33;
+bool writeoutput = true;
+bool multisheets = true;
+
+// 0: allow all, -1: disable all, n: individual entries
+int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
+int noBlackfilterMultiIndexCount = 0;
+int noNoisefilterMultiIndex[MAX_MULTI_INDEX];
+int noNoisefilterMultiIndexCount = 0;
+int noBlurfilterMultiIndex[MAX_MULTI_INDEX];
+int noBlurfilterMultiIndexCount = 0;
+int noGrayfilterMultiIndex[MAX_MULTI_INDEX];
+int noGrayfilterMultiIndexCount = 0;
+int noMaskScanMultiIndex[MAX_MULTI_INDEX];
+int noMaskScanMultiIndexCount = 0;
+int noMaskCenterMultiIndex[MAX_MULTI_INDEX];
+int noMaskCenterMultiIndexCount = 0;
+int noDeskewMultiIndex[MAX_MULTI_INDEX];
+int noDeskewMultiIndexCount = 0;
+int noWipeMultiIndex[MAX_MULTI_INDEX];
+int noWipeMultiIndexCount = 0;
+int noBorderMultiIndex[MAX_MULTI_INDEX];
+int noBorderMultiIndexCount = 0;
+int noBorderScanMultiIndex[MAX_MULTI_INDEX];
+int noBorderScanMultiIndexCount = 0;
+int noBorderAlignMultiIndex[MAX_MULTI_INDEX];
+int noBorderAlignMultiIndexCount = 0;
+
+int sheetMultiIndex[MAX_MULTI_INDEX];
+int sheetMultiIndexCount = -1; // default: process all between start-sheet and end-sheet
+int excludeMultiIndex[MAX_MULTI_INDEX];
+int excludeMultiIndexCount = 0;
+int ignoreMultiIndex[MAX_MULTI_INDEX];
+int ignoreMultiIndexCount = 0;
+int autoborder[MAX_MASKS][EDGES_COUNT];
+int autoborderMask[MAX_MASKS][EDGES_COUNT];
+int insertBlank[MAX_MULTI_INDEX];
+int insertBlankCount = 0;
+int replaceBlank[MAX_MULTI_INDEX];
+int replaceBlankCount = 0;
+bool overwrite = false;
+int dpi = 300;
 
 /**
  * Print an error and exit process
@@ -87,127 +212,6 @@ void errOutput(const char *fmt, ...) {
  * The main program.
  */
 int main(int argc, char* argv[]) {
-
-    // --- parameter variables ---
-    int layout = LAYOUT_SINGLE;
-    int startSheet = 1;
-    int endSheet = -1;
-    int startInput = -1;
-    int startOutput = -1;
-    int inputCount = 1;
-    int outputCount = 1;
-    int sheetSize[DIMENSIONS_COUNT] = { -1, -1 };
-    int sheetBackground = WHITE24;
-    int preRotate = 0;
-    int postRotate = 0;
-    int preMirror = 0;
-    int postMirror = 0;
-    int preShift[DIRECTIONS_COUNT] = { 0, 0 };
-    int postShift[DIRECTIONS_COUNT] = { 0, 0 };
-    int size[DIRECTIONS_COUNT] = { -1, -1 };
-    int postSize[DIRECTIONS_COUNT] = { -1, -1 };
-    int stretchSize[DIRECTIONS_COUNT] = { -1, -1 };
-    int postStretchSize[DIRECTIONS_COUNT] = { -1, -1 };
-    float zoomFactor = 1.0;
-    float postZoomFactor = 1.0;
-    int pointCount = 0;
-    int point[MAX_POINTS][COORDINATES_COUNT];
-    int maskCount = 0;
-    int mask[MAX_MASKS][EDGES_COUNT];
-    int wipeCount = 0;
-    int wipe[MAX_MASKS][EDGES_COUNT];
-    int middleWipe[2] = { 0, 0 };
-    int preWipeCount = 0;
-    int preWipe[MAX_MASKS][EDGES_COUNT];
-    int postWipeCount = 0;
-    int postWipe[MAX_MASKS][EDGES_COUNT];
-    int preBorder[EDGES_COUNT] = { 0, 0, 0, 0 };
-    int postBorder[EDGES_COUNT] = { 0, 0, 0, 0 };
-    int border[EDGES_COUNT] = { 0, 0, 0, 0 };
-    bool maskValid[MAX_MASKS];
-    int preMaskCount = 0;
-    int preMask[MAX_MASKS][EDGES_COUNT];
-    int blackfilterScanDirections = (1<<HORIZONTAL) | (1<<VERTICAL);
-    int blackfilterScanSize[DIRECTIONS_COUNT] = { 20, 20 };
-    int blackfilterScanDepth[DIRECTIONS_COUNT] = { 500, 500 };
-    int blackfilterScanStep[DIRECTIONS_COUNT] = { 5, 5 };
-    float blackfilterScanThreshold = 0.95;
-    int blackfilterExcludeCount = 0;
-    int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
-    int blackfilterIntensity = 20;
-    int noisefilterIntensity = 4;
-    int blurfilterScanSize[DIRECTIONS_COUNT] = { 100, 100 };
-    int blurfilterScanStep[DIRECTIONS_COUNT] = { 50, 50 };
-    float blurfilterIntensity = 0.01;
-    int grayfilterScanSize[DIRECTIONS_COUNT] = { 50, 50 };
-    int grayfilterScanStep[DIRECTIONS_COUNT] = { 20, 20 };
-    float grayfilterThreshold = 0.5;
-    int maskScanDirections = (1<<HORIZONTAL);
-    int maskScanSize[DIRECTIONS_COUNT] = { 50, 50 };
-    int maskScanDepth[DIRECTIONS_COUNT] = { -1, -1 };
-    int maskScanStep[DIRECTIONS_COUNT] = { 5, 5 };
-    float maskScanThreshold[DIRECTIONS_COUNT] = { 0.1, 0.1 };
-    int maskScanMinimum[DIMENSIONS_COUNT] = { 100, 100 };
-    int maskScanMaximum[DIMENSIONS_COUNT] = { -1, -1 }; // set default later
-    int maskColor = WHITE24;
-    int deskewScanEdges = (1<<LEFT) | (1<<RIGHT);
-    int deskewScanSize = 1500;
-    float deskewScanDepth = 0.5;
-    float deskewScanRange = 5.0;
-    float deskewScanStep = 0.1;
-    float deskewScanDeviation = 1.0;
-    int borderScanDirections = (1<<VERTICAL);
-    int borderScanSize[DIRECTIONS_COUNT] = { 5, 5 };
-    int borderScanStep[DIRECTIONS_COUNT] = { 5, 5 };
-    int borderScanThreshold[DIRECTIONS_COUNT] = { 5, 5 };
-    int borderAlign = 0; // center
-    int borderAlignMargin[DIRECTIONS_COUNT] = { 0, 0 }; // center
-    int outsideBorderscanMask[MAX_PAGES][EDGES_COUNT]; // set by --layout
-    int outsideBorderscanMaskCount = 0;
-    float whiteThreshold = 0.9;
-    float blackThreshold = 0.33;
-    bool writeoutput = true;
-    bool multisheets = true;
-
-    // 0: allow all, -1: disable all, n: individual entries
-    int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
-    int noBlackfilterMultiIndexCount = 0;
-    int noNoisefilterMultiIndex[MAX_MULTI_INDEX];
-    int noNoisefilterMultiIndexCount = 0;
-    int noBlurfilterMultiIndex[MAX_MULTI_INDEX];
-    int noBlurfilterMultiIndexCount = 0;
-    int noGrayfilterMultiIndex[MAX_MULTI_INDEX];
-    int noGrayfilterMultiIndexCount = 0;
-    int noMaskScanMultiIndex[MAX_MULTI_INDEX];
-    int noMaskScanMultiIndexCount = 0;
-    int noMaskCenterMultiIndex[MAX_MULTI_INDEX];
-    int noMaskCenterMultiIndexCount = 0;
-    int noDeskewMultiIndex[MAX_MULTI_INDEX];
-    int noDeskewMultiIndexCount = 0;
-    int noWipeMultiIndex[MAX_MULTI_INDEX];
-    int noWipeMultiIndexCount = 0;
-    int noBorderMultiIndex[MAX_MULTI_INDEX];
-    int noBorderMultiIndexCount = 0;
-    int noBorderScanMultiIndex[MAX_MULTI_INDEX];
-    int noBorderScanMultiIndexCount = 0;
-    int noBorderAlignMultiIndex[MAX_MULTI_INDEX];
-    int noBorderAlignMultiIndexCount = 0;
-
-    int sheetMultiIndex[MAX_MULTI_INDEX];
-    int sheetMultiIndexCount = -1; // default: process all between start-sheet and end-sheet
-    int excludeMultiIndex[MAX_MULTI_INDEX];
-    int excludeMultiIndexCount = 0;
-    int ignoreMultiIndex[MAX_MULTI_INDEX];
-    int ignoreMultiIndexCount = 0;
-    int autoborder[MAX_MASKS][EDGES_COUNT];
-    int autoborderMask[MAX_MASKS][EDGES_COUNT];
-    int insertBlank[MAX_MULTI_INDEX];
-    int insertBlankCount = 0;
-    int replaceBlank[MAX_MULTI_INDEX];
-    int replaceBlankCount = 0;
-    bool overwrite = false;
-    int dpi = 300;
-
     // --- local variables ---
     int w = -1;
     int h = -1;
@@ -953,12 +957,12 @@ int main(int argc, char* argv[]) {
 
     // Calculate the constant absolute values based on the relative parameters.
     absBlackThreshold = WHITE * (1.0 - blackThreshold);
-    const unsigned int absWhiteThreshold = WHITE * (whiteThreshold);
-    const unsigned int absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
-    const unsigned int absGrayfilterThreshold = WHITE * (grayfilterThreshold);
-    const double deskewScanRangeRad = degreesToRadians(deskewScanRange);
-    const double deskewScanStepRad = degreesToRadians(deskewScanStep);
-    const double deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
+    absWhiteThreshold = WHITE * (whiteThreshold);
+    absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
+    absGrayfilterThreshold = WHITE * (grayfilterThreshold);
+    deskewScanRangeRad = degreesToRadians(deskewScanRange);
+    deskewScanStepRad = degreesToRadians(deskewScanStep);
+    deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
 
     avcodec_register_all();
     av_register_all();
