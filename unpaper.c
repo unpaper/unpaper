@@ -1709,7 +1709,7 @@ int main(int argc, char* argv[]) {
             if (!isExcluded(nr, noBorderScanMultiIndex, noBorderScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                 saveDebug("_before-border%d.pnm", nr, &sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
-                    detectBorder(autoborder[i], borderScanDirections, borderScanSize, borderScanStep, borderScanThreshold, outsideBorderscanMask[i], &sheet);
+                    detectBorder(autoborder[i], outsideBorderscanMask[i], &sheet);
                     borderToMask(autoborder[i], autoborderMask[i], &sheet);
                 }
                 applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, &sheet);

@@ -1093,7 +1093,7 @@ static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, 
 /**
  * Detects a border of completely non-black pixels around the area outsideBorder[LEFT],outsideBorder[TOP]-outsideBorder[RIGHT],outsideBorder[BOTTOM].
  */
-void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], int outsideMask[EDGES_COUNT], struct IMAGE* image) {
+void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], struct IMAGE* image) {
     border[LEFT] = outsideMask[LEFT];
     border[TOP] = outsideMask[TOP];
     border[RIGHT] = image->frame->width - outsideMask[RIGHT];

@@ -95,7 +95,7 @@ void centerMask(struct IMAGE* image, int center[COORDINATES_COUNT], int mask[EDG
 
 void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, int margin[DIRECTIONS_COUNT], struct IMAGE* image);
 
-void detectBorder(int border[EDGES_COUNT], int borderScanDirections, int borderScanSize[DIRECTIONS_COUNT], int borderScanStep[DIRECTIONS_COUNT], int borderScanThreshold[DIRECTIONS_COUNT], int outsideMask[EDGES_COUNT], struct IMAGE* image);
+void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], struct IMAGE* image);
 
 void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], struct IMAGE* image);
 
