@@ -580,12 +580,11 @@ static bool detectMask(int startX, int startY, int maskScanDirections, int maskS
  * @param mask point to array into which detected masks will be stored
  * @return number of masks stored in mask[][]
  */
-int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], bool maskValid[MAX_MASKS], int point[MAX_POINTS][COORDINATES_COUNT], int pointCount, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT],  struct IMAGE* image) {
+void detectMasks(struct IMAGE* image) {
     int left;
     int top;
     int right;
     int bottom;
-    int maskCount;
 
     maskCount = 0;
     if (maskScanDirections != 0) {
@@ -609,14 +608,8 @@ int detectMasks(int mask[MAX_MASKS][EDGES_COUNT], bool maskValid[MAX_MASKS], int
                      printf("auto-masking (%d,%d): NO MASK FOUND\n", point[i][X], point[i][Y]);
                  }
              }
-             //if (maskValid[i] == false) { // (mask had been auto-set to full page size)
-             //    if (verbose>=VERBOSE_NORMAL) {
-             //        printf("auto-masking (%d,%d): NO MASK DETECTED\n", point[i][X], point[i][Y]);
-             //    }
-             //}
          }
     }
-    return maskCount;
 }
 
 

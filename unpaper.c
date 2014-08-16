@@ -1582,7 +1582,7 @@ int main(int argc, char* argv[]) {
 
             // mask-detection
             if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &sheet);
+                detectMasks(&sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ mask-scan DISABLED for sheet %d\n", nr);
@@ -1620,7 +1620,7 @@ int main(int argc, char* argv[]) {
 
                 // detect masks again, we may get more precise results now after first masking and grayfilter
                 if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                    maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &originalSheet);
+                    detectMasks(&originalSheet);
                 } else {
                     if (verbose >= VERBOSE_MORE) {
                         printf("(mask-scan before deskewing disabled)\n");
@@ -1668,7 +1668,7 @@ int main(int argc, char* argv[]) {
             if ( (!isExcluded(nr, noMaskCenterMultiIndex, noMaskCenterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) && (layout != LAYOUT_NONE) && (maskCount == pointCount) ) { // (maskCount==pointCount to make sure all masks had correctly been detected)
                 // perform auto-masking again to get more precise masks after rotation
                 if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                    maskCount = detectMasks(mask, maskValid, point, pointCount, maskScanDirections, maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum, maskScanMaximum, &sheet);
+                    detectMasks(&sheet);
                 } else {
                     if (verbose >= VERBOSE_MORE) {
                         printf("(mask-scan before centering disabled)\n");
