@@ -27,6 +27,8 @@
 
 #include "unpaper.h"
 
+#include "parse.h"
+
 /* --- constants ---------------------------------------------------------- */
 
 // factors for conversion to inches
@@ -300,39 +302,60 @@ char* implode(char* buf, const char* s[], int cnt) {
  *
  * @see isInMultiIndex(..)
  */
-void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount) {
-    char s1[MAX_MULTI_INDEX * 5]; // buffer
-    char s2[MAX_MULTI_INDEX * 5]; // buffer
+void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
+    char *s1, *s2 = NULL;
     char c;
     int index;
+    int allocated = 0;
+
+    multiIndex->count = -1;
+    multiIndex->indexes = NULL;
 
     if ( optarg == NULL ) {
-        *multiIndexCount = -1;
         return;
     }
 
-    *multiIndexCount = 0;
-    strcpy(s1, optarg); // argv[*i] -> s1
+    multiIndex->count = 0;
+    allocated = 32;
+    multiIndex->indexes = calloc(allocated, sizeof(multiIndex->indexes[0]));
+    s1 = strdup(optarg);
+
     do {
         index = -1;
-        s2[0] = (char)0; // = ""
-        sscanf(s1, "%d%c%s", &index, &c, s2);
+        sscanf(s1, "%d%c%ms", &index, &c, &s2);
         if (index != -1) {
-            multiIndex[(*multiIndexCount)++] = index;
+            if (multiIndex->count >= allocated) {
+                allocated += 32;
+                multiIndex->indexes = realloc(multiIndex->indexes, allocated * sizeof(multiIndex->indexes[0]));
+            }
+
+            multiIndex->indexes[(multiIndex->count)++] = index;
             if (c=='-') { // range is specified: get range end
                 strcpy(s1, s2); // s2 -> s1
                 sscanf(s1, "%d,%s", &index, s2);
-                for (int j = multiIndex[(*multiIndexCount)-1]+1; j <= index; j++) {
-                    multiIndex[(*multiIndexCount)++] = j;
+                size_t count = index - multiIndex->indexes[(multiIndex->count)-1];
+
+                allocated += count;
+                multiIndex->indexes = realloc(multiIndex->indexes, allocated);
+
+                for (int j = multiIndex->indexes[(multiIndex->count)-1]+1; j <= index; j++) {
+                    multiIndex->indexes[(multiIndex->count)++] = j;
                 }
             }
         } else {
             // string is not correctly parseable: break without inreasing *i (string may be e.g. input-filename)
-            *multiIndexCount = -1; // disable all
-            return; // exit here
+            multiIndex->count = -1; // disable all
+            free(s1);
+            free(s2);
+            return;
         }
-        strcpy(s1, s2); // s2 -> s1
-    } while ((*multiIndexCount < MAX_MULTI_INDEX) && (strlen(s1) > 0));
+        if ( s2 ) {
+            strcpy(s1, s2); // s2 -> s1
+            free(s2);
+        }
+    } while ((multiIndex->count < MAX_MULTI_INDEX) && (strlen(s1) > 0));
+
+    free(s1);
 }
 
 
@@ -343,12 +366,12 @@ void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount)
  *
  * @see parseMultiIndex(..)
  */
-bool isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
-    if (multiIndexCount == -1) {
+bool isInMultiIndex(int index, struct MultiIndex multiIndex) {
+    if (multiIndex.count == -1) {
         return true; // all
     } else {
-        for (int i = 0; i < multiIndexCount; i++) {
-            if (index == multiIndex[i]) {
+        for (int i = 0; i < multiIndex.count; i++) {
+            if (index == multiIndex.indexes[i]) {
                 return true; // found in list
             }
         }
@@ -356,30 +379,18 @@ bool isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCo
     }
 }
 
-
-/**
- * Tests whether 'index' is either part of multiIndex or excludeIndex.
- * (Throughout the application, excludeIndex generalizes several individual
- * multi-indices: if an entry is part of excludeIndex, it is treated as being
- * an entry of all other multiIndices, too.)
- */
-bool isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount, int excludeIndex[MAX_MULTI_INDEX], int excludeIndexCount) {
-    return ( (isInMultiIndex(index, excludeIndex, excludeIndexCount) == true) || (isInMultiIndex(index, multiIndex, multiIndexCount) == true) );
-}
-
-
 /**
  * Outputs all entries in an array of integer to the console.
  */
-void printMultiIndex(int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
-    if (multiIndexCount == -1) {
+void printMultiIndex(struct MultiIndex multiIndex) {
+    if (multiIndex.count == -1) {
         printf("all");
-    } else if (multiIndexCount == 0) {
+    } else if (multiIndex.count == 0) {
         printf("none");
     } else {
-        for (int i = 0; i < multiIndexCount; i++) {
-            printf("%d", multiIndex[i]);
-            if (i < multiIndexCount-1) {
+        for (int i = 0; i < multiIndex.count; i++) {
+            printf("%d", multiIndex.indexes[i]);
+            if (i < multiIndex.count-1) {
                 printf(",");
             }
         }

@@ -213,42 +213,25 @@ extern float blackThreshold;
 extern bool writeoutput;
 extern bool multisheets;
 
-// 0: allow all, -1: disable all, n: individual entries
-extern int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
-extern int noBlackfilterMultiIndexCount;
-extern int noNoisefilterMultiIndex[MAX_MULTI_INDEX];
-extern int noNoisefilterMultiIndexCount;
-extern int noBlurfilterMultiIndex[MAX_MULTI_INDEX];
-extern int noBlurfilterMultiIndexCount;
-extern int noGrayfilterMultiIndex[MAX_MULTI_INDEX];
-extern int noGrayfilterMultiIndexCount;
-extern int noMaskScanMultiIndex[MAX_MULTI_INDEX];
-extern int noMaskScanMultiIndexCount;
-extern int noMaskCenterMultiIndex[MAX_MULTI_INDEX];
-extern int noMaskCenterMultiIndexCount;
-extern int noDeskewMultiIndex[MAX_MULTI_INDEX];
-extern int noDeskewMultiIndexCount;
-extern int noWipeMultiIndex[MAX_MULTI_INDEX];
-extern int noWipeMultiIndexCount;
-extern int noBorderMultiIndex[MAX_MULTI_INDEX];
-extern int noBorderMultiIndexCount;
-extern int noBorderScanMultiIndex[MAX_MULTI_INDEX];
-extern int noBorderScanMultiIndexCount;
-extern int noBorderAlignMultiIndex[MAX_MULTI_INDEX];
-extern int noBorderAlignMultiIndexCount;
+extern struct MultiIndex noBlackfilterMultiIndex;
+extern struct MultiIndex noNoisefilterMultiIndex;
+extern struct MultiIndex noBlurfilterMultiIndex;
+extern struct MultiIndex noGrayfilterMultiIndex;
+extern struct MultiIndex noMaskScanMultiIndex;
+extern struct MultiIndex noMaskCenterMultiIndex;
+extern struct MultiIndex noDeskewMultiIndex;
+extern struct MultiIndex noWipeMultiIndex;
+extern struct MultiIndex noBorderMultiIndex;
+extern struct MultiIndex noBorderScanMultiIndex;
+extern struct MultiIndex noBorderAlignMultiIndex;
+extern struct MultiIndex sheetMultiIndex;
+extern struct MultiIndex excludeMultiIndex;
+extern struct MultiIndex ignoreMultiIndex;
+extern struct MultiIndex insertBlank;
+extern struct MultiIndex replaceBlank;
 
-extern int sheetMultiIndex[MAX_MULTI_INDEX];
-extern int sheetMultiIndexCount; // default: process all between start-sheet and end-sheet
-extern int excludeMultiIndex[MAX_MULTI_INDEX];
-extern int excludeMultiIndexCount;
-extern int ignoreMultiIndex[MAX_MULTI_INDEX];
-extern int ignoreMultiIndexCount;
 extern int autoborder[MAX_MASKS][EDGES_COUNT];
 extern int autoborderMask[MAX_MASKS][EDGES_COUNT];
-extern int insertBlank[MAX_MULTI_INDEX];
-extern int insertBlankCount;
-extern int replaceBlank[MAX_MULTI_INDEX];
-extern int replaceBlankCount;
 extern bool overwrite;
 extern int dpi;
 

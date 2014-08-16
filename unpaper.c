@@ -149,41 +149,27 @@ bool writeoutput = true;
 bool multisheets = true;
 
 // 0: allow all, -1: disable all, n: individual entries
-int noBlackfilterMultiIndex[MAX_MULTI_INDEX];
-int noBlackfilterMultiIndexCount = 0;
-int noNoisefilterMultiIndex[MAX_MULTI_INDEX];
-int noNoisefilterMultiIndexCount = 0;
-int noBlurfilterMultiIndex[MAX_MULTI_INDEX];
-int noBlurfilterMultiIndexCount = 0;
-int noGrayfilterMultiIndex[MAX_MULTI_INDEX];
-int noGrayfilterMultiIndexCount = 0;
-int noMaskScanMultiIndex[MAX_MULTI_INDEX];
-int noMaskScanMultiIndexCount = 0;
-int noMaskCenterMultiIndex[MAX_MULTI_INDEX];
-int noMaskCenterMultiIndexCount = 0;
-int noDeskewMultiIndex[MAX_MULTI_INDEX];
-int noDeskewMultiIndexCount = 0;
-int noWipeMultiIndex[MAX_MULTI_INDEX];
-int noWipeMultiIndexCount = 0;
-int noBorderMultiIndex[MAX_MULTI_INDEX];
-int noBorderMultiIndexCount = 0;
-int noBorderScanMultiIndex[MAX_MULTI_INDEX];
-int noBorderScanMultiIndexCount = 0;
-int noBorderAlignMultiIndex[MAX_MULTI_INDEX];
-int noBorderAlignMultiIndexCount = 0;
+struct MultiIndex noBlackfilterMultiIndex = { 0, NULL };
+struct MultiIndex noNoisefilterMultiIndex = { 0, NULL };
+struct MultiIndex noBlurfilterMultiIndex = { 0, NULL };
+struct MultiIndex noGrayfilterMultiIndex = { 0, NULL };
+struct MultiIndex noMaskScanMultiIndex = { 0, NULL };
+struct MultiIndex noMaskCenterMultiIndex = { 0, NULL };
+struct MultiIndex noDeskewMultiIndex = { 0, NULL };
+struct MultiIndex noWipeMultiIndex = { 0, NULL };
+struct MultiIndex noBorderMultiIndex = { 0, NULL };
+struct MultiIndex noBorderScanMultiIndex = { 0, NULL };
+struct MultiIndex noBorderAlignMultiIndex = { 0, NULL };
 
-int sheetMultiIndex[MAX_MULTI_INDEX];
-int sheetMultiIndexCount = -1; // default: process all between start-sheet and end-sheet
-int excludeMultiIndex[MAX_MULTI_INDEX];
-int excludeMultiIndexCount = 0;
-int ignoreMultiIndex[MAX_MULTI_INDEX];
-int ignoreMultiIndexCount = 0;
+// default: process all between start-sheet and end-sheet
+struct MultiIndex sheetMultiIndex = { -1, NULL };
+struct MultiIndex excludeMultiIndex = { 0, NULL };
+struct MultiIndex ignoreMultiIndex = { 0, NULL };
+struct MultiIndex insertBlank = { 0, NULL };
+struct MultiIndex replaceBlank = { 0, NULL };
+
 int autoborder[MAX_MASKS][EDGES_COUNT];
 int autoborderMask[MAX_MASKS][EDGES_COUNT];
-int insertBlank[MAX_MULTI_INDEX];
-int insertBlankCount = 0;
-int replaceBlank[MAX_MULTI_INDEX];
-int replaceBlankCount = 0;
 bool overwrite = false;
 int dpi = 300;
 
@@ -415,10 +401,10 @@ int main(int argc, char* argv[]) {
             break;
 
         case '#':
-            parseMultiIndex(optarg, sheetMultiIndex, &sheetMultiIndexCount);
+            parseMultiIndex(optarg, &sheetMultiIndex);
             // allow 0 as start sheet, might be overwritten by --start-sheet again
-            if (sheetMultiIndexCount > 0 && startSheet > sheetMultiIndex[0] )
-                startSheet = sheetMultiIndex[0];
+            if (sheetMultiIndex.count > 0 && startSheet > sheetMultiIndex.indexes[0] )
+                startSheet = sheetMultiIndex.indexes[0];
             break;
 
         case 0x7e:
@@ -446,13 +432,13 @@ int main(int argc, char* argv[]) {
             break;
 
         case 'x':
-            parseMultiIndex(optarg, excludeMultiIndex, &excludeMultiIndexCount);
-            if (excludeMultiIndexCount == -1)
-                excludeMultiIndexCount = 0; // 'exclude all' makes no sense
+            parseMultiIndex(optarg, &excludeMultiIndex);
+            if (excludeMultiIndex.count == -1)
+                excludeMultiIndex.count = 0; // 'exclude all' makes no sense
             break;
 
         case 'n':
-            parseMultiIndex(optarg, ignoreMultiIndex, &ignoreMultiIndexCount);
+            parseMultiIndex(optarg, &ignoreMultiIndex);
             break;
 
         case 0x83:
@@ -633,7 +619,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x92:
-            parseMultiIndex(optarg, noBlackfilterMultiIndex, &noBlackfilterMultiIndexCount);
+            parseMultiIndex(optarg, &noBlackfilterMultiIndex);
             break;
 
         case 0x93:
@@ -679,7 +665,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x9a:
-            parseMultiIndex(optarg, noNoisefilterMultiIndex, &noNoisefilterMultiIndexCount);
+            parseMultiIndex(optarg, &noNoisefilterMultiIndex);
             break;
 
         case 0x9b:
@@ -687,7 +673,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x9c:
-            parseMultiIndex(optarg, noBlurfilterMultiIndex, &noBlurfilterMultiIndexCount);
+            parseMultiIndex(optarg, &noBlurfilterMultiIndex);
             break;
 
         case 0x9d:
@@ -703,7 +689,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xa0:
-            parseMultiIndex(optarg, noGrayfilterMultiIndex, &noGrayfilterMultiIndexCount);
+            parseMultiIndex(optarg, &noGrayfilterMultiIndex);
             break;
 
         case 0xa1:
@@ -719,7 +705,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xa4:
-            parseMultiIndex(optarg, noMaskScanMultiIndex, &noMaskScanMultiIndexCount);
+            parseMultiIndex(optarg, &noMaskScanMultiIndex);
             break;
 
         case 0xa5:
@@ -755,11 +741,11 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xad:
-            parseMultiIndex(optarg, noMaskCenterMultiIndex, &noMaskCenterMultiIndexCount);
+            parseMultiIndex(optarg, &noMaskCenterMultiIndex);
             break;
 
         case 0xae:
-            parseMultiIndex(optarg, noDeskewMultiIndex, &noDeskewMultiIndexCount);
+            parseMultiIndex(optarg, &noDeskewMultiIndex);
             break;
 
         case 0xaf:
@@ -787,7 +773,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xb5:
-            parseMultiIndex(optarg, noBorderScanMultiIndex, &noBorderScanMultiIndexCount);
+            parseMultiIndex(optarg, &noBorderScanMultiIndex);
             break;
 
         case 0xb6:
@@ -815,15 +801,15 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xbc:
-            parseMultiIndex(optarg, noBorderAlignMultiIndex, &noBorderAlignMultiIndexCount);
+            parseMultiIndex(optarg, &noBorderAlignMultiIndex);
             break;
 
         case 0xbd:
-            parseMultiIndex(optarg, noWipeMultiIndex, &noWipeMultiIndexCount);
+            parseMultiIndex(optarg, &noWipeMultiIndex);
             break;
 
         case 0xbe:
-            parseMultiIndex(optarg, noBorderMultiIndex, &noBorderMultiIndexCount);
+            parseMultiIndex(optarg, &noBorderMultiIndex);
             break;
 
         case 'w':
@@ -859,11 +845,11 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xc3:
-            parseMultiIndex(optarg, insertBlank, &insertBlankCount);
+            parseMultiIndex(optarg, &insertBlank);
             break;
 
         case 0xc4:
-            parseMultiIndex(optarg, replaceBlank, &replaceBlankCount);
+            parseMultiIndex(optarg, &replaceBlank);
             break;
 
         case 'T':
@@ -979,8 +965,8 @@ int main(int argc, char* argv[]) {
 
         bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
         for (int i = 0; i < inputCount; i++) {
-            bool ins = isInMultiIndex(inputNr, insertBlank, insertBlankCount);
-            bool repl = isInMultiIndex(inputNr, replaceBlank, replaceBlankCount);
+            bool ins = isInMultiIndex(inputNr, insertBlank);
+            bool repl = isInMultiIndex(inputNr, replaceBlank);
 
             if ( repl ) {
                 inputFileNames[i] = NULL;
@@ -1044,7 +1030,7 @@ int main(int argc, char* argv[]) {
         // --- process single sheet                                    ---
         // ---------------------------------------------------------------
 
-        if (isInMultiIndex(nr, sheetMultiIndex, sheetMultiIndexCount) && (!isInMultiIndex(nr, excludeMultiIndex, excludeMultiIndexCount))) {
+        if (isInMultiIndex(nr, sheetMultiIndex) && (!isInMultiIndex(nr, excludeMultiIndex))) {
             char s1[1023]; // buffers for result of implode()
             char s2[1023];
 
@@ -1216,7 +1202,7 @@ int main(int argc, char* argv[]) {
                 if (postZoomFactor != 1.0) {
                     printf("post-zoom: %f\n", postZoomFactor);
                 }
-                if (noBlackfilterMultiIndexCount != -1) {
+                if (noBlackfilterMultiIndex.count != -1) {
                     printf("blackfilter-scan-direction: %s\n", getDirections(blackfilterScanDirections));
                     printf("blackfilter-scan-size: [%d,%d]\n", blackfilterScanSize[0], blackfilterScanSize[1]);
                     printf("blackfilter-scan-depth: [%d,%d]\n", blackfilterScanDepth[0], blackfilterScanDepth[1]);
@@ -1230,45 +1216,45 @@ int main(int argc, char* argv[]) {
                         printf("\n");
                     }
                     printf("blackfilter-intensity: %d\n", blackfilterIntensity);
-                    if (noBlackfilterMultiIndexCount > 0) {
+                    if (noBlackfilterMultiIndex.count > 0) {
                         printf("blackfilter DISABLED for sheets: ");
-                        printMultiIndex(noBlackfilterMultiIndex, noBlackfilterMultiIndexCount);
+                        printMultiIndex(noBlackfilterMultiIndex);
                     }
                 } else {
                     printf("blackfilter DISABLED for all sheets.\n");
                 }
-                if (noNoisefilterMultiIndexCount != -1) {
+                if (noNoisefilterMultiIndex.count != -1) {
                     printf("noisefilter-intensity: %d\n", noisefilterIntensity);
-                    if (noNoisefilterMultiIndexCount > 0) {
+                    if (noNoisefilterMultiIndex.count > 0) {
                         printf("noisefilter DISABLED for sheets: ");
-                        printMultiIndex(noNoisefilterMultiIndex, noNoisefilterMultiIndexCount);
+                        printMultiIndex(noNoisefilterMultiIndex);
                     }
                 } else {
                     printf("noisefilter DISABLED for all sheets.\n");
                 }
-                if (noBlurfilterMultiIndexCount != -1) {
+                if (noBlurfilterMultiIndex.count != -1) {
                     printf("blurfilter-size: [%d,%d]\n", blurfilterScanSize[0], blurfilterScanSize[1]);
                     printf("blurfilter-step: [%d,%d]\n", blurfilterScanStep[0], blurfilterScanStep[1]);
                     printf("blurfilter-intensity: %f\n", blurfilterIntensity);
-                    if (noBlurfilterMultiIndexCount > 0) {
+                    if (noBlurfilterMultiIndex.count > 0) {
                         printf("blurfilter DISABLED for sheets: ");
-                        printMultiIndex(noBlurfilterMultiIndex, noBlurfilterMultiIndexCount);
+                        printMultiIndex(noBlurfilterMultiIndex);
                     }
                 } else {
                     printf("blurfilter DISABLED for all sheets.\n");
                 }
-                if (noGrayfilterMultiIndexCount != -1) {
+                if (noGrayfilterMultiIndex.count != -1) {
                     printf("grayfilter-size: [%d,%d]\n", grayfilterScanSize[0], grayfilterScanSize[1]);
                     printf("grayfilter-step: [%d,%d]\n", grayfilterScanStep[0], grayfilterScanStep[1]);
                     printf("grayfilter-threshold: %f\n", grayfilterThreshold);
-                    if (noGrayfilterMultiIndexCount > 0) {
+                    if (noGrayfilterMultiIndex.count > 0) {
                         printf("grayfilter DISABLED for sheets: ");
-                        printMultiIndex(noGrayfilterMultiIndex, noGrayfilterMultiIndexCount);
+                        printMultiIndex(noGrayfilterMultiIndex);
                     }
                 } else {
                     printf("grayfilter DISABLED for all sheets.\n");
                 }
-                if (noMaskScanMultiIndexCount != -1) {
+                if (noMaskScanMultiIndex.count != -1) {
                     printf("mask points: ");
                     for (int i = 0; i < pointCount; i++) {
                         printf("(%d,%d) ",point[i][X],point[i][Y]);
@@ -1282,14 +1268,14 @@ int main(int argc, char* argv[]) {
                     printf("mask-scan-minimum: [%d,%d]\n", maskScanMinimum[0], maskScanMinimum[1]);
                     printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[0], maskScanMaximum[1]);
                     printf("mask-color: %d\n", maskColor);
-                    if (noMaskScanMultiIndexCount > 0) {
+                    if (noMaskScanMultiIndex.count > 0) {
                         printf("mask-scan DISABLED for sheets: ");
-                        printMultiIndex(noMaskScanMultiIndex, noMaskScanMultiIndexCount);
+                        printMultiIndex(noMaskScanMultiIndex);
                     }
                 } else {
                     printf("mask-scan DISABLED for all sheets.\n");
                 }
-                if (noDeskewMultiIndexCount != -1) {
+                if (noDeskewMultiIndex.count != -1) {
                     printf("deskew-scan-direction: ");
                     printEdges(deskewScanEdges);
                     printf("deskew-scan-size: %d\n", deskewScanSize);
@@ -1297,14 +1283,14 @@ int main(int argc, char* argv[]) {
                     printf("deskew-scan-range: %f\n", deskewScanRange);
                     printf("deskew-scan-step: %f\n", deskewScanStep);
                     printf("deskew-scan-deviation: %f\n", deskewScanDeviation);
-                    if (noDeskewMultiIndexCount > 0) {
+                    if (noDeskewMultiIndex.count > 0) {
                         printf("deskew-scan DISABLED for sheets: ");
-                        printMultiIndex(noDeskewMultiIndex, noDeskewMultiIndexCount);
+                        printMultiIndex(noDeskewMultiIndex);
                     }
                 } else {
                     printf("deskew-scan DISABLED for all sheets.\n");
                 }
-                if (noWipeMultiIndexCount != -1) {
+                if (noWipeMultiIndex.count != -1) {
                     if (wipeCount > 0) {
                         printf("wipe areas: ");
                         for (int i = 0; i < wipeCount; i++) {
@@ -1318,21 +1304,21 @@ int main(int argc, char* argv[]) {
                 if (middleWipe[0] > 0 || middleWipe[1] > 0) {
                     printf("middle-wipe (l,r): %d,%d\n", middleWipe[0], middleWipe[1]);
                 }
-                if (noBorderMultiIndexCount != -1) {
+                if (noBorderMultiIndex.count != -1) {
                     if (border[LEFT]!=0 || border[TOP]!=0 || border[RIGHT]!=0 || border[BOTTOM]!=0) {
                         printf("explicit border: [%d,%d,%d,%d]\n", border[LEFT], border[TOP], border[RIGHT], border[BOTTOM]);
                     }
                 } else {
                     printf("border DISABLED for all sheets.\n");
                 }
-                if (noBorderScanMultiIndexCount != -1) {
+                if (noBorderScanMultiIndex.count != -1) {
                     printf("border-scan-direction: %s\n", getDirections(borderScanDirections));
                     printf("border-scan-size: [%d,%d]\n", borderScanSize[0], borderScanSize[1]);
                     printf("border-scan-step: [%d,%d]\n", borderScanStep[0], borderScanStep[1]);
                     printf("border-scan-threshold: [%d,%d]\n", borderScanThreshold[0], borderScanThreshold[1]);
-                    if (noBorderScanMultiIndexCount > 0) {
+                    if (noBorderScanMultiIndex.count > 0) {
                         printf("border-scan DISABLED for sheets: ");
-                        printMultiIndex(noBorderScanMultiIndex, noBorderScanMultiIndexCount);
+                        printMultiIndex(noBorderScanMultiIndex);
                     }
                     printf("border-align: ");
                     printEdges(borderAlign);
@@ -1359,9 +1345,9 @@ int main(int argc, char* argv[]) {
                 if (postRotate != 0) {
                     printf("post-rotate: %d\n", postRotate);
                 }
-                //if (ignoreMultiIndexCount > 0) {
+                //if (ignoreMultiIndex.count > 0) {
                 //    printf("EXCLUDE sheets: ");
-                //    printMultiIndex(ignoreMultiIndex, ignoreMultiIndexCount);
+                //    printMultiIndex(ignoreMultiIndex);
                 //}
                 printf("white-threshold: %f\n", whiteThreshold);
                 printf("black-threshold: %f\n", blackThreshold);
@@ -1526,17 +1512,17 @@ int main(int argc, char* argv[]) {
 
 
             // pre-wipe
-            if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
                 applyWipes(preWipe, preWipeCount, &sheet);
             }
 
             // pre-border
-            if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
                 applyBorder(preBorder, maskColor, &sheet);
             }
 
             // black area filter
-            if (!isExcluded(nr, noBlackfilterMultiIndex, noBlackfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noBlackfilterMultiIndex, ignoreMultiIndex)) {
                 saveDebug("_before-blackfilter%d.pnm", nr, &sheet);
                 blackfilter(&sheet);
                 saveDebug("_after-blackfilter%d.pnm", nr, &sheet);
@@ -1547,7 +1533,7 @@ int main(int argc, char* argv[]) {
             }
 
             // noise filter
-            if (!isExcluded(nr, noNoisefilterMultiIndex, noNoisefilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noNoisefilterMultiIndex, ignoreMultiIndex)) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("noise-filter ...");
                 }
@@ -1564,7 +1550,7 @@ int main(int argc, char* argv[]) {
             }
 
             // blur filter
-            if (!isExcluded(nr, noBlurfilterMultiIndex, noBlurfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noBlurfilterMultiIndex, ignoreMultiIndex)) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("blur-filter...");
                 }
@@ -1581,7 +1567,7 @@ int main(int argc, char* argv[]) {
             }
 
             // mask-detection
-            if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
                 detectMasks(&sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
@@ -1597,7 +1583,7 @@ int main(int argc, char* argv[]) {
             }
 
             // gray filter
-            if (!isExcluded(nr, noGrayfilterMultiIndex, noGrayfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noGrayfilterMultiIndex, ignoreMultiIndex)) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("gray-filter...");
                 }
@@ -1614,12 +1600,12 @@ int main(int argc, char* argv[]) {
             }
 
             // rotation-detection
-            if ((!isExcluded(nr, noDeskewMultiIndex, noDeskewMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount))) {
+            if ((!isExcluded(nr, noDeskewMultiIndex, ignoreMultiIndex))) {
                 saveDebug("_before-deskew%d.pnm", nr, &sheet);
                 originalSheet = sheet; // copy struct entries ('clone')
 
                 // detect masks again, we may get more precise results now after first masking and grayfilter
-                if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
                     detectMasks(&originalSheet);
                 } else {
                     if (verbose >= VERBOSE_MORE) {
@@ -1665,9 +1651,9 @@ int main(int argc, char* argv[]) {
             }
 
             // auto-center masks on either single-page or double-page layout
-            if ( (!isExcluded(nr, noMaskCenterMultiIndex, noMaskCenterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) && (layout != LAYOUT_NONE) && (maskCount == pointCount) ) { // (maskCount==pointCount to make sure all masks had correctly been detected)
+            if ( !isExcluded(nr, noMaskCenterMultiIndex, ignoreMultiIndex) ) { // (maskCount==pointCount to make sure all masks had correctly been detected)
                 // perform auto-masking again to get more precise masks after rotation
-                if (!isExcluded(nr, noMaskScanMultiIndex, noMaskScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
                     detectMasks(&sheet);
                 } else {
                     if (verbose >= VERBOSE_MORE) {
@@ -1688,7 +1674,7 @@ int main(int argc, char* argv[]) {
             }
 
             // explicit wipe
-            if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
                 applyWipes(wipe, wipeCount, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
@@ -1697,7 +1683,7 @@ int main(int argc, char* argv[]) {
             }
 
             // explicit border
-            if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
                 applyBorder(border, maskColor, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
@@ -1706,7 +1692,7 @@ int main(int argc, char* argv[]) {
             }
 
             // border-detection
-            if (!isExcluded(nr, noBorderScanMultiIndex, noBorderScanMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noBorderScanMultiIndex, ignoreMultiIndex)) {
                 saveDebug("_before-border%d.pnm", nr, &sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     detectBorder(autoborder[i], outsideBorderscanMask[i], &sheet);
@@ -1715,7 +1701,7 @@ int main(int argc, char* argv[]) {
                 applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, &sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     // border-centering
-                    if (!isExcluded(nr, noBorderAlignMultiIndex, noBorderAlignMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+                    if (!isExcluded(nr, noBorderAlignMultiIndex, ignoreMultiIndex)) {
                         alignMask(autoborderMask[i], outsideBorderscanMask[i], borderAlign, borderAlignMargin, &sheet);
                     } else {
                         if (verbose >= VERBOSE_MORE) {
@@ -1731,12 +1717,12 @@ int main(int argc, char* argv[]) {
             }
 
             // post-wipe
-            if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
                 applyWipes(postWipe, postWipeCount, &sheet);
             }
 
             // post-border
-            if (!isExcluded(nr, noBorderMultiIndex, noBorderMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
+            if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
                 applyBorder(postBorder, maskColor, &sheet);
             }
 
