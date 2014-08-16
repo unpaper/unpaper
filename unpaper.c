@@ -1063,11 +1063,7 @@ int main(int argc, char* argv[]) {
                         if (verbose>=VERBOSE_NORMAL) {
                             printf("pre-rotating %d degrees.\n", preRotate);
                         }
-                        if (preRotate == 90) {
-                            flipRotate(1, &page);
-                        } else if (preRotate == -90) {
-                            flipRotate(-1, &page);
-                        }
+                        flipRotate(preRotate/90, &page);
                     }
 
                     // if sheet-size is not known yet (and not forced by --sheet-size), set now based on size of (first) input image
@@ -1747,11 +1743,7 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("post-rotating %d degrees.\n", postRotate);
                 }
-                if (postRotate == 90) {
-                    flipRotate(1, &sheet);
-                } else if (postRotate == -90) {
-                    flipRotate(-1, &sheet);
-                }
+                flipRotate(postRotate/90, &sheet);
             }
 
             // post-stretch
