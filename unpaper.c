@@ -1527,7 +1527,7 @@ int main(int argc, char* argv[]) {
 
             // pre-wipe
             if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                applyWipes(preWipe, preWipeCount, maskColor, &sheet);
+                applyWipes(preWipe, preWipeCount, &sheet);
             }
 
             // pre-border
@@ -1689,7 +1689,7 @@ int main(int argc, char* argv[]) {
 
             // explicit wipe
             if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                applyWipes(wipe, wipeCount, maskColor, &sheet);
+                applyWipes(wipe, wipeCount, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ wipe DISABLED for sheet %d\n", nr);
@@ -1732,7 +1732,7 @@ int main(int argc, char* argv[]) {
 
             // post-wipe
             if (!isExcluded(nr, noWipeMultiIndex, noWipeMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
-                applyWipes(postWipe, postWipeCount, maskColor, &sheet);
+                applyWipes(postWipe, postWipeCount, &sheet);
             }
 
             // post-border

@@ -50,7 +50,7 @@ void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int
 /* --- wiping ------------------------------------------------------------- */
 
 
-void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, int wipeColor, struct IMAGE* image);
+void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, struct IMAGE* image);
 
 
 /* --- mirroring ---------------------------------------------------------- */

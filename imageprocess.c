@@ -648,12 +648,12 @@ void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int
  * Permanently wipes out areas of an images. Each pixel covered by a wipe-area
  * is set to wipeColor.
  */
-void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, int wipeColor, struct IMAGE* image) {
+void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, struct IMAGE* image) {
     for (int i = 0; i < areaCount; i++) {
         int count = 0;
         for (int y = area[i][TOP]; y <= area[i][BOTTOM]; y++) {
             for (int x = area[i][LEFT]; x <= area[i][RIGHT]; x++) {
-                if ( setPixel(wipeColor, x, y, image) ) {
+                if ( setPixel(maskColor, x, y, image) ) {
                     count++;
                 }
             }
