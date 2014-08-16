@@ -411,31 +411,34 @@ void rotate(const float radians, AVFrame *source, AVFrame *target) {
 
 /* --- stretching / resizing / shifting ------------------------------------ */
 
-/**
- * Stretches the image so that the resulting image has a new size.
- *
- * @param w the new width to stretch to
- * @param h the new height to stretch to
- */
-void stretch(int w, int h, AVFrame **image) {
-    AVFrame *newimage;
-    const float xRatio = (*image)->width / (float) w;
-    const float yRatio = (*image)->height / (float) h;
+static void stretchTo(AVFrame *source, AVFrame *target) {
+    const float xRatio = source->width / (float) target->width;
+    const float yRatio = source->height / (float) target->height;
+
 
     if (verbose >= VERBOSE_MORE) {
-        printf("stretching %dx%d -> %dx%d\n", (*image)->width, (*image)->height, w, h);
+        printf("stretching %dx%d -> %dx%d\n",
+               source->width, source->height,
+               target->width, target->height);
     }
 
-    // allocate new buffer's memory
-    initImage(&newimage, w, h, (*image)->format, WHITE24);
-
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
+    for (int y = 0; y < target->height; y++) {
+        for (int x = 0; x < target->width; x++) {
             // calculate average pixel value in source matrix
-            const int pixel = interpolate(x * xRatio, y * yRatio, *image);
-            setPixel(pixel, x, y, newimage);
+            const int pixel = interpolate(x * xRatio, y * yRatio, source);
+            setPixel(pixel, x, y, target);
         }
     }
+}
+
+void stretch(int w, int h, AVFrame **image) {
+    AVFrame *newimage;
+
+    // allocate new buffer's memory
+    initImage(&newimage, w, h, (*image)->format, -1);
+
+    stretchTo(*image, newimage);
+
     replaceImage(image, &newimage);
 }
 
@@ -447,7 +450,7 @@ void stretch(int w, int h, AVFrame **image) {
  * @param h the new height to resize to
  */
 void resize(int w, int h, AVFrame **image) {
-    AVFrame *newimage;
+    AVFrame *stretched, *resized;
     int ww;
     int hh;
     float wRat = (float)w / (*image)->width;
@@ -467,10 +470,23 @@ void resize(int w, int h, AVFrame **image) {
         ww = w;
         hh = h;
     }
-    stretch(ww, hh, image);
-    initImage(&newimage, w, h, (*image)->format, sheetBackground);
-    centerImage(*image, 0, 0, w, h, newimage);
-    replaceImage(image, &newimage);
+    initImage(&stretched, ww, hh, (*image)->format, sheetBackground);
+    stretchTo(*image, stretched);
+
+    // Check if any centering needs to be done, otherwise make a new
+    // copy, center and return that.  Check for the stretched
+    // width/height to be the same rather than comparing the ratio, as
+    // it is possible that the ratios are just off enough that they
+    // generate the same width/height.
+    if ( (ww == w) && (hh = h) ) {
+        // don't create one more buffer if the size is the same.
+        resized = stretched;
+    } else {
+        initImage(&resized, w, h, (*image)->format, sheetBackground);
+        centerImage(stretched, 0, 0, w, h, resized);
+        av_frame_free(&stretched);
+    }
+    replaceImage(image, &resized);
 }
 
 
