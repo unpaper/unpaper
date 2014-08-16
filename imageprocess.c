@@ -38,6 +38,31 @@
  ****************************************************************************/
 
 
+static inline bool inMask(int x, int y, int mask[EDGES_COUNT]) {
+    return (x >= mask[LEFT]) && (x <= mask[RIGHT]) && (y >= mask[TOP]) && (y <= mask[BOTTOM]);
+}
+
+/**
+ * Tests if masks a and b overlap.
+ */
+static inline bool masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
+    return ( inMask(a[LEFT], a[TOP], b) || inMask(a[RIGHT], a[BOTTOM], b) );
+}
+
+
+/**
+ * Tests if at least one mask in masks overlaps with m.
+ */
+static bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
+    for (int i = 0; i < masksCount; i++ ) {
+        if ( masksOverlap(m, masks[i]) ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 /* --- deskewing ---------------------------------------------------------- */
 
 /**
@@ -123,7 +148,7 @@ static int detectEdgeRotationPeak(double m, int shiftX, int shiftY, struct IMAGE
             x[lineStep] += shiftX;
             yy = y[lineStep];
             y[lineStep] += shiftY;
-            if ((xx >= mask[LEFT]) && (xx <= mask[RIGHT]) && (yy >= mask[TOP]) && (yy <= mask[BOTTOM])) {
+            if ( inMask(xx, yy, mask) ) {
                 pixel = getPixelDarknessInverse(xx, yy, image);
                 blackness += (255 - pixel);
             }
@@ -626,13 +651,7 @@ void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int
             // in any mask?
             bool m = false;
             for (int i = 0; ((m==false) && (i<maskCount)); i++) {
-                const int left = mask[i][LEFT];
-                const int top = mask[i][TOP];
-                const int right = mask[i][RIGHT];
-                const int bottom = mask[i][BOTTOM];
-                if (y>=top && y<=bottom && x>=left && x<=right) {
-                    m = true;
-                }
+                m = inMask(x, y, mask[i]);
             }
             if (m == false) {
                 setPixel(maskColor, x, y, image); // delete: set to white
@@ -736,7 +755,6 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
     int l, t, r, b;
     int diffX;
     int diffY;
-    int mask[EDGES_COUNT];
     bool alreadyExcludedMessage;
 
     if (stepX != 0) { // horizontal scanning
@@ -772,10 +790,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
         while ((l < image->frame->width) && (t < image->frame->height)) { // single scanning "stripe"
             uint8_t blackness = darknessRect(l, t, r, b, image);
             if (blackness >= absBlackfilterScanThreshold) { // found a solidly black area
-                mask[LEFT] = l;
-                mask[TOP] = t;
-                mask[RIGHT] = r;
-                mask[BOTTOM] = b;
+                int mask[EDGES_COUNT] = { l, t, r, b };
                 if (! masksOverlapAny(mask, exclude, excludeCount) ) {
                     if (verbose >= VERBOSE_NORMAL) {
                         printf("black-area flood-fill: [%d,%d,%d,%d]\n", l, t, r, b);

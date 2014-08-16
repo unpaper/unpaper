@@ -397,36 +397,3 @@ void printMultiIndex(struct MultiIndex multiIndex) {
     }
     printf("\n");
 }
-
-
-/**
- * Tests if a point is covered by a mask.
- */
-static bool inMask(int x, int y, int mask[EDGES_COUNT]) {
-    if ( (x >= mask[LEFT]) && (x <= mask[RIGHT]) && (y >= mask[TOP]) && (y <= mask[BOTTOM]) ) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-/**
- * Tests if masks a and b overlap.
- */
-static bool masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
-    return ( inMask(a[LEFT], a[TOP], b) || inMask(a[RIGHT], a[BOTTOM], b) );
-}
-
-
-/**
- * Tests if at least one mask in masks overlaps with m.
- */
-bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
-    for (int i = 0; i < masksCount; i++ ) {
-        if ( masksOverlap(m, masks[i]) ) {
-            return true;
-        }
-    }
-    return false;
-}

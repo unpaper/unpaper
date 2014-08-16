@@ -58,5 +58,3 @@ static inline bool isExcluded(int index, struct MultiIndex multiIndex, struct Mu
 }
 
 void printMultiIndex(struct MultiIndex multiIndex);
-
-bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount);
