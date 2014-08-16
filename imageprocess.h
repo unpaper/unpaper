@@ -93,7 +93,7 @@ int grayfilter(struct IMAGE* image);
 
 void centerMask(struct IMAGE* image, int center[COORDINATES_COUNT], int mask[EDGES_COUNT]);
 
-void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, int margin[DIRECTIONS_COUNT], struct IMAGE* image);
+void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], struct IMAGE* image);
 
 void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], struct IMAGE* image);
 

@@ -1698,7 +1698,7 @@ int main(int argc, char* argv[]) {
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     // border-centering
                     if (!isExcluded(nr, noBorderAlignMultiIndex, ignoreMultiIndex)) {
-                        alignMask(autoborderMask[i], outsideBorderscanMask[i], borderAlign, borderAlignMargin, &sheet);
+                        alignMask(autoborderMask[i], outsideBorderscanMask[i], &sheet);
                     } else {
                         if (verbose >= VERBOSE_MORE) {
                             printf("+ border-centering DISABLED for sheet %d\n", nr);

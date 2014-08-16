@@ -994,24 +994,24 @@ void centerMask(struct IMAGE* image, int center[COORDINATES_COUNT], int mask[DIR
 /**
  * Moves a rectangular area of pixels to be centered inside a specified area coordinates.
  */
-void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], int direction, int margin[DIRECTIONS_COUNT], struct IMAGE* image) {
+void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], struct IMAGE* image) {
     struct IMAGE newimage;
     int targetX;
     int targetY;
 
     const int width = mask[RIGHT] - mask[LEFT] + 1;
     const int height = mask[BOTTOM] - mask[TOP] + 1;
-    if (direction & 1<<LEFT) {
-        targetX = outside[LEFT] + margin[HORIZONTAL];
-    } else if (direction & 1<<RIGHT) {
-        targetX = outside[RIGHT] - width - margin[HORIZONTAL];
+    if (borderAlign & 1<<LEFT) {
+        targetX = outside[LEFT] + borderAlignMargin[HORIZONTAL];
+    } else if (borderAlign & 1<<RIGHT) {
+        targetX = outside[RIGHT] - width - borderAlignMargin[HORIZONTAL];
     } else {
         targetX = (outside[LEFT] + outside[RIGHT] - width) / 2;
     }
-    if (direction & 1<<TOP) {
-        targetY = outside[TOP] + margin[VERTICAL];
-    } else if (direction & 1<<BOTTOM) {
-        targetY = outside[BOTTOM] - height - margin[VERTICAL];
+    if (borderAlign & 1<<TOP) {
+        targetY = outside[TOP] + borderAlignMargin[VERTICAL];
+    } else if (borderAlign & 1<<BOTTOM) {
+        targetY = outside[BOTTOM] - height - borderAlignMargin[VERTICAL];
     } else {
         targetY = (outside[TOP] + outside[BOTTOM] - height) / 2;
     }
