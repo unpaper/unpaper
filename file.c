@@ -159,7 +159,7 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
         initImage(&output, image->width, image->height,
                   outputPixFmt, -1);
         copyImageArea(0, 0, image->width, image->height,
-                      &image, 0, 0, &output);
+                      image, 0, 0, output);
         image = output;
     }
 

@@ -1095,7 +1095,7 @@ int main(int argc, char* argv[]) {
                     saveDebug("_page%d.pnm", inputNr-inputCount+j, page);
                     saveDebug("_before_center_page%d.pnm", inputNr-inputCount+j, sheet);
 
-                    centerImage(&page, (w * j / inputCount), 0, (w / inputCount), h, &sheet);
+                    centerImage(page, (w * j / inputCount), 0, (w / inputCount), h, sheet);
 
                     saveDebug("_after_center_page%d.pnm", inputNr-inputCount+j, sheet);
                 }
@@ -1124,7 +1124,7 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("pre-mirroring %s\n", getDirections(preMirror));
                 }
-                mirror(preMirror, &sheet);
+                mirror(preMirror, sheet);
             }
 
             // pre-shifting
@@ -1140,7 +1140,7 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("pre-masking\n ");
                 }
-                applyMasks(preMask, preMaskCount, maskColor, &sheet);
+                applyMasks(preMask, preMaskCount, maskColor, sheet);
             }
 
 
@@ -1509,18 +1509,18 @@ int main(int argc, char* argv[]) {
 
             // pre-wipe
             if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
-                applyWipes(preWipe, preWipeCount, &sheet);
+                applyWipes(preWipe, preWipeCount, sheet);
             }
 
             // pre-border
             if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
-                applyBorder(preBorder, maskColor, &sheet);
+                applyBorder(preBorder, maskColor, sheet);
             }
 
             // black area filter
             if (!isExcluded(nr, noBlackfilterMultiIndex, ignoreMultiIndex)) {
                 saveDebug("_before-blackfilter%d.pnm", nr, sheet);
-                blackfilter(&sheet);
+                blackfilter(sheet);
                 saveDebug("_after-blackfilter%d.pnm", nr, sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
@@ -1534,7 +1534,7 @@ int main(int argc, char* argv[]) {
                     printf("noise-filter ...");
                 }
                 saveDebug("_before-noisefilter%d.pnm", nr, sheet);
-                int filterResult = noisefilter(&sheet);
+                int filterResult = noisefilter(sheet);
                 saveDebug("_after-noisefilter%d.pnm", nr, sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d clusters.\n", filterResult);
@@ -1551,7 +1551,7 @@ int main(int argc, char* argv[]) {
                     printf("blur-filter...");
                 }
                 saveDebug("_before-blurfilter%d.pnm", nr, sheet);
-                int filterResult = blurfilter(&sheet);
+                int filterResult = blurfilter(sheet);
                 saveDebug("_after-blurfilter%d.pnm", nr, sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
@@ -1564,7 +1564,7 @@ int main(int argc, char* argv[]) {
 
             // mask-detection
             if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
-                detectMasks(&sheet);
+                detectMasks(sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ mask-scan DISABLED for sheet %d\n", nr);
@@ -1574,7 +1574,7 @@ int main(int argc, char* argv[]) {
             // permamently apply masks
             if (maskCount > 0) {
                 saveDebug("_before-masking%d.pnm", nr, sheet);
-                applyMasks(mask, maskCount, maskColor, &sheet);
+                applyMasks(mask, maskCount, maskColor, sheet);
                 saveDebug("_after-masking%d.pnm", nr, sheet);
             }
 
@@ -1584,7 +1584,7 @@ int main(int argc, char* argv[]) {
                     printf("gray-filter...");
                 }
                 saveDebug("_before-grayfilter%d.pnm", nr, sheet);
-                int filterResult = grayfilter(&sheet);
+                int filterResult = grayfilter(sheet);
                 saveDebug("_after-grayfilter%d.pnm", nr, sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
@@ -1602,7 +1602,7 @@ int main(int argc, char* argv[]) {
 
                 // detect masks again, we may get more precise results now after first masking and grayfilter
                 if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
-                    detectMasks(&originalSheet);
+                    detectMasks(originalSheet);
                 } else {
                     if (verbose >= VERBOSE_MORE) {
                         printf("(mask-scan before deskewing disabled)\n");
@@ -1612,7 +1612,7 @@ int main(int argc, char* argv[]) {
                 // auto-deskew each mask
                 for (int i = 0; i < maskCount; i++) {
                     saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, originalSheet);
-                    float rotation = detectRotation(&originalSheet, mask[i]);
+                    float rotation = detectRotation(originalSheet, mask[i]);
                     saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, originalSheet);
 
                     if (verbose >= VERBOSE_NORMAL) {
@@ -1626,13 +1626,13 @@ int main(int argc, char* argv[]) {
                         initImage(&rectTarget, rect->width, rect->height, sheet->format, sheetBackground);
 
                         // copy area to rotate into rSource
-                        copyImageArea(mask[i][LEFT], mask[i][TOP], rect->width, rect->height, &sheet, 0, 0, &rect);
+                        copyImageArea(mask[i][LEFT], mask[i][TOP], rect->width, rect->height, sheet, 0, 0, rect);
 
                         // rotate
-                        rotate(-rotation, &rect, &rectTarget);
+                        rotate(-rotation, rect, rectTarget);
 
                         // copy result back into whole image
-                        copyImageArea(0, 0, rectTarget->width, rectTarget->height, &rectTarget, mask[i][LEFT], mask[i][TOP], &sheet);
+                        copyImageArea(0, 0, rectTarget->width, rectTarget->height, rectTarget, mask[i][LEFT], mask[i][TOP], sheet);
 
                         av_frame_free(&rect);
                         av_frame_free(&rectTarget);
@@ -1650,7 +1650,7 @@ int main(int argc, char* argv[]) {
             if ( !isExcluded(nr, noMaskCenterMultiIndex, ignoreMultiIndex) ) { // (maskCount==pointCount to make sure all masks had correctly been detected)
                 // perform auto-masking again to get more precise masks after rotation
                 if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
-                    detectMasks(&sheet);
+                    detectMasks(sheet);
                 } else {
                     if (verbose >= VERBOSE_MORE) {
                         printf("(mask-scan before centering disabled)\n");
@@ -1660,7 +1660,7 @@ int main(int argc, char* argv[]) {
                 saveDebug("_before-centering%d.pnm", nr, sheet);
                 // center masks on the sheet, according to their page position
                 for (int i = 0; i < maskCount; i++) {
-                    centerMask(&sheet, point[i], mask[i]);
+                    centerMask(sheet, point[i], mask[i]);
                 }
                 saveDebug("_after-centering%d.pnm", nr, sheet);
             } else {
@@ -1671,7 +1671,7 @@ int main(int argc, char* argv[]) {
 
             // explicit wipe
             if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
-                applyWipes(wipe, wipeCount, &sheet);
+                applyWipes(wipe, wipeCount, sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ wipe DISABLED for sheet %d\n", nr);
@@ -1680,7 +1680,7 @@ int main(int argc, char* argv[]) {
 
             // explicit border
             if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
-                applyBorder(border, maskColor, &sheet);
+                applyBorder(border, maskColor, sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ border DISABLED for sheet %d\n", nr);
@@ -1691,14 +1691,14 @@ int main(int argc, char* argv[]) {
             if (!isExcluded(nr, noBorderScanMultiIndex, ignoreMultiIndex)) {
                 saveDebug("_before-border%d.pnm", nr, sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
-                    detectBorder(autoborder[i], outsideBorderscanMask[i], &sheet);
-                    borderToMask(autoborder[i], autoborderMask[i], &sheet);
+                    detectBorder(autoborder[i], outsideBorderscanMask[i], sheet);
+                    borderToMask(autoborder[i], autoborderMask[i], sheet);
                 }
-                applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, &sheet);
+                applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     // border-centering
                     if (!isExcluded(nr, noBorderAlignMultiIndex, ignoreMultiIndex)) {
-                        alignMask(autoborderMask[i], outsideBorderscanMask[i], &sheet);
+                        alignMask(autoborderMask[i], outsideBorderscanMask[i], sheet);
                     } else {
                         if (verbose >= VERBOSE_MORE) {
                             printf("+ border-centering DISABLED for sheet %d\n", nr);
@@ -1714,12 +1714,12 @@ int main(int argc, char* argv[]) {
 
             // post-wipe
             if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
-                applyWipes(postWipe, postWipeCount, &sheet);
+                applyWipes(postWipe, postWipeCount, sheet);
             }
 
             // post-border
             if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
-                applyBorder(postBorder, maskColor, &sheet);
+                applyBorder(postBorder, maskColor, sheet);
             }
 
             // post-mirroring
@@ -1727,7 +1727,7 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("post-mirroring %s\n", getDirections(postMirror));
                 }
-                mirror(postMirror, &sheet);
+                mirror(postMirror, sheet);
             }
 
             // post-shifting
@@ -1801,7 +1801,7 @@ int main(int argc, char* argv[]) {
                 for (int j = 0; j < outputCount; j++) {
                     // get pagebuffer
                     initImage(&page, sheet->width / outputCount, sheet->height, sheet->format, -1);
-                    copyImageArea(page->width * j, 0, page->width, page->height, &sheet, 0, 0, &page);
+                    copyImageArea(page->width * j, 0, page->width, page->height, sheet, 0, 0, page);
 
                     if (verbose >= VERBOSE_MORE) {
                         printf("saving file %s.\n", outputFileNames[j]);

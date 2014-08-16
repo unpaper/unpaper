@@ -72,7 +72,7 @@ static bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT
  *
  * @param m ascending slope of the virtually shifted (m=tan(angle)). Mind that this is negative for negative radians.
  */
-static int detectEdgeRotationPeak(double m, int shiftX, int shiftY, AVFrame **image, int mask[EDGES_COUNT]) {
+static int detectEdgeRotationPeak(double m, int shiftX, int shiftY, AVFrame *image, int mask[EDGES_COUNT]) {
     int width = mask[RIGHT] - mask[LEFT] + 1;
     int height = mask[BOTTOM] - mask[TOP] + 1;
     int mid;
@@ -173,7 +173,7 @@ static int detectEdgeRotationPeak(double m, int shiftX, int shiftY, AVFrame **im
  * Which of the four edges to take depends on whether shiftX or shiftY is non-zero,
  * and what sign this shifting value has.
  */
-static double detectEdgeRotation(int shiftX, int shiftY, AVFrame **image, int mask[EDGES_COUNT]) {
+static double detectEdgeRotation(int shiftX, int shiftY, AVFrame *image, int mask[EDGES_COUNT]) {
     // either shiftX or shiftY is 0, the other value is -i|+i
     // depending on shiftX/shiftY the start edge for shifting is determined
     int maxPeak = 0;
@@ -197,7 +197,7 @@ static double detectEdgeRotation(int shiftX, int shiftY, AVFrame **image, int ma
  * Angles between -deskewScanRange and +deskewScanRange are scanned, at either the
  * horizontal or vertical edges of the area specified by left, top, right, bottom.
  */
-double detectRotation(AVFrame **image, int mask[EDGES_COUNT]) {
+double detectRotation(AVFrame *image, int mask[EDGES_COUNT]) {
     double rotation[4];
     int count = 0;
     double total;
@@ -263,7 +263,7 @@ double detectRotation(AVFrame **image, int mask[EDGES_COUNT]) {
 /**
  * Nearest-neighbour interpolation.
  */
-static int nearest(float x, float y, AVFrame **source)
+static int nearest(float x, float y, AVFrame *source)
 {
         // Round to nearest location.
         int x1 = (int) roundf(x);
@@ -298,7 +298,7 @@ static int cubicPixel(float x, int a, int b, int c, int d)
 /**
  * 2-D bicubic interpolation
 */
-static int bicubicInterpolate(float x, float y, AVFrame **source)
+static int bicubicInterpolate(float x, float y, AVFrame *source)
 {
     int fx = (int) x;
     int fy = (int) y;
@@ -338,7 +338,7 @@ static int linearPixel(float x, int a, int b)
 /**
  * 2-D bilinear interpolation
 */
-static int bilinearInterpolate(float x, float y, AVFrame **source)
+static int bilinearInterpolate(float x, float y, AVFrame *source)
 {
     int x1 = (int) x;
     int x2 = (int) ceilf(x);
@@ -346,7 +346,7 @@ static int bilinearInterpolate(float x, float y, AVFrame **source)
     int y2 = (int) ceilf(y);
 
     // Check edge conditions to avoid divide-by-zero
-    if (x2 > (*source)->width || y2 > (*source)->height)
+    if (x2 > source->width || y2 > source->height)
         return getPixel(x, y, source);
     else if (x2 == x1 && y2 == y1)
         return getPixel(x, y, source);
@@ -374,7 +374,7 @@ static int bilinearInterpolate(float x, float y, AVFrame **source)
  * 2-D bilinear interpolation
  * The method chosen depends on the global interpolateType variable.
 */
-static int interpolate(float x, float y, AVFrame **source)
+static int interpolate(float x, float y, AVFrame *source)
 {
     if (interpolateType == INTERP_NN) {
         return nearest(x, y, source);
@@ -389,9 +389,9 @@ static int interpolate(float x, float y, AVFrame **source)
  * Rotates a whole image buffer by the specified radians, around its middle-point.
  * (To rotate parts of an image, extract the part with copyBuffer, rotate, and re-paste with copyBuffer.)
  */
-void rotate(const float radians, AVFrame **source, AVFrame **target) {
-    const int w = (*source)->width;
-    const int h = (*source)->height;
+void rotate(const float radians, AVFrame *source, AVFrame *target) {
+    const int w = source->width;
+    const int h = source->height;
 
     // create 2D rotation matrix
     const float sinval = sinf(radians);
@@ -432,8 +432,8 @@ void stretch(int w, int h, AVFrame **image) {
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {
             // calculate average pixel value in source matrix
-            const int pixel = interpolate(x * xRatio, y * yRatio, image);
-            setPixel(pixel, x, y, &newimage);
+            const int pixel = interpolate(x * xRatio, y * yRatio, *image);
+            setPixel(pixel, x, y, newimage);
         }
     }
     replaceImage(image, &newimage);
@@ -469,7 +469,7 @@ void resize(int w, int h, AVFrame **image) {
     }
     stretch(ww, hh, image);
     initImage(&newimage, w, h, (*image)->format, sheetBackground);
-    centerImage(image, 0, 0, w, h, &newimage);
+    centerImage(*image, 0, 0, w, h, newimage);
     replaceImage(image, &newimage);
 }
 
@@ -488,8 +488,8 @@ void shift(int shiftX, int shiftY, AVFrame **image) {
 
     for (int y = 0; y < (*image)->height; y++) {
         for (int x = 0; x < (*image)->width; x++) {
-            const int pixel = getPixel(x, y, image);
-            setPixel(pixel, x + shiftX, y + shiftY, &newimage);
+            const int pixel = getPixel(x, y, *image);
+            setPixel(pixel, x + shiftX, y + shiftY, newimage);
         }
     }
     replaceImage(image, &newimage);
@@ -503,7 +503,7 @@ void shift(int shiftX, int shiftY, AVFrame **image) {
  *
  * @return number of shift-steps until blank edge found
  */
-static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskScanSize, int maskScanDepth, float maskScanThreshold, AVFrame **image) {
+static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskScanSize, int maskScanDepth, float maskScanThreshold, AVFrame *image) {
     // either shiftX or shiftY is 0, the other value is -i|+i
     int left;
     int top;
@@ -516,7 +516,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
 
     if (shiftY==0) { // vertical border is to be detected, horizontal shifting of scan-bar
         if (maskScanDepth == -1) {
-            maskScanDepth = (*image)->height;
+            maskScanDepth = image->height;
         }
         const int halfDepth = maskScanDepth / 2;
         left = startX - half;
@@ -525,7 +525,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
         bottom = startY + halfDepth;
     } else { // horizontal border is to be detected, vertical shifting of scan-bar
         if (maskScanDepth == -1) {
-            maskScanDepth = (*image)->width;
+            maskScanDepth = image->width;
         }
         const int halfDepth = maskScanDepth / 2;
         left = startX - halfDepth;
@@ -556,7 +556,7 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY, int maskSc
  *
  * @return the detected mask in left, top, right, bottom; or -1, -1, -1, -1 if no mask could be detected
  */
-static bool detectMask(int startX, int startY, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT], int* left, int* top, int* right, int* bottom, AVFrame **image) {
+static bool detectMask(int startX, int startY, int maskScanDirections, int maskScanSize[DIRECTIONS_COUNT], int maskScanDepth[DIRECTIONS_COUNT], int maskScanStep[DIRECTIONS_COUNT], float maskScanThreshold[DIRECTIONS_COUNT], int maskScanMinimum[DIMENSIONS_COUNT], int maskScanMaximum[DIMENSIONS_COUNT], int* left, int* top, int* right, int* bottom, AVFrame *image) {
     int width;
     int height;
     int half[DIRECTIONS_COUNT];
@@ -569,14 +569,14 @@ static bool detectMask(int startX, int startY, int maskScanDirections, int maskS
         *right = startX + maskScanStep[HORIZONTAL] * detectEdge(startX, startY, maskScanStep[HORIZONTAL], 0, maskScanSize[HORIZONTAL], maskScanDepth[HORIZONTAL], maskScanThreshold[HORIZONTAL], image) + half[HORIZONTAL];
     } else { // full range of sheet
         *left = 0;
-        *right = (*image)->width - 1;
+        *right = image->width - 1;
     }
     if ((maskScanDirections & 1<<VERTICAL) != 0) {
         *top = startY - maskScanStep[VERTICAL] * detectEdge(startX, startY, 0, -maskScanStep[VERTICAL], maskScanSize[VERTICAL], maskScanDepth[VERTICAL], maskScanThreshold[VERTICAL], image) - half[VERTICAL];
         *bottom = startY + maskScanStep[VERTICAL] * detectEdge(startX, startY, 0, maskScanStep[VERTICAL], maskScanSize[VERTICAL], maskScanDepth[VERTICAL], maskScanThreshold[VERTICAL], image) + half[VERTICAL];
     } else { // full range of sheet
         *top = 0;
-        *bottom = (*image)->height - 1;
+        *bottom = image->height - 1;
     }
 
     // if below minimum or above maximum, set to maximum
@@ -605,7 +605,7 @@ static bool detectMask(int startX, int startY, int maskScanDirections, int maskS
  * @param mask point to array into which detected masks will be stored
  * @return number of masks stored in mask[][]
  */
-void detectMasks(AVFrame **image) {
+void detectMasks(AVFrame *image) {
     int left;
     int top;
     int right;
@@ -642,12 +642,12 @@ void detectMasks(AVFrame **image) {
  * Permanently applies image masks. Each pixel which is not covered by at least
  * one mask is set to maskColor.
  */
-void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int maskColor, AVFrame **image) {
+void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int maskColor, AVFrame *image) {
     if (maskCount<=0) {
         return;
     }
-    for (int y = 0; y < (*image)->height; y++) {
-        for (int x = 0; x < (*image)->width; x++) {
+    for (int y = 0; y < image->height; y++) {
+        for (int x = 0; x < image->width; x++) {
             // in any mask?
             bool m = false;
             for (int i = 0; ((m==false) && (i<maskCount)); i++) {
@@ -667,7 +667,7 @@ void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int
  * Permanently wipes out areas of an images. Each pixel covered by a wipe-area
  * is set to wipeColor.
  */
-void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, AVFrame **image) {
+void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, AVFrame *image) {
     for (int i = 0; i < areaCount; i++) {
         int count = 0;
         for (int y = area[i][TOP]; y <= area[i][BOTTOM]; y++) {
@@ -683,25 +683,24 @@ void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount, AVFrame **image
     }
 }
 
-
 /* --- mirroring ---------------------------------------------------------- */
 
 /**
  * Mirrors an image either horizontally, vertically, or both.
  */
-void mirror(int directions, AVFrame **image) {
+void mirror(int directions, AVFrame *image) {
     const bool horizontal = !!((directions & 1<<HORIZONTAL) != 0);
     const bool vertical = !!((directions & 1<<VERTICAL) != 0);
-    int untilX = ((horizontal==true)&&(vertical==false)) ? (((*image)->width - 1) >> 1) : ((*image)->width - 1);  // w>>1 == (int)(w-0.5)/2
-    int untilY = (vertical==true) ? (((*image)->height - 1) >> 1) : (*image)->height - 1;
+    int untilX = ((horizontal==true)&&(vertical==false)) ? ((image->width - 1) >> 1) : (image->width - 1);  // w>>1 == (int)(w-0.5)/2
+    int untilY = (vertical==true) ? ((image->height - 1) >> 1) : image->height - 1;
 
     for (int y = 0; y <= untilY; y++) {
-        const int yy = (vertical==true) ? ((*image)->height - y - 1) : y;
+        const int yy = (vertical==true) ? (image->height - y - 1) : y;
         if ((vertical==true) && (horizontal==true) && (y == yy)) { // last middle line in odd-lined image mirrored both h and v
-            untilX = (((*image)->width - 1) >> 1);
+            untilX = ((image->width - 1) >> 1);
         }
         for (int x = 0; x <= untilX; x++) {
-            const int xx = (horizontal==true) ? ((*image)->width - x - 1) : x;
+            const int xx = (horizontal==true) ? (image->width - x - 1) : x;
             const int pixel1 = getPixel(x, y, image);
             const int pixel2 = getPixel(xx, yy, image);
             setPixel(pixel2, x, y, image);
@@ -728,8 +727,8 @@ void flipRotate(int direction, AVFrame **image) {
         const int xx = ((direction > 0) ? (*image)->height - 1 : 0) - y * direction;
         for (int x = 0; x < (*image)->width; x++) {
             const int yy = ((direction < 0) ? (*image)->width - 1 : 0) + x * direction;
-            const int pixel = getPixel(x, y, image);
-            setPixel(pixel, xx, yy, &newimage);
+            const int pixel = getPixel(x, y, *image);
+            setPixel(pixel, xx, yy, newimage);
         }
     }
     replaceImage(image, &newimage);
@@ -745,7 +744,7 @@ void flipRotate(int direction, AVFrame **image) {
  * @param stepY is 0 if stepX!=0
  * @see blackfilter()
  */
-static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned int absBlackfilterScanThreshold, int exclude[MAX_MASKS][EDGES_COUNT], int excludeCount, int intensity, AVFrame **image) {
+static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned int absBlackfilterScanThreshold, int exclude[MAX_MASKS][EDGES_COUNT], int excludeCount, int intensity, AVFrame *image) {
     int left;
     int top;
     int right;
@@ -772,22 +771,22 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
         shiftX = dep;
         shiftY = 0;
     }
-    while ((left < (*image)->width) && (top < (*image)->height)) { // individual scanning "stripes" over the whole sheet
+    while ((left < image->width) && (top < image->height)) { // individual scanning "stripes" over the whole sheet
         l = left;
         t = top;
         r = right;
         b = bottom;
         // make sure last stripe does not reach outside sheet, shift back inside (next +=shift will exit while-loop)
-        if (r >= (*image)->width || b >= (*image)->height) {
-            diffX = r-(*image)->width+1;
-            diffY = b-(*image)->height+1;
+        if (r >= image->width || b >= image->height) {
+            diffX = r-image->width+1;
+            diffY = b-image->height+1;
             l -= diffX;
             t -= diffY;
             r -= diffX;
             b -= diffY;
         }
         alreadyExcludedMessage = false;
-        while ((l < (*image)->width) && (t < (*image)->height)) { // single scanning "stripe"
+        while ((l < image->width) && (t < image->height)) { // single scanning "stripe"
             uint8_t blackness = darknessRect(l, t, r, b, image);
             if (blackness >= absBlackfilterScanThreshold) { // found a solidly black area
                 int mask[EDGES_COUNT] = { l, t, r, b };
@@ -827,7 +826,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
  * A virtual bar of width 'size' and height 'depth' is horizontally moved
  * above the middle of the sheet (or the full sheet, if depth ==-1).
  */
-void blackfilter(AVFrame **image) {
+void blackfilter(AVFrame *image) {
     if ((blackfilterScanDirections & 1<<HORIZONTAL) != 0) { // left-to-right scan
         blackfilterScan(blackfilterScanStep[HORIZONTAL], 0, blackfilterScanSize[HORIZONTAL], blackfilterScanDepth[HORIZONTAL], absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, image);
     }
@@ -844,13 +843,13 @@ void blackfilter(AVFrame **image) {
  *
  * @param intensity maximum cluster size to delete
  */
-int noisefilter(AVFrame **image) {
+int noisefilter(AVFrame *image) {
     int count;
     int neighbors;
 
     count = 0;
-    for (int y = 0; y < (*image)->height; y++) {
-        for (int x = 0; x < (*image)->width; x++) {
+    for (int y = 0; y < image->height; y++) {
+        for (int x = 0; x < image->width; x++) {
             uint8_t pixel = getPixelDarknessInverse(x, y, image);
             if (pixel < absWhiteThreshold) { // one dark pixel found
                 neighbors = countPixelNeighbors(x, y, noisefilterIntensity, absWhiteThreshold, image); // get number of non-light pixels in neighborhood
@@ -872,14 +871,14 @@ int noisefilter(AVFrame **image) {
  * filter. This algoithm counts pixels while 'shaking' the area to detect,
  * and clears the area if the amount of white pixels exceeds whiteTreshold.
  */
-int blurfilter(AVFrame **image) {
-    const int blocksPerRow = (*image)->width / blurfilterScanSize[HORIZONTAL];
+int blurfilter(AVFrame *image) {
+    const int blocksPerRow = image->width / blurfilterScanSize[HORIZONTAL];
     const int total = blurfilterScanSize[HORIZONTAL] * blurfilterScanSize[VERTICAL]; // Number of pixels in a block
     int top = 0;
     int right = blurfilterScanSize[HORIZONTAL] - 1;
     int bottom = blurfilterScanSize[VERTICAL] - 1;
-    int maxLeft = (*image)->width - blurfilterScanSize[HORIZONTAL];
-    int maxTop = (*image)->height - blurfilterScanSize[VERTICAL];
+    int maxLeft = image->width - blurfilterScanSize[HORIZONTAL];
+    int maxTop = image->height - blurfilterScanSize[VERTICAL];
     int result = 0;
 
     // Number of dark pixels in previous row
@@ -945,7 +944,7 @@ int blurfilter(AVFrame **image) {
  * Two conditions have to apply before an area gets deleted: first, not a single black pixel may be contained,
  * second, a minimum threshold of blackness must not be exceeded.
  */
-int grayfilter(AVFrame **image) {
+int grayfilter(AVFrame *image) {
     int left = 0;
     int top = 0;
     int right = grayfilterScanSize[HORIZONTAL] - 1;
@@ -960,11 +959,11 @@ int grayfilter(AVFrame **image) {
                 result += clearRect(left, top, right, bottom, image, WHITE24);
             }
         }
-        if (left < (*image)->width) { // not yet at end of row
+        if (left < image->width) { // not yet at end of row
             left += grayfilterScanStep[HORIZONTAL];
             right += grayfilterScanStep[HORIZONTAL];
         } else { // end of row
-            if (bottom >= (*image)->height) { // has been last row
+            if (bottom >= image->height) { // has been last row
                 return result; // exit here
             }
             // next row:
@@ -982,21 +981,21 @@ int grayfilter(AVFrame **image) {
 /**
  * Moves a rectangular area of pixels to be centered above the centerX, centerY coordinates.
  */
-void centerMask(AVFrame **image, int center[COORDINATES_COUNT], int mask[DIRECTIONS_COUNT]) {
+void centerMask(AVFrame *image, int center[COORDINATES_COUNT], int mask[DIRECTIONS_COUNT]) {
     AVFrame *newimage;
 
     const int width = mask[RIGHT] - mask[LEFT] + 1;
     const int height = mask[BOTTOM] - mask[TOP] + 1;
     const int targetX = center[X] - width/2;
     const int targetY = center[Y] - height/2;
-    if ((targetX >= 0) && (targetY >= 0) && ((targetX+width) <= (*image)->width) && ((targetY+height) <= (*image)->height)) {
+    if ((targetX >= 0) && (targetY >= 0) && ((targetX+width) <= image->width) && ((targetY+height) <= image->height)) {
         if (verbose >= VERBOSE_NORMAL) {
             printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], center[X], center[Y], targetX-mask[LEFT], targetY-mask[TOP]);
         }
-        initImage(&newimage, width, height, (*image)->format, -1);
-        copyImageArea(mask[LEFT], mask[TOP], width, height, image, 0, 0, &newimage);
+        initImage(&newimage, width, height, image->format, -1);
+        copyImageArea(mask[LEFT], mask[TOP], width, height, image, 0, 0, newimage);
         clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, sheetBackground);
-        copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
+        copyImageArea(0, 0, width, height, newimage, targetX, targetY, image);
         av_frame_free(&newimage);
     } else {
         if (verbose >= VERBOSE_NORMAL) {
@@ -1009,7 +1008,7 @@ void centerMask(AVFrame **image, int center[COORDINATES_COUNT], int mask[DIRECTI
 /**
  * Moves a rectangular area of pixels to be centered inside a specified area coordinates.
  */
-void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], AVFrame **image) {
+void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], AVFrame *image) {
     AVFrame *newimage;
     int targetX;
     int targetY;
@@ -1033,10 +1032,10 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], AVFrame **image)
     if (verbose >= VERBOSE_NORMAL) {
         printf("aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], targetX, targetY, targetX - mask[LEFT], targetY - mask[TOP]);
     }
-    initImage(&newimage, width, height, (*image)->format, sheetBackground);
-    copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0, &newimage);
+    initImage(&newimage, width, height, image->format, sheetBackground);
+    copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0, newimage);
     clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, sheetBackground);
-    copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
+    copyImageArea(0, 0, width, height, newimage, targetX, targetY, image);
     av_frame_free(&newimage);
 }
 
@@ -1046,7 +1045,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], AVFrame **image)
  *
  * @param x1..y2 area inside of which border is to be detected
  */
-static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, int size, int threshold, AVFrame **image) {
+static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, int size, int threshold, AVFrame *image) {
     int left;
     int top;
     int right;
@@ -1101,11 +1100,11 @@ static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY, 
 /**
  * Detects a border of completely non-black pixels around the area outsideBorder[LEFT],outsideBorder[TOP]-outsideBorder[RIGHT],outsideBorder[BOTTOM].
  */
-void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], AVFrame **image) {
+void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], AVFrame *image) {
     border[LEFT] = outsideMask[LEFT];
     border[TOP] = outsideMask[TOP];
-    border[RIGHT] = (*image)->width - outsideMask[RIGHT];
-    border[BOTTOM] = (*image)->height - outsideMask[BOTTOM];
+    border[RIGHT] = image->width - outsideMask[RIGHT];
+    border[BOTTOM] = image->height - outsideMask[BOTTOM];
 
     if (borderScanDirections & 1<<HORIZONTAL) {
         border[LEFT] += detectBorderEdge(outsideMask, borderScanStep[HORIZONTAL], 0, borderScanSize[HORIZONTAL], borderScanThreshold[HORIZONTAL], image);
@@ -1124,11 +1123,11 @@ void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], AVFrame
 /**
  * Converts a border-tuple to a mask-tuple.
  */
-void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], AVFrame **image) {
+void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], AVFrame *image) {
     mask[LEFT] = border[LEFT];
     mask[TOP] = border[TOP];
-    mask[RIGHT] = (*image)->width - border[RIGHT] - 1;
-    mask[BOTTOM] = (*image)->height - border[BOTTOM] - 1;
+    mask[RIGHT] = image->width - border[RIGHT] - 1;
+    mask[BOTTOM] = image->height - border[BOTTOM] - 1;
     if (verbose >= VERBOSE_DEBUG) {
         printf("border [%d,%d,%d,%d] -> mask [%d,%d,%d,%d]\n", border[LEFT], border[TOP], border[RIGHT], border[BOTTOM], mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM]);
     }
@@ -1139,7 +1138,7 @@ void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], AVFrame **imag
  * Applies a border to the whole image. All pixels in the border range at the
  * edges of the sheet will be cleared.
  */
-void applyBorder(int border[EDGES_COUNT], int borderColor, AVFrame **image) {
+void applyBorder(int border[EDGES_COUNT], int borderColor, AVFrame *image) {
     int mask[EDGES_COUNT];
 
     if (border[LEFT]!=0 || border[TOP]!=0 || border[RIGHT]!=0 || border[BOTTOM]!=0) {
