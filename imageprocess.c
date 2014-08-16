@@ -974,25 +974,25 @@ int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[
 /**
  * Moves a rectangular area of pixels to be centered above the centerX, centerY coordinates.
  */
-void centerMask(int centerX, int centerY, int left, int top, int right, int bottom, struct IMAGE* image) {
+void centerMask(struct IMAGE* image, int center[COORDINATES_COUNT], int mask[DIRECTIONS_COUNT]) {
     struct IMAGE newimage;
 
-    const int width = right - left + 1;
-    const int height = bottom - top + 1;
-    const int targetX = centerX - width/2;
-    const int targetY = centerY - height/2;
+    const int width = mask[RIGHT] - mask[LEFT] + 1;
+    const int height = mask[BOTTOM] - mask[TOP] + 1;
+    const int targetX = center[X] - width/2;
+    const int targetY = center[Y] - height/2;
     if ((targetX >= 0) && (targetY >= 0) && ((targetX+width) <= image->frame->width) && ((targetY+height) <= image->frame->height)) {
         if (verbose >= VERBOSE_NORMAL) {
-            printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", left, top, right, bottom, centerX, centerY, targetX-left, targetY-top);
+            printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], center[X], center[Y], targetX-mask[LEFT], targetY-mask[TOP]);
         }
         initImage(&newimage, width, height, image->frame->format, -1);
-        copyImageArea(left, top, width, height, image, 0, 0, &newimage);
-        clearRect(left, top, right, bottom, image, image->background);
+        copyImageArea(mask[LEFT], mask[TOP], width, height, image, 0, 0, &newimage);
+        clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, image->background);
         copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
         freeImage(&newimage);
     } else {
         if (verbose >= VERBOSE_NORMAL) {
-            printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d - NO CENTERING (would shift area outside visible image)\n", left, top, right, bottom, centerX, centerY, targetX-left, targetY-top);
+            printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d - NO CENTERING (would shift area outside visible image)\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], center[X], center[Y], targetX-mask[LEFT], targetY-mask[TOP]);
         }
     }
 }

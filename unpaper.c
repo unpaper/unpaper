@@ -1678,7 +1678,7 @@ int main(int argc, char* argv[]) {
                 saveDebug("_before-centering%d.pnm", nr, &sheet);
                 // center masks on the sheet, according to their page position
                 for (int i = 0; i < maskCount; i++) {
-                    centerMask(point[i][X], point[i][Y], mask[i][LEFT], mask[i][TOP], mask[i][RIGHT], mask[i][BOTTOM], &sheet);
+                    centerMask(&sheet, point[i], mask[i]);
                 }
                 saveDebug("_after-centering%d.pnm", nr, &sheet);
             } else {
