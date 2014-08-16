@@ -1088,7 +1088,7 @@ int main(int argc, char* argv[]) {
                 // place image into sheet buffer
                 // allocate sheet-buffer if not done yet
                 if ((sheet == NULL) && (w != -1) && (h != -1)) {
-                    initImage(&sheet, w, h, AV_PIX_FMT_RGB24, sheetBackground);
+                    initImage(&sheet, w, h, AV_PIX_FMT_RGB24, true);
 
                 }
                 if (page != NULL) {
@@ -1112,7 +1112,7 @@ int main(int argc, char* argv[]) {
                 if ((w == -1) || (h == -1)) {
                     errOutput("sheet size unknown, use at least one input file per sheet, or force using --sheet-size.");
                 } else {
-                    initImage(&sheet, w, h, AV_PIX_FMT_RGB24, sheetBackground);
+                    initImage(&sheet, w, h, AV_PIX_FMT_RGB24, true);
                 }
             }
 
@@ -1622,8 +1622,8 @@ int main(int argc, char* argv[]) {
                     if (rotation != 0.0) {
                         AVFrame *rect;
                         AVFrame *rectTarget;
-                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet->format, -1);
-                        initImage(&rectTarget, rect->width, rect->height, sheet->format, sheetBackground);
+                        initImage(&rect, (mask[i][RIGHT]-mask[i][LEFT]+1), (mask[i][BOTTOM]-mask[i][TOP]+1), sheet->format, false);
+                        initImage(&rectTarget, rect->width, rect->height, sheet->format, true);
 
                         // copy area to rotate into rSource
                         copyImageArea(mask[i][LEFT], mask[i][TOP], rect->width, rect->height, sheet, 0, 0, rect);
@@ -1800,7 +1800,7 @@ int main(int argc, char* argv[]) {
 
                 for (int j = 0; j < outputCount; j++) {
                     // get pagebuffer
-                    initImage(&page, sheet->width / outputCount, sheet->height, sheet->format, -1);
+                    initImage(&page, sheet->width / outputCount, sheet->height, sheet->format, false);
                     copyImageArea(page->width * j, 0, page->width, page->height, sheet, 0, 0, page);
 
                     if (verbose >= VERBOSE_MORE) {

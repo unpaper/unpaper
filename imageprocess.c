@@ -435,7 +435,7 @@ void stretch(int w, int h, AVFrame **image) {
     AVFrame *newimage;
 
     // allocate new buffer's memory
-    initImage(&newimage, w, h, (*image)->format, -1);
+    initImage(&newimage, w, h, (*image)->format, false);
 
     stretchTo(*image, newimage);
 
@@ -470,7 +470,7 @@ void resize(int w, int h, AVFrame **image) {
         ww = w;
         hh = h;
     }
-    initImage(&stretched, ww, hh, (*image)->format, sheetBackground);
+    initImage(&stretched, ww, hh, (*image)->format, true);
     stretchTo(*image, stretched);
 
     // Check if any centering needs to be done, otherwise make a new
@@ -482,7 +482,7 @@ void resize(int w, int h, AVFrame **image) {
         // don't create one more buffer if the size is the same.
         resized = stretched;
     } else {
-        initImage(&resized, w, h, (*image)->format, sheetBackground);
+        initImage(&resized, w, h, (*image)->format, true);
         centerImage(stretched, 0, 0, w, h, resized);
         av_frame_free(&stretched);
     }
@@ -500,7 +500,7 @@ void shift(int shiftX, int shiftY, AVFrame **image) {
     AVFrame *newimage;
 
     // allocate new buffer's memory
-    initImage(&newimage, (*image)->width, (*image)->height, (*image)->format, sheetBackground);
+    initImage(&newimage, (*image)->width, (*image)->height, (*image)->format, true);
 
     for (int y = 0; y < (*image)->height; y++) {
         for (int x = 0; x < (*image)->width; x++) {
@@ -737,7 +737,7 @@ void flipRotate(int direction, AVFrame **image) {
     AVFrame *newimage;
 
     // exchanged width and height
-    initImage(&newimage, (*image)->height, (*image)->width, (*image)->format, -1);
+    initImage(&newimage, (*image)->height, (*image)->width, (*image)->format, false);
 
     for (int y = 0; y < (*image)->height; y++) {
         const int xx = ((direction > 0) ? (*image)->height - 1 : 0) - y * direction;
@@ -1008,7 +1008,7 @@ void centerMask(AVFrame *image, int center[COORDINATES_COUNT], int mask[DIRECTIO
         if (verbose >= VERBOSE_NORMAL) {
             printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], center[X], center[Y], targetX-mask[LEFT], targetY-mask[TOP]);
         }
-        initImage(&newimage, width, height, image->format, -1);
+        initImage(&newimage, width, height, image->format, false);
         copyImageArea(mask[LEFT], mask[TOP], width, height, image, 0, 0, newimage);
         clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, sheetBackground);
         copyImageArea(0, 0, width, height, newimage, targetX, targetY, image);
@@ -1048,7 +1048,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], AVFrame *image) 
     if (verbose >= VERBOSE_NORMAL) {
         printf("aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], targetX, targetY, targetX - mask[LEFT], targetY - mask[TOP]);
     }
-    initImage(&newimage, width, height, image->format, sheetBackground);
+    initImage(&newimage, width, height, image->format, true);
     copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0, newimage);
     clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, sheetBackground);
     copyImageArea(0, 0, width, height, newimage, targetX, targetY, image);

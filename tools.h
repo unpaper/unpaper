@@ -20,7 +20,7 @@
 
 /* --- tool functions for image handling ---------------------------------- */
 
-void initImage(AVFrame **image, int width, int height, int color, int background);
+void initImage(AVFrame **image, int width, int height, int pixel_format, bool fill);
 
 static inline void replaceImage(AVFrame **image, AVFrame **newimage) {
     av_frame_free(image);

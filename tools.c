@@ -85,7 +85,7 @@ static void getPixelComponents(AVFrame *image, int x, int y, uint8_t *r, uint8_t
  * Allocates a memory block for storing image data and fills the IMAGE-struct
  * with the specified values.
  */
-void initImage(AVFrame **image, int width, int height, int pixel_format, int background) {
+void initImage(AVFrame **image, int width, int height, int pixel_format, bool fill) {
     int ret;
 
     (*image) = av_frame_alloc();
@@ -100,10 +100,10 @@ void initImage(AVFrame **image, int width, int height, int pixel_format, int bac
         errOutput("unable to allocate buffer: %s", errbuff);
     }
 
-    if ( background != -1 ) {
+    if ( fill ) {
         for (int y = 0; y < (*image)->height; y++) {
             for (int x = 0; x < (*image)->width; x++) {
-                setPixel(background, x, y, *image);
+                setPixel(sheetBackground, x, y, *image);
             }
         }
     }
