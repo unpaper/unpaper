@@ -498,14 +498,6 @@ void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image) {
     }
 }
 
-
-/**
- * Flood-fill an area of pixels.
- * (Declaration of header for indirect recursive calls.)
- */
-void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image);
-
-
 /**
  * Solidly fills a line of pixels heading towards a specified direction
  * until color-changes in the pixels to overwrite exceed the 'intensity'
