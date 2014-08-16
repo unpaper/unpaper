@@ -468,7 +468,7 @@ void resize(int w, int h, struct IMAGE* image) {
         hh = h;
     }
     stretch(ww, hh, image);
-    initImage(&newimage, w, h, image->frame->format, image->background);
+    initImage(&newimage, w, h, image->frame->format, sheetBackground);
     centerImage(image, 0, 0, w, h, &newimage);
     replaceImage(image, &newimage);
 }
@@ -484,7 +484,7 @@ void shift(int shiftX, int shiftY, struct IMAGE* image) {
     struct IMAGE newimage;
 
     // allocate new buffer's memory
-    initImage(&newimage, image->frame->width, image->frame->height, image->frame->format, image->background);
+    initImage(&newimage, image->frame->width, image->frame->height, image->frame->format, sheetBackground);
 
     for (int y = 0; y < image->frame->height; y++) {
         for (int x = 0; x < image->frame->width; x++) {
@@ -995,7 +995,7 @@ void centerMask(struct IMAGE* image, int center[COORDINATES_COUNT], int mask[DIR
         }
         initImage(&newimage, width, height, image->frame->format, -1);
         copyImageArea(mask[LEFT], mask[TOP], width, height, image, 0, 0, &newimage);
-        clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, image->background);
+        clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, sheetBackground);
         copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
         freeImage(&newimage);
     } else {
@@ -1033,9 +1033,9 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], struct IMAGE* im
     if (verbose >= VERBOSE_NORMAL) {
         printf("aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], targetX, targetY, targetX - mask[LEFT], targetY - mask[TOP]);
     }
-    initImage(&newimage, width, height, image->frame->format, image->background);
+    initImage(&newimage, width, height, image->frame->format, sheetBackground);
     copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0, &newimage);
-    clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, image->background);
+    clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, sheetBackground);
     copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
     freeImage(&newimage);
 }

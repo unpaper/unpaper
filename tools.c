@@ -100,11 +100,10 @@ void initImage(struct IMAGE* image, int width, int height, int pixel_format, int
         errOutput("unable to allocate buffer: %s", errbuff);
     }
 
-    image->background = background;
     if ( background != -1 ) {
         for (int y = 0; y < image->frame->height; y++) {
             for (int x = 0; x < image->frame->width; x++) {
-                setPixel(image->background, x, y, image);
+                setPixel(background, x, y, image);
             }
         }
     }
@@ -122,9 +121,6 @@ void freeImage(struct IMAGE* image) {
  * Replaces one image with another.
  */
 void replaceImage(struct IMAGE* image, struct IMAGE* newimage) {
-    if ( newimage->background == -1 )
-        newimage->background = image->background;
-
     freeImage(image);
     // pass-back new image
     *image = *newimage; // copy whole struct
@@ -300,7 +296,7 @@ void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target) {
  */
 static void centerImageArea(int x, int y, int w, int h, struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target) {
     if ((w < ww) || (h < hh)) { // white rest-border will remain, so clear first
-        clearRect(toX, toY, toX + ww - 1, toY + hh - 1, target, target->background);
+        clearRect(toX, toY, toX + ww - 1, toY + hh - 1, target, sheetBackground);
     }
     if (w < ww) {
         toX += (ww - w) / 2;

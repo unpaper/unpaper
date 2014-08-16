@@ -1800,7 +1800,7 @@ int main(int argc, char* argv[]) {
 
                 for (int j = 0; j < outputCount; j++) {
                     // get pagebuffer
-                    initImage(&page, sheet.frame->width / outputCount, sheet.frame->height, sheet.frame->format, sheet.background);
+                    initImage(&page, sheet.frame->width / outputCount, sheet.frame->height, sheet.frame->format, -1);
                     copyImageArea(page.frame->width * j, 0, page.frame->width, page.frame->height, &sheet, 0, 0, &page);
 
                     if (verbose >= VERBOSE_MORE) {

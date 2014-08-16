@@ -112,7 +112,6 @@ typedef enum {
 /* --- struct ------------------------------------------------------------- */
 
 struct IMAGE {
-    int background;
     AVFrame *frame;
 };
 
