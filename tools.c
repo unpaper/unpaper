@@ -110,16 +110,6 @@ void initImage(AVFrame **image, int width, int height, int pixel_format, int bac
 }
 
 /**
- * Replaces one image with another.
- */
-void replaceImage(AVFrame **image, AVFrame **newimage) {
-    av_frame_free(image);
-    // pass-back new image
-    *image = *newimage; // copy whole struct
-}
-
-
-/**
  * Sets the color/grayscale value of a single pixel.
  *
  * @return true if the pixel has been changed, false if the original color was the one to set
