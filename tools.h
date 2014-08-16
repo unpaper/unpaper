@@ -22,8 +22,6 @@
 
 void initImage(AVFrame **image, int width, int height, int color, int background);
 
-void freeImage(AVFrame **image);
-
 void replaceImage(AVFrame **image, AVFrame **newimage);
 
 bool setPixel(int pixel, const int x, const int y, AVFrame **image);

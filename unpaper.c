@@ -1634,8 +1634,8 @@ int main(int argc, char* argv[]) {
                         // copy result back into whole image
                         copyImageArea(0, 0, rectTarget->width, rectTarget->height, &rectTarget, mask[i][LEFT], mask[i][TOP], &sheet);
 
-                        freeImage(&rect);
-                        freeImage(&rectTarget);
+                        av_frame_free(&rect);
+                        av_frame_free(&rectTarget);
                     }
                 }
 
@@ -1809,10 +1809,10 @@ int main(int argc, char* argv[]) {
 
                     saveImage(outputFileNames[j], page, outputPixFmt);
 
-                    freeImage(&page);
+                    av_frame_free(&page);
                 }
 
-                freeImage(&sheet);
+                av_frame_free(&sheet);
                 sheet = NULL;
             }
         }

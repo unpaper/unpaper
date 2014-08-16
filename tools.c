@@ -110,18 +110,10 @@ void initImage(AVFrame **image, int width, int height, int pixel_format, int bac
 }
 
 /**
- * Frees an image.
- */
-void freeImage(AVFrame **image) {
-    av_frame_free(image);
-}
-
-
-/**
  * Replaces one image with another.
  */
 void replaceImage(AVFrame **image, AVFrame **newimage) {
-    freeImage(image);
+    av_frame_free(image);
     // pass-back new image
     *image = *newimage; // copy whole struct
 }

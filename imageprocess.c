@@ -997,7 +997,7 @@ void centerMask(AVFrame **image, int center[COORDINATES_COUNT], int mask[DIRECTI
         copyImageArea(mask[LEFT], mask[TOP], width, height, image, 0, 0, &newimage);
         clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, sheetBackground);
         copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
-        freeImage(&newimage);
+        av_frame_free(&newimage);
     } else {
         if (verbose >= VERBOSE_NORMAL) {
             printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d - NO CENTERING (would shift area outside visible image)\n", mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], center[X], center[Y], targetX-mask[LEFT], targetY-mask[TOP]);
@@ -1037,7 +1037,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], AVFrame **image)
     copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0, &newimage);
     clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, sheetBackground);
     copyImageArea(0, 0, width, height, &newimage, targetX, targetY, image);
-    freeImage(&newimage);
+    av_frame_free(&newimage);
 }
 
 
