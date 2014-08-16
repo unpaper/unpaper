@@ -68,24 +68,24 @@ void flipRotate(int direction, struct IMAGE* image);
 /* --- blackfilter -------------------------------------------------------- */
 
 
-void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], unsigned int absBlackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, struct IMAGE* image);
+void blackfilter(struct IMAGE* image);
 
 
 /* --- noisefilter -------------------------------------------------------- */
 
 
-int noisefilter(int intensity, unsigned int absWhiteThreshold, struct IMAGE* image);
+int noisefilter(struct IMAGE* image);
 
 
 /* --- blurfilter --------------------------------------------------------- */
 
-int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, unsigned int absWhiteThreshold, struct IMAGE* image);
+int blurfilter(struct IMAGE* image);
 
 
 /* --- grayfilter --------------------------------------------------------- */
 
 
-int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], unsigned int absGrayfilterThreshold, struct IMAGE* image);
+int grayfilter(struct IMAGE* image);
 
 
 /* --- border-detection --------------------------------------------------- */

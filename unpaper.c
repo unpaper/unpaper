@@ -1538,7 +1538,7 @@ int main(int argc, char* argv[]) {
             // black area filter
             if (!isExcluded(nr, noBlackfilterMultiIndex, noBlackfilterMultiIndexCount, ignoreMultiIndex, ignoreMultiIndexCount)) {
                 saveDebug("_before-blackfilter%d.pnm", nr, &sheet);
-                blackfilter(blackfilterScanDirections, blackfilterScanSize, blackfilterScanDepth, blackfilterScanStep, absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, &sheet);
+                blackfilter(&sheet);
                 saveDebug("_after-blackfilter%d.pnm", nr, &sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
@@ -1552,7 +1552,7 @@ int main(int argc, char* argv[]) {
                     printf("noise-filter ...");
                 }
                 saveDebug("_before-noisefilter%d.pnm", nr, &sheet);
-                int filterResult = noisefilter(noisefilterIntensity, absWhiteThreshold, &sheet);
+                int filterResult = noisefilter(&sheet);
                 saveDebug("_after-noisefilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d clusters.\n", filterResult);
@@ -1569,7 +1569,7 @@ int main(int argc, char* argv[]) {
                     printf("blur-filter...");
                 }
                 saveDebug("_before-blurfilter%d.pnm", nr, &sheet);
-                int filterResult = blurfilter(blurfilterScanSize, blurfilterScanStep, blurfilterIntensity, absWhiteThreshold, &sheet);
+                int filterResult = blurfilter(&sheet);
                 saveDebug("_after-blurfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);
@@ -1602,7 +1602,7 @@ int main(int argc, char* argv[]) {
                     printf("gray-filter...");
                 }
                 saveDebug("_before-grayfilter%d.pnm", nr, &sheet);
-                int filterResult = grayfilter(grayfilterScanSize, grayfilterScanStep, absGrayfilterThreshold, &sheet);
+                int filterResult = grayfilter(&sheet);
                 saveDebug("_after-grayfilter%d.pnm", nr, &sheet);
                 if (verbose >= VERBOSE_NORMAL) {
                     printf(" deleted %d pixels.\n", filterResult);

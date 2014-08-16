@@ -819,7 +819,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep, unsigned in
  * A virtual bar of width 'size' and height 'depth' is horizontally moved
  * above the middle of the sheet (or the full sheet, if depth ==-1).
  */
-void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIONS_COUNT], int blackfilterScanDepth[DIRECTIONS_COUNT], int blackfilterScanStep[DIRECTIONS_COUNT], unsigned int absBlackfilterScanThreshold, int blackfilterExclude[MAX_MASKS][EDGES_COUNT], int blackfilterExcludeCount, int blackfilterIntensity, struct IMAGE* image) {
+void blackfilter(struct IMAGE* image) {
     if ((blackfilterScanDirections & 1<<HORIZONTAL) != 0) { // left-to-right scan
         blackfilterScan(blackfilterScanStep[HORIZONTAL], 0, blackfilterScanSize[HORIZONTAL], blackfilterScanDepth[HORIZONTAL], absBlackfilterScanThreshold, blackfilterExclude, blackfilterExcludeCount, blackfilterIntensity, image);
     }
@@ -836,7 +836,7 @@ void blackfilter(int blackfilterScanDirections, int blackfilterScanSize[DIRECTIO
  *
  * @param intensity maximum cluster size to delete
  */
-int noisefilter(int intensity, unsigned int absWhiteThreshold, struct IMAGE* image) {
+int noisefilter(struct IMAGE* image) {
     int count;
     int neighbors;
 
@@ -845,8 +845,8 @@ int noisefilter(int intensity, unsigned int absWhiteThreshold, struct IMAGE* ima
         for (int x = 0; x < image->frame->width; x++) {
             uint8_t pixel = getPixelDarknessInverse(x, y, image);
             if (pixel < absWhiteThreshold) { // one dark pixel found
-                neighbors = countPixelNeighbors(x, y, intensity, absWhiteThreshold, image); // get number of non-light pixels in neighborhood
-                if (neighbors <= intensity) { // ...not more than 'intensity'?
+                neighbors = countPixelNeighbors(x, y, noisefilterIntensity, absWhiteThreshold, image); // get number of non-light pixels in neighborhood
+                if (neighbors <= noisefilterIntensity) { // ...not more than 'intensity'?
                     clearPixelNeighbors(x, y, absWhiteThreshold, image); // delete area
                     count++;
                 }
@@ -864,7 +864,7 @@ int noisefilter(int intensity, unsigned int absWhiteThreshold, struct IMAGE* ima
  * filter. This algoithm counts pixels while 'shaking' the area to detect,
  * and clears the area if the amount of white pixels exceeds whiteTreshold.
  */
-int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[DIRECTIONS_COUNT], float blurfilterIntensity, unsigned int absWhiteThreshold, struct IMAGE* image) {
+int blurfilter(struct IMAGE* image) {
     const int blocksPerRow = image->frame->width / blurfilterScanSize[HORIZONTAL];
     const int total = blurfilterScanSize[HORIZONTAL] * blurfilterScanSize[VERTICAL]; // Number of pixels in a block
     int top = 0;
@@ -937,7 +937,7 @@ int blurfilter(int blurfilterScanSize[DIRECTIONS_COUNT], int blurfilterScanStep[
  * Two conditions have to apply before an area gets deleted: first, not a single black pixel may be contained,
  * second, a minimum threshold of blackness must not be exceeded.
  */
-int grayfilter(int grayfilterScanSize[DIRECTIONS_COUNT], int grayfilterScanStep[DIRECTIONS_COUNT], unsigned int absGrayfilterThreshold, struct IMAGE* image) {
+int grayfilter(struct IMAGE* image) {
     int left = 0;
     int top = 0;
     int right = grayfilterScanSize[HORIZONTAL] - 1;
