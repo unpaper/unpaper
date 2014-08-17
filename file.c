@@ -100,6 +100,18 @@ void loadImage(const char *filename, AVFrame **image) {
         *image = frame;
         break;
 
+    case AV_PIX_FMT_PAL8:
+        initImage(image, frame->width, frame->height, AV_PIX_FMT_RGB24, -1);
+
+        const uint32_t *palette = (const uint32_t *)frame->data[1];
+        for (int y = 0; y < frame->height; y++) {
+            for (int x = 0; x < frame->width; x++) {
+                const uint8_t palette_index = frame->data[0][frame->linesize[0]*y + x];
+                setPixel(palette[palette_index], x, y, *image);
+            }
+        }
+        break;
+
     default:
         errOutput("unable to open file %s: unsupported pixel format", filename);
     }
