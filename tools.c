@@ -260,15 +260,6 @@ void copyImageArea(const int x, const int y, const int width, const int height, 
     }
 }
 
-
-/**
- * Copies a whole image into another.
- */
-void copyImage(AVFrame *source, int toX, int toY, AVFrame *target) {
-    copyImageArea(0, 0, source->width, source->height, source, toX, toY, target);
-}
-
-
 /**
  * Centers one area of an image inside an area of another image.
  * If the source area is smaller than the target area, is is equally
