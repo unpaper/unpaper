@@ -658,7 +658,7 @@ void detectMasks(AVFrame *image) {
  * Permanently applies image masks. Each pixel which is not covered by at least
  * one mask is set to maskColor.
  */
-void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int maskColor, AVFrame *image) {
+void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, AVFrame *image) {
     if (maskCount<=0) {
         return;
     }
@@ -670,7 +670,7 @@ void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int
                 m = inMask(x, y, mask[i]);
             }
             if (m == false) {
-                setPixel(maskColor, x, y, image); // delete: set to white
+                setPixel(maskColor, x, y, image);
             }
         }
     }
@@ -1154,7 +1154,7 @@ void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], AVFrame *image
  * Applies a border to the whole image. All pixels in the border range at the
  * edges of the sheet will be cleared.
  */
-void applyBorder(int border[EDGES_COUNT], int borderColor, AVFrame *image) {
+void applyBorder(int border[EDGES_COUNT], AVFrame *image) {
     int mask[EDGES_COUNT];
 
     if (border[LEFT]!=0 || border[TOP]!=0 || border[RIGHT]!=0 || border[BOTTOM]!=0) {
@@ -1162,6 +1162,6 @@ void applyBorder(int border[EDGES_COUNT], int borderColor, AVFrame *image) {
         if (verbose >= VERBOSE_NORMAL) {
             printf("applying border (%d,%d,%d,%d) [%d,%d,%d,%d]\n", border[LEFT], border[TOP], border[RIGHT], border[BOTTOM], mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM]);
         }
-        applyMasks(&mask, 1, borderColor, image);
+        applyMasks(&mask, 1, image);
     }
 }

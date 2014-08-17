@@ -1138,7 +1138,7 @@ int main(int argc, char* argv[]) {
                 if (verbose >= VERBOSE_NORMAL) {
                     printf("pre-masking\n ");
                 }
-                applyMasks(preMask, preMaskCount, maskColor, sheet);
+                applyMasks(preMask, preMaskCount, sheet);
             }
 
 
@@ -1512,7 +1512,7 @@ int main(int argc, char* argv[]) {
 
             // pre-border
             if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
-                applyBorder(preBorder, maskColor, sheet);
+                applyBorder(preBorder, sheet);
             }
 
             // black area filter
@@ -1572,7 +1572,7 @@ int main(int argc, char* argv[]) {
             // permamently apply masks
             if (maskCount > 0) {
                 saveDebug("_before-masking%d.pnm", nr, sheet);
-                applyMasks(mask, maskCount, maskColor, sheet);
+                applyMasks(mask, maskCount, sheet);
                 saveDebug("_after-masking%d.pnm", nr, sheet);
             }
 
@@ -1678,7 +1678,7 @@ int main(int argc, char* argv[]) {
 
             // explicit border
             if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
-                applyBorder(border, maskColor, sheet);
+                applyBorder(border, sheet);
             } else {
                 if (verbose >= VERBOSE_MORE) {
                     printf("+ border DISABLED for sheet %d\n", nr);
@@ -1694,7 +1694,7 @@ int main(int argc, char* argv[]) {
                     detectBorder(autoborder[i], outsideBorderscanMask[i], sheet);
                     borderToMask(autoborder[i], autoborderMask[i], sheet);
                 }
-                applyMasks(autoborderMask, outsideBorderscanMaskCount, maskColor, sheet);
+                applyMasks(autoborderMask, outsideBorderscanMaskCount, sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     // border-centering
                     if (!isExcluded(nr, noBorderAlignMultiIndex, ignoreMultiIndex)) {
@@ -1719,7 +1719,7 @@ int main(int argc, char* argv[]) {
 
             // post-border
             if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
-                applyBorder(postBorder, maskColor, sheet);
+                applyBorder(postBorder, sheet);
             }
 
             // post-mirroring

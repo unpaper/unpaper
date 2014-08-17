@@ -44,7 +44,7 @@ void shift(int shiftX, int shiftY, AVFrame **image);
 
 void detectMasks(AVFrame *image);
 
-void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, const int maskColor, AVFrame *image);
+void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount, AVFrame *image);
 
 
 /* --- wiping ------------------------------------------------------------- */
@@ -99,4 +99,4 @@ void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], AVFrame
 
 void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], AVFrame *image);
 
-void applyBorder(int border[EDGES_COUNT], int borderColor, AVFrame *image);
+void applyBorder(int border[EDGES_COUNT], AVFrame *image);
