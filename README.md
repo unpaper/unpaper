@@ -37,6 +37,32 @@ Output files are generated in PNM rawbits format. Conversion to PDF
 can be achieved with Linux tools such as `pgm2tiff`, `tiffcp` and
 `tiff2pdf`.
 
+Building instructions
+---------------------
+
+`unpaper` uses GNU Autotools for its build system, so you should be
+able to execute the same commands used for other software packages:
+
+    ./configure
+    make
+    sudo make install
+
+There are, though, some recommendations about the way you build the
+code. Since the tasks are calculation-intensive, it is important to
+build with optimizations turned on:
+
+    ./configure CFLAGS="-O2 -march-native -pipe"
+
+Even better, if your compiler supports it, is to use Link-Time
+Optimizations, as that has shown that execution time can improve
+sensibly:
+
+    ./configure CFLAGS="-O2 -march=native -pipe -flto"
+
+Further optimizations such as `-ftracer` and `-ftree-vectorize` are
+thought to work, but their effect has not been evaluated so your
+mileage may vary.
+
 Further Information
 -------------------
 
