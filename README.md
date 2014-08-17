@@ -28,20 +28,13 @@ good idea to manually control the results of unpaper and adjust the
 parameter settings according to the requirements of the input. Each
 processing step can also be disabled individually for each sheet.
 
-Input files can be in many format, depending on the support coming
-from [libav](http://libav.org). PNM formats (as used by scanning tools
-such as `scanimage` and `scanadf`) are fully supported. Basic support
-for some variants of TIFF and PNG files is also present.
-
-Output files are generated in PNM rawbits format. Conversion to PDF
-can be achieved with Linux tools such as `pgm2tiff`, `tiffcp` and
-`tiff2pdf`.
+See [further documentation][3] for the supported file formats notes.
 
 Dependencies
 ------------
 
-The only hard dependency of `unpaper` is [libav](http://libav.org),
-which is used for file input and output.
+The only hard dependency of `unpaper` is [libav][4], which is used for
+file input and output.
 
 At the time of writing, any version of libav can be used, and at least
 from version 9 it supports a superset of the file formats supported by
@@ -86,3 +79,5 @@ You can find more information on the [basic concepts][1] and the
 
 [1]: doc/basic-concepts.md
 [2]: doc/image-processing.md
+[3]: doc/file-formats.md
+[4]: https://libav.org/

@@ -9,7 +9,8 @@ unpaper_LDADD = $(LIBAV_LIBS)
 dist_doc_DATA = NEWS COPYING README.md AUTHORS
 dist_man_MANS = unpaper.1
 
-dist_html_DATA = doc/basic-concepts.md doc/image-processing.md
+dist_html_DATA = doc/basic-concepts.md doc/image-processing.md  \
+        doc/file-formats.md
 imgdir = $(htmldir)/img
 dist_img_DATA = doc/img/blackfilter-detail.png				\
                 doc/img/blackfilter.png doc/img/blurfilter-detail.png	\
