@@ -168,8 +168,6 @@ struct MultiIndex ignoreMultiIndex = { 0, NULL };
 struct MultiIndex insertBlank = { 0, NULL };
 struct MultiIndex replaceBlank = { 0, NULL };
 
-int autoborder[MAX_MASKS][EDGES_COUNT];
-int autoborderMask[MAX_MASKS][EDGES_COUNT];
 bool overwrite = false;
 int dpi = 300;
 
@@ -1689,6 +1687,8 @@ int main(int argc, char* argv[]) {
 
             // border-detection
             if (!isExcluded(nr, noBorderScanMultiIndex, ignoreMultiIndex)) {
+                int autoborder[MAX_MASKS][EDGES_COUNT];
+                int autoborderMask[MAX_MASKS][EDGES_COUNT];
                 saveDebug("_before-border%d.pnm", nr, sheet);
                 for (int i = 0; i < outsideBorderscanMaskCount; i++) {
                     detectBorder(autoborder[i], outsideBorderscanMask[i], sheet);
