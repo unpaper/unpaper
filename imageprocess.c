@@ -434,6 +434,9 @@ static void stretchTo(AVFrame *source, AVFrame *target) {
 void stretch(int w, int h, AVFrame **image) {
     AVFrame *newimage;
 
+    if ( (*image)->width == w && (*image)->height == h )
+        return;
+
     // allocate new buffer's memory
     initImage(&newimage, w, h, (*image)->format, false);
 

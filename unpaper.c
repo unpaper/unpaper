@@ -1368,28 +1368,23 @@ int main(int argc, char* argv[]) {
             // -------------------------------------------------------
 
             // stretch
-            if ((stretchSize[WIDTH] != -1) || (stretchSize[HEIGHT] != -1)) {
-                if (stretchSize[WIDTH] != -1) {
-                    w = stretchSize[WIDTH];
-                } else {
-                    w = sheet->width;
-                }
-                if (stretchSize[HEIGHT] != -1) {
-                    h = stretchSize[HEIGHT];
-                } else {
-                    h = sheet->height;
-                }
-                saveDebug("_before-stretch%d.pnm", nr, sheet);
-                stretch(w, h, &sheet);
-                saveDebug("_after-stretch%d.pnm", nr, sheet);
+            if (stretchSize[WIDTH] != -1) {
+                w = stretchSize[WIDTH];
+            } else {
+                w = sheet->width;
+            }
+            if (stretchSize[HEIGHT] != -1) {
+                h = stretchSize[HEIGHT];
+            } else {
+                h = sheet->height;
             }
 
-            // zoom
-            if (zoomFactor != 1.0) {
-                w = sheet->width * zoomFactor;
-                h = sheet->height * zoomFactor;
-                stretch(w, h, &sheet);
-            }
+            w *= zoomFactor;
+            h *= zoomFactor;
+
+            saveDebug("_before-stretch%d.pnm", nr, sheet);
+            stretch(w, h, &sheet);
+            saveDebug("_after-stretch%d.pnm", nr, sheet);
 
             // size
             if ((size[WIDTH] != -1) || (size[HEIGHT] != -1)) {
@@ -1742,26 +1737,21 @@ int main(int argc, char* argv[]) {
             }
 
             // post-stretch
-            if ((postStretchSize[WIDTH] != -1) || (postStretchSize[HEIGHT] != -1)) {
-                if (postStretchSize[WIDTH] != -1) {
-                    w = postStretchSize[WIDTH];
-                } else {
-                    w = sheet->width;
-                }
-                if (postStretchSize[HEIGHT] != -1) {
-                    h = postStretchSize[HEIGHT];
-                } else {
-                    h = sheet->height;
-                }
-                stretch(w, h, &sheet);
+            if (postStretchSize[WIDTH] != -1) {
+                w = postStretchSize[WIDTH];
+            } else {
+                w = sheet->width;
+            }
+            if (postStretchSize[HEIGHT] != -1) {
+                h = postStretchSize[HEIGHT];
+            } else {
+                h = sheet->height;
             }
 
-            // post-zoom
-            if (postZoomFactor != 1.0) {
-                w = sheet->width * postZoomFactor;
-                h = sheet->height * postZoomFactor;
-                stretch(w, h, &sheet);
-            }
+            w *= postZoomFactor;
+            h *= postZoomFactor;
+
+            stretch(w, h, &sheet);
 
             // post-size
             if ((postSize[WIDTH] != -1) || (postSize[HEIGHT] != -1)) {
