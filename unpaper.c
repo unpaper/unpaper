@@ -206,7 +206,6 @@ int main(int argc, char* argv[]) {
     int previousWidth = -1;
     int previousHeight = -1;
     AVFrame *sheet;
-    AVFrame *originalSheet;
     AVFrame *page;
     int inputNr;
     int outputNr;
@@ -1596,11 +1595,10 @@ int main(int argc, char* argv[]) {
             // rotation-detection
             if ((!isExcluded(nr, noDeskewMultiIndex, ignoreMultiIndex))) {
                 saveDebug("_before-deskew%d.pnm", nr, sheet);
-                originalSheet = sheet; // copy struct entries ('clone')
 
                 // detect masks again, we may get more precise results now after first masking and grayfilter
                 if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
-                    detectMasks(originalSheet);
+                    detectMasks(sheet);
                 } else {
                     if (verbose >= VERBOSE_MORE) {
                         printf("(mask-scan before deskewing disabled)\n");
@@ -1609,9 +1607,9 @@ int main(int argc, char* argv[]) {
 
                 // auto-deskew each mask
                 for (int i = 0; i < maskCount; i++) {
-                    saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, originalSheet);
-                    float rotation = detectRotation(originalSheet, mask[i]);
-                    saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, originalSheet);
+                    saveDebug("_before-deskew-detect%d.pnm", nr*maskCount+i, sheet);
+                    float rotation = detectRotation(sheet, mask[i]);
+                    saveDebug("_after-deskew-detect%d.pnm", nr*maskCount+i, sheet);
 
                     if (verbose >= VERBOSE_NORMAL) {
                         printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
