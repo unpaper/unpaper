@@ -205,15 +205,12 @@ int main(int argc, char* argv[]) {
     int bottom;
     int previousWidth = -1;
     int previousHeight = -1;
-    AVFrame *sheet;
-    AVFrame *page;
+    AVFrame *sheet = NULL;
+    AVFrame *page = NULL;
     int inputNr;
     int outputNr;
     int option_index = 0;
     int outputPixFmt = -1;
-
-    sheet = NULL;
-    page = NULL;
 
     // -------------------------------------------------------------------
     // --- parse parameters                                            ---
