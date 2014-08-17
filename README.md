@@ -37,6 +37,21 @@ Output files are generated in PNM rawbits format. Conversion to PDF
 can be achieved with Linux tools such as `pgm2tiff`, `tiffcp` and
 `tiff2pdf`.
 
+Dependencies
+------------
+
+The only hard dependency of `unpaper` is [libav](http://libav.org),
+which is used for file input and output.
+
+At the time of writing, any version of libav can be used, and at least
+from version 9 it supports a superset of the file formats supported by
+`unpaper` before version 6.
+
+The yet to be released version 11 is recommended, once available, as
+it has better support for TIFF files, including a faster, less
+memory-consuming support for grayscale TIFF files, and support for
+grayscale and alpha files.
+
 Building instructions
 ---------------------
 
