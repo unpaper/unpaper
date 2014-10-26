@@ -197,8 +197,8 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     codec_ctx->width = image->width;
     codec_ctx->height = image->height;
     codec_ctx->pix_fmt = image->format;
-    codec_ctx->time_base.den = 1;
-    codec_ctx->time_base.num = 1;
+    video_st->time_base.den = codec_ctx->time_base.den = 1;
+    video_st->time_base.num = codec_ctx->time_base.num = 1;
 
     ret = avcodec_open2(codec_ctx, codec, NULL);
 
