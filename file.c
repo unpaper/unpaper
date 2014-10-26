@@ -25,6 +25,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 
@@ -41,11 +42,14 @@
 void loadImage(const char *filename, AVFrame **image) {
     int ret, got_frame = 0;
     AVFormatContext *s = NULL;
-    AVCodecContext *avctx = NULL;
+    AVCodecContext *avctx = avcodec_alloc_context3(NULL);
     AVCodec *codec;
     AVPacket pkt;
     AVFrame *frame = av_frame_alloc();
     char errbuff[1024];
+
+    if (!avctx)
+        errOutput("cannot allocate a new context");
 
     ret = avformat_open_input(&s, filename, NULL, NULL);
     if (ret < 0) {
@@ -64,7 +68,11 @@ void loadImage(const char *filename, AVFrame **image) {
     if (s->streams[0]->codec->codec_type != AVMEDIA_TYPE_VIDEO)
         errOutput("unable to open file %s: wrong stream", filename);
 
-    avctx = s->streams[0]->codec;
+    ret = avcodec_copy_context(avctx, s->streams[0]->codec);
+    if (ret < 0) {
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("cannot set the new context for %s: %s", filename, errbuff);
+    }
 
     codec = avcodec_find_decoder(avctx->codec_id);
     if (!codec)
@@ -85,7 +93,7 @@ void loadImage(const char *filename, AVFrame **image) {
     if (pkt.stream_index != 0)
         errOutput("unable to open file %s: invalid stream.", filename);
 
-    ret = avcodec_decode_video2(s->streams[0]->codec, frame, &got_frame, &pkt);
+    ret = avcodec_decode_video2(avctx, frame, &got_frame, &pkt);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
         errOutput("unable to open file %s: %s", filename, errbuff);
@@ -189,8 +197,8 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     codec_ctx->width = image->width;
     codec_ctx->height = image->height;
     codec_ctx->pix_fmt = image->format;
-    codec_ctx->time_base.den = 1;
-    codec_ctx->time_base.num = 1;
+    video_st->time_base.den = codec_ctx->time_base.den = 1;
+    video_st->time_base.num = codec_ctx->time_base.num = 1;
 
     ret = avcodec_open2(codec_ctx, codec, NULL);
 
