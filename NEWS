@@ -1,4 +1,8 @@
-Release 6, 2014-xx-yy
+Release 6.1, 2014-10-23
+ - Compatibility with ffmpeg's implementation of libavcodec, and
+   libav-11 and later.
+
+Release 6, 2014-08-19
  - Use libav for both input and output of files, rather than custom
    code. This adds support for many different input file formats
    outside of PPM/PBM/PGM, as long as libav can reconduct them to a
