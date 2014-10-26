@@ -192,7 +192,7 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     codec_ctx->time_base.den = 1;
     codec_ctx->time_base.num = 1;
 
-    ret = avcodec_open2(codec_ctx, NULL, NULL);
+    ret = avcodec_open2(codec_ctx, codec, NULL);
 
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
