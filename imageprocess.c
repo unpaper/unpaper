@@ -173,15 +173,15 @@ static int detectEdgeRotationPeak(double m, int shiftX, int shiftY, AVFrame *ima
  * Which of the four edges to take depends on whether shiftX or shiftY is non-zero,
  * and what sign this shifting value has.
  */
-static double detectEdgeRotation(int shiftX, int shiftY, AVFrame *image, int mask[EDGES_COUNT]) {
+static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image, int mask[EDGES_COUNT]) {
     // either shiftX or shiftY is 0, the other value is -i|+i
     // depending on shiftX/shiftY the start edge for shifting is determined
     int maxPeak = 0;
-    double detectedRotation = 0.0;
+    float detectedRotation = 0.0;
 
     // iteratively increase test angle,  alterating between +/- sign while increasing absolute value
-    for (double rotation = 0.0; rotation <= deskewScanRangeRad; rotation = (rotation>=0.0) ? -(rotation + deskewScanStepRad) : -rotation ) {
-        double m = tan(rotation);
+    for (float rotation = 0.0; rotation <= deskewScanRangeRad; rotation = (rotation>=0.0) ? -(rotation + deskewScanStepRad) : -rotation ) {
+        float m = tan(rotation);
         int peak = detectEdgeRotationPeak(m, shiftX, shiftY, image, mask);
         if (peak > maxPeak) {
             detectedRotation = rotation;
@@ -197,12 +197,12 @@ static double detectEdgeRotation(int shiftX, int shiftY, AVFrame *image, int mas
  * Angles between -deskewScanRange and +deskewScanRange are scanned, at either the
  * horizontal or vertical edges of the area specified by left, top, right, bottom.
  */
-double detectRotation(AVFrame *image, int mask[EDGES_COUNT]) {
-    double rotation[4];
+float detectRotation(AVFrame *image, int mask[EDGES_COUNT]) {
+    float rotation[4];
     int count = 0;
-    double total;
-    double average;
-    double deviation;
+    float total;
+    float average;
+    float deviation;
 
     if ((deskewScanEdges & 1<<LEFT) != 0) {
         // left

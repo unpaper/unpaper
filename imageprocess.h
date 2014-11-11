@@ -24,7 +24,7 @@
 
 /* --- deskewing ---------------------------------------------------------- */
 
-double detectRotation(AVFrame *image, int mask[EDGES_COUNT]);
+float detectRotation(AVFrame *image, int mask[EDGES_COUNT]);
 
 void rotate(const float radians, AVFrame *source, AVFrame *target);
 
