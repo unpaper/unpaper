@@ -239,7 +239,7 @@ void saveDebug(char *filenameTemplate, int index, AVFrame *image)
 
 /* --- arithmetic tool functions ------------------------------------------ */
 
-static inline double degreesToRadians(double d) {
+static inline float degreesToRadians(float d) {
     return d * M_PI / 180.0;
 }
 
