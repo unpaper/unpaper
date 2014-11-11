@@ -1,3 +1,11 @@
+Release 6.2, 2014-xx-xx
+ - Tests now compare a golden file by counting the bytes that differ
+   between it and the result. This allows non-byte-perfect
+   calculations to be executed and still not fail the tests. This is
+   required as fused multiply-add instructions can increase precision
+   and thus deviate from the base C code, when using floating-point
+   arithmetic.
+
 Release 6.1, 2014-10-23
  - Compatibility with ffmpeg's implementation of libavcodec, and
    libav-11 and later.
