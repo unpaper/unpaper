@@ -12,6 +12,4 @@ touch tests/resultsG2.pbm
 
 [ -s tests/resultsG2.pbm ]
 
-md5sum -c - <<EOF
-7efdcb1d3d531ae8a4117ae40c1616b4  tests/resultsG2.pbm
-EOF
+./compare-image ${srcdir:-.}/tests/goldenG2.pbm tests/resultsG2.pbm

@@ -10,6 +10,4 @@ rm -f tests/resultsF21.pbm
 
 [ -f tests/resultsF21.pbm ]
 
-md5sum -c - <<EOF
-08323895a7b1da2b3015e186299fa60d  tests/resultsF21.pbm
-EOF
+./compare-image ${srcdir:-.}/tests/goldenF21.pbm tests/resultsF21.pbm

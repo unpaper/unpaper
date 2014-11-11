@@ -12,9 +12,6 @@ done
 
 for i in 1 2; do
     [ -f tests/resultsE30$i.pbm ]
-done
 
-md5sum -c - <<EOF
-a85fd0b279bc9ecaa9a5bed7e829c43f  tests/resultsE301.pbm
-b8a47789baa71cd5b3be7a4353bfa17b  tests/resultsE302.pbm
-EOF
+    ./compare-image ${srcdir:-.}/tests/goldenE30$i.pbm tests/resultsE30$i.pbm
+done

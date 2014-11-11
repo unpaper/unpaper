@@ -10,6 +10,4 @@ rm -f tests/resultsC2.pbm
 
 [ -f tests/resultsC2.pbm ]
 
-md5sum -c - <<EOF
-9f25e744b241e8ea1a80f0600b1a2977  tests/resultsC2.pbm
-EOF
+./compare-image ${srcdir:-.}/tests/goldenC2.pbm tests/resultsC2.pbm

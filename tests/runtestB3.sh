@@ -10,6 +10,4 @@ rm -f tests/resultsB3.ppm
 
 [ -f tests/resultsB3.ppm ]
 
-md5sum -c - <<EOF
-9a4fda67294b67060a2767fa54fcbc0a  tests/resultsB3.ppm
-EOF
+./compare-image ${srcdir:-.}/tests/goldenB3.ppm tests/resultsB3.ppm
