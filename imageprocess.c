@@ -72,17 +72,17 @@ static bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT
  *
  * @param m ascending slope of the virtually shifted (m=tan(angle)). Mind that this is negative for negative radians.
  */
-static int detectEdgeRotationPeak(double m, int shiftX, int shiftY, AVFrame *image, int mask[EDGES_COUNT]) {
+static int detectEdgeRotationPeak(float m, int shiftX, int shiftY, AVFrame *image, int mask[EDGES_COUNT]) {
     int width = mask[RIGHT] - mask[LEFT] + 1;
     int height = mask[BOTTOM] - mask[TOP] + 1;
     int mid;
     int half;
     int sideOffset;
     int outerOffset;
-    double X; // unrounded coordinates
-    double Y;
-    double stepX;
-    double stepY;
+    float X; // unrounded coordinates
+    float Y;
+    float stepX;
+    float stepY;
     int x[MAX_ROTATION_SCAN_SIZE];
     int y[MAX_ROTATION_SCAN_SIZE];
     int xx;
@@ -181,7 +181,7 @@ static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image, int mask
 
     // iteratively increase test angle,  alterating between +/- sign while increasing absolute value
     for (float rotation = 0.0; rotation <= deskewScanRangeRad; rotation = (rotation>=0.0) ? -(rotation + deskewScanStepRad) : -rotation ) {
-        float m = tan(rotation);
+        float m = tanf(rotation);
         int peak = detectEdgeRotationPeak(m, shiftX, shiftY, image, mask);
         if (peak > maxPeak) {
             detectedRotation = rotation;
@@ -244,9 +244,9 @@ float detectRotation(AVFrame *image, int mask[EDGES_COUNT]) {
     average = total / count;
     total = 0.0;
     for (int i = 0; i < count; i++) {
-        total += pow(rotation[i]-average, 2);
+        total += powf(rotation[i]-average, 2);
     }
-    deviation = sqrt(total);
+    deviation = sqrtf(total);
     if (verbose >= VERBOSE_NORMAL) {
         printf("rotation average: %f  deviation: %f  rotation-scan-deviation (maximum): %f  [%d,%d,%d,%d]\n", average, deviation, deskewScanDeviationRad, mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM]);
     }

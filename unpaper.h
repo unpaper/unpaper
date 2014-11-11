@@ -122,9 +122,9 @@ extern unsigned int absBlackThreshold;
 extern unsigned int absWhiteThreshold;
 extern unsigned int absBlackfilterScanThreshold;
 extern unsigned int absGrayfilterThreshold;
-extern double deskewScanRangeRad;
-extern double deskewScanStepRad;
-extern double deskewScanDeviationRad;
+extern float deskewScanRangeRad;
+extern float deskewScanStepRad;
+extern float deskewScanDeviationRad;
 
 extern int layout;
 extern int startSheet;

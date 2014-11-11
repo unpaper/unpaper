@@ -64,9 +64,9 @@ unsigned int absBlackThreshold;
 unsigned int absWhiteThreshold;
 unsigned int absBlackfilterScanThreshold;
 unsigned int absGrayfilterThreshold;
-double deskewScanRangeRad;
-double deskewScanStepRad;
-double deskewScanDeviationRad;
+float deskewScanRangeRad;
+float deskewScanStepRad;
+float deskewScanDeviationRad;
 
 int layout = LAYOUT_SINGLE;
 int startSheet = 1;
