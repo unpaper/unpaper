@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "%zd bytes differ over %zd — %.2f%%\n",
             diffbytes, image_size, percent_diff);
 
-    if ( percent_diff > 1 )
+    if ( percent_diff > 0.1 )
         return 1;
 
     return 0;
