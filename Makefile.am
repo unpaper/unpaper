@@ -73,10 +73,6 @@ CLEANFILES = tests/.dirstamp tests/resultsA1.pbm tests/resultsB1.ppm    \
 	     tests/resultsF3.pbm tests/resultsG1.pbm                    \
 	     tests/resultsG2.pbm tests/resultsG3.pbm
 
-tests/.dirstamp:
-	$(MKDIR_P) tests
-	touch tests/.dirstamp
-
 %.1: %.1.xml
 	$(AM_V_GEN)$(XSLTPROC) \
 		--stringparam man.copyright.section.enable 0 \
