@@ -560,8 +560,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
             <listitem>
               <para>
                 Directions in which to search for solidly black areas. Either <option>v</option>
-                (for vertical mirroring), <option>h</option> (for horizontal mirroring) or
+                (for vertical searching), <option>h</option> (for horizontal searching) or
                 <option>v,h</option> (for both) can be specified.
+                The blackfilter works by moving a virtual bar across each page.
+                The darkness inside the virtual bar is determined
+                and if it exceeds <option>blackfilter-scan-threshold</option> black pixels in the area are filled.
+                During filling the blackness of each pixel is determined by <option>black-threshold</option>.
+                The bar is then moved by <option>blackfilter-scan-step</option> in the scanning direction.
+                Once a page border is encountered the bar is moved down (horizontal scan) or right (vertical scan) by its <option>blackfilter-scan-size</option>.
               </para>
             </listitem>
           </varlistentry>
@@ -580,8 +586,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Width of virtual bar used for mask detection. Two values may be specified to
-                individually set horizontal and vertical size. (default: <option>20,20</option>)
+                Size of virtual bar in direction of scanning (meaning width for horizontal pass, height for vertical pass) used for black area detection.
+                Two values may be specified to individually set the size for the horizontal scanning-pass and the vertical pass. (default: <option>20,20</option>)
               </para>
             </listitem>
           </varlistentry>
@@ -600,7 +606,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Size of virtual bar used for black area detection. (default: <option>500,500</option>)
+                Depth of virtual bar in non-scanning direction (meaning height for horizontal pass, width for vertical pass) used for black area detection.
+                Two values may be specified to individually set the depth for the horizontal scanning-pass and the vertical pass. (default: <option>500,500</option>)
               </para>
             </listitem>
           </varlistentry>
@@ -620,7 +627,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Steps to move virtual bar for black area detection. (default: <option>5,5</option>)
+                Steps to move virtual bar for black area detection. Two values may be specified to
+                individually set the step for the horizontal scanning-pass and the vertical pass. (default: <option>5,5</option>)
               </para>
             </listitem>
           </varlistentry>
@@ -672,8 +680,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Intensity with which to delete black areas. Larger values will leave less
-                noise-pixels around former black areas, but may delete page content. (default:
+                Intensity with which to delete black areas. This deletes pixels around the virtual scan bar.
+                Larger values will leave less noise-pixels around former black areas, but may delete page content. (default:
                 <option>20</option>)
               </para>
             </listitem>
@@ -1315,7 +1323,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
             <listitem>
               <para>
                 Brightness ratio below which a pixel is considered black (non-gray). This is used by
-                the gray-filter. This value is also used when converting a grayscale image to
+                the gray-filter and the blackfilter. This value is also used when converting a grayscale image to
                 black-and-white mode (default: <option>0.33</option>)
               </para>
             </listitem>
