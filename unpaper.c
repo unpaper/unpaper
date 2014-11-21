@@ -1000,7 +1000,7 @@ int main(int argc, char* argv[]) {
         if ( inputWildcard )
             optind++;
 	
-	if(optind >= argc) { // see any one of the last two optind++ has pushed over the array
+	if(optind >= argc) { // see if any one of the last two optind++ has pushed over the array
 		errOutput("not enough output files given.");
 		return -1;
 	}
