@@ -1000,9 +1000,8 @@ int main(int argc, char* argv[]) {
         if ( inputWildcard )
             optind++;
 	
-	if(optind >= argc) { // see if any one of the last two optind++ has pushed over the array
+	if(optind >= argc) { // see if any one of the last two optind++ has pushed it over the array boundary
 		errOutput("not enough output files given.");
-		return -1;
 	}
         bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
         for(int i = 0; i < outputCount; i++) {
@@ -1011,7 +1010,6 @@ int main(int argc, char* argv[]) {
                 outputFileNames[i] = outputFilesBuffer[i];
             } else if ( optind >= argc ) {
                 errOutput("not enough output files given.");
-                return -1;
             } else {
                 outputFileNames[i] = argv[optind++];
             }
