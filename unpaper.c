@@ -980,6 +980,9 @@ int main(int argc, char* argv[]) {
             } else {
                 inputFileNames[i] = argv[optind++];
             }
+	    if (verbose >= VERBOSE_DEBUG) {
+		printf("added input file %s\n", inputFileNames[i]);
+	    }
 
             if ( inputFileNames[i] != NULL ) {
                 struct stat statBuf;
@@ -996,7 +999,10 @@ int main(int argc, char* argv[]) {
         }
         if ( inputWildcard )
             optind++;
-
+	
+	if(optind >= argc) { // see if any one of the last two optind++ has pushed it over the array boundary
+		errOutput("not enough output files given.");
+	}
         bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
         for(int i = 0; i < outputCount; i++) {
             if ( outputWildcard ) {
@@ -1004,10 +1010,13 @@ int main(int argc, char* argv[]) {
                 outputFileNames[i] = outputFilesBuffer[i];
             } else if ( optind >= argc ) {
                 errOutput("not enough output files given.");
-                return -1;
             } else {
                 outputFileNames[i] = argv[optind++];
             }
+	    if (verbose >= VERBOSE_DEBUG) {
+		printf("added output file %s\n", outputFileNames[i]);
+	    }
+	    
 
             if ( ! overwrite ) {
                 struct stat statbuf;
