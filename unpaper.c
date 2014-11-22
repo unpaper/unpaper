@@ -1049,12 +1049,13 @@ int main(int argc, char* argv[]) {
             }
 
             // load input image(s)
+	    // if --input-pages == 2 combine two files onto one image (called sheet)
             for (int j = 0; j < inputCount; j++) {
                 if (inputFileNames[j] != NULL) { // may be null if --insert-blank or --replace-blank
                     if (verbose >= VERBOSE_MORE)
                         printf("loading file %s.\n", inputFileNames[j]);
 
-                    loadImage(inputFileNames[j], &page);
+                    loadImage(inputFileNames[j], &page); // allocates page buffer
                     saveDebug("_loaded_%d.pnm", inputNr-inputCount+j, page);
 
                     if (outputPixFmt == -1 && page != NULL) {
@@ -1099,6 +1100,8 @@ int main(int argc, char* argv[]) {
                     saveDebug("_before_center_page%d.pnm", inputNr-inputCount+j, sheet);
 
                     centerImage(page, (w * j / inputCount), 0, (w / inputCount), h, sheet);
+                    // the page is copied onto the sheet so we can free the buffer again.
+                    av_frame_free(&page);
 
                     saveDebug("_after_center_page%d.pnm", inputNr-inputCount+j, sheet);
                 }
