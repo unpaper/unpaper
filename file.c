@@ -51,13 +51,15 @@ void loadImage(const char *filename, AVFrame **image) {
     if (!avctx)
         errOutput("cannot allocate a new context");
 
-    ret = avformat_open_input(&s, filename, NULL, NULL); // avformat_open_input allocates buffer for AVFormatContext (=s) itself
+    // avformat_open_input allocates buffer for AVFormatContext (=s) itself
+    ret = avformat_open_input(&s, filename, NULL, NULL);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
         errOutput("unable to open file %s: %s", filename, errbuff);
     }
 
-    avformat_find_stream_info(s, NULL); // this pre-reads stuff which will be stored in pkt
+    // avformat_find_stream_info() pre-reads stuff from the stream
+    avformat_find_stream_info(s, NULL);
 
     if (verbose >= VERBOSE_MORE)
         av_dump_format(s, 0, filename, 0);
@@ -68,7 +70,8 @@ void loadImage(const char *filename, AVFrame **image) {
     if (s->streams[0]->codec->codec_type != AVMEDIA_TYPE_VIDEO)
         errOutput("unable to open file %s: wrong stream", filename);
 
-    ret = avcodec_copy_context(avctx, s->streams[0]->codec); // this doesn't allocate new memory as avctx is only initialized in vcodec_alloc_context3()
+    // avcodec_copy_context() doesn't allocate new memory as avctx is only initialized in vcodec_alloc_context3()
+    ret = avcodec_copy_context(avctx, s->streams[0]->codec);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
         errOutput("cannot set the new context for %s: %s", filename, errbuff);
@@ -93,7 +96,8 @@ void loadImage(const char *filename, AVFrame **image) {
     if (pkt.stream_index != 0)
         errOutput("unable to open file %s: invalid stream.", filename);
 
-    avctx->refcounted_frames = 1; // this makes us have to free the frames ourselves.
+    // this makes us have to free the frames ourselves.
+    avctx->refcounted_frames = 1; 
     ret = avcodec_decode_video2(avctx, frame, &got_frame, &pkt);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
@@ -191,12 +195,14 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     }
 
     if ( image->format != outputPixFmt ) {
-        AVFrame *output; // temporary frame
+        // create temporary frame
+        AVFrame *output;
         initImage(&output, image->width, image->height,
                   outputPixFmt, -1);
         copyImageArea(0, 0, image->width, image->height,
                       image, 0, 0, output);
-        av_frame_free(&image); // free temporary buffer
+        // free temporary buffer
+        av_frame_free(&image);
         image = output;
     }
 
@@ -247,9 +253,11 @@ void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
     av_write_frame(out_ctx, &pkt);
     av_write_trailer(out_ctx);
 
-    avio_close(out_ctx->pb); // this flushes all buffers in the stream
+    // this flushes all buffers in the stream
+    avio_close(out_ctx->pb); 
 
-    av_free_packet(&pkt); // free the buffer in the packet
+    // free the buffer in the packet
+    av_free_packet(&pkt);
 
     avcodec_close(codec_ctx);
     avformat_free_context(out_ctx);
