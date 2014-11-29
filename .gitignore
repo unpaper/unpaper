@@ -11,6 +11,7 @@ compile
 depcomp
 install-sh
 missing
+compare-image
 test-driver
 test-suite.log
 tests/.dirstamp
