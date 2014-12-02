@@ -1,5 +1,5 @@
 bin_PROGRAMS = unpaper
-MANPAGE_XSL ?= http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xs
+MANPAGE_XSL ?= http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl
 
 unpaper_SOURCES = file.c imageprocess.c imageprocess.h parse.c  \
 	parse.h tools.c tools.h unpaper.c unpaper.h
