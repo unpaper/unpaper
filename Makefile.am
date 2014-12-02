@@ -1,5 +1,5 @@
 bin_PROGRAMS = unpaper
-MANPAGE_XSL ?= http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xsl
+MANPAGE_XSL ?= http://docbook.sourceforge.net/release/xsl-ns/current/manpages/docbook.xs
 
 unpaper_SOURCES = file.c imageprocess.c imageprocess.h parse.c  \
 	parse.h tools.c tools.h unpaper.c unpaper.h
@@ -38,9 +38,10 @@ TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
         tests/runtestD3.sh tests/runtestE1.sh tests/runtestE2.sh	\
         tests/runtestE3.sh tests/runtestF1.sh tests/runtestF2.sh	\
         tests/runtestF3.sh tests/runtestG1.sh tests/runtestG2.sh	\
-	tests/runtestG3.sh
+        tests/runtestG3.sh tests/runtestH1.sh tests/runtestH2.sh	\
+        tests/runtestH3.sh
 
-XFAIL_TESTS = tests/runtestG3.sh
+XFAIL_TESTS = tests/runtestG3.sh tests/runtestH2.sh tests/runtestH3.sh
 
 EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png           \
              tests/imgsrc003.png tests/imgsrc004.png                    \
@@ -57,6 +58,9 @@ EXTRA_DIST = $(TESTS) tests/imgsrc001.png tests/imgsrc002.png           \
              tests/goldenE302.pbm tests/goldenF11.pbm                   \
              tests/goldenF21.pbm tests/goldenF3.pbm                     \
              tests/goldenG1.pbm tests/goldenG2.pbm tests/goldenG3.pbm   \
+             tests/goldenH101.pbm tests/goldenH102.pbm                  \
+             tests/goldenH103.pbm tests/goldenH104.pbm                  \
+             tests/goldenH105.pbm tests/goldenH106.pbm                  \
              .dir-locals.el
 
 CLEANFILES = tests/.dirstamp tests/resultsA1.pbm tests/resultsB1.ppm    \
@@ -71,7 +75,16 @@ CLEANFILES = tests/.dirstamp tests/resultsA1.pbm tests/resultsB1.ppm    \
 	     tests/resultsE301.pbm tests/resultsE302.pbm                \
 	     tests/resultsF11.pbm tests/resultsF21.pbm                  \
 	     tests/resultsF3.pbm tests/resultsG1.pbm                    \
-	     tests/resultsG2.pbm tests/resultsG3.pbm
+	     tests/resultsG2.pbm tests/resultsG3.pbm                    \
+	     tests/resultsH101.pbm tests/resultsH102.pbm                \
+	     tests/resultsH103.pbm tests/resultsH104.pbm                \
+	     tests/resultsH105.pbm tests/resultsH106.pbm                \
+	     tests/resultsH201.pbm tests/resultsH202.pbm                \
+	     tests/resultsH203.pbm tests/resultsH204.pbm                \
+	     tests/resultsH205.pbm tests/resultsH206.pbm                \
+	     tests/resultsH301.pbm tests/resultsH302.pbm                \
+	     tests/resultsH303.pbm tests/resultsH304.pbm                \
+	     tests/resultsH305.pbm tests/resultsH306.pbm
 
 %.1: %.1.xml
 	$(AM_V_GEN)$(XSLTPROC) \

@@ -303,13 +303,15 @@ char* implode(char* buf, const char* s[], int cnt) {
  * @see isInMultiIndex(..)
  */
 void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
-    char *s1, *s2 = NULL;
-    char c;
-    int index;
+    char *s1 = NULL;
+    char *s2 = NULL;
+    char c = '\0';
+    int index = -1;
+    int range_end = -1;
     int allocated = 0;
-
     multiIndex->count = -1;
     multiIndex->indexes = NULL;
+    int scanned = 0;
 
     if ( optarg == NULL ) {
         return;
@@ -321,39 +323,48 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
     s1 = strdup(optarg);
 
     do {
-        index = -1;
-        sscanf(s1, "%d%c%ms", &index, &c, &s2);
-        if (index != -1) {
+        scanned = sscanf(s1, "%d%c%ms", &index, &c, &s2);
+        if ( scanned <= 0 ) {
+            errOutput("couldn't parse multi-index in '%s'", optarg);
+        } else if ( scanned == 2 ) {
+            // only index + delimiter found, e.g. "1," or "1-"
+            errOutput("unexpected end of multi-index '%s' after '%d%c'", optarg, index, c);
+        } else {
+            /* add the index or the range */
             if (multiIndex->count >= allocated) {
                 allocated += 32;
                 multiIndex->indexes = realloc(multiIndex->indexes, allocated * sizeof(multiIndex->indexes[0]));
             }
 
             multiIndex->indexes[(multiIndex->count)++] = index;
-            if (c=='-') { // range is specified: get range end
+            if ( c=='-' && scanned == 3 ) { // range is specified: get range end
                 strcpy(s1, s2); // s2 -> s1
-                sscanf(s1, "%d,%s", &index, s2);
-                size_t count = index - multiIndex->indexes[(multiIndex->count)-1];
+                if ( sscanf(s1, "%d,%s", &range_end, s2) <= 0) {
+                    errOutput("couldn't determine range end in multi-index '%s' after -'%d' by.", optarg, index, s1);
+                } else if ( range_end <= index ) {
+                    // range end <= range start
+                    errOutput("undefined range %d-%d in multi-index '%s'.", index, range_end, optarg);
+                }
+                size_t count = range_end - multiIndex->indexes[(multiIndex->count)-1];
 
                 allocated += count;
-                multiIndex->indexes = realloc(multiIndex->indexes, allocated);
+                multiIndex->indexes = realloc(multiIndex->indexes, allocated * sizeof(multiIndex->indexes[0]));
 
-                for (int j = multiIndex->indexes[(multiIndex->count)-1]+1; j <= index; j++) {
+                for (int j = multiIndex->indexes[(multiIndex->count)-1]+1; j <= range_end; j++) {
                     multiIndex->indexes[(multiIndex->count)++] = j;
                 }
             }
-        } else {
-            // string is not correctly parseable: break without inreasing *i (string may be e.g. input-filename)
-            multiIndex->count = -1; // disable all
-            free(s1);
-            free(s2);
-            return;
+
+            if ( scanned == 3 ) {
+                // keep on with the rest of the multi-index
+                strcpy(s1, s2); // s2 -> s1
+                free(s2);
+            } else {
+                // this was the last index
+                break;
+            }
         }
-        if ( s2 ) {
-            strcpy(s1, s2); // s2 -> s1
-            free(s2);
-        }
-    } while ((multiIndex->count < MAX_MULTI_INDEX) && (strlen(s1) > 0));
+    } while (multiIndex->count < MAX_MULTI_INDEX);
 
     free(s1);
 }
