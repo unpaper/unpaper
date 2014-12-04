@@ -402,19 +402,19 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x7e:
-            sscanf(optarg,"%d", &startSheet);
+            parseSingleInt(optarg, &startSheet, "--start or --start-sheet");
             break;
 
         case 0x7f:
-            sscanf(optarg,"%d", &endSheet);
+            parseSingleInt(optarg, &endSheet, "--end or --end-sheet");
             break;
 
         case 0x80:
-            sscanf(optarg,"%d", &startInput);
+            parseSingleInt(optarg, &startInput, "--si or --start-input");
             break;
 
         case 0x81:
-            sscanf(optarg,"%d", &startOutput);
+            parseSingleInt(optarg, &startOutput, "--so or --start-output");
             break;
 
         case 'S':
@@ -436,7 +436,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x83:
-            sscanf(optarg, "%d", &preRotate);
+            parseSingleInt(optarg, &preRotate, "--pre-rotate");
             if ((preRotate != 0) && (abs(preRotate) != 90)) {
                 fprintf(stderr, "cannot set --pre-rotate value other than -90 or 90, ignoring.\n");
                 preRotate = 0;
@@ -444,7 +444,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x84:
-            sscanf(optarg,"%d", &postRotate);
+            parseSingleInt(optarg, &postRotate, "--post-rotate");
             if ((postRotate != 0) && (abs(postRotate) != 90)) {
                 fprintf(stderr, "cannot set --post-rotate value other than -90 or 90, ignoring.\n");
                 postRotate = 0;
@@ -469,11 +469,9 @@ int main(int argc, char* argv[]) {
 
         case 0x88:
             if ( preMaskCount < MAX_MASKS ) {
-                left = -1;
-                top = -1;
-                right = -1;
-                bottom = -1;
-                sscanf(optarg,"%d,%d,%d,%d", &left, &top, &right, &bottom); // x1, y1, x2, y2
+                if ( sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right, &bottom) /* x1, y1, x2, y2 */ < 4 ) {
+                    errOutput("couldn't parse argument '%s' for option '--pre-mask' as INT,INT,INT,INT.", optarg);
+                }
                 preMask[preMaskCount][LEFT] = left;
                 preMask[preMaskCount][TOP] = top;
                 preMask[preMaskCount][RIGHT] = right;
@@ -502,18 +500,20 @@ int main(int argc, char* argv[]) {
             break;
 
         case 'z':
-            sscanf(optarg,"%f", &zoomFactor);
+            parseSingleFloat(optarg, &zoomFactor, "-z or --zoom");
             break;
 
         case 0x8c:
-            sscanf(optarg,"%f", &postZoomFactor);
+            parseSingleFloat(optarg, &postZoomFactor, "--post-zoom");
             break;
 
         case 'p':
             if ( pointCount < MAX_POINTS ) {
                 int x = -1;
                 int y = -1;
-                sscanf(optarg,"%d,%d", &x, &y);
+                if( sscanf(optarg,"%d,%d", &x, &y) < 2) {
+                    errOutput("couldn't parse argument '%s' for option '-p or --mask-scan-point'", optarg);
+                }
                 point[pointCount][X] = x;
                 point[pointCount][Y] = y;
                 pointCount++;
@@ -529,7 +529,9 @@ int main(int argc, char* argv[]) {
                 top = -1;
                 right = -1;
                 bottom = -1;
-                sscanf(optarg,"%d,%d,%d,%d", &left, &top, &right, &bottom); // x1, y1, x2, y2
+                if ( sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right, &bottom) /* x1, y1, x2, y2 */ < 4 ) {
+                    errOutput("couldn't parse argument '%s' for option '-m or --mask' as INT,INT,INT,INT.", optarg);
+                }
                 mask[maskCount][LEFT] = left;
                 mask[maskCount][TOP] = top;
                 mask[maskCount][RIGHT] = right;
@@ -548,7 +550,9 @@ int main(int argc, char* argv[]) {
                 top = -1;
                 right = -1;
                 bottom = -1;
-                sscanf(optarg,"%d,%d,%d,%d", &left, &top, &right, &bottom); // x1, y1, x2, y2
+                if ( sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right, &bottom) /* x1, y1, x2, y2 */ < 4 ) {
+                    errOutput("couldn't parse argument '%s' for option '-W or --wipe' as INT,INT,INT,INT.", optarg);
+                }
                 wipe[wipeCount][LEFT] = left;
                 wipe[wipeCount][TOP] = top;
                 wipe[wipeCount][RIGHT] = right;
@@ -566,7 +570,9 @@ int main(int argc, char* argv[]) {
                 top = -1;
                 right = -1;
                 bottom = -1;
-                sscanf(optarg,"%d,%d,%d,%d", &left, &top, &right, &bottom); // x1, y1, x2, y2
+                if ( sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right, &bottom) /* x1, y1, x2, y2 */ < 4 ) {
+                    errOutput("couldn't parse argument '%s' for option '--pre-wipe' as INT,INT,INT,INT.", optarg);
+                }
                 preWipe[preWipeCount][LEFT] = left;
                 preWipe[preWipeCount][TOP] = top;
                 preWipe[preWipeCount][RIGHT] = right;
@@ -584,7 +590,9 @@ int main(int argc, char* argv[]) {
                 top = -1;
                 right = -1;
                 bottom = -1;
-                sscanf(optarg,"%d,%d,%d,%d", &left, &top, &right, &bottom); // x1, y1, x2, y2
+                if ( sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right, &bottom) /* x1, y1, x2, y2 */ < 4 ) {
+                    errOutput("couldn't parse argument '%s' for option '--post-wipe' as INT,INT,INT,INT.", optarg);
+                }
                 postWipe[postWipeCount][LEFT] = left;
                 postWipe[postWipeCount][TOP] = top;
                 postWipe[postWipeCount][RIGHT] = right;
@@ -601,15 +609,21 @@ int main(int argc, char* argv[]) {
             break;
 
         case 'B':
-            sscanf(optarg,"%d,%d,%d,%d", &border[LEFT], &border[TOP], &border[RIGHT], &border[BOTTOM]);
+            if ( sscanf(optarg,"%d,%d,%d,%d", &border[LEFT], &border[TOP], &border[RIGHT], &border[BOTTOM]) < 4 ) {
+                errOutput("couldn't parse argument '%s' for option '-B or --border' as INT,INT,INT,INT.", optarg);
+            }
             break;
 
         case 0x90:
-            sscanf(optarg,"%d,%d,%d,%d", &preBorder[LEFT], &preBorder[TOP], &preBorder[RIGHT], &preBorder[BOTTOM]);
+            if ( sscanf(optarg,"%d,%d,%d,%d", &preBorder[LEFT], &preBorder[TOP], &preBorder[RIGHT], &preBorder[BOTTOM]) < 4 ) {
+                errOutput("couldn't parse argument '%s' for option '--pre-border' as INT,INT,INT,INT.", optarg);
+            }
             break;
 
         case 0x91:
-            sscanf(optarg,"%d,%d,%d,%d", &postBorder[LEFT], &postBorder[TOP], &postBorder[RIGHT], &postBorder[BOTTOM]);
+            if ( sscanf(optarg,"%d,%d,%d,%d", &postBorder[LEFT], &postBorder[TOP], &postBorder[RIGHT], &postBorder[BOTTOM]) < 4 ) {
+                errOutput("couldn't parse argument '%s' for option '--post-border' as INT,INT,INT,INT.", optarg);
+            }
             break;
 
         case 0x92:
@@ -642,7 +656,9 @@ int main(int argc, char* argv[]) {
                 top = -1;
                 right = -1;
                 bottom = -1;
-                sscanf(optarg,"%d,%d,%d,%d", &left, &top, &right, &bottom); // x1, y1, x2, y2
+               if ( sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right, &bottom) /* x1, y1, x2, y2 */ < 4 ) {
+                    errOutput("couldn't parse argument '%s' for option '--bx or --blackfilter-scan-exclude' as INT,INT,INT,INT.", optarg);
+                }
                 blackfilterExclude[blackfilterExcludeCount][LEFT] = left;
                 blackfilterExclude[blackfilterExcludeCount][TOP] = top;
                 blackfilterExclude[blackfilterExcludeCount][RIGHT] = right;
@@ -655,7 +671,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x99:
-            sscanf(optarg, "%d", &blackfilterIntensity);
+            parseSingleInt(optarg, &blackfilterIntensity, "--bi or --blackfilter-intensity");
             break;
 
         case 0x9a:
@@ -663,7 +679,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x9b:
-            sscanf(optarg, "%d", &noisefilterIntensity);
+            parseSingleInt(optarg, &noisefilterIntensity, "--ni or --noisefilter-intensity");
             break;
 
         case 0x9c:
@@ -679,7 +695,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x9f:
-            sscanf(optarg, "%f", &blurfilterIntensity);
+            parseSingleFloat(optarg, &blurfilterIntensity, "--li or --blurfilter-intensity");
             break;
 
         case 0xa0:
@@ -695,7 +711,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xa3:
-            sscanf(optarg, "%f", &grayfilterThreshold);
+            parseSingleFloat(optarg, &grayfilterThreshold, "--gt or --grayfilter-threshold");
             break;
 
         case 0xa4:
@@ -723,15 +739,19 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xaa:
-            sscanf(optarg,"%d,%d", &maskScanMinimum[WIDTH], &maskScanMinimum[HEIGHT]);
+            if ( sscanf(optarg,"%d,%d", &maskScanMinimum[WIDTH], &maskScanMinimum[HEIGHT]) < 2 ) {
+                errOutput("couldn't parse argument '%s' for option '--mm or --mask-scan-minimum' as INT,INT.");
+            }
             break;
 
         case 0xab:
-            sscanf(optarg,"%d,%d", &maskScanMaximum[WIDTH], &maskScanMaximum[HEIGHT]);
+            if ( sscanf(optarg,"%d,%d", &maskScanMaximum[WIDTH], &maskScanMaximum[HEIGHT]) < 2 ) {
+                errOutput("couldn't parse argument '%s' for option '--mM or --mask-scan-maximum' as INT,INT.");
+            }
             break;
 
         case 0xac:
-            sscanf(optarg,"%d", &maskColor);
+            parseSingleInt(optarg, &maskColor, "--mc or --mask-color");
             break;
 
         case 0xad:
@@ -747,23 +767,23 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xb0:
-            sscanf(optarg,"%d", &deskewScanSize);
+            parseSingleInt(optarg, &deskewScanSize, "--ds or --deskew-scan-size");
             break;
 
         case 0xb1:
-            sscanf(optarg,"%f", &deskewScanDepth);
+            parseSingleFloat(optarg, &deskewScanDepth, "--dd or --deskew-scan-depth");
             break;
 
         case 0xb2:
-            sscanf(optarg,"%f", &deskewScanRange);
+            parseSingleFloat(optarg, &deskewScanRange, "--dr or --deskew-scan-range");
             break;
 
         case 0xb3:
-            sscanf(optarg,"%f", &deskewScanStep);
+            parseSingleFloat(optarg, &deskewScanStep, "--dp or --deskew-scan-step");
             break;
 
         case 0xb4:
-            sscanf(optarg,"%f", &deskewScanDeviation);
+            parseSingleFloat(optarg, &deskewScanDeviation, "--dv or --deskew-scan-deviation");
             break;
 
         case 0xb5:
@@ -807,11 +827,11 @@ int main(int argc, char* argv[]) {
             break;
 
         case 'w':
-            sscanf(optarg,"%f", &whiteThreshold);
+            parseSingleFloat(optarg, &whiteThreshold, "-w or --white-threshold");
             break;
 
         case 'b':
-            sscanf(optarg,"%f", &blackThreshold);
+            parseSingleFloat(optarg, &blackThreshold, "-b or --black-threshold");
             break;
 
         case 0xbf:
@@ -850,16 +870,12 @@ int main(int argc, char* argv[]) {
             writeoutput = false;
             break;
 
-        case 0xc5:
-            // Deprecated function, ignore.
-            break;
-
         case 0xc6:
             multisheets = false;
             break;
 
         case 0xc7:
-            sscanf(optarg,"%d", &dpi);
+            parseSingleInt(optarg, &dpi, "--dpi");
             break;
 
         case 't':
@@ -869,6 +885,8 @@ int main(int argc, char* argv[]) {
                 outputPixFmt = AV_PIX_FMT_GRAY8;
             } else if ( strcmp(optarg, "ppm") == 0 ) {
                 outputPixFmt = AV_PIX_FMT_RGB24;
+            } else {
+                errOutput("unknown format '%s' for option '-t or --type'. Allowed types are pbm, pgm or ppm.", optarg);
             }
             break;
 

@@ -176,17 +176,32 @@ void printEdges(int d) {
 }
 
 
+
+/**
+ * Parse a single string to int
+ * @param s the string to parse
+ * @param i target int
+ * @param option a string containing the option for which the argument should be parsed (for error output)
+ */
+void parseSingleInt(const char*s, int* i, const char* option) {
+    if ( sscanf(s, "%d", i) <= 0 ) {
+        errOutput("couldn't parse argument '%s' for option '%s' as integer.", s, option);
+    }
+}
+
+
 /**
  * Parses either a single integer string, of a pair of two integers seperated
  * by a comma.
  */
 void parseInts(char* s, int i[2]) {
-    i[0] = -1;
-    i[1] = -1;
-    sscanf(s, "%d,%d", &i[0], &i[1]);
-    if (i[1]==-1) {
+    int scanned = sscanf(s, "%d,%d", &i[0], &i[1]);
+    if ( scanned <= 0 ) {
+        errOutput("couldn't parse argument '%s' as integer(,integer).", s);
+    } else if ( scanned == 1 ) {
         i[1] = i[0]; // if second value is unset, copy first one into
     }
+    // everything was scanned in
 }
 
 
@@ -207,6 +222,7 @@ static int parseSizeSingle(const char *s, int dpi) {
        multiply for dpi. */
     return (int)value;
 }
+
 
 /**
  * Parses a pair of size-values and returns it in pixels.
@@ -253,9 +269,21 @@ int parseColor(char* s) {
     if ( strcmp(s, "black") == 0 )
         return BLACK24;
     if ( strcmp(s, "white") == 0 )
-      return WHITE24;
+        return WHITE24;
 
     errOutput("cannot parse color '%s'.", s);
+}
+
+/**
+ * Parse a single string to float
+ * @param s the string to parse
+ * @param i target float
+ * @param option a string containing the option for which the argument should be parsed (for error output)
+ */
+void parseSingleFloat(const char*s, float* f, const char* option) {
+    if ( sscanf(s, "%f", f) <= 0 ) {
+        errOutput("couldn't parse argument '%s' for option '%s' as floating point number.", s, option);
+    }
 }
 
 
