@@ -302,7 +302,7 @@ char* implode(char* buf, const char* s[], int cnt) {
  *
  * @see isInMultiIndex(..)
  */
-void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
+void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex, const char* option) {
     char *s1 = NULL;
     char *s2 = NULL;
     char c = '\0';
@@ -325,10 +325,10 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
     do {
         scanned = sscanf(s1, "%d%c%ms", &index, &c, &s2);
         if ( scanned <= 0 ) {
-            errOutput("couldn't parse multi-index in '%s'", optarg);
+            errOutput("couldn't parse '%s' as multi-index for option %s.", optarg, option);
         } else if ( scanned == 2 ) {
             // only index + delimiter found, e.g. "1," or "1-"
-            errOutput("unexpected end of multi-index '%s' after '%d%c'", optarg, index, c);
+            errOutput("unexpected end of multi-index '%s' after '%d%c' for option %s.", optarg, index, c, option);
         } else {
             /* add the index or the range */
             if (multiIndex->count >= allocated) {
@@ -337,25 +337,29 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
             }
 
             multiIndex->indexes[(multiIndex->count)++] = index;
-            if ( c=='-' && scanned == 3 ) { // range is specified: get range end
-                strcpy(s1, s2); // s2 -> s1
-                if ( sscanf(s1, "%d,%s", &range_end, s2) <= 0) {
-                    errOutput("couldn't determine range end in multi-index '%s' after -'%d' by.", optarg, index, s1);
-                } else if ( range_end <= index ) {
-                    // range end <= range start
-                    errOutput("undefined range %d-%d in multi-index '%s'.", index, range_end, optarg);
+            
+            if ( scanned == 3 ) { // range is specified: get range end
+                if ( c == '-' ) {
+                    strcpy(s1, s2); // s2 -> s1
+                    if ( sscanf(s1, "%d,%s", &range_end, s2) <= 0) {
+                        errOutput("couldn't determine range end in multi-index '%s' after '%d'- for option %s.", optarg, index, option);
+                    } else if ( range_end <= index ) {
+                        // range end <= range start
+                        errOutput("incorrect range %d-%d in multi-index '%s' for option %s.\nThe range end can't be lower than the range start.", index, range_end, optarg, option);
+                    }
+                    size_t count = range_end - multiIndex->indexes[(multiIndex->count)-1];
+
+                    allocated += count;
+                    multiIndex->indexes = realloc(multiIndex->indexes, allocated * sizeof(multiIndex->indexes[0]));
+
+                    for (int j = multiIndex->indexes[(multiIndex->count)-1]+1; j <= range_end; j++) {
+                        multiIndex->indexes[(multiIndex->count)++] = j;
+                    }
+                } else if ( c != ',' ) {
+                    // only '-' and ',' as delimiters allowed
+                    errOutput("unexpected delimiter '%c' in multi-index '%s' at '%d%c' for option %s.", c, s1, index, c, option);
                 }
-                size_t count = range_end - multiIndex->indexes[(multiIndex->count)-1];
-
-                allocated += count;
-                multiIndex->indexes = realloc(multiIndex->indexes, allocated * sizeof(multiIndex->indexes[0]));
-
-                for (int j = multiIndex->indexes[(multiIndex->count)-1]+1; j <= range_end; j++) {
-                    multiIndex->indexes[(multiIndex->count)++] = j;
-                }
-            }
-
-            if ( scanned == 3 ) {
+                
                 // keep on with the rest of the multi-index
                 strcpy(s1, s2); // s2 -> s1
                 free(s2);

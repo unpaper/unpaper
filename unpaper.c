@@ -395,7 +395,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case '#':
-            parseMultiIndex(optarg, &sheetMultiIndex);
+            parseMultiIndex(optarg, &sheetMultiIndex, "'-#' or '--sheet'");
             // allow 0 as start sheet, might be overwritten by --start-sheet again
             if (sheetMultiIndex.count > 0 && startSheet > sheetMultiIndex.indexes[0] )
                 startSheet = sheetMultiIndex.indexes[0];
@@ -426,13 +426,13 @@ int main(int argc, char* argv[]) {
             break;
 
         case 'x':
-            parseMultiIndex(optarg, &excludeMultiIndex);
+            parseMultiIndex(optarg, &excludeMultiIndex, "'-x' or '--exclude'");
             if (excludeMultiIndex.count == -1)
                 excludeMultiIndex.count = 0; // 'exclude all' makes no sense
             break;
 
         case 'n':
-            parseMultiIndex(optarg, &ignoreMultiIndex);
+            parseMultiIndex(optarg, &ignoreMultiIndex, "'-n' or '--no-processing'");
             break;
 
         case 0x83:
@@ -613,7 +613,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x92:
-            parseMultiIndex(optarg, &noBlackfilterMultiIndex);
+            parseMultiIndex(optarg, &noBlackfilterMultiIndex, "'--no-blackfilter'");
             break;
 
         case 0x93:
@@ -659,7 +659,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x9a:
-            parseMultiIndex(optarg, &noNoisefilterMultiIndex);
+            parseMultiIndex(optarg, &noNoisefilterMultiIndex, "'--no-noisefilter'");
             break;
 
         case 0x9b:
@@ -667,7 +667,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0x9c:
-            parseMultiIndex(optarg, &noBlurfilterMultiIndex);
+            parseMultiIndex(optarg, &noBlurfilterMultiIndex, "'--no-blurfilter'");
             break;
 
         case 0x9d:
@@ -683,7 +683,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xa0:
-            parseMultiIndex(optarg, &noGrayfilterMultiIndex);
+            parseMultiIndex(optarg, &noGrayfilterMultiIndex, "'--no-grayfilter'");
             break;
 
         case 0xa1:
@@ -699,7 +699,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xa4:
-            parseMultiIndex(optarg, &noMaskScanMultiIndex);
+            parseMultiIndex(optarg, &noMaskScanMultiIndex, "'--no-mask-scan'");
             break;
 
         case 0xa5:
@@ -735,11 +735,11 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xad:
-            parseMultiIndex(optarg, &noMaskCenterMultiIndex);
+            parseMultiIndex(optarg, &noMaskCenterMultiIndex, "'--no-mask-center'");
             break;
 
         case 0xae:
-            parseMultiIndex(optarg, &noDeskewMultiIndex);
+            parseMultiIndex(optarg, &noDeskewMultiIndex, "'--no-deskew'");
             break;
 
         case 0xaf:
@@ -767,7 +767,7 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xb5:
-            parseMultiIndex(optarg, &noBorderScanMultiIndex);
+            parseMultiIndex(optarg, &noBorderScanMultiIndex, "'--no-border-scan'");
             break;
 
         case 0xb6:
@@ -795,15 +795,15 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xbc:
-            parseMultiIndex(optarg, &noBorderAlignMultiIndex);
+            parseMultiIndex(optarg, &noBorderAlignMultiIndex, "'--no-border-align'");
             break;
 
         case 0xbd:
-            parseMultiIndex(optarg, &noWipeMultiIndex);
+            parseMultiIndex(optarg, &noWipeMultiIndex, "'--no-wipe'");
             break;
 
         case 0xbe:
-            parseMultiIndex(optarg, &noBorderMultiIndex);
+            parseMultiIndex(optarg, &noBorderMultiIndex, "'--no-border'");
             break;
 
         case 'w':
@@ -839,11 +839,11 @@ int main(int argc, char* argv[]) {
             break;
 
         case 0xc3:
-            parseMultiIndex(optarg, &insertBlank);
+            parseMultiIndex(optarg, &insertBlank, "'--insert-blank'");
             break;
 
         case 0xc4:
-            parseMultiIndex(optarg, &replaceBlank);
+            parseMultiIndex(optarg, &replaceBlank, "'--replace-blank'");
             break;
 
         case 'T':

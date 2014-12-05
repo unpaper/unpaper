@@ -43,7 +43,7 @@ struct MultiIndex {
     int *indexes;
 };
 
-void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex);
+void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex, const char* option);
 
 bool isInMultiIndex(int index, struct MultiIndex multiIndex);
 
