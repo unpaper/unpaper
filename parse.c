@@ -185,7 +185,7 @@ void printEdges(int d) {
  */
 void parseSingleInt(const char*s, int* i, const char* option) {
     if ( sscanf(s, "%d", i) <= 0 ) {
-        errOutput("couldn't parse argument '%s' for option %s. , expected integer.", s, option);
+        errOutput("couldn't parse argument '%s' for option %s, expected integer.", s, option);
     }
 }
 
@@ -201,14 +201,14 @@ void parseInts(const char* s, int i[2], const char* option) {
     char c;
     int scanned = sscanf(s, "%d%c%d", &i[0], &c, &i[1]);
     if ( scanned <= 0 ) {
-        errOutput("couldn't parse argument '%s' for option %s. , expected integer(,integer).", s, option);
+        errOutput("couldn't parse argument '%s' for option %s, expected integer(,integer).", s, option);
     } else if ( scanned == 1 ) {
         i[1] = i[0]; // if second value is unset, copy first one into
     } else if ( scanned == 2 ) {
         // a single char in the middle but no other int set
-        errOutput("couldn't parse argument '%s' after '%d%c' for option %s. , expected integer,integer.", s, i[1], c, option);
+        errOutput("couldn't parse argument '%s' after '%d%c' for option %s, expected integer,integer.", s, i[1], c, option);
     } else if ( c != ',' ) {
-        errOutput("un, expected delimiter '%c' in argument '%s' for option %s. , expected integer,integer.", c, s, option);
+        errOutput("unexpected delimiter '%c' in argument '%s' for option %s, expected integer,integer.", c, s, option);
     }
 }
 
@@ -290,7 +290,7 @@ int parseColor(char* s) {
  */
 void parseSingleFloat(const char*s, float* f, const char* option) {
     if ( sscanf(s, "%f", f) <= 0 ) {
-        errOutput("couldn't parse argument '%s' for option %s. , expected floating point number.", s, option);
+        errOutput("couldn't parse argument '%s' for option %s, expected floating point number.", s, option);
     }
 }
 
@@ -303,14 +303,14 @@ void parseFloats(const char* s, float f[2], const char* option) {
     char c;
     int scanned = sscanf(s, "%f%c%f", &f[0], &c, &f[1]);
     if ( scanned <= 0 ) {
-        errOutput("couldn't parse argument '%s' for option %s. , expected float(,float).", s, option);
+        errOutput("couldn't parse argument '%s' for option %s, expected float(,float).", s, option);
     } else if ( scanned == 1 ) {
         f[1] = f[0]; // if second value is unset, copy first one into
     } else if ( scanned == 2 ) {
         // a single char in the middle but no other float set
-        errOutput("couldn't parse argument '%s' after '%f%c' for option %s. , expected float,float.", s, f[1], c, option);
+        errOutput("couldn't parse argument '%s' after '%f%c' for option %s, expected float,float.", s, f[1], c, option);
     } else if ( c != ',' ) {
-        errOutput("un, expected delimiter '%c' in argument '%s' for option %s. , expected float,float.", c, s, option);
+        errOutput("unexpected delimiter '%c' in argument '%s' for option %s, expected float,float.", c, s, option);
     }
 }
 
