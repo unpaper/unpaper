@@ -991,7 +991,9 @@ int main(int argc, char* argv[]) {
             if ( inputFileNames[i] != NULL ) {
                 struct stat statBuf;
                 if ( stat(inputFileNames[i], &statBuf) != 0 ) {
-                    if ( endSheet == -1 ) {
+                    if ( inputWildcard ) {
+                        // this jumps to the end of the processing-loop
+                        // endSheet = nr-1 exits the loop
                         endSheet = nr-1;
                         goto sheet_end;
                     } else {
