@@ -740,13 +740,13 @@ int main(int argc, char* argv[]) {
 
         case 0xaa:
             if ( sscanf(optarg,"%d,%d", &maskScanMinimum[WIDTH], &maskScanMinimum[HEIGHT]) < 2 ) {
-                errOutput("couldn't parse argument '%s' for option '--mm' or '--mask-scan-minimum' as INT,INT.");
+                errOutput("couldn't parse argument '%s' for option '--mm' or '--mask-scan-minimum' as INT,INT.", optarg);
             }
             break;
 
         case 0xab:
             if ( sscanf(optarg,"%d,%d", &maskScanMaximum[WIDTH], &maskScanMaximum[HEIGHT]) < 2 ) {
-                errOutput("couldn't parse argument '%s' for option '--mM' or '--mask-scan-maximum' as INT,INT.");
+                errOutput("couldn't parse argument '%s' for option '--mM' or '--mask-scan-maximum' as INT,INT.", optarg);
             }
             break;
 
