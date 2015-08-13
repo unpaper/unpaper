@@ -23,9 +23,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
+
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/avutil.h>
 
 #include "unpaper.h"
-#include "tools.h" //only needed for getPixelGrayscale
+#include "tools.h"
 
 /**
  * Loads image data from a file in pnm format.
@@ -33,144 +38,90 @@
  * @param f file to load
  * @param image structure to hold loaded image
  * @param type returns the type of the loaded image
- * @return true on success, false on failure
  */
-void loadImage(FILE *f, struct IMAGE* image, int* type) {
-    int bytesPerLine;
-    char magic[10];
-    char word[255];
-    char c;
-    int maxColorIndex;
-    int inputSize;
-    int read;
-    uint8_t* buffer2;
-    int lineOffsetInput;
-    int lineOffsetOutput;
-    int x;
-    int y;
-    int bb;
-    int off;
-    int bits;
-    int bit;
-    int pixel;
-    int size;
-    int pos;
-    uint8_t* p;
-    uint8_t r, g, b;
+void loadImage(const char *filename, AVFrame **image) {
+    int ret, got_frame = 0;
+    AVFormatContext *s = NULL;
+    AVCodecContext *avctx = avcodec_alloc_context3(NULL);
+    AVCodec *codec;
+    AVPacket pkt;
+    AVFrame *frame = av_frame_alloc();
+    char errbuff[1024];
 
-    // read magic number
-    fread(magic, 1, 2, f);
-    magic[2] = 0; // terminate
-    if (strcmp(magic, "P4")==0) {
-        *type = PBM;
-        image->bitdepth = 1;
-        image->color = false;
-    } else if (strcmp(magic, "P5")==0) {
-        *type = PGM;
-        image->bitdepth = 8;
-        image->color = false;
-    } else if (strcmp(magic, "P6")==0) {
-        *type = PPM;
-        image->bitdepth = 8;
-        image->color = true;
-    } else {
-        printf("*** error: input file format using magic '%s' is unknown.\n", magic);
-        return;
+    if (!avctx)
+        errOutput("cannot allocate a new context");
+
+    ret = avformat_open_input(&s, filename, NULL, NULL);
+    if (ret < 0) {
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open file %s: %s", filename, errbuff);
     }
 
-    // get image info: width, height, optionally depth
-    fgetc(f); // skip \n after magic number
-    fscanf(f, "%s", word);
-    while (word[0]=='#') { // skip comment lines
-        do {
-            fscanf(f, "%c", &c);
-        } while ((feof(f)==0)&&(c!='\n'));
-        fscanf(f, "%s", word);
-    }
-    // now reached width/height pair as decimal ascii
-    sscanf(word, "%d", &image->width);
-    fscanf(f, "%d", &image->height);
-    fgetc(f); // skip \n after width/height pair
-    if (*type == PBM) {
-        bytesPerLine = (image->width + 7) / 8;
-    } else { // PGM or PPM
-        fscanf(f, "%s", word);
-        while (word[0]=='#') { // skip comment lines
-            do {
-                fscanf(f, "%c", &c);
-            } while ((feof(f) == 0) && (c != '\n'));
-            fscanf(f, "%s", word);
-        }
-        // read max color value
-        sscanf(word, "%d", &maxColorIndex);
-        fgetc(f); // skip \n after max color index
-        if (maxColorIndex > 255) {
-            printf("*** error: grayscale / color-component bit depths above 8 are not supported.\n");
-            return;
-        }
-        bytesPerLine = image->width;
-        if (*type == PPM) {
-            bytesPerLine *= 3; // 3 color-components per pixel
-        }
+    avformat_find_stream_info(s, NULL);
+
+    if (verbose >= VERBOSE_MORE)
+        av_dump_format(s, 0, filename, 0);
+
+    if (s->nb_streams < 1)
+        errOutput("unable to open file %s: missing streams", filename);
+
+    if (s->streams[0]->codec->codec_type != AVMEDIA_TYPE_VIDEO)
+        errOutput("unable to open file %s: wrong stream", filename);
+
+    ret = avcodec_copy_context(avctx, s->streams[0]->codec);
+    if (ret < 0) {
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("cannot set the new context for %s: %s", filename, errbuff);
     }
 
-    // read binary image data
-    inputSize = bytesPerLine * image->height;
+    codec = avcodec_find_decoder(avctx->codec_id);
+    if (!codec)
+        errOutput("unable to open file %s: unsupported format", filename);
 
-    image->buffer = (uint8_t*)malloc(inputSize);
-    read = fread(image->buffer, 1, inputSize, f);
-    if (read != inputSize) {
-        printf("*** error: Only %d out of %d could be read.\n", read, inputSize);
-        return;
+    ret = avcodec_open2(avctx, codec, NULL);
+    if (ret < 0) {
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open file %s: %s", filename, errbuff);
     }
-    
-    if (*type == PBM) { // internally convert b&w to 8-bit for processing
-        buffer2 = (uint8_t*)malloc(image->width * image->height);
-        lineOffsetInput = 0;
-        lineOffsetOutput = 0;
-        for (y = 0; y < image->height; y++) {
-            for (x = 0; x < image->width; x++) {
-                bb = x >> 3;  // x / 8;
-                off = x & 7; // x % 8;
-                bit = 128>>off;
-                bits = image->buffer[lineOffsetInput + bb];
-                bits &= bit;
-                if (bits == 0) { // 0: white pixel
-                    pixel = 0xff;
-                } else {
-                    pixel = 0x00;
-                }
-                buffer2[lineOffsetOutput+x] = pixel; // set as whole byte
+
+    ret = av_read_frame(s, &pkt);
+    if (ret < 0) {
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open file %s: %s", filename, errbuff);
+    }
+
+    if (pkt.stream_index != 0)
+        errOutput("unable to open file %s: invalid stream.", filename);
+
+    ret = avcodec_decode_video2(avctx, frame, &got_frame, &pkt);
+    if (ret < 0) {
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open file %s: %s", filename, errbuff);
+    }
+
+    switch(frame->format) {
+    case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
+    case AV_PIX_FMT_GRAY8:
+    case AV_PIX_FMT_RGB24:
+    case AV_PIX_FMT_MONOBLACK:
+    case AV_PIX_FMT_MONOWHITE:
+        *image = frame;
+        break;
+
+    case AV_PIX_FMT_PAL8:
+        initImage(image, frame->width, frame->height, AV_PIX_FMT_RGB24, -1);
+
+        const uint32_t *palette = (const uint32_t *)frame->data[1];
+        for (int y = 0; y < frame->height; y++) {
+            for (int x = 0; x < frame->width; x++) {
+                const uint8_t palette_index = frame->data[0][frame->linesize[0]*y + x];
+                setPixel(palette[palette_index], x, y, *image);
             }
-            lineOffsetInput += bytesPerLine;
-            lineOffsetOutput += image->width;
         }
-        free(image->buffer);
-        image->buffer = buffer2;
-    }
+        break;
 
-    if (*type == PPM) {
-        // init cached values for grayscale, lightness and darknessInverse
-        size = image->width * image->height;
-        image->bufferGrayscale = (uint8_t*)malloc(size);
-        image->bufferLightness = (uint8_t*)malloc(size);
-        image->bufferDarknessInverse = (uint8_t*)malloc(size);
-        p = image->buffer;
-        for (pos = 0; pos < size; pos++) {
-            r = *p;
-            p++;
-            g = *p;
-            p++;
-            b = *p;
-            p++;            
-            image->bufferGrayscale[pos] = pixelGrayscale(r, g, b);
-            image->bufferLightness[pos] = pixelLightness(r, g, b);
-            image->bufferDarknessInverse[pos] = pixelDarknessInverse(r, g, b);
-        }
-    } else {
-        image->bufferGrayscale = image->buffer;
-        image->bufferLightness = image->buffer;
-        image->bufferDarknessInverse = image->buffer;
+    default:
+        errOutput("unable to open file %s: unsupported pixel format", filename);
     }
 }
 
@@ -178,118 +129,123 @@ void loadImage(FILE *f, struct IMAGE* image, int* type) {
 /**
  * Saves image data to a file in pgm or pbm format.
  *
- * @param outputFile file to save image to
+ * @param filename file name to save image to
  * @param image image to save
  * @param type filetype of the image to save
- * @param blackThreshold threshold for grayscale-to-black&white conversion
  * @return true on success, false on failure
  */
-void saveImage(FILE *outputFile, struct IMAGE* image, int type, float blackThreshold) {
-    uint8_t* buf;
-    int bytesPerLine;
-    int inputSize;
-    int outputSize;
-    int lineOffsetOutput;
-    int offsetInput;
-    int offsetOutput;
-    int x;
-    int y;
-    int pixel;
-    int b;
-    int off;
-    uint8_t bit;
-    uint8_t val;
-    const char* outputMagic;
-    int blackThresholdAbs;
+void saveImage(char *filename, AVFrame *image, int outputPixFmt) {
+    AVOutputFormat *fmt = NULL;
+    enum AVCodecID output_codec = -1;
+    AVCodec *codec;
+    AVFormatContext *out_ctx;
+    AVCodecContext *codec_ctx;
+    AVStream *video_st;
+    int ret;
+    char errbuff[1024];
 
-    if (type == PBM) { // convert to pbm
-        blackThresholdAbs = WHITE * (1.0 - blackThreshold);
-        bytesPerLine = (image->width + 7) >> 3; // / 8;
-        outputSize = bytesPerLine * image->height;
-        buf = (uint8_t*)malloc(outputSize);
-        memset(buf, 0, outputSize);
-        lineOffsetOutput = 0;
-        for (y = 0; y < image->height; y++) {
-            for (x = 0; x < image->width; x++) {
-                pixel = getPixelGrayscale(x, y, image);
-                b = x >> 3; // / 8;
-                off = x & 7; // % 8;
-                bit = 128>>off;
-                val = buf[lineOffsetOutput + b];
-                if (pixel < blackThresholdAbs) { // dark
-                    val |= bit; // set bit to one: black
-                } else { // bright
-                    val &= (~bit); // set bit to zero: white
-                }
-                buf[lineOffsetOutput+b] = val;
-            }
-            lineOffsetOutput += bytesPerLine;
-        }
-    } else if (type == PPM) { // maybe convert to color
-        outputSize = image->width * image->height * 3;
-        if (image->color) { // color already
-            buf = image->buffer;
-        } else { // convert to color
-            buf = (uint8_t*)malloc(outputSize);
-            inputSize = image->width * image->height;
-            offsetOutput = 0;
-            for (offsetInput = 0; offsetInput < inputSize; offsetInput++) {
-                pixel = image->buffer[offsetInput];
-                buf[offsetOutput++] = pixel;
-                buf[offsetOutput++] = pixel;
-                buf[offsetOutput++] = pixel;
-            }
-        }
-    } else { // PGM
-        outputSize = image->width * image->height;
-        buf = image->buffer;
-    }
-    
-    switch (type) {
-        case PBM:
-            outputMagic = "P4";
-            break;
-        case PPM:
-            outputMagic = "P6";
-            break;
-        default: // PGM
-            outputMagic = "P5";
-            break;
+    fmt = av_guess_format("image2", NULL, NULL);
+
+    if ( !fmt ) {
+        errOutput("could not find suitable output format.");
     }
 
-    // write to file
-    fprintf(outputFile, "%s\n", outputMagic);
-    fprintf(outputFile, "# generated by unpaper\n");
-    fprintf(outputFile, "%u %u\n", image->width, image->height);
-    if ((type == PGM)||(type == PPM)) {
-      fprintf(outputFile, "255\n"); // maximum color index per color-component
+    out_ctx = avformat_alloc_context();
+    if ( !out_ctx ) {
+        errOutput("unable to allocate output context.");
     }
-    fwrite(buf, 1, outputSize, outputFile);
 
-    if (buf != image->buffer) {
-        free(buf);
+    out_ctx->oformat = fmt;
+    snprintf(out_ctx->filename, sizeof(out_ctx->filename), "%s", filename);
+
+    switch (outputPixFmt) {
+    case AV_PIX_FMT_RGB24:
+        output_codec = AV_CODEC_ID_PPM;
+        break;
+    case AV_PIX_FMT_Y400A:
+    case AV_PIX_FMT_GRAY8:
+        outputPixFmt = AV_PIX_FMT_GRAY8;
+        output_codec = AV_CODEC_ID_PGM;
+        break;
+    case AV_PIX_FMT_MONOBLACK:
+    case AV_PIX_FMT_MONOWHITE:
+        outputPixFmt = AV_PIX_FMT_MONOWHITE;
+        output_codec = AV_CODEC_ID_PBM;
+        break;
     }
-}    
 
+    if ( image->format != outputPixFmt ) {
+        AVFrame *output;
+        initImage(&output, image->width, image->height,
+                  outputPixFmt, -1);
+        copyImageArea(0, 0, image->width, image->height,
+                      image, 0, 0, output);
+        image = output;
+    }
+
+    codec = avcodec_find_encoder(output_codec);
+    if ( !codec ) {
+        errOutput("output codec not found");
+    }
+
+    video_st = avformat_new_stream(out_ctx, codec);
+    if ( !video_st ) {
+        errOutput("could not alloc output stream");
+    }
+
+    codec_ctx = video_st->codec;
+    codec_ctx->width = image->width;
+    codec_ctx->height = image->height;
+    codec_ctx->pix_fmt = image->format;
+    video_st->time_base.den = codec_ctx->time_base.den = 1;
+    video_st->time_base.num = codec_ctx->time_base.num = 1;
+
+    ret = avcodec_open2(codec_ctx, codec, NULL);
+
+    if (ret < 0) {
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to open codec: %s", errbuff);
+    }
+
+    if (verbose >= VERBOSE_MORE)
+        av_dump_format(out_ctx, 0, filename, 1);
+
+    if (avio_open(&out_ctx->pb, filename, AVIO_FLAG_WRITE) < 0) {
+        errOutput("could not open '%s'", filename);
+    }
+
+    avformat_write_header(out_ctx, NULL);
+
+    AVPacket pkt = { 0 };
+    int got_packet;
+    av_init_packet(&pkt);
+
+    /* encode the image */
+    ret = avcodec_encode_video2(video_st->codec, &pkt, image, &got_packet);
+
+    if (ret < 0) {
+        av_strerror(ret, errbuff, sizeof(errbuff));
+        errOutput("unable to write file %s: %s", filename, errbuff);
+    }
+    av_write_frame(out_ctx, &pkt);
+
+    av_write_trailer(out_ctx);
+    avcodec_close(codec_ctx);
+
+    av_free(codec_ctx);
+    av_free(video_st);
+
+    avio_close(out_ctx->pb);
+    av_free(out_ctx);
+}
 
 /**
  * Saves the image if full debugging mode is enabled.
  */
-void saveDebug(char* filename, struct IMAGE* image) {
-    int type;
-    
-    if (verbose >= VERBOSE_DEBUG_SAVE) {
-        FILE *f = fopen(filename, "w");
-
-        if (image->color) {
-            type = PPM;
-        } else if (image->bitdepth == 1) {
-            type = PBM;
-        } else {
-            type = PGM;
-        }
-        saveImage(f, image, type, 0.5); // 0.5 is a dummy, not used because PGM depth
-
-        fclose(f);
+void saveDebug(char *filenameTemplate, int index, AVFrame *image) {
+    if ( verbose >= VERBOSE_DEBUG_SAVE ) {
+        char debugFilename[100];
+        sprintf(debugFilename, filenameTemplate, index);
+        saveImage(debugFilename, image, image->format);
     }
 }

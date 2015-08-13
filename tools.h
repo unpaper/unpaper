@@ -17,53 +17,38 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-/* --- arithmetic tool functions ------------------------------------------ */
-
-
-double sqr(double d);
-
-double degreesToRadians(double d);
-
-double radiansToDegrees(double r);
-
-void limit(int* i, int max);
-
 
 /* --- tool functions for image handling ---------------------------------- */
 
+void initImage(AVFrame **image, int width, int height, int pixel_format, bool fill);
 
-void initImage(struct IMAGE* image, int width, int height, int bitdepth, bool color, int background);
+static inline void replaceImage(AVFrame **image, AVFrame **newimage) {
+    av_frame_free(image);
+    *image = *newimage;
+}
 
-void freeImage(struct IMAGE* image);
+bool setPixel(int pixel, const int x, const int y, AVFrame *image);
 
-void replaceImage(struct IMAGE* image, struct IMAGE* newimage);
+int getPixel(int x, int y, AVFrame *image);
 
-bool setPixel(int pixel, int x, int y, struct IMAGE* image);
+uint8_t getPixelDarknessInverse(int x, int y, AVFrame *image);
 
-int getPixel(int x, int y, struct IMAGE* image);
+int clearRect(const int left, const int top, const int right, const int bottom, AVFrame *image, const int blackwhite);
 
-int getPixelGrayscale(int x, int y, struct IMAGE* image);
+void copyImageArea(const int x, const int y, const int width, const int height, AVFrame *source, const int toX, const int toY, AVFrame *target);
 
-int getPixelDarknessInverse(int x, int y, struct IMAGE* image);
+void centerImage(AVFrame *source, int toX, int toY, int ww, int hh, AVFrame *target);
 
-int clearRect(int left, int top, int right, int bottom, struct IMAGE* image, int blackwhite);
+uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2, const int y2, AVFrame *image);
 
-void copyImageArea(int x, int y, int width, int height, struct IMAGE* source, int toX, int toY, struct IMAGE* target);
+uint8_t inverseLightnessRect(const int x1, const int y1, const int x2, const int y2, AVFrame *image);
 
-void copyImage(struct IMAGE* source, int toX, int toY, struct IMAGE* target);
+uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2, AVFrame *image);
 
-void centerImage(struct IMAGE* source, int toX, int toY, int ww, int hh, struct IMAGE* target);
+int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, AVFrame *image);
 
-int brightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image);
+int countPixelNeighbors(int x, int y, int intensity, int whiteMin, AVFrame *image);
 
-int lightnessRect(int x1, int y1, int x2, int y2, struct IMAGE* image);
+void clearPixelNeighbors(int x, int y, int whiteMin, AVFrame *image);
 
-int darknessInverseRect(int x1, int y1, int x2, int y2, struct IMAGE* image);
-
-int countPixelsRect(int left, int top, int right, int bottom, int minColor, int maxBrightness, bool clear, struct IMAGE* image);
-
-int countPixelNeighbors(int x, int y, int intensity, int whiteMin, struct IMAGE* image);
-
-void clearPixelNeighbors(int x, int y, int whiteMin, struct IMAGE* image);
-
-void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, struct IMAGE* image);
+void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, AVFrame *image);

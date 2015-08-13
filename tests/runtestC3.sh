@@ -2,9 +2,14 @@
 
 echo "[C3] Explicit -1 size shifting."
 
-. tests/prologue.sh
+set -e
+set -x
 
 rm -f tests/resultsC3.pbm
-$UNPAPER -v --overwrite -n --sheet-size a4 --pre-shift -1cm tests/imgsrc002.pbm tests/resultsC3.pbm
+./unpaper -v -n --sheet-size a4 --pre-shift -1cm ${srcdir:-.}/tests/imgsrc002.png tests/resultsC3.pbm
 
 [ -f tests/resultsC3.pbm ]
+
+md5sum -c - <<EOF
+a0577952458d23184dcac97b9094576f  tests/resultsC3.pbm
+EOF

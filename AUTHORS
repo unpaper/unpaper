@@ -3,3 +3,6 @@ Original author and maintainer
 
 Diego Elio Pettenò <flameeyes@flameeyes.eu> 2011-
 Build system cleanup and code improvements
+
+Michael McMaster <michael@codesrc.com> 2013
+Improved image quality when using deskew and stretch

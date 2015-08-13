@@ -2,9 +2,14 @@
 
 echo "[B3] Combined Gray/Black+White, No Processing."
 
-. tests/prologue.sh
+set -e
+set -x
 
 rm -f tests/resultsB3.ppm
-$UNPAPER -v --overwrite -n --input-pages 2 tests/imgsrc004.pgm tests/imgsrc005.pbm tests/resultsB3.ppm
+./unpaper -v -n --input-pages 2 ${srcdir:-.}/tests/imgsrc004.png ${srcdir:-.}/tests/imgsrc005.png tests/resultsB3.ppm
 
 [ -f tests/resultsB3.ppm ]
+
+md5sum -c - <<EOF
+9a4fda67294b67060a2767fa54fcbc0a  tests/resultsB3.ppm
+EOF

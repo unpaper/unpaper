@@ -1,18 +1,20 @@
 AC_PREREQ(2.68)
 
-AC_INIT([unpaper], [0.4.2])
+AC_INIT([unpaper], [6.1], [https://github.com/Flameeyes/unpaper/issues], , [https://github.com/Flameeyes/unpaper])
 
-AC_PROG_MKDIR_P
+AM_INIT_AUTOMAKE([1.13 dist-xz no-dist-gzip foreign])
+AM_SILENT_RULES([yes])
+AM_MAINTAINER_MODE([enable])
+
 AC_PROG_CC_C99
+AC_PROG_MKDIR_P
 
-AM_INIT_AUTOMAKE([dist-xz no-dist-gzip foreign parallel-tests])
 AC_USE_SYSTEM_EXTENSIONS
 
 AC_HEADER_STDBOOL
 AC_SEARCH_LIBS([sqrt], [m])
 
-AC_PATH_PROG([PNGTOPNM], [pngtopnm], [false])
-AC_PATH_PROG([PNMTOPNG], [pnmtopng], [false])
+PKG_CHECK_MODULES([LIBAV], [libavformat libavcodec libavutil])
 
 AC_ARG_VAR([XSLTPROC], [A libxslt-compatible XSLT processor command])
 AS_IF([test "x$XSLTPROC" = "x"], [
@@ -22,6 +24,6 @@ AS_IF([test "x$XSLTPROC" = "x"], [
   ])
 ])
 
-AC_CONFIG_FILES([Makefile tests/prologue.sh])
+AC_CONFIG_FILES([Makefile])
 
 AC_OUTPUT

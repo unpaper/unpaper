@@ -1,6 +1,0 @@
-set -e
-set -x
-
-UNPAPER=@abs_top_builddir@/unpaper
-PNGTOPNM=@PNGTOPNM@
-PNMTOPNG=@PNMTOPNG@
