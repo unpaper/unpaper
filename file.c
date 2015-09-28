@@ -93,10 +93,21 @@ void loadImage(const char *filename, AVFrame **image) {
     if (pkt.stream_index != 0)
         errOutput("unable to open file %s: invalid stream.", filename);
 
+    while (!got_frame && pkt.data) {
+
+        if (pkt.size <= 0) {
+            pkt.data = NULL;
+            pkt.size = 0;
+        }
+
     ret = avcodec_decode_video2(avctx, frame, &got_frame, &pkt);
     if (ret < 0) {
         av_strerror(ret, errbuff, sizeof(errbuff));
         errOutput("unable to open file %s: %s", filename, errbuff);
+    }
+
+        pkt.data += ret;
+        pkt.size -= ret;
     }
 
     switch(frame->format) {
