@@ -684,7 +684,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
               <option>-ni</option> <replaceable>intensity</replaceable>
             </term>
             <term>
-              <option>-noisefilter-intensity</option> <replaceable>intensity</replaceable>
+              <option>--noisefilter-intensity</option> <replaceable>intensity</replaceable>
             </term>
 
             <listitem>
