@@ -263,6 +263,7 @@ int main(int argc, char* argv[]) {
             { "post-border",                required_argument, NULL, 0x91 },
             { "no-blackfilter",             optional_argument, NULL, 0x92 },
             { "blackfilter-scan-direction", required_argument, NULL, 0x93 },
+            { "bn",                         required_argument, NULL, 0x93 },
             { "blackfilter-scan-size",      required_argument, NULL, 0x94 },
             { "bs",                         required_argument, NULL, 0x94 },
             { "blackfilter-scan-depth",     required_argument, NULL, 0x95 },
