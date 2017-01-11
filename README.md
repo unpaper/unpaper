@@ -51,6 +51,11 @@ Building instructions
 `unpaper` uses GNU Autotools for its build system, so you should be
 able to execute the same commands used for other software packages:
 
+    libtoolize --force
+    aclocal
+    autoheader
+    automake --force-missing --add-missing
+    autoconf
     ./configure
     make
     sudo make install
