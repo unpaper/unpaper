@@ -64,7 +64,7 @@ The **grayfilter** removes areas which are gray-only, that means it
 wipes out all those areas which do not contain a maximum relative
 amount of non-dark pixels. The size of the local area the *grayfilter*
 operates on can be set using `--grayfilter-size`, and the granularity
-of detection is controlled via `--grayfiter-step`.  The maximum
+of detection is controlled via `--grayfilter-step`.  The maximum
 relative amount of non-dark pixels that are still considered to be
 deletable can be set using `--grayfilter-threshold`.
 

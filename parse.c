@@ -177,7 +177,7 @@ void printEdges(int d) {
 
 
 /**
- * Parses either a single integer string, of a pair of two integers seperated
+ * Parses either a single integer string, of a pair of two integers separated
  * by a comma.
  */
 void parseInts(char* s, int i[2]) {
@@ -260,7 +260,7 @@ int parseColor(char* s) {
 
 
 /**
- * Parses either a single float string, of a pair of two floats seperated
+ * Parses either a single float string, of a pair of two floats separated
  * by a comma.
  */
 void parseFloats(char* s, float f[2]) {

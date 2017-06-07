@@ -68,7 +68,7 @@ static bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT
 /**
  * Returns the maximum peak value that occurs when shifting a rotated virtual line above the image,
  * starting from one edge of an area and moving towards the middle point of the area.
- * The peak value is calulated by the absolute difference in the average blackness of pixels that occurs between two single shifting steps.
+ * The peak value is calculated by the absolute difference in the average blackness of pixels that occurs between two single shifting steps.
  *
  * @param m ascending slope of the virtually shifted (m=tan(angle)). Mind that this is negative for negative radians.
  */

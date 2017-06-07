@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "[E3] Splitting 2-page layout into seperate output pages (with explicit input and output)."
+echo "[E3] Splitting 2-page layout into separate output pages (with explicit input and output)."
 
 set -e
 set -x

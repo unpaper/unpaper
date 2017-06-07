@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "[E2] Splitting 2-page layout into seperate output pages (with output wildcard only)."
+echo "[E2] Splitting 2-page layout into separate output pages (with output wildcard only)."
 
 set -e
 set -x
