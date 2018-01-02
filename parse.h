@@ -22,7 +22,7 @@
 
 int parseDirections(char* s);
 
-const char *getDirections(int d);
+void printDirections(int d);
 
 int parseEdges(char* s);
 
@@ -34,27 +34,20 @@ void parseSize(char* s, int i[2], int dpi);
 
 int parseColor(char* s);
 
+void printInts(int i[2]);
+
 void parseFloats(char* s, float f[2]);
+
+void printFloats(float f[2]);
 
 char* implode(char* buf, const char* s[], int cnt);
 
-struct MultiIndex {
-    int count;
-    int *indexes;
-};
+void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount);
 
-void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex);
+bool isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount);
 
-bool isInMultiIndex(int index, struct MultiIndex multiIndex);
+bool isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount, int excludeIndex[MAX_MULTI_INDEX], int excludeIndexCount);
 
-/**
- * Tests whether 'index' is either part of multiIndex or excludeIndex.
- * (Throughout the application, excludeIndex generalizes several individual
- * multi-indices: if an entry is part of excludeIndex, it is treated as being
- * an entry of all other multiIndices, too.)
- */
-static inline bool isExcluded(int index, struct MultiIndex multiIndex, struct MultiIndex excludeIndex) {
-    return ( isInMultiIndex(index, excludeIndex) || isInMultiIndex(index, multiIndex) );
-}
+void printMultiIndex(int multiIndex[MAX_MULTI_INDEX], int multiIndexCount);
 
-void printMultiIndex(struct MultiIndex multiIndex);
+bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount);
