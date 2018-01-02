@@ -1,4 +1,4 @@
-/*
+/* 
  * This file is part of Unpaper.
  *
  * Copyright © 2005-2007 Jens Gulden
@@ -26,8 +26,6 @@
 #include <math.h>
 
 #include "unpaper.h"
-
-#include "parse.h"
 
 /* --- constants ---------------------------------------------------------- */
 
@@ -84,7 +82,7 @@ static const struct {
 
 /**
  * Parses a parameter string on occurrences of 'vertical', 'horizontal' or both.
- */
+ */            
 int parseDirections(char* s) {
     int dir = 0;
     if (strchr(s, 'h') != 0) { // (there is no 'h' in 'vertical'...)
@@ -102,24 +100,28 @@ int parseDirections(char* s) {
 
 /**
  * Prints whether directions are vertical, horizontal, or both.
- */
-const char *getDirections(int d) {
-    switch(d) {
-    case (1<<VERTICAL)|(1<<HORIZONTAL):
-        return "[vertical,horizontal]";
-    case (1<<VERTICAL):
-        return "[vertical]";
-    case (1<<HORIZONTAL):
-        return "[horizontal]";
+ */            
+void printDirections(int d) {
+    bool comma = false;
+    
+    printf("[");
+    if ((d & 1<<VERTICAL) != 0) {
+        printf("vertical");
+        comma = true;
     }
-
-    return "[none]";
+    if ((d & 1<<HORIZONTAL) != 0) {
+        if (comma == true) {
+            printf(",");
+        }
+        printf("horizontal");
+    }
+    printf("]\n");
 }
 
 
 /**
  * Parses a parameter string on occurrences of 'left', 'top', 'right', 'bottom' or combinations.
- */
+ */            
 int parseEdges(char* s) {
     int dir = 0;
     if (strstr(s, "left") != 0) {
@@ -143,10 +145,10 @@ int parseEdges(char* s) {
 
 /**
  * Prints whether edges are left, top, right, bottom or combinations.
- */
+ */            
 void printEdges(int d) {
     bool comma = false;
-
+    
     printf("[");
     if ((d & 1<<LEFT) != 0) {
         printf("left");
@@ -177,9 +179,9 @@ void printEdges(int d) {
 
 
 /**
- * Parses either a single integer string, of a pair of two integers separated
+ * Parses either a single integer string, of a pair of two integers seperated
  * by a comma.
- */
+ */            
 void parseInts(char* s, int i[2]) {
     i[0] = -1;
     i[1] = -1;
@@ -191,6 +193,7 @@ void parseInts(char* s, int i[2]) {
 
 
 static int parseSizeSingle(const char *s, int dpi) {
+    int j;
     char *valueEnd;
     float value;
 
@@ -199,7 +202,7 @@ static int parseSizeSingle(const char *s, int dpi) {
     if ( fabs(value) == HUGE_VAL || s == valueEnd )
         errOutput("invalid size %s", s);
 
-    for (int j = 0; j < MEASUREMENTS_COUNT; j++)
+    for (j = 0; j < MEASUREMENTS_COUNT; j++)
         if ( strcmp(valueEnd, MEASUREMENTS[j].unit) == 0 )
             return (int)(value * MEASUREMENTS[j].factor * dpi);
 
@@ -209,17 +212,18 @@ static int parseSizeSingle(const char *s, int dpi) {
 }
 
 /**
- * Parses a pair of size-values and returns it in pixels.
+ * Parses a pair of size-values and returns it in pixels. 
  * Values may be suffixed by MEASUREMENTS such as 'cm', 'in', in that case
  * conversion to pixels is perfomed based on the dpi-value.
- */
+ */            
 void parseSize(char* s, int i[2], int dpi) {
     char str[255];
+    int j;
     char* comma;
     int pos;
 
     // is s a papersize name?
-    for (int j = 0; j < PAPERSIZES_COUNT; j++) {
+    for (j = 0; j < PAPERSIZES_COUNT; j++) {
         if (strcmp(s, PAPERSIZES[j].name)==0) {
             i[0] = PAPERSIZES[j].width * dpi;
             i[1] = PAPERSIZES[j].height * dpi;
@@ -228,7 +232,7 @@ void parseSize(char* s, int i[2], int dpi) {
     }
 
     // find comma in size string, if there
-    comma = strchr(s, ',');
+    comma = strchr(s, ',');    
 
     if (comma == NULL) {
         i[0] = i[1] = parseSizeSingle(s, dpi);
@@ -248,21 +252,29 @@ void parseSize(char* s, int i[2], int dpi) {
 
 /**
  * Parses a color. Currently only "black" and "white".
- */
+ */            
 int parseColor(char* s) {
     if ( strcmp(s, "black") == 0 )
-        return BLACK24;
+        return BLACK;
     if ( strcmp(s, "white") == 0 )
-      return WHITE24;
+        return WHITE;
 
     errOutput("cannot parse color '%s'.", s);
 }
 
 
 /**
- * Parses either a single float string, of a pair of two floats separated
+ * Outputs a pair of two integers seperated by a comma.
+ */            
+void printInts(int i[2]) {
+    printf("[%d,%d]\n", i[0], i[1]);
+}
+
+
+/**
+ * Parses either a single float string, of a pair of two floats seperated
  * by a comma.
- */
+ */            
 void parseFloats(char* s, float f[2]) {
     f[0] = -1.0;
     f[1] = -1.0;
@@ -272,17 +284,27 @@ void parseFloats(char* s, float f[2]) {
     }
 }
 
+
+/**
+ * Outputs a pair of two floats seperated by a comma.
+ */            
+void printFloats(float f[2]) {
+    printf("[%f,%f]\n", f[0], f[1]);
+}
+
+
 /**
  * Combines an array of strings to a comma-seperated string.
  */
 char* implode(char* buf, const char* s[], int cnt) {
+    int i;
     if (cnt > 0) {
         if (s[0] != NULL) {
             strcpy(buf, s[0]);
         } else {
             strcpy(buf, BLANK_TEXT);
         }
-        for (int i = 1; i < cnt; i++) {
+        for (i = 1; i < cnt; i++) {        
             if (s[i] != NULL) {
                 sprintf(buf + strlen(buf), ", %s", s[i]);
             } else {
@@ -302,60 +324,35 @@ char* implode(char* buf, const char* s[], int cnt) {
  *
  * @see isInMultiIndex(..)
  */
-void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
-    char *s1, *s2 = NULL;
+void parseMultiIndex(const char *optarg, int multiIndex[], int* multiIndexCount) {
+    char s1[MAX_MULTI_INDEX * 5]; // buffer
+    char s2[MAX_MULTI_INDEX * 5]; // buffer
     char c;
     int index;
-    int allocated = 0;
-
-    multiIndex->count = -1;
-    multiIndex->indexes = NULL;
-
-    if ( optarg == NULL ) {
-        return;
-    }
-
-    multiIndex->count = 0;
-    allocated = 32;
-    multiIndex->indexes = calloc(allocated, sizeof(multiIndex->indexes[0]));
-    s1 = strdup(optarg);
-
+    int j;
+    
+    *multiIndexCount = 0;
+    strcpy(s1, optarg); // argv[*i] -> s1
     do {
         index = -1;
-        sscanf(s1, "%d%c%ms", &index, &c, &s2);
+        s2[0] = (char)0; // = ""
+        sscanf(s1, "%d%c%s", &index, &c, s2);
         if (index != -1) {
-            if (multiIndex->count >= allocated) {
-                allocated += 32;
-                multiIndex->indexes = realloc(multiIndex->indexes, allocated * sizeof(multiIndex->indexes[0]));
-            }
-
-            multiIndex->indexes[(multiIndex->count)++] = index;
+            multiIndex[(*multiIndexCount)++] = index;
             if (c=='-') { // range is specified: get range end
                 strcpy(s1, s2); // s2 -> s1
                 sscanf(s1, "%d,%s", &index, s2);
-                size_t count = index - multiIndex->indexes[(multiIndex->count)-1];
-
-                allocated += count;
-                multiIndex->indexes = realloc(multiIndex->indexes, allocated);
-
-                for (int j = multiIndex->indexes[(multiIndex->count)-1]+1; j <= index; j++) {
-                    multiIndex->indexes[(multiIndex->count)++] = j;
+                for (j = multiIndex[(*multiIndexCount)-1]+1; j <= index; j++) {
+                    multiIndex[(*multiIndexCount)++] = j;
                 }
             }
         } else {
             // string is not correctly parseable: break without inreasing *i (string may be e.g. input-filename)
-            multiIndex->count = -1; // disable all
-            free(s1);
-            free(s2);
-            return;
+            *multiIndexCount = -1; // disable all
+            return; // exit here
         }
-        if ( s2 ) {
-            strcpy(s1, s2); // s2 -> s1
-            free(s2);
-        }
-    } while ((multiIndex->count < MAX_MULTI_INDEX) && (strlen(s1) > 0));
-
-    free(s1);
+        strcpy(s1, s2); // s2 -> s1
+    } while ((*multiIndexCount < MAX_MULTI_INDEX) && (strlen(s1) > 0));
 }
 
 
@@ -366,12 +363,14 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
  *
  * @see parseMultiIndex(..)
  */
-bool isInMultiIndex(int index, struct MultiIndex multiIndex) {
-    if (multiIndex.count == -1) {
+bool isInMultiIndex(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
+    int i;
+    
+    if (multiIndexCount == -1) {
         return true; // all
     } else {
-        for (int i = 0; i < multiIndex.count; i++) {
-            if (index == multiIndex.indexes[i]) {
+        for (i = 0; i < multiIndexCount; i++) {
+            if (index == multiIndex[i]) {
                 return true; // found in list
             }
         }
@@ -379,21 +378,70 @@ bool isInMultiIndex(int index, struct MultiIndex multiIndex) {
     }
 }
 
+
+/**
+ * Tests whether 'index' is either part of multiIndex or excludeIndex.
+ * (Throughout the application, excludeIndex generalizes several individual 
+ * multi-indices: if an entry is part of excludeIndex, it is treated as being
+ * an entry of all other multiIndices, too.)
+ */
+bool isExcluded(int index, int multiIndex[MAX_MULTI_INDEX], int multiIndexCount, int excludeIndex[MAX_MULTI_INDEX], int excludeIndexCount) {
+    return ( (isInMultiIndex(index, excludeIndex, excludeIndexCount) == true) || (isInMultiIndex(index, multiIndex, multiIndexCount) == true) );
+}
+
+
 /**
  * Outputs all entries in an array of integer to the console.
  */
-void printMultiIndex(struct MultiIndex multiIndex) {
-    if (multiIndex.count == -1) {
+void printMultiIndex(int multiIndex[MAX_MULTI_INDEX], int multiIndexCount) {
+    int i;
+    
+    if (multiIndexCount == -1) {
         printf("all");
-    } else if (multiIndex.count == 0) {
+    } else if (multiIndexCount == 0) {
         printf("none");
     } else {
-        for (int i = 0; i < multiIndex.count; i++) {
-            printf("%d", multiIndex.indexes[i]);
-            if (i < multiIndex.count-1) {
+        for (i = 0; i < multiIndexCount; i++) {
+            printf("%d", multiIndex[i]);
+            if (i < multiIndexCount-1) {
                 printf(",");
             }
         }
     }
     printf("\n");
+}
+
+
+/**
+ * Tests if a point is covered by a mask.
+ */
+static bool inMask(int x, int y, int mask[EDGES_COUNT]) {
+    if ( (x >= mask[LEFT]) && (x <= mask[RIGHT]) && (y >= mask[TOP]) && (y <= mask[BOTTOM]) ) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+/**
+ * Tests if masks a and b overlap.
+ */
+static bool masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
+    return ( inMask(a[LEFT], a[TOP], b) || inMask(a[RIGHT], a[BOTTOM], b) );
+}
+
+
+/**
+ * Tests if at least one mask in masks overlaps with m.
+ */
+bool masksOverlapAny(int m[EDGES_COUNT], int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
+    int i;
+    
+    for ( i = 0; i < masksCount; i++ ) {
+        if ( masksOverlap(m, masks[i]) ) {
+            return true;
+        }
+    }
+    return false;
 }

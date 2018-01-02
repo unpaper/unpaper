@@ -138,7 +138,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
           unpaper tries to clean scanned images by removing dark edges that appeared through
           scanning or copying on areas outside the actual page content (e.g.  dark areas between the
           left-hand-side and the right-hand-side of a double- sided book-page scan).  The program
-          also tries to detect misaligned centering and rotation of pages and will automatically
+          also tries to detect disaligned centering and rotation of pages and will automatically
           straighten each page by rotating it to the correct angle. This process is called
           "deskewing".  Note that the automatic processing will sometimes fail. It is always a good
           idea to manually control the results of unpaper and adjust the parameter settings
@@ -560,14 +560,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
             <listitem>
               <para>
                 Directions in which to search for solidly black areas. Either <option>v</option>
-                (for vertical searching), <option>h</option> (for horizontal searching) or
+                (for vertical mirroring), <option>h</option> (for horizontal mirroring) or
                 <option>v,h</option> (for both) can be specified.
-                The blackfilter works by moving a virtual bar across each page.
-                The darkness inside the virtual bar is determined
-                and if it exceeds <option>blackfilter-scan-threshold</option> black pixels in the area are filled.
-                During filling the blackness of each pixel is determined by <option>black-threshold</option>.
-                The bar is then moved by <option>blackfilter-scan-step</option> in the scanning direction.
-                Once a page border is encountered the bar is moved down (horizontal scan) or right (vertical scan) by its <option>blackfilter-scan-size</option>.
               </para>
             </listitem>
           </varlistentry>
@@ -586,8 +580,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Size of virtual bar in direction of scanning (meaning width for horizontal pass, height for vertical pass) used for black area detection.
-                Two values may be specified to individually set the size for the horizontal scanning-pass and the vertical pass. (default: <option>20,20</option>)
+                Width of virtual bar used for mask detection. Two values may be specified to
+                individually set horizontal and vertical size. (default: <option>20,20</option>)
               </para>
             </listitem>
           </varlistentry>
@@ -606,8 +600,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Depth of virtual bar in non-scanning direction (meaning height for horizontal pass, width for vertical pass) used for black area detection.
-                Two values may be specified to individually set the depth for the horizontal scanning-pass and the vertical pass. (default: <option>500,500</option>)
+                Size of virtual bar used for black area detection. (default: <option>500,500</option>)
               </para>
             </listitem>
           </varlistentry>
@@ -627,8 +620,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Steps to move virtual bar for black area detection. Two values may be specified to
-                individually set the step for the horizontal scanning-pass and the vertical pass. (default: <option>5,5</option>)
+                Steps to move virtual bar for black area detection. (default: <option>5,5</option>)
               </para>
             </listitem>
           </varlistentry>
@@ -680,8 +672,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
             <listitem>
               <para>
-                Intensity with which to delete black areas. This deletes pixels around the virtual scan bar.
-                Larger values will leave less noise-pixels around former black areas, but may delete page content. (default:
+                Intensity with which to delete black areas. Larger values will leave less
+                noise-pixels around former black areas, but may delete page content. (default:
                 <option>20</option>)
               </para>
             </listitem>
@@ -1323,7 +1315,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
             <listitem>
               <para>
                 Brightness ratio below which a pixel is considered black (non-gray). This is used by
-                the gray-filter and the blackfilter. This value is also used when converting a grayscale image to
+                the gray-filter. This value is also used when converting a grayscale image to
                 black-and-white mode (default: <option>0.33</option>)
               </para>
             </listitem>
@@ -1597,6 +1589,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
           <varlistentry>
             <term>
+              <option>--no-qpixels</option>
+            </term>
+
+            <listitem>
+              <para>
+                Ignored for backwards compatibility.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
               <option>--no-multi-pages</option>
             </term>
 
@@ -1626,50 +1630,32 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
           <varlistentry>
             <term>
               <option>-t</option>
-              { <option>pbm</option> | <option>pgm</option> | <option>ppm</option> }
+              { <option>pbm</option> | <option>pgm</option> }
             </term>
             <term>
               <option>--type</option>
-              { <option>pbm</option> | <option>pgm</option>> | <option>ppm</option> }
+              { <option>pbm</option> | <option>pgm</option> }
             </term>
 
             <listitem>
               <para>
-                Output file type (and bit depth). If not specified, the one with the same, or
-                closest, pixel format as the original input files will be used.
+                Output file type. (default: as input)
               </para>
+            </listitem>
+          </varlistentry>
 
-              <variablelist>
-                <varlistentry>
-                  <term><option>pbm</option></term>
+          <varlistentry>
+            <term>
+              <option>-d</option> <replaceable>bits</replaceable>
+            </term>
+            <term>
+              <option>--depth</option> <replaceable>bits</replaceable>
+            </term>
 
-                  <listitem>
-                    <para>
-                      Portable Bit Map, monochrome raw image.
-                    </para>
-                  </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                  <term><option>pgm</option></term>
-
-                  <listitem>
-                    <para>
-                      Portable Grayscale Map, 8-bit per pixel grayscale raw image.
-                    </para>
-                  </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                  <term><option>ppm</option></term>
-
-                  <listitem>
-                    <para>
-                      Portable Pixel Map, 24-bit per pixel RGB raw image.
-                    </para>
-                  </listitem>
-                </varlistentry>
-              </variablelist>
+            <listitem>
+              <para>
+                Output pixel depth. (default: as input)
+              </para>
             </listitem>
           </varlistentry>
 
@@ -1816,6 +1802,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
           <varlistentry>
             <term>
+              <option>--time</option>
+            </term>
+
+            <listitem>
+              <para>
+                Output processing time consumed.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>
               <option>-V</option>
             </term>
             <term>
@@ -1834,3 +1832,13 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
     </refentry>
   </section>
 </article>
+<!--
+    Local Variables:
+    mode: nxml
+    mode: auto-fill
+    mode: flyspell
+    ispell-local-dictionary: "english"
+    fill-column: 100
+    indent-tabs-mode: nil
+    End:
+-->
