@@ -17,6 +17,8 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef TOOLS_H
+#define TOOLS_H
 
 /* --- tool functions for image handling ---------------------------------- */
 
@@ -52,3 +54,5 @@ int countPixelNeighbors(int x, int y, int intensity, int whiteMin, AVFrame *imag
 void clearPixelNeighbors(int x, int y, int whiteMin, AVFrame *image);
 
 void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity, AVFrame *image);
+
+#endif /* TOOLS_H */

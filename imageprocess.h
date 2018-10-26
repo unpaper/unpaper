@@ -17,6 +17,9 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef IMAGEPROCESS_H
+#define IMAGEPROCESS_H
+
 /****************************************************************************
  * image processing functions                                               *
  ****************************************************************************/
@@ -100,3 +103,5 @@ void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT], AVFrame
 void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT], AVFrame *image);
 
 void applyBorder(int border[EDGES_COUNT], AVFrame *image);
+
+#endif /* IMAGEPROCESS_H */
