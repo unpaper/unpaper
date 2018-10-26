@@ -17,6 +17,9 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef PARSE_H
+#define PARSE_H
+
 /* --- tool functions for parameter parsing and verbose output ------------ */
 
 
@@ -58,3 +61,5 @@ static inline bool isExcluded(int index, struct MultiIndex multiIndex, struct Mu
 }
 
 void printMultiIndex(struct MultiIndex multiIndex);
+
+#endif /* PARSE_H */
