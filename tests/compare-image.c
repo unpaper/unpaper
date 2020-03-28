@@ -99,9 +99,12 @@ AVFrame *fetch_frame_from_file(const char *filename) {
 
 int main(int argc, char *argv[]) {
     AVFrame *golden, *result;
-    
-    if ( argc != 3 ) {
-        fprintf(stderr, "Usage: %s golden-file result-file\n", argv[0]);
+    float allowed_difference = 0.1;
+
+    if ( argc == 4 ) {
+        allowed_difference = strtof(argv[3], NULL);
+    } else if (argc != 3) {
+        fprintf(stderr, "Usage: %s golden-file result-file [allowed-difference]\n", argv[0]);
         return 1;
     }
     
@@ -137,10 +140,10 @@ int main(int argc, char *argv[]) {
 
     const float percent_diff = (diffbytes / (float)image_size)*100.0;
 
-    fprintf(stderr, "%zd bytes differ over %zd — %.2f%%\n",
-            diffbytes, image_size, percent_diff);
+    fprintf(stderr, "%zd bytes differ over %zd — %.2f%% (limit: %.2f%%)\n",
+            diffbytes, image_size, percent_diff, allowed_difference);
 
-    if ( percent_diff > 0.1 )
+    if ( percent_diff > allowed_difference )
         return 1;
 
     return 0;
