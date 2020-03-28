@@ -6,12 +6,12 @@ set -e
 set -x
 
 for i in 1 2; do
-    rm -f tests/resultsE20$i.pbm
+    rm -f tests/resultsE2-0$i.pbm
 done
-./unpaper -v --layout double --output-pages 2 ${srcdir:-.}/tests/imgsrcE001.png tests/resultsE2%02d.pbm
+./unpaper -v --layout double --output-pages 2 ${srcdir:-.}/tests/imgsrcE001.png tests/resultsE2-%02d.pbm
 
 for i in 1 2; do
-    [ -f tests/resultsE20$i.pbm ]
+    [ -f tests/resultsE2-0$i.pbm ]
 
-    ./compare-image ${srcdir:-.}/tests/goldenE20$i.pbm tests/resultsE20$i.pbm
+    ./compare-image ${srcdir:-.}/tests/goldenE2-0$i.pbm tests/resultsE2-0$i.pbm
 done
