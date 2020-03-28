@@ -22,18 +22,7 @@
 #ifndef UNPAPER_H
 #define UNPAPER_H
 
-#if HAVE_STDBOOL_H
-# include <stdbool.h>
-#else
-typedef enum {
-    FALSE,
-    TRUE
-} BOOLEAN;
-
-# define bool BOOLEAN
-# define false FALSE
-# define true TRUE
-#endif
+#include <stdbool.h>
 
 #include <libavutil/frame.h>
 #include <math.h>

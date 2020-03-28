@@ -11,7 +11,6 @@ AC_PROG_MKDIR_P
 
 AC_USE_SYSTEM_EXTENSIONS
 
-AC_HEADER_STDBOOL
 AC_SEARCH_LIBS([sqrt], [m])
 
 PKG_CHECK_MODULES([LIBAV], [libavformat libavcodec libavutil])
