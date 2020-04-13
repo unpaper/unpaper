@@ -83,5 +83,5 @@ generate PDFs out of the processed images by using tools such as
 `pnm2tiff`, `tiffcp` and `tiff2pdf`.
 
 [1]: https://libav.org/
-[2]: https://github.com/Flameeyes/unpaper/issues
+[2]: https://github.com/unpaper/unpaper/issues
 
