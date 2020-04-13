@@ -33,17 +33,8 @@ See [further documentation][3] for the supported file formats notes.
 Dependencies
 ------------
 
-The only hard dependency of `unpaper` is [libav][4], which is used for
+The only hard dependency of `unpaper` is [ffmpeg][4], which is used for
 file input and output.
-
-At the time of writing, any version of libav can be used, and at least
-from version 9 it supports a superset of the file formats supported by
-`unpaper` before version 6.
-
-The yet to be released version 11 is recommended, once available, as
-it has better support for TIFF files, including a faster, less
-memory-consuming support for grayscale TIFF files, and support for
-grayscale and alpha files.
 
 Building instructions
 ---------------------
@@ -80,4 +71,4 @@ You can find more information on the [basic concepts][1] and the
 [1]: doc/basic-concepts.md
 [2]: doc/image-processing.md
 [3]: doc/file-formats.md
-[4]: https://libav.org/
+[4]: https://www.ffmpeg.org/
