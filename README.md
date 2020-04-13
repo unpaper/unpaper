@@ -1,6 +1,9 @@
 unpaper
 =======
 
+[![Build
+Status](https://travis-ci.com/unpaper/unpaper.svg?branch=master)](https://travis-ci.com/unpaper/unpaper)
+
 Originally written by Jens Gulden — see AUTHORS for more information.
 Licensed under GNU GPL v2 — see COPYING for more information.
 
