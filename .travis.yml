@@ -1,0 +1,17 @@
+dist:
+  - xenial
+  - bionic
+
+addons:
+  apt:
+    packages:
+      - libavcodec-dev
+      - libavutil-dev
+      - libavformat-dev
+      - xsltproc
+
+script:
+  - autoreconf -fis
+  - ./configure
+  - make
+  - make DESTDIR=$(mktemp -d) install
