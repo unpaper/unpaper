@@ -3,8 +3,8 @@ MANPAGE_XSL ?= http://docbook.sourceforge.net/release/xsl-ns/current/manpages/do
 
 unpaper_SOURCES = file.c imageprocess.c imageprocess.h parse.c  \
 	parse.h tools.c tools.h unpaper.c unpaper.h
-unpaper_CFLAGS = $(LIBAV_CFLAGS)
-unpaper_LDADD = $(LIBAV_LIBS)
+unpaper_CFLAGS = $(FFMPEG_CFLAGS)
+unpaper_LDADD = $(FFMPEG_LIBS)
 
 dist_doc_DATA = NEWS COPYING README.md AUTHORS
 dist_man_MANS = unpaper.1
@@ -29,8 +29,8 @@ dist_img_DATA = doc/img/blackfilter-detail.png				\
 
 check_PROGRAMS = compare-image
 compare_image_SOURCES = tests/compare-image.c
-compare_image_CFLAGS = $(LIBAV_CFLAGS)
-compare_image_LDADD = $(LIBAV_LIBS)
+compare_image_CFLAGS = $(FFMPEG_CFLAGS)
+compare_image_LDADD = $(FFMPEG_LIBS)
 
 TESTS = tests/runtestA1.sh tests/runtestB1.sh tests/runtestB2.sh	\
         tests/runtestB3.sh tests/runtestC1.sh tests/runtestC2.sh	\

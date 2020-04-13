@@ -13,7 +13,7 @@ AC_USE_SYSTEM_EXTENSIONS
 
 AC_SEARCH_LIBS([sqrt], [m])
 
-PKG_CHECK_MODULES([LIBAV], [libavformat libavcodec libavutil])
+PKG_CHECK_MODULES([FFMPEG], [libavformat libavcodec libavutil])
 
 AC_ARG_VAR([XSLTPROC], [A libxslt-compatible XSLT processor command])
 AS_IF([test "x$XSLTPROC" = "x"], [
