@@ -2,7 +2,7 @@ File Formats
 ============
 
 `unpaper` gets its file input and output code support from the
-[libav][1] library, but not all image file formats
+[ffmpeg][1] library, but not all image file formats
 supported by the library are supported by `unpaper`.
 
 The reason for the complexity is to be found in the different pixel
@@ -82,6 +82,6 @@ PDF support is not currently available and not planned. You can
 generate PDFs out of the processed images by using tools such as
 `pnm2tiff`, `tiffcp` and `tiff2pdf`.
 
-[1]: https://libav.org/
+[1]: https://www.ffmpeg.org/
 [2]: https://github.com/unpaper/unpaper/issues
 
