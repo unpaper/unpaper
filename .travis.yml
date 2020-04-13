@@ -1,6 +1,10 @@
-dist:
-  - xenial
-  - bionic
+dist: bionic
+
+language: c
+
+compiler:
+  - clang
+  - gcc
 
 addons:
   apt:
