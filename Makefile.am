@@ -10,7 +10,7 @@ unpaper_SOURCES = file.c imageprocess.c imageprocess.h parse.c  \
 unpaper_CFLAGS = $(FFMPEG_CFLAGS)
 unpaper_LDADD = $(FFMPEG_LIBS)
 
-dist_doc_DATA = NEWS README.md AUTHORS LICENSES/CC0-1.0.txt     \
+dist_doc_DATA = NEWS README.md AUTHORS LICENSES/MIT.txt \
                 LICENSES/GPL-2.0-only.txt
 dist_man_MANS = unpaper.1
 
