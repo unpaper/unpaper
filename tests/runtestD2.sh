@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: 2005 The unpaper authors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 echo "[D2] Fit to sheet size."
 
 set -e

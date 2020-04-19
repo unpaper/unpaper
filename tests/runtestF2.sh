@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: 2005 The unpaper authors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 echo "[F2] Merging 2-page layout into single output page (with output wildcard only)."
 
 set -e

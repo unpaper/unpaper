@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: 2005 The unpaper authors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 echo "[C2] Explicit shifting."
 
 set -e

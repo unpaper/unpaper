@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2005 The unpaper authors
+
+SPDX-License-Identifier: GPL-2.0-only
+-->
+
 File Formats
 ============
 

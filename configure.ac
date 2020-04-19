@@ -1,3 +1,7 @@
+dnl SPDX-FileCopyrightText: 2005 The unpaper authors
+dnl
+dnl SPDX-License-Identifier: GPL-2.0-only
+
 AC_PREREQ(2.68)
 
 AC_INIT([unpaper], [6.2], [https://github.com/unpaper/unpaper/issues], , [https://github.com/unpaper/unpaper])

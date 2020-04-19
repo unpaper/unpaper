@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2005 The unpaper authors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 Release 6.2, 2014-xx-xx
  - Tests now compare a golden file by counting the bytes that differ
    between it and the result. This allows non-byte-perfect

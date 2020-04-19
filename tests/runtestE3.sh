@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# SPDX-FileCopyrightText: 2005 The unpaper authors
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 echo "[E3] Splitting 2-page layout into separate output pages (with explicit input and output)."
 
 set -e
