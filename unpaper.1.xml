@@ -1621,7 +1621,7 @@ SPDX-License-Identifier: GPL-2.0-only
             </term>
             <term>
               <option>--type</option>
-              { <option>pbm</option> | <option>pgm</option>> | <option>ppm</option> }
+              { <option>pbm</option> | <option>pgm</option> | <option>ppm</option> }
             </term>
 
             <listitem>
