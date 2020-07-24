@@ -4,8 +4,7 @@
 //
 // SPDX-License-Identifier: GPL-2.0-only
 
-#ifndef PARSE_H
-#define PARSE_H
+#pragma once
 
 /* --- tool functions for parameter parsing and verbose output ------------ */
 
@@ -48,5 +47,3 @@ static inline bool isExcluded(int index, struct MultiIndex multiIndex, struct Mu
 }
 
 void printMultiIndex(struct MultiIndex multiIndex);
-
-#endif /* PARSE_H */
