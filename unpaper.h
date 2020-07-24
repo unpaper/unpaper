@@ -6,8 +6,7 @@
 
 /* --- global declarations ------------------------------------------------ */
 
-#ifndef UNPAPER_H
-#define UNPAPER_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -251,5 +250,3 @@ static inline void limit(int* i, int max) {
 static inline int pixelValue(uint8_t r, uint8_t g, uint8_t b) {
     return (r)<<16 | (g)<<8 | (b);
 }
-
-#endif /* UNPAPER_H */
