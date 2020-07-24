@@ -95,7 +95,7 @@ static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
 
     maxDepth = width / 2;
     half = deskewScanSize / 2;
-    outerOffset = (int)(abs(m) * half);
+    outerOffset = (int)(fabsf(m) * half);
     mid = height / 2;
     sideOffset =
         shiftX > 0 ? mask[LEFT] - outerOffset : mask[RIGHT] + outerOffset;
@@ -111,7 +111,7 @@ static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
     limit(&deskewScanSize, width);
     maxDepth = height / 2;
     half = deskewScanSize / 2;
-    outerOffset = (int)(abs(m) * half);
+    outerOffset = (int)(fabsf(m) * half);
     mid = width / 2;
     sideOffset =
         shiftY > 0 ? mask[TOP] - outerOffset : mask[BOTTOM] + outerOffset;
