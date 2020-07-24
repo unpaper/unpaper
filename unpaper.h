@@ -8,87 +8,19 @@
 
 #pragma once
 
+#include <math.h>
 #include <stdbool.h>
 
 #include <libavutil/frame.h>
-#include <math.h>
+
+#include "constants.h"
 
 /* --- preprocessor macros ------------------------------------------------ */
 
-#define pluralS(i) ( (i > 1) ? "s" : "" )
+#define pluralS(i) ((i > 1) ? "s" : "")
 
-/* --- preprocessor constants ---------------------------------------------- */
-
-#define MAX_MULTI_INDEX 10000 // maximum pixel count of virtual line to detect rotation with
-#define MAX_ROTATION_SCAN_SIZE 10000 // maximum pixel count of virtual line to detect rotation with
-#define MAX_MASKS 100
-#define MAX_POINTS 100
-#define MAX_FILES 100
-#define MAX_PAGES 2
-#define WHITE 0xFF
-#define GRAY 0x1F
-#define BLACK 0x00
-#define WHITE24 0xFFFFFF
-#define GRAY24 0x1F1F1F
-#define BLACK24 0x000000
-#define BLANK_TEXT "<blank>"
-
-
-/* --- typedefs ----------------------------------------------------------- */
-
-typedef enum {
-    VERBOSE_QUIET = -1,
-    VERBOSE_NONE = 0,
-    VERBOSE_NORMAL = 1,
-    VERBOSE_MORE = 2,
-    VERBOSE_DEBUG = 3,
-    VERBOSE_DEBUG_SAVE = 4
-} VERBOSE_LEVEL;
-
-typedef enum {
-    X,
-    Y,
-    COORDINATES_COUNT
-} COORDINATES;
-
-typedef enum {
-    WIDTH,
-    HEIGHT,
-    DIMENSIONS_COUNT
-} DIMENSIONS;
-
-typedef enum {
-    HORIZONTAL,
-    VERTICAL,
-    DIRECTIONS_COUNT
-} DIRECTIONS;
-
-typedef enum {
-    LEFT,
-    TOP,
-    RIGHT,
-    BOTTOM,
-    EDGES_COUNT
-} EDGES;
-
-typedef enum {
-    LAYOUT_NONE,
-    LAYOUT_SINGLE,
-    LAYOUT_DOUBLE,
-    LAYOUTS_COUNT
-} LAYOUTS;
-
-typedef enum {
-    INTERP_NN,
-    INTERP_LINEAR,
-    INTERP_CUBIC,
-    INTERP_FUNCTIONS_COUNT
-} INTERP_FUNCTIONS;
-
-
-void errOutput(const char *fmt, ...)
-    __attribute__((format(printf, 1, 2)))
-    __attribute__((noreturn));
+void errOutput(const char *fmt, ...) __attribute__((format(printf, 1, 2)))
+__attribute__((noreturn));
 
 /* --- global variable ---------------------------------------------------- */
 
@@ -174,8 +106,8 @@ extern int borderScanDirections;
 extern int borderScanSize[DIRECTIONS_COUNT];
 extern int borderScanStep[DIRECTIONS_COUNT];
 extern int borderScanThreshold[DIRECTIONS_COUNT];
-extern int borderAlign; // center
-extern int borderAlignMargin[DIRECTIONS_COUNT]; // center
+extern int borderAlign;                                   // center
+extern int borderAlignMargin[DIRECTIONS_COUNT];           // center
 extern int outsideBorderscanMask[MAX_PAGES][EDGES_COUNT]; // set by --layout
 extern int outsideBorderscanMaskCount;
 extern float whiteThreshold;
@@ -216,37 +148,41 @@ void saveDebug(char *filenameTemplate, int index, AVFrame *image)
 
 /* --- arithmetic tool functions ------------------------------------------ */
 
-static inline float degreesToRadians(float d) {
-    return d * M_PI / 180.0;
+static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
+
+static inline void limit(int *i, int max) {
+  if (*i > max) {
+    *i = max;
+  }
 }
 
-static inline void limit(int* i, int max) {
-    if (*i > max) {
-        *i = max;
-    }
-}
+#define max(a, b)                                                              \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    _a > _b ? _a : _b;                                                         \
+  })
 
-#define max(a, b)                               \
-    ({ __typeof__ (a) _a = (a);                 \
-        __typeof__ (b) _b = (b);                \
-        _a > _b ? _a : _b; })
+#define max3(a, b, c)                                                          \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    __typeof__(c) _c = (c);                                                    \
+    (_a > _b ? (_a > _c ? _a : _c) : (_b > _c ? _b : _c));                     \
+  })
 
-#define max3(a, b, c)                                                   \
-    ({ __typeof__ (a) _a = (a);                                         \
-        __typeof__ (b) _b = (b);                                        \
-        __typeof__ (c) _c = (c);                                        \
-        ( _a > _b ? ( _a > _c ? _a : _c ) : ( _b > _c ? _b : _c ) ); })
+#define min3(a, b, c)                                                          \
+  ({                                                                           \
+    __typeof__(a) _a = (a);                                                    \
+    __typeof__(b) _b = (b);                                                    \
+    __typeof__(c) _c = (c);                                                    \
+    (_a < _b ? (_a < _c ? _a : _c) : (_b < _c ? _b : _c));                     \
+  })
 
-#define min3(a, b, c)                                                   \
-    ({ __typeof__ (a) _a = (a);                                         \
-        __typeof__ (b) _b = (b);                                        \
-        __typeof__ (c) _c = (c);                                        \
-        ( _a < _b ? ( _a < _c ? _a : _c ) : ( _b < _c ? _b : _c ) ); })
-
-#define red(pixel) ( (pixel >> 16) & 0xff )
-#define green(pixel) ( (pixel >> 8) & 0xff )
-#define blue(pixel) ( pixel & 0xff )
+#define red(pixel) ((pixel >> 16) & 0xff)
+#define green(pixel) ((pixel >> 8) & 0xff)
+#define blue(pixel) (pixel & 0xff)
 
 static inline int pixelValue(uint8_t r, uint8_t g, uint8_t b) {
-    return (r)<<16 | (g)<<8 | (b);
+  return (r) << 16 | (g) << 8 | (b);
 }
