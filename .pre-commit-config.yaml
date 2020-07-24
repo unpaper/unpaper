@@ -11,3 +11,7 @@ repos:
     rev: latest
     hooks:
     - id: reuse
+-   repo: https://github.com/doublify/pre-commit-clang-format
+    rev: master
+    hooks:
+    -   id: clang-format
