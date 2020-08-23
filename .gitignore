@@ -5,6 +5,7 @@
 *.o
 *~
 .deps
+.vscode
 Makefile
 Makefile.in
 aclocal.m4
