@@ -2,25 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-*.o
 *~
-.deps
 .vscode
-Makefile
-Makefile.in
-aclocal.m4
-autom4te.cache/
 builddir/
 compare-image
-compile
-config.log
-config.status
-configure
-depcomp
-install-sh
-missing
-test-driver
-test-suite.log
 tests/.dirstamp
 tests/imgsrc*.pbm
 tests/imgsrc*.pgm
