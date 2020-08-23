@@ -26,7 +26,7 @@
 #include "unpaper.h"
 
 #define WELCOME                                                                \
-  PACKAGE_STRING                                                               \
+  "unpaper"                                                               \
   "\n"                                                                         \
   "License GPLv2: GNU GPL version 2.\n"                                        \
   "This is free software: you are free to change and redistribute it.\n"       \
@@ -43,7 +43,7 @@
           "scan001.pbm, scan002.pbm, scan003.pbm etc.\n"                       \
           "\n"                                                                 \
           "See 'man unpaper' for options details\n"                            \
-          "Report bugs at " PACKAGE_BUGREPORT "\n"
+          "Report bugs at https://github.com/unpaper/unpaper/issues\n"
 
 /* --- global variable ---------------------------------------------------- */
 
@@ -370,7 +370,7 @@ int main(int argc, char *argv[]) {
       return c == '?' ? 1 : 0;
 
     case 'V':
-      puts(VERSION);
+      puts("6.2+");
       return 0;
 
     case 'l':
