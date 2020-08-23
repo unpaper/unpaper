@@ -28,7 +28,7 @@ install:
   - pip3 install meson
 
 script:
-  - export PREFIX=$(mktemp -d)
-  - meson setup --prefix=$PREFIX builddir
+  - export DESTDIR=$(mktemp -d)
+  - meson setup builddir
   - meson -C builddir compile
   - meson -C builddir install
