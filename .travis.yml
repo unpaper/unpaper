@@ -17,9 +17,18 @@ addons:
       - libavutil-dev
       - libavformat-dev
       - xsltproc
+      # The following are for meson:
+      - python3
+      - python3-pip
+      - python3-setuptools
+      - python3-wheel
+      - ninja-build
+
+install:
+  - pip3 install meson
 
 script:
-  - autoreconf -fis
-  - ./configure
-  - make
-  - make DESTDIR=$(mktemp -d) install
+  - export PREFIX=$(mktemp -d)
+  - meson setup --prefix=$PREFIX builddir
+  - meson -C builddir compile
+  - meson -C builddir install
