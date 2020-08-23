@@ -13,11 +13,7 @@ unpaper_deps = [
 
 executable(
     'unpaper',
-    'constants.h',
-    'file.c', 
-    'imageprocess.c', 'imageprocess.h',
-    'parse.c', 'parse.h',
-    'tools.c', 'tools.h',
-    'unpaper.c', 'unpaper.h',
-    dependencies : unpaper_deps
+    'file.c', 'imageprocess.c', 'parse.c', 'tools.c', 'unpaper.c',
+    dependencies : unpaper_deps,
+    install : true,
 )
