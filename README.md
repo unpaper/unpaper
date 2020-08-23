@@ -48,24 +48,16 @@ file input and output.
 Building instructions
 ---------------------
 
-`unpaper` uses GNU Autotools for its build system, so you should be
-able to execute the same commands used for other software packages:
+`unpaper` uses [the Meson Build system](https://mesonbuild.com), which
+can be installed using Python's package manage (`pip3` or `pip`):
 
-    ./configure
-    make
-    sudo make install
+    unpaper$ pip3 install --user meson
+    unpaper$ CFLAGS="-O2 -march=native" meson builddir
+    unpaper$ meson compile -C builddir
 
-There are, though, some recommendations about the way you build the
-code. Since the tasks are calculation-intensive, it is important to
-build with optimizations turned on:
-
-    ./configure CFLAGS="-O2 -march-native -pipe"
-
-Even better, if your compiler supports it, is to use Link-Time
-Optimizations, as that has shown that execution time can improve
-sensibly:
-
-    ./configure CFLAGS="-O2 -march=native -pipe -flto"
+You can pass required optimization flags when creating the meson build directory
+in the `CFLAGS` environment variable. Usage of Link-Time Optimizations (`-flto`)
+is recommended if available.
 
 Further optimizations such as `-ftracer` and `-ftree-vectorize` are
 thought to work, but their effect has not been evaluated so your
