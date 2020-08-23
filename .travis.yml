@@ -30,5 +30,5 @@ install:
 script:
   - export DESTDIR=$(mktemp -d)
   - meson setup builddir
-  - meson -C builddir compile
-  - meson -C builddir install
+  - meson compile -C builddir
+  - meson install -C builddir
