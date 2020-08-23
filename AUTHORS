@@ -2,11 +2,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-only
 
-Jens Gulden <unpaper@jensgulden.de> 2005-2009
-Original author and maintainer
-
+# This is the list of unpaper authors for copyright purposes.
+#
+# This does not necessarily list everyone who has contributed code, since in
+# some cases, their employer may be the copyright holder.  To see the full list
+# of contributors, see the revision history in source control.
+Jens Gulden <unpaper@jensgulden.de> 2005-2009 (Original author and maintainer)
 Diego Elio Pettenò <flameeyes@flameeyes.com> 2011-
-Build system cleanup and code improvements
-
-Michael McMaster <michael@codesrc.com> 2013
-Improved image quality when using deskew and stretch
+Michael McMaster <michael@codesrc.com> 2013 (Improved image quality when using deskew and stretch)
+Facebook Inc. 2020-
