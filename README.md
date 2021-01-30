@@ -51,7 +51,7 @@ Building instructions
 `unpaper` uses [the Meson Build system](https://mesonbuild.com), which
 can be installed using Python's package manage (`pip3` or `pip`):
 
-    unpaper$ pip3 install --user meson
+    unpaper$ pip3 install --user meson sphinx
     unpaper$ CFLAGS="-O2 -march=native" meson builddir
     unpaper$ meson compile -C builddir
 

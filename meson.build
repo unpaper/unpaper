@@ -17,3 +17,14 @@ executable(
     dependencies : unpaper_deps,
     install : true,
 )
+
+sphinx = find_program('sphinx-build', required: true)
+
+custom_target(
+    'man',
+    command: [sphinx, '-b', 'man', join_paths(meson.source_root(), 'doc'), '@OUTDIR@'],
+    input: ['doc/conf.py', 'doc/index.rst', 'doc/unpaper.1.rst'],
+    output: 'unpaper.1',
+    install: true,
+    install_dir: join_paths(get_option('prefix'), get_option('mandir'), 'man1'),
+)
