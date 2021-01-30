@@ -22,11 +22,10 @@ addons:
       - python3-setuptools
       - python3-wheel
       - ninja-build
-      # For man pages and documentation
-      - python3-sphinx
 
 install:
-  - pip3 install meson
+  # Sphinx is used for man pages and documentation.
+  - pip3 install meson 'sphinx >= 3.4'
 
 script:
   - export DESTDIR=$(mktemp -d)
