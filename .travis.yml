@@ -16,13 +16,14 @@ addons:
       - libavcodec-dev
       - libavutil-dev
       - libavformat-dev
-      - xsltproc
       # The following are for meson:
       - python3
       - python3-pip
       - python3-setuptools
       - python3-wheel
       - ninja-build
+      # For man pages and documentation
+      - python3-sphinx
 
 install:
   - pip3 install meson
