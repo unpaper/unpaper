@@ -22,13 +22,17 @@ addons:
       - python3-setuptools
       - python3-wheel
       - ninja-build
+      # The following are for tests:
+      - python3-pytest
+      - python3-pillow
 
 install:
   # Sphinx is used for man pages and documentation.
-  - pip3 install meson 'sphinx >= 3.4'
+  - pip3 install 'meson >= 0.57' 'sphinx >= 3.4'
 
 script:
   - export DESTDIR=$(mktemp -d)
   - meson setup builddir
   - meson compile -C builddir
+  - meson test -C builddir
   - meson install -C builddir
