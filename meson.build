@@ -3,6 +3,11 @@
 # SPDX-License-Identifier: MIT
 
 project('unpaper', 'c', default_options : ['c_std=c11'])
+
+if not meson.version().version_compare('>0.57')
+    error('Meson 0.57 or later required')
+endif
+
 add_global_arguments('-D_POSIX_C_SOURCE=200809L', language : 'c')
 
 cc = meson.get_compiler('c')
@@ -20,7 +25,7 @@ unpaper_deps = [
     cc.find_library('m', required : false)
 ]
 
-executable(
+unpaper = executable(
     'unpaper',
     'file.c', 'imageprocess.c', 'parse.c', 'tools.c', 'unpaper.c',
     dependencies : unpaper_deps,
@@ -37,3 +42,22 @@ custom_target(
     install: true,
     install_dir: join_paths(get_option('prefix'), get_option('mandir'), 'man1'),
 )
+
+pytest = find_program('pytest', required: false)
+if pytest.found()
+    test(
+        'pytest suite',
+        pytest,
+        args: [
+            meson.project_source_root() + '/tests/unpaper_tests.py'
+        ],
+        env: [
+            'TEST_IMGSRC_DIR=' + meson.project_source_root() + '/tests/source_images/',
+            'TEST_GOLDEN_DIR=' + meson.project_source_root() + '/tests/golden_images/',
+            'TEST_UNPAPER_BINARY=' + unpaper.full_path(),
+        ],
+        timeout : -1,
+    )
+else
+    warning('pytest not found, tests will not be performed.')
+endif
