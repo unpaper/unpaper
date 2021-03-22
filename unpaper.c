@@ -16,8 +16,6 @@
 
 #include <sys/stat.h>
 
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
 
 #include "imageprocess.h"
@@ -965,9 +963,6 @@ int main(int argc, char *argv[]) {
   deskewScanRangeRad = degreesToRadians(deskewScanRange);
   deskewScanStepRad = degreesToRadians(deskewScanStep);
   deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
-
-  avcodec_register_all();
-  av_register_all();
 
   for (int nr = startSheet; (endSheet == -1) || (nr <= endSheet); nr++) {
     char inputFilesBuffer[2][255];

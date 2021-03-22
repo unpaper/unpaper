@@ -202,7 +202,9 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
     errOutput("could not open '%s'", filename);
   }
 
-  avformat_write_header(out_ctx, NULL);
+  if (avformat_write_header(out_ctx, NULL) < 0) {
+    errOutput("error writing header to '%s'", filename);
+  }
 
   AVPacket pkt = {0};
   int got_packet;
