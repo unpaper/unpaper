@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: 2020 The unpaper authors
 #
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+    rev: v3.4.0
     hooks:
     -   id: check-yaml
 -   repo: https://github.com/fsfe/reuse-tool
-    rev: latest
+    rev: v0.12.1
     hooks:
     - id: reuse
 -   repo: https://github.com/doublify/pre-commit-clang-format
