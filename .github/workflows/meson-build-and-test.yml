@@ -1,0 +1,45 @@
+# SPDX-FileCopyrightText: 2012- The Meson development team
+# SPDX-FileCopyrightText: 2021 The unpaper authors
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: ci_meson
+
+on:
+  push:
+  pull_request:
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Meson dependencies
+      run: pip install 'meson >= 0.57' ninja
+    - name: Unpaper dependencies
+      run: |
+        sudo apt install libavcodec-dev libavutil-dev libavformat-dev python3
+        pip install 'sphinx >= 3.4' pytest pillow
+    - run: meson setup builddir/
+      env:
+        CC: ${{ matrix.compiler }}
+    - run: meson test -C builddir/ -v
+      timeout-minutes: 30
+    - name: Test installation
+      run: |
+        export DESTDIR=$(mktemp -d)
+        meson install -C builddir/
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: Linux_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
