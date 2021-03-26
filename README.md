@@ -52,12 +52,13 @@ Building instructions
 can be installed using Python's package manage (`pip3` or `pip`):
 
     unpaper$ pip3 install --user 'meson >= 0.57' 'sphinx >= 3.4'
-    unpaper$ CFLAGS="-O2 -march=native" meson builddir
+    unpaper$ CFLAGS="-march=native" meson --buildtype=debugoptimized builddir
     unpaper$ meson compile -C builddir
 
-You can pass required optimization flags when creating the meson build directory
-in the `CFLAGS` environment variable. Usage of Link-Time Optimizations (`-flto`)
-is recommended if available.
+You can pass required optimization flags when creating the meson build
+directory in the `CFLAGS` environment variable. Usage of Link-Time
+Optimizations (Meson option `-Db_lto=true`) is recommended if
+available.
 
 Further optimizations such as `-ftracer` and `-ftree-vectorize` are
 thought to work, but their effect has not been evaluated so your
