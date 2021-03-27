@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2021 The unpaper authors
+#
+# SPDX-License-Identifier: MIT
+
+pull_request_rules:
+  - name: Automatic merge on approval
+    conditions:
+      - "#approved-reviews-by>=1"
+      - "status-success=ci_meson"
+      - "status-success=pre-commit"
+    actions:
+      merge:
+        method: rebase
+  - name: Automatic merge from Flameeyes
+    conditions:
+      - "author=Flameeyes"
+      - "status-success=ci_meson"
+      - "status-success=pre-commit"
+    actions:
+      merge:
+        method: rebase
