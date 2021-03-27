@@ -17,6 +17,10 @@ jobs:
     strategy:
       matrix:
         compiler: [gcc, clang]
+        meson_setup_flags:
+          - ""
+          - "--buildtype=debugoptimized"
+          - "--buildtype=debugoptimized -Db_lto=true"
 
     steps:
     - uses: actions/checkout@v1
@@ -29,7 +33,7 @@ jobs:
       run: |
         sudo apt install libavcodec-dev libavutil-dev libavformat-dev python3
         pip install 'sphinx >= 3.4' pytest pillow
-    - run: meson setup builddir/
+    - run: meson setup ${{ matrix.meson_setup_flags }} builddir/
       env:
         CC: ${{ matrix.compiler }}
     - run: meson test -C builddir/ -v
