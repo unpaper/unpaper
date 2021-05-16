@@ -11,7 +11,8 @@ on:
 
 jobs:
 
-  linux:
+  linux-build-and-test:
+    name: Build and test on Linux
     runs-on: ubuntu-latest
 
     strategy:
