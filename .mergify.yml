@@ -6,7 +6,12 @@ pull_request_rules:
   - name: Automatic merge on approval
     conditions:
       - "#approved-reviews-by>=1"
-      - "status-success=ci_meson"
+      - "status-success=Build and test on Linux (gcc)"
+      - "status-success=Build and test on Linux (gcc, --buildtype=debugoptimized)"
+      - "status-success=Build and test on Linux (gcc, --buildtype=debugoptimized  -Db_lto=true)"
+      - "status-success=Build and test on Linux (clang)"
+      - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized)"
+      - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized  -Db_lto=true)"
       - "status-success=pre-commit"
     actions:
       merge:
@@ -14,7 +19,12 @@ pull_request_rules:
   - name: Automatic merge from Flameeyes
     conditions:
       - "author=Flameeyes"
-      - "status-success=ci_meson"
+      - "status-success=Build and test on Linux (gcc)"
+      - "status-success=Build and test on Linux (gcc, --buildtype=debugoptimized)"
+      - "status-success=Build and test on Linux (gcc, --buildtype=debugoptimized  -Db_lto=true)"
+      - "status-success=Build and test on Linux (clang)"
+      - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized)"
+      - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized  -Db_lto=true)"
       - "status-success=pre-commit"
     actions:
       merge:
