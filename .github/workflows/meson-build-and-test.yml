@@ -36,6 +36,8 @@ jobs:
     - run: meson setup ${{ matrix.meson_setup_flags }} builddir/
       env:
         CC: ${{ matrix.compiler }}
+    - run: meson compile -C builddir/ -v
+      timeout-minutes: 15
     - run: meson test -C builddir/ -v
       timeout-minutes: 30
     - name: Test installation
