@@ -32,7 +32,7 @@ unpaper = executable(
     install : true,
 )
 
-sphinx = find_program('sphinx-build', required: true)
+sphinx = find_program('sphinx-build', required: true, version: '>= 3.4')
 
 custom_target(
     'man',
