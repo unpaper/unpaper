@@ -265,9 +265,7 @@ char *implode(char *buf, const char *s[], int cnt) {
  * @see isInMultiIndex(..)
  */
 void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
-  char *s1, *s2 = NULL;
-  char c;
-  int index;
+  char *s1;
   int allocated = 0;
 
   multiIndex->count = -1;
@@ -283,8 +281,10 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
   s1 = strdup(optarg);
 
   do {
-    index = -1;
-    sscanf(s1, "%d%c%ms", &index, &c, &s2);
+    char c;
+    char *s2 = NULL;
+    int index = -1;
+    int components = sscanf(s1, "%d%c%ms", &index, &c, &s2);
     if (index != -1) {
       if (multiIndex->count >= allocated) {
         allocated += 32;
@@ -294,6 +294,10 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
 
       multiIndex->indexes[(multiIndex->count)++] = index;
       if (c == '-') {   // range is specified: get range end
+        if (components < 3) {
+          errOutput("Invalid multi-index string \"%s\".", optarg);
+        }
+
         strcpy(s1, s2); // s2 -> s1
         sscanf(s1, "%d,%s", &index, s2);
         size_t count = index - multiIndex->indexes[(multiIndex->count) - 1];
@@ -307,7 +311,7 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
         }
       }
     } else {
-      // string is not correctly parseable: break without inreasing *i (string
+      // string is not correctly parseable: break without increasing *i (string
       // may be e.g. input-filename)
       multiIndex->count = -1; // disable all
       free(s1);

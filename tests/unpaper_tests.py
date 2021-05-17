@@ -424,3 +424,12 @@ def test_no_overwrite_existing_file(imgsrc_path, tmp_path):
     )
     assert unpaper_result.returncode != 0
     assert result_path.stat().st_size == 0
+
+
+def test_invalid_multi_index(imgsrc_path, tmp_path):
+    source_path = imgsrc_path / "imgsrc001.png"
+    result_path = tmp_path / "result.pbm"
+    unpaper_result = run_unpaper(
+        "--no-processing", "1-", str(source_path), str(result_path), check=False
+    )
+    assert unpaper_result.returncode != 0
