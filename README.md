@@ -13,8 +13,9 @@ Status](https://travis-ci.com/unpaper/unpaper.svg?branch=main)](https://travis-c
 Originally written by Jens Gulden — see AUTHORS for more information.
 The entire `unpaper` project is licensed under GNU GPL v2.
 Some of the individual files are licensed under the MIT or Apache 2.0 licenses.
-Each file contains an SPDX license header specifying its license.
-The text of all three licenses is available under `LICENSES`.
+Each file contains an [SPDX license header](https://reuse.software/)
+specifying its license. The text of all three licenses is available under
+`LICENSES`.
 
 Overview
 --------
