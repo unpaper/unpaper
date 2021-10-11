@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
         {"end-sheet", required_argument, NULL, 0x7f},
         {"start-input", required_argument, NULL, 0x80},
         {"si", required_argument, NULL, 0x80},
-        {"start-ouput", required_argument, NULL, 0x81},
+        {"start-output", required_argument, NULL, 0x81},
         {"so", required_argument, NULL, 0x81},
         {"sheet-size", required_argument, NULL, 'S'},
         {"sheet-background", required_argument, NULL, 0x82},
