@@ -173,7 +173,7 @@ static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
   int maxPeak = 0;
   float detectedRotation = 0.0;
 
-  // iteratively increase test angle,  alterating between +/- sign while
+  // iteratively increase test angle, alternating between +/- sign while
   // increasing absolute value
   for (float rotation = 0.0; rotation <= deskewScanRangeRad;
        rotation = (rotation >= 0.0) ? -(rotation + deskewScanStepRad)
@@ -515,7 +515,7 @@ void shift(int shiftX, int shiftY, AVFrame **image) {
 /* --- mask-detection ----------------------------------------------------- */
 
 /**
- * Finds one edge of non-black pixels headig from one starting point towards
+ * Finds one edge of non-black pixels heading from one starting point towards
  * edge direction.
  *
  * @return number of shift-steps until blank edge found
@@ -884,7 +884,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep,
           if ((verbose >= VERBOSE_NORMAL) && (!alreadyExcludedMessage)) {
             printf("black-area EXCLUDED: [%d,%d,%d,%d]\n", l, t, r, b);
             alreadyExcludedMessage = true; // do this only once per scan-stripe,
-                                           // otherwise too many mesages
+                                           // otherwise too many messages
           }
         }
       }
@@ -957,7 +957,7 @@ int noisefilter(AVFrame *image) {
 
 /**
  * Removes noise using a kind of blurfilter, as alternative to the noise
- * filter. This algoithm counts pixels while 'shaking' the area to detect,
+ * filter. This algorithm counts pixels while 'shaking' the area to detect,
  * and clears the area if the amount of white pixels exceeds whiteTreshold.
  */
 int blurfilter(AVFrame *image) {

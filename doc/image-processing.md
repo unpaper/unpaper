@@ -100,7 +100,7 @@ is of course no visible line drawn in the image.) The algorithm will
 count the number of dark pixels along the line as it is virtually
 moved.
 
-Some parameters control the the size of the 'virtual line' and its
+Some parameters control the size of the 'virtual line' and its
 movement: `--deskew-scan-size`: the height/width of the 'virtual line'
 used for scanning (the length of the line at rotation angle 0)
 `--deskew-scan-range`: the absolute value of degrees between the

@@ -175,7 +175,7 @@ static int parseSizeSingle(const char *s, int dpi) {
 /**
  * Parses a pair of size-values and returns it in pixels.
  * Values may be suffixed by MEASUREMENTS such as 'cm', 'in', in that case
- * conversion to pixels is perfomed based on the dpi-value.
+ * conversion to pixels is performed based on the dpi-value.
  */
 void parseSize(char *s, int i[2], int dpi) {
   char str[255];
@@ -235,7 +235,7 @@ void parseFloats(char *s, float f[2]) {
 }
 
 /**
- * Combines an array of strings to a comma-seperated string.
+ * Combines an array of strings to a comma-separated string.
  */
 char *implode(char *buf, const char *s[], int cnt) {
   if (cnt > 0) {
