@@ -230,7 +230,7 @@ the *sheet* numbering. In other words, setting these options specifies
 an offset at which the file numbering starts relative to
 *sheet* 1. For example:
 
- unpaper --input-pages 2 (...options...) --start-input 7 input%03d.pgm output%03d.pgm
+    unpaper --input-pages 2 (...options...) --start-input 7 input%03d.pgm output%03d.pgm
 
 These settings would cause the input-files `input007.pgm` and
 `input008.pgm` to be used for *sheet* 1, `input009.pgm` and
