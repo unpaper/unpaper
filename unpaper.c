@@ -1648,7 +1648,7 @@ int main(int argc, char *argv[]) {
         }
       }
 
-      // permamently apply masks
+      // permanently apply masks
       if (maskCount > 0) {
         saveDebug("_before-masking%d.pnm", nr, sheet);
         applyMasks(mask, maskCount, sheet);

@@ -293,7 +293,7 @@ void centerImage(AVFrame *source, int toX, int toY, int ww, int hh,
 }
 
 /**
- * Returns the average brightness of a rectagular area.
+ * Returns the average brightness of a rectangular area.
  */
 uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2,
                               const int y2, AVFrame *image) {
@@ -309,7 +309,7 @@ uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2,
 }
 
 /**
- * Returns the inverseaverage lightness of a rectagular area.
+ * Returns the inverseaverage lightness of a rectangular area.
  */
 uint8_t inverseLightnessRect(const int x1, const int y1, const int x2,
                              const int y2, AVFrame *image) {
@@ -325,7 +325,7 @@ uint8_t inverseLightnessRect(const int x1, const int y1, const int x2,
 }
 
 /**
- * Returns the average darkness of a rectagular area.
+ * Returns the average darkness of a rectangular area.
  */
 uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2,
                      AVFrame *image) {
