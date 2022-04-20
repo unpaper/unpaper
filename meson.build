@@ -43,21 +43,23 @@ custom_target(
     install_dir: join_paths(get_option('prefix'), get_option('mandir'), 'man1'),
 )
 
-pytest = find_program('pytest', required: false)
-if pytest.found()
-    test(
-        'pytest suite',
-        pytest,
-        args: [
-            meson.project_source_root() + '/tests/unpaper_tests.py'
-        ],
-        env: [
-            'TEST_IMGSRC_DIR=' + meson.project_source_root() + '/tests/source_images/',
-            'TEST_GOLDEN_DIR=' + meson.project_source_root() + '/tests/golden_images/',
-            'TEST_UNPAPER_BINARY=' + unpaper.full_path(),
-        ],
-        timeout : -1,
-    )
-else
+pymod = import('python')
+python = pymod.find_installation(required: false, modules: ['pytest', 'PIL'], disabler: true)
+
+if not python.found()
     warning('pytest not found, tests will not be performed.')
 endif
+
+test(
+    'pytest suite',
+    python,
+    args: [
+        '-m', 'pytest', meson.project_source_root() + '/tests/unpaper_tests.py'
+    ],
+    env: [
+        'TEST_IMGSRC_DIR=' + meson.project_source_root() + '/tests/source_images/',
+        'TEST_GOLDEN_DIR=' + meson.project_source_root() + '/tests/golden_images/',
+        'TEST_UNPAPER_BINARY=' + unpaper.full_path(),
+    ],
+    timeout : -1,
+)
