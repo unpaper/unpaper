@@ -22,9 +22,10 @@
 #include "parse.h"
 #include "tools.h"
 #include "unpaper.h"
+#include "version.h"
 
 #define WELCOME                                                                \
-  "unpaper"                                                               \
+  "unpaper " VERSION_STR                                                              \
   "\n"                                                                         \
   "License GPLv2: GNU GPL version 2.\n"                                        \
   "This is free software: you are free to change and redistribute it.\n"       \
@@ -368,7 +369,7 @@ int main(int argc, char *argv[]) {
       return c == '?' ? 1 : 0;
 
     case 'V':
-      puts("6.2+");
+      puts(VERSION_STR);
       return 0;
 
     case 'l':
