@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-project('unpaper', 'c', default_options : ['c_std=c11'])
+project('unpaper', 'c', version : '7.0.0', default_options : ['c_std=c11'])
 
 if not meson.version().version_compare('>0.57')
     error('Meson 0.57 or later required')
@@ -24,6 +24,10 @@ unpaper_deps = [
     dependency('libavformat'), dependency('libavcodec'), dependency('libavutil'),
     cc.find_library('m', required : false)
 ]
+
+conf_data = configuration_data()
+conf_data.set('version', meson.project_version())
+configure_file(input: 'version.h.in', output: 'version.h', configuration: conf_data)
 
 unpaper = executable(
     'unpaper',
