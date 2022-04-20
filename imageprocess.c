@@ -23,7 +23,7 @@
  * image processing functions                                               *
  ****************************************************************************/
 
-static inline bool inMask(int x, int y, int mask[EDGES_COUNT]) {
+static inline bool inMask(int x, int y, Mask mask) {
   return (x >= mask[LEFT]) && (x <= mask[RIGHT]) && (y >= mask[TOP]) &&
          (y <= mask[BOTTOM]);
 }
@@ -31,15 +31,15 @@ static inline bool inMask(int x, int y, int mask[EDGES_COUNT]) {
 /**
  * Tests if masks a and b overlap.
  */
-static inline bool masksOverlap(int a[EDGES_COUNT], int b[EDGES_COUNT]) {
+static inline bool masksOverlap(Mask a, Mask b) {
   return (inMask(a[LEFT], a[TOP], b) || inMask(a[RIGHT], a[BOTTOM], b));
 }
 
 /**
  * Tests if at least one mask in masks overlaps with m.
  */
-static bool masksOverlapAny(int m[EDGES_COUNT],
-                            int masks[MAX_MASKS][EDGES_COUNT], int masksCount) {
+static bool masksOverlapAny(Mask m,
+                            Mask *masks, int masksCount) {
   for (int i = 0; i < masksCount; i++) {
     if (masksOverlap(m, masks[i])) {
       return true;
@@ -61,7 +61,7 @@ static bool masksOverlapAny(int m[EDGES_COUNT],
  * this is negative for negative radians.
  */
 static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
-                                  AVFrame *image, int mask[EDGES_COUNT]) {
+                                  AVFrame *image, Mask mask) {
   int width = mask[RIGHT] - mask[LEFT] + 1;
   int height = mask[BOTTOM] - mask[TOP] + 1;
   int mid;
@@ -167,7 +167,7 @@ static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
  * is non-zero, and what sign this shifting value has.
  */
 static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
-                                int mask[EDGES_COUNT]) {
+                                Mask mask) {
   // either shiftX or shiftY is 0, the other value is -i|+i
   // depending on shiftX/shiftY the start edge for shifting is determined
   int maxPeak = 0;
@@ -194,7 +194,7 @@ static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
  * the horizontal or vertical edges of the area specified by left, top, right,
  * bottom.
  */
-float detectRotation(AVFrame *image, int mask[EDGES_COUNT]) {
+float detectRotation(AVFrame *image, Mask mask) {
   float rotation[4];
   int count = 0;
   float total;
@@ -703,17 +703,17 @@ void detectMasks(AVFrame *image) {
  * Permanently applies image masks. Each pixel which is not covered by at least
  * one mask is set to maskColor.
  */
-void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount,
+void applyMasks(Mask *masks, const int masksCount,
                 AVFrame *image) {
-  if (maskCount <= 0) {
+  if (masksCount <= 0) {
     return;
   }
   for (int y = 0; y < image->height; y++) {
     for (int x = 0; x < image->width; x++) {
       // in any mask?
       bool m = false;
-      for (int i = 0; ((m == false) && (i < maskCount)); i++) {
-        m = inMask(x, y, mask[i]);
+      for (int i = 0; i < masksCount; i++) {
+        m = m || inMask(x, y, masks[i]);
       }
       if (m == false) {
         setPixel(maskColor, x, y, image);
@@ -728,7 +728,7 @@ void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount,
  * Permanently wipes out areas of an images. Each pixel covered by a wipe-area
  * is set to wipeColor.
  */
-void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount,
+void applyWipes(Mask *area, int areaCount,
                 AVFrame *image) {
   for (int i = 0; i < areaCount; i++) {
     int count = 0;
@@ -814,7 +814,7 @@ void flipRotate(int direction, AVFrame **image) {
  */
 static void blackfilterScan(int stepX, int stepY, int size, int dep,
                             unsigned int absBlackfilterScanThreshold,
-                            int exclude[MAX_MASKS][EDGES_COUNT],
+                            Mask *exclude,
                             int excludeCount, int intensity, AVFrame *image) {
   int left;
   int top;
@@ -866,7 +866,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep,
       uint8_t blackness = darknessRect(l, t, r, b, image);
       if (blackness >=
           absBlackfilterScanThreshold) { // found a solidly black area
-        int mask[EDGES_COUNT] = {l, t, r, b};
+        Mask mask = {l, t, r, b};
         if (!masksOverlapAny(mask, exclude, excludeCount)) {
           if (verbose >= VERBOSE_NORMAL) {
             printf("black-area flood-fill: [%d,%d,%d,%d]\n", l, t, r, b);
@@ -1091,7 +1091,7 @@ int grayfilter(AVFrame *image) {
  * coordinates.
  */
 void centerMask(AVFrame *image, int center[COORDINATES_COUNT],
-                int mask[EDGES_COUNT]) {
+                Mask mask) {
   AVFrame *newimage;
 
   const int width = mask[RIGHT] - mask[LEFT] + 1;
@@ -1125,7 +1125,7 @@ void centerMask(AVFrame *image, int center[COORDINATES_COUNT],
  * Moves a rectangular area of pixels to be centered inside a specified area
  * coordinates.
  */
-void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT],
+void alignMask(Mask mask, Mask outside,
                AVFrame *image) {
   AVFrame *newimage;
   int targetX;
@@ -1166,7 +1166,7 @@ void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT],
  *
  * @param x1..y2 area inside of which border is to be detected
  */
-static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY,
+static int detectBorderEdge(Mask outsideMask, int stepX, int stepY,
                             int size, int threshold, AVFrame *image) {
   int left;
   int top;
@@ -1223,7 +1223,7 @@ static int detectBorderEdge(int outsideMask[EDGES_COUNT], int stepX, int stepY,
  * Detects a border of completely non-black pixels around the area
  * outsideBorder[LEFT],outsideBorder[TOP]-outsideBorder[RIGHT],outsideBorder[BOTTOM].
  */
-void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT],
+void detectBorder(int border[EDGES_COUNT], Mask outsideMask,
                   AVFrame *image) {
   border[LEFT] = outsideMask[LEFT];
   border[TOP] = outsideMask[TOP];
@@ -1256,7 +1256,7 @@ void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT],
 /**
  * Converts a border-tuple to a mask-tuple.
  */
-void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT],
+void borderToMask(int border[EDGES_COUNT], Mask mask,
                   AVFrame *image) {
   mask[LEFT] = border[LEFT];
   mask[TOP] = border[TOP];
@@ -1274,7 +1274,7 @@ void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT],
  * edges of the sheet will be cleared.
  */
 void applyBorder(int border[EDGES_COUNT], AVFrame *image) {
-  int mask[EDGES_COUNT];
+  Mask mask;
 
   if (border[LEFT] != 0 || border[TOP] != 0 || border[RIGHT] != 0 ||
       border[BOTTOM] != 0) {
