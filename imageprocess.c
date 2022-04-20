@@ -1091,7 +1091,7 @@ int grayfilter(AVFrame *image) {
  * coordinates.
  */
 void centerMask(AVFrame *image, int center[COORDINATES_COUNT],
-                int mask[DIRECTIONS_COUNT]) {
+                int mask[EDGES_COUNT]) {
   AVFrame *newimage;
 
   const int width = mask[RIGHT] - mask[LEFT] + 1;
