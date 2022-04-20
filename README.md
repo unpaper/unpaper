@@ -68,6 +68,9 @@ Further optimizations such as `-ftracer` and `-ftree-vectorize` are
 thought to work, but their effect has not been evaluated so your
 mileage may vary.
 
+Tests depend on `pytest` and `pillow`, which will be auto-detected by
+Meson.
+
 Further Information
 -------------------
 
