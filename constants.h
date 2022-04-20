@@ -37,6 +37,8 @@ typedef enum { HORIZONTAL, VERTICAL, DIRECTIONS_COUNT } DIRECTIONS;
 
 typedef enum { LEFT, TOP, RIGHT, BOTTOM, EDGES_COUNT } EDGES;
 
+typedef int Mask[EDGES_COUNT];
+
 typedef enum {
   LAYOUT_NONE,
   LAYOUT_SINGLE,

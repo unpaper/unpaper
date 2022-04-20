@@ -16,7 +16,7 @@
 
 /* --- deskewing ---------------------------------------------------------- */
 
-float detectRotation(AVFrame *image, int mask[EDGES_COUNT]);
+float detectRotation(AVFrame *image, Mask mask);
 
 void rotate(const float radians, AVFrame *source, AVFrame *target);
 
@@ -32,12 +32,12 @@ void shift(int shiftX, int shiftY, AVFrame **image);
 
 void detectMasks(AVFrame *image);
 
-void applyMasks(int mask[MAX_MASKS][EDGES_COUNT], const int maskCount,
+void applyMasks(Mask *masks, const int maskCount,
                 AVFrame *image);
 
 /* --- wiping ------------------------------------------------------------- */
 
-void applyWipes(int area[MAX_MASKS][EDGES_COUNT], int areaCount,
+void applyWipes(Mask *area, int areaCount,
                 AVFrame *image);
 
 /* --- mirroring ---------------------------------------------------------- */
@@ -67,14 +67,14 @@ int grayfilter(AVFrame *image);
 /* --- border-detection --------------------------------------------------- */
 
 void centerMask(AVFrame *image, int center[COORDINATES_COUNT],
-                int mask[EDGES_COUNT]);
+                Mask mask);
 
-void alignMask(int mask[EDGES_COUNT], int outside[EDGES_COUNT], AVFrame *image);
+void alignMask(Mask mask, Mask outside, AVFrame *image);
 
-void detectBorder(int border[EDGES_COUNT], int outsideMask[EDGES_COUNT],
+void detectBorder(int border[EDGES_COUNT], Mask outsideMask,
                   AVFrame *image);
 
-void borderToMask(int border[EDGES_COUNT], int mask[EDGES_COUNT],
+void borderToMask(int border[EDGES_COUNT], Mask mask,
                   AVFrame *image);
 
 void applyBorder(int border[EDGES_COUNT], AVFrame *image);
