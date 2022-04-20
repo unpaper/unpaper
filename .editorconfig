@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2022 The unpaper authors
+#
+# SPDX-License-Identifier: 0BSD
+
+# https://editorconfig.org/
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+indent_style = space
+indent_size = 4
+
+charset = utf-8
