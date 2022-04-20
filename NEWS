@@ -2,13 +2,17 @@
 #
 # SPDX-License-Identifier: GPL-2.0-only
 
-Release 6.2, 2014-xx-xx
+Release 7.0.0, 2022-04-20
  - Tests now compare a golden file by counting the bytes that differ
    between it and the result. This allows non-byte-perfect
    calculations to be executed and still not fail the tests. This is
    required as fused multiply-add instructions can increase precision
    and thus deviate from the base C code, when using floating-point
    arithmetic.
+ - Build is now provided by Meson, replacing the Autotools based
+   build system introduced in 0.4, 10½ years ago.
+ - Compatibility expanded to ffmpeg-5, which is the current widely
+   available release.
 
 Release 6.1, 2014-10-23
  - Compatibility with ffmpeg's implementation of libavcodec, and
@@ -86,7 +90,7 @@ Release 0.2, 2006-05-09:
 - Version number fallback to 0.2 (instead of counting up to 1.2). This better
   reflects the current development status and appears more suitable in an
   open-source context.
-- User documentation with several explaining diagrams added, see file 
+- User documentation with several explaining diagrams added, see file
   'doc/index.html'.
 - Color support added. Files of type PPM can be read, processed and written
   now. By default, unpaper uses the same image format for the output file as
@@ -95,8 +99,8 @@ Release 0.2, 2006-05-09:
   parameter --type pbm|pgm|ppm to force an output file format independently
   from the input file format.
 - Better image rotation implementation. Auto-rotation of pages is now done
-  much faster. 
-- The --cache option became obsolete (due to new image rotation 
+  much faster.
+- The --cache option became obsolete (due to new image rotation
   implementation).
 - The compiler-switch -DNOSINCOS became obsolete (due to new image rotation
   implementation). It is no longer needed for compilation on some platforms.
@@ -115,15 +119,15 @@ Release 1.1, 2005-08-27:
 - Multiple input and output filename patterns can now be specified using the
   options --input-file-sequence and --output-file-sequence.
 - Blank pages or sheets can be inserted into the sequence of input sheets
-  using --insert-blank and/or --replace-blanks,  
-- Zooming and stretching are now supported, see --stretch, --zoom and 
-  --post-stretch, --post-zoom. 
+  using --insert-blank and/or --replace-blanks,
+- Zooming and stretching are now supported, see --stretch, --zoom and
+  --post-stretch, --post-zoom.
 - The sheet size can be set while keeping the content's aspect ratio (and
   centering it with best-fitting on the sheet) using --size and --post-size.
   For changing the sheet size without performing any stretching/zooming of
   content use --sheet-size.
 - Faster rotation when deskewing images. The rotating algorithm has been
-  optimized to run up to 4 times faster than before. Additional speedup 
+  optimized to run up to 4 times faster than before. Additional speedup
   may be achieved by caching intermediate results of trigonometric calculations
   when processing multiple page. This caching uses a lot of memory, it
   can be enabled using the --cache switch.
@@ -135,18 +139,18 @@ Release 1.1, 2005-08-27:
 - The behaviour of the 'double' template, used with the --layout parameter
   by specifying "--layout double", has been changed slightly. The input
   images are no longer assumed to be rotated by 90 degrees, as they would
-  be when scanned from paper with a usual ADF-scanner. 
+  be when scanned from paper with a usual ADF-scanner.
   That means, "--layout double" no longer implies "--pre-rotate 90" and
   "--post-rotate 90". To get the layout-template behaving as in earlier
-  versions, use "--layout double-rotated", this behaves like the old 
+  versions, use "--layout double-rotated", this behaves like the old
   "--layout double".
 - --border-align --border-margin allow to align page content heading towards
   one edge, but keeping a specified distance margin.
 - Using the new parameter --blackfilter-scan-exclude [l,t,r,b], areas can
   be specified on which the blackfilter will not work. This is useful to
-  exclude the blackfilter from working on inner page content, e.g. to 
+  exclude the blackfilter from working on inner page content, e.g. to
   protect images with larger dark parts from deletion.
-  Note that the --layout option may preset some blackfilter-scan-exclude 
+  Note that the --layout option may preset some blackfilter-scan-exclude
   masks.
 - The speed of the noisefilter has been optimized a bit.
 - The default --mask-scan-step value has been changed from 10 to 5, which
