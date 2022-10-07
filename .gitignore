@@ -4,5 +4,6 @@
 
 *~
 .vscode
+_build/
 builddir/
 tests/__pycache__/
