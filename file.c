@@ -127,7 +127,6 @@ void loadImage(const char *filename, AVFrame **image) {
  * @return true on success, false on failure
  */
 void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
-  const AVOutputFormat *fmt = NULL;
   enum AVCodecID output_codec = -1;
   const AVCodec *codec;
   AVFormatContext *out_ctx;
@@ -138,19 +137,10 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
   int ret;
   char errbuff[1024];
 
-  fmt = av_guess_format("image2", NULL, NULL);
-
-  if (!fmt) {
-    errOutput("could not find suitable output fmt.");
-  }
-
-  out_ctx = avformat_alloc_context();
-  if (!out_ctx) {
+  if (avformat_alloc_output_context2(&out_ctx, NULL, "image2", filename) < 0 ||
+    out_ctx == NULL) {
     errOutput("unable to allocate output context.");
   }
-
-  out_ctx->oformat = fmt;
-  out_ctx->url = av_strdup(filename);
 
   switch (outputPixFmt) {
   case AV_PIX_FMT_RGB24:
