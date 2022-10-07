@@ -15,3 +15,7 @@ indent_style = space
 indent_size = 2
 
 charset = utf-8
+
+[*.{c,h}]
+cpp_indent_braces = false
+cpp_space_pointer_reference_alignment = right
