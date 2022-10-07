@@ -51,7 +51,7 @@ pymod = import('python')
 python = pymod.find_installation(required: false, modules: ['pytest', 'PIL'], disabler: true)
 
 if not python.found()
-    warning('pytest not found, tests will not be performed.')
+    warning('pytest or Pillow not found, tests will not be performed.')
 endif
 
 test(
