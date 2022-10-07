@@ -4,6 +4,7 @@
 
 *~
 .vscode
+_deps/
 _build/
 builddir/
 tests/__pycache__/
