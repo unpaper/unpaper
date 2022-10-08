@@ -13,6 +13,7 @@
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
+#include <libavutil/opt.h>
 
 #include "tools.h"
 #include "unpaper.h"
@@ -140,6 +141,11 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
   if (avformat_alloc_output_context2(&out_ctx, NULL, "image2", filename) < 0 ||
     out_ctx == NULL) {
     errOutput("unable to allocate output context.");
+  }
+
+  if ((ret = av_opt_set(out_ctx->priv_data, "update", "true", 0)) < 0) {
+    av_strerror(ret, errbuff, sizeof(errbuff));
+    errOutput("unable to configure update option: %s", errbuff);
   }
 
   switch (outputPixFmt) {
