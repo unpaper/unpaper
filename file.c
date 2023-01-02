@@ -40,7 +40,10 @@ void loadImage(const char *filename, AVFrame **image) {
     errOutput("unable to open file %s: %s", filename, errbuff);
   }
 
-  avformat_find_stream_info(s, NULL);
+  ret = avformat_find_stream_info(s, NULL);
+  if (ret < 0) {
+    errOutput("unable to get stream info");
+  }
 
   if (verbose >= VERBOSE_MORE)
     av_dump_format(s, 0, filename, 0);
