@@ -443,7 +443,7 @@ Options
 .. option:: -Bm vertical, horizontal; --border-margin vertical, horizontal
 
    Distance to keep from the sheet edge when aligning a border area. May
-   use measurement suffices such as cm, in.
+   use measurement suffixes such as cm, in.
 
 .. option:: -w threshold; --white-threshold threshold
 
