@@ -37,8 +37,7 @@ static inline bool masksOverlap(const Mask a, const Mask b) {
 /**
  * Tests if at least one mask in masks overlaps with m.
  */
-static bool masksOverlapAny(const Mask m,
-                            const Mask *masks, int masksCount) {
+static bool masksOverlapAny(const Mask m, const Mask *masks, int masksCount) {
   for (int i = 0; i < masksCount; i++) {
     if (masksOverlap(m, masks[i])) {
       return true;
@@ -702,8 +701,7 @@ void detectMasks(AVFrame *image) {
  * Permanently applies image masks. Each pixel which is not covered by at least
  * one mask is set to maskColor.
  */
-void applyMasks(Mask *masks, const int masksCount,
-                AVFrame *image) {
+void applyMasks(Mask *masks, const int masksCount, AVFrame *image) {
   if (masksCount <= 0) {
     return;
   }
@@ -727,8 +725,7 @@ void applyMasks(Mask *masks, const int masksCount,
  * Permanently wipes out areas of an images. Each pixel covered by a wipe-area
  * is set to wipeColor.
  */
-void applyWipes(Mask *area, int areaCount,
-                AVFrame *image) {
+void applyWipes(Mask *area, int areaCount, AVFrame *image) {
   for (int i = 0; i < areaCount; i++) {
     int count = 0;
     for (int y = area[i][TOP]; y <= area[i][BOTTOM]; y++) {
@@ -813,8 +810,8 @@ void flipRotate(int direction, AVFrame **image) {
  */
 static void blackfilterScan(int stepX, int stepY, int size, int dep,
                             unsigned int absBlackfilterScanThreshold,
-                            const Mask *exclude,
-                            int excludeCount, int intensity, AVFrame *image) {
+                            const Mask *exclude, int excludeCount,
+                            int intensity, AVFrame *image) {
   int left;
   int top;
   int right;
@@ -1124,8 +1121,7 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
  * Moves a rectangular area of pixels to be centered inside a specified area
  * coordinates.
  */
-void alignMask(const Mask mask, const Mask outside,
-               AVFrame *image) {
+void alignMask(const Mask mask, const Mask outside, AVFrame *image) {
   AVFrame *newimage;
   int targetX;
   int targetY;
@@ -1255,8 +1251,7 @@ void detectBorder(int border[EDGES_COUNT], const Mask outsideMask,
 /**
  * Converts a border-tuple to a mask-tuple.
  */
-void borderToMask(const int border[EDGES_COUNT], Mask mask,
-                  AVFrame *image) {
+void borderToMask(const int border[EDGES_COUNT], Mask mask, AVFrame *image) {
   mask[LEFT] = border[LEFT];
   mask[TOP] = border[TOP];
   mask[RIGHT] = image->width - border[RIGHT] - 1;
