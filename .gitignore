@@ -8,3 +8,4 @@ _deps/
 _build/
 builddir/
 tests/__pycache__/
+venv/
