@@ -6,6 +6,7 @@
 
 /* --- The main program  -------------------------------------------------- */
 
+#include <assert.h>
 #include <getopt.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -58,7 +59,7 @@ float deskewScanRangeRad;
 float deskewScanStepRad;
 float deskewScanDeviationRad;
 
-static int layout = LAYOUT_SINGLE;
+static LAYOUTS layout = LAYOUT_SINGLE;
 int startSheet = 1;
 int endSheet = -1;
 int startInput = -1;
@@ -1188,12 +1189,17 @@ int main(int argc, char *argv[]) {
 
       if (verbose >= VERBOSE_MORE) {
         switch (layout) {
+        case LAYOUT_NONE:
+          printf("layout: none\n");
+          break;
         case LAYOUT_SINGLE:
           printf("layout: single\n");
           break;
         case LAYOUT_DOUBLE:
           printf("layout: double\n");
           break;
+        default:
+          assert(false); // unreachable
         }
 
         if (preRotate != 0) {
