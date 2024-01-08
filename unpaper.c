@@ -152,7 +152,6 @@ struct MultiIndex noBorderMultiIndex = {0, NULL};
 struct MultiIndex noBorderScanMultiIndex = {0, NULL};
 struct MultiIndex noBorderAlignMultiIndex = {0, NULL};
 
-struct MultiIndex excludeMultiIndex = {0, NULL};
 struct MultiIndex ignoreMultiIndex = {0, NULL};
 struct MultiIndex insertBlank = {0, NULL};
 struct MultiIndex replaceBlank = {0, NULL};
@@ -418,9 +417,9 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'x':
-      parseMultiIndex(optarg, &excludeMultiIndex);
-      if (excludeMultiIndex.count == -1)
-        excludeMultiIndex.count = 0; // 'exclude all' makes no sense
+      parseMultiIndex(optarg, &options.excludeMultiIndex);
+      if (options.excludeMultiIndex.count == -1)
+        options.excludeMultiIndex.count = 0; // 'exclude all' makes no sense
       break;
 
     case 'n':
@@ -1058,7 +1057,7 @@ int main(int argc, char *argv[]) {
     // ---------------------------------------------------------------
 
     if (isInMultiIndex(nr, options.sheetMultiIndex) &&
-        (!isInMultiIndex(nr, excludeMultiIndex))) {
+        (!isInMultiIndex(nr, options.excludeMultiIndex))) {
       char s1[1023]; // buffers for result of implode()
       char s2[1023];
 
