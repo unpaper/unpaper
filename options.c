@@ -13,4 +13,5 @@ optionsInit(Options *o)
   o->sheetMultiIndex = (struct MultiIndex) { .count = -1, .indexes = NULL };
 
   o->excludeMultiIndex = (struct MultiIndex) { .count = 0, .indexes = NULL };
+  o->ignoreMultiIndex = (struct MultiIndex) { .count = 0, .indexes = NULL };
 }

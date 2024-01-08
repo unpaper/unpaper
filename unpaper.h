@@ -125,7 +125,6 @@ extern struct MultiIndex noWipeMultiIndex;
 extern struct MultiIndex noBorderMultiIndex;
 extern struct MultiIndex noBorderScanMultiIndex;
 extern struct MultiIndex noBorderAlignMultiIndex;
-extern struct MultiIndex ignoreMultiIndex;
 extern struct MultiIndex insertBlank;
 extern struct MultiIndex replaceBlank;
 

@@ -152,7 +152,6 @@ struct MultiIndex noBorderMultiIndex = {0, NULL};
 struct MultiIndex noBorderScanMultiIndex = {0, NULL};
 struct MultiIndex noBorderAlignMultiIndex = {0, NULL};
 
-struct MultiIndex ignoreMultiIndex = {0, NULL};
 struct MultiIndex insertBlank = {0, NULL};
 struct MultiIndex replaceBlank = {0, NULL};
 
@@ -423,7 +422,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'n':
-      parseMultiIndex(optarg, &ignoreMultiIndex);
+      parseMultiIndex(optarg, &options.ignoreMultiIndex);
       break;
 
     case 0x83:
@@ -1415,9 +1414,9 @@ int main(int argc, char *argv[]) {
         if (postRotate != 0) {
           printf("post-rotate: %d\n", postRotate);
         }
-        // if (ignoreMultiIndex.count > 0) {
+        // if (options.ignoreMultiIndex.count > 0) {
         //    printf("EXCLUDE sheets: ");
-        //    printMultiIndex(ignoreMultiIndex);
+        //    printMultiIndex(options.ignoreMultiIndex);
         //}
         printf("white-threshold: %f\n", whiteThreshold);
         printf("black-threshold: %f\n", blackThreshold);
@@ -1594,17 +1593,17 @@ int main(int argc, char *argv[]) {
       }
 
       // pre-wipe
-      if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noWipeMultiIndex, options.ignoreMultiIndex)) {
         applyWipes(preWipe, preWipeCount, sheet);
       }
 
       // pre-border
-      if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noBorderMultiIndex, options.ignoreMultiIndex)) {
         applyBorder(preBorder, sheet);
       }
 
       // black area filter
-      if (!isExcluded(nr, noBlackfilterMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noBlackfilterMultiIndex, options.ignoreMultiIndex)) {
         saveDebug("_before-blackfilter%d.pnm", nr, sheet);
         blackfilter(sheet);
         saveDebug("_after-blackfilter%d.pnm", nr, sheet);
@@ -1615,7 +1614,7 @@ int main(int argc, char *argv[]) {
       }
 
       // noise filter
-      if (!isExcluded(nr, noNoisefilterMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noNoisefilterMultiIndex, options.ignoreMultiIndex)) {
         if (verbose >= VERBOSE_NORMAL) {
           printf("noise-filter ...");
         }
@@ -1632,7 +1631,7 @@ int main(int argc, char *argv[]) {
       }
 
       // blur filter
-      if (!isExcluded(nr, noBlurfilterMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noBlurfilterMultiIndex, options.ignoreMultiIndex)) {
         if (verbose >= VERBOSE_NORMAL) {
           printf("blur-filter...");
         }
@@ -1649,7 +1648,7 @@ int main(int argc, char *argv[]) {
       }
 
       // mask-detection
-      if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noMaskScanMultiIndex, options.ignoreMultiIndex)) {
         detectMasks(sheet);
       } else {
         if (verbose >= VERBOSE_MORE) {
@@ -1665,7 +1664,7 @@ int main(int argc, char *argv[]) {
       }
 
       // gray filter
-      if (!isExcluded(nr, noGrayfilterMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noGrayfilterMultiIndex, options.ignoreMultiIndex)) {
         if (verbose >= VERBOSE_NORMAL) {
           printf("gray-filter...");
         }
@@ -1682,12 +1681,12 @@ int main(int argc, char *argv[]) {
       }
 
       // rotation-detection
-      if ((!isExcluded(nr, noDeskewMultiIndex, ignoreMultiIndex))) {
+      if ((!isExcluded(nr, noDeskewMultiIndex, options.ignoreMultiIndex))) {
         saveDebug("_before-deskew%d.pnm", nr, sheet);
 
         // detect masks again, we may get more precise results now after first
         // masking and grayfilter
-        if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
+        if (!isExcluded(nr, noMaskScanMultiIndex, options.ignoreMultiIndex)) {
           detectMasks(sheet);
         } else {
           if (verbose >= VERBOSE_MORE) {
@@ -1740,10 +1739,10 @@ int main(int argc, char *argv[]) {
       // auto-center masks on either single-page or double-page layout
       if (!isExcluded(
               nr, noMaskCenterMultiIndex,
-              ignoreMultiIndex)) { // (maskCount==pointCount to make sure all
-                                   // masks had correctly been detected)
+              options.ignoreMultiIndex)) { // (maskCount==pointCount to make sure all
+                                           // masks had correctly been detected)
         // perform auto-masking again to get more precise masks after rotation
-        if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
+        if (!isExcluded(nr, noMaskScanMultiIndex, options.ignoreMultiIndex)) {
           detectMasks(sheet);
         } else {
           if (verbose >= VERBOSE_MORE) {
@@ -1764,7 +1763,7 @@ int main(int argc, char *argv[]) {
       }
 
       // explicit wipe
-      if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noWipeMultiIndex, options.ignoreMultiIndex)) {
         applyWipes(wipe, wipeCount, sheet);
       } else {
         if (verbose >= VERBOSE_MORE) {
@@ -1773,7 +1772,7 @@ int main(int argc, char *argv[]) {
       }
 
       // explicit border
-      if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noBorderMultiIndex, options.ignoreMultiIndex)) {
         applyBorder(border, sheet);
       } else {
         if (verbose >= VERBOSE_MORE) {
@@ -1782,7 +1781,7 @@ int main(int argc, char *argv[]) {
       }
 
       // border-detection
-      if (!isExcluded(nr, noBorderScanMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noBorderScanMultiIndex, options.ignoreMultiIndex)) {
         int autoborder[MAX_MASKS][EDGES_COUNT];
         int autoborderMask[MAX_MASKS][EDGES_COUNT];
         saveDebug("_before-border%d.pnm", nr, sheet);
@@ -1793,7 +1792,7 @@ int main(int argc, char *argv[]) {
         applyMasks(autoborderMask, outsideBorderscanMaskCount, sheet);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
           // border-centering
-          if (!isExcluded(nr, noBorderAlignMultiIndex, ignoreMultiIndex)) {
+          if (!isExcluded(nr, noBorderAlignMultiIndex, options.ignoreMultiIndex)) {
             alignMask(autoborderMask[i], outsideBorderscanMask[i], sheet);
           } else {
             if (verbose >= VERBOSE_MORE) {
@@ -1809,12 +1808,12 @@ int main(int argc, char *argv[]) {
       }
 
       // post-wipe
-      if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noWipeMultiIndex, options.ignoreMultiIndex)) {
         applyWipes(postWipe, postWipeCount, sheet);
       }
 
       // post-border
-      if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, noBorderMultiIndex, options.ignoreMultiIndex)) {
         applyBorder(postBorder, sheet);
       }
 
