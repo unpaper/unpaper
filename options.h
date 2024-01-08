@@ -9,6 +9,8 @@ typedef struct {
   struct MultiIndex sheetMultiIndex;
   struct MultiIndex excludeMultiIndex;
   struct MultiIndex ignoreMultiIndex;
+  struct MultiIndex insertBlank;
+  struct MultiIndex replaceBlank;
 } Options;
 
 void optionsInit(Options *o);

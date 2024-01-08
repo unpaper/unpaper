@@ -152,9 +152,6 @@ struct MultiIndex noBorderMultiIndex = {0, NULL};
 struct MultiIndex noBorderScanMultiIndex = {0, NULL};
 struct MultiIndex noBorderAlignMultiIndex = {0, NULL};
 
-struct MultiIndex insertBlank = {0, NULL};
-struct MultiIndex replaceBlank = {0, NULL};
-
 bool overwrite = false;
 int dpi = 300;
 
@@ -861,11 +858,11 @@ int main(int argc, char *argv[]) {
       break;
 
     case 0xc3:
-      parseMultiIndex(optarg, &insertBlank);
+      parseMultiIndex(optarg, &options.insertBlank);
       break;
 
     case 0xc4:
-      parseMultiIndex(optarg, &replaceBlank);
+      parseMultiIndex(optarg, &options.replaceBlank);
       break;
 
     case 'T':
@@ -979,8 +976,8 @@ int main(int argc, char *argv[]) {
     bool outputWildcard = false;
 
     for (int i = 0; i < inputCount; i++) {
-      bool ins = isInMultiIndex(inputNr, insertBlank);
-      bool repl = isInMultiIndex(inputNr, replaceBlank);
+      bool ins = isInMultiIndex(inputNr, options.insertBlank);
+      bool repl = isInMultiIndex(inputNr, options.replaceBlank);
 
       if (repl) {
         inputFileNames[i] = NULL;
