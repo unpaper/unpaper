@@ -976,6 +976,8 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------
 
     bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
+    bool outputWildcard = false;
+
     for (int i = 0; i < inputCount; i++) {
       bool ins = isInMultiIndex(inputNr, insertBlank);
       bool repl = isInMultiIndex(inputNr, replaceBlank);
@@ -1025,7 +1027,7 @@ int main(int argc, char *argv[]) {
                           // it over the array boundary
       errOutput("not enough output files given.");
     }
-    bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
+    outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
     for (int i = 0; i < outputCount; i++) {
       if (outputWildcard) {
         sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
