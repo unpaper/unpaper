@@ -23,4 +23,16 @@ optionsInit(Options *o)
   o->ignoreMultiIndex = multiIndexEmpty();
   o->insertBlank = multiIndexEmpty();
   o->replaceBlank = multiIndexEmpty();
+
+  o->noBlackfilterMultiIndex = multiIndexEmpty();
+  o->noNoisefilterMultiIndex = multiIndexEmpty();
+  o->noBlurfilterMultiIndex = multiIndexEmpty();
+  o->noGrayfilterMultiIndex = multiIndexEmpty();
+  o->noMaskScanMultiIndex = multiIndexEmpty();
+  o->noMaskCenterMultiIndex = multiIndexEmpty();
+  o->noDeskewMultiIndex = multiIndexEmpty();
+  o->noWipeMultiIndex = multiIndexEmpty();
+  o->noBorderMultiIndex = multiIndexEmpty();
+  o->noBorderScanMultiIndex = multiIndexEmpty();
+  o->noBorderAlignMultiIndex = multiIndexEmpty();
 }
