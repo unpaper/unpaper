@@ -60,7 +60,6 @@ float deskewScanRangeRad;
 float deskewScanStepRad;
 float deskewScanDeviationRad;
 
-int startSheet = 1;
 int endSheet = -1;
 int startInput = -1;
 int startOutput = -1;
@@ -458,12 +457,12 @@ int main(int argc, char *argv[]) {
     case '#':
       parseMultiIndex(optarg, &options.sheetMultiIndex);
       // allow 0 as start sheet, might be overwritten by --start-sheet again
-      if (options.sheetMultiIndex.count > 0 && startSheet > options.sheetMultiIndex.indexes[0])
-        startSheet = options.sheetMultiIndex.indexes[0];
+      if (options.sheetMultiIndex.count > 0 && options.startSheet > options.sheetMultiIndex.indexes[0])
+        options.startSheet = options.sheetMultiIndex.indexes[0];
       break;
 
     case OPT_START_SHEET:
-      sscanf(optarg, "%d", &startSheet);
+      sscanf(optarg, "%d", &options.startSheet);
       break;
 
     case OPT_END_SHEET:
@@ -1013,15 +1012,15 @@ int main(int argc, char *argv[]) {
     printf(WELCOME); // welcome message
 
   if (startInput == -1)
-    startInput = (startSheet - 1) * inputCount + 1;
+    startInput = (options.startSheet - 1) * inputCount + 1;
   if (startOutput == -1)
-    startOutput = (startSheet - 1) * outputCount + 1;
+    startOutput = (options.startSheet - 1) * outputCount + 1;
 
   inputNr = startInput;
   outputNr = startOutput;
 
   if (!multisheets && endSheet == -1)
-    endSheet = startSheet;
+    endSheet = options.startSheet;
 
   // Calculate the constant absolute values based on the relative parameters.
   absBlackThreshold = WHITE * (1.0 - blackThreshold);
@@ -1032,7 +1031,7 @@ int main(int argc, char *argv[]) {
   deskewScanStepRad = degreesToRadians(deskewScanStep);
   deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
 
-  for (int nr = startSheet; (endSheet == -1) || (nr <= endSheet); nr++) {
+  for (int nr = options.startSheet; (endSheet == -1) || (nr <= endSheet); nr++) {
     char inputFilesBuffer[2][255];
     char outputFilesBuffer[2][255];
     char *inputFileNames[2];
