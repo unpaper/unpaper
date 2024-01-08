@@ -58,7 +58,7 @@ float deskewScanRangeRad;
 float deskewScanStepRad;
 float deskewScanDeviationRad;
 
-int layout = LAYOUT_SINGLE;
+static int layout = LAYOUT_SINGLE;
 int startSheet = 1;
 int endSheet = -1;
 int startInput = -1;
