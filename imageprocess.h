@@ -32,11 +32,11 @@ void shift(int shiftX, int shiftY, AVFrame **image);
 
 void detectMasks(AVFrame *image);
 
-void applyMasks(Mask *masks, const int maskCount, AVFrame *image);
+void applyMasks(const Mask *masks, const int maskCount, AVFrame *image);
 
 /* --- wiping ------------------------------------------------------------- */
 
-void applyWipes(Mask *area, int areaCount, AVFrame *image);
+void applyWipes(const Mask *area, int areaCount, AVFrame *image);
 
 /* --- mirroring ---------------------------------------------------------- */
 

@@ -700,7 +700,7 @@ void detectMasks(AVFrame *image) {
  * Permanently applies image masks. Each pixel which is not covered by at least
  * one mask is set to maskColor.
  */
-void applyMasks(Mask *masks, const int masksCount, AVFrame *image) {
+void applyMasks(const Mask *masks, const int masksCount, AVFrame *image) {
   if (masksCount <= 0) {
     return;
   }
@@ -724,7 +724,7 @@ void applyMasks(Mask *masks, const int masksCount, AVFrame *image) {
  * Permanently wipes out areas of an images. Each pixel covered by a wipe-area
  * is set to wipeColor.
  */
-void applyWipes(Mask *area, int areaCount, AVFrame *image) {
+void applyWipes(const Mask *area, int areaCount, AVFrame *image) {
   for (int i = 0; i < areaCount; i++) {
     int count = 0;
     for (int y = area[i][TOP]; y <= area[i][BOTTOM]; y++) {
