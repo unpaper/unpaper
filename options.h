@@ -9,6 +9,8 @@ typedef struct {
   int endSheet;
   int startInput;
   int startOutput;
+  int inputCount;
+  int outputCount;
 
   struct MultiIndex sheetMultiIndex;
   struct MultiIndex excludeMultiIndex;

@@ -18,6 +18,8 @@ optionsInit(Options *o)
   o->endSheet = -1;
   o->startInput = -1;
   o->startOutput = -1;
+  o->inputCount = 1;
+  o->outputCount = 1;
 
   // default: process all between start-sheet and end-sheet
   // This does not use .count = 0 because we use the -1 as a sentinel for "all sheets".
