@@ -56,9 +56,6 @@ unsigned int absBlackThreshold;
 unsigned int absWhiteThreshold;
 unsigned int absBlackfilterScanThreshold;
 unsigned int absGrayfilterThreshold;
-float deskewScanRangeRad;
-float deskewScanStepRad;
-float deskewScanDeviationRad;
 
 int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
 int sheetBackground = WHITE24;
@@ -264,6 +261,7 @@ int main(int argc, char *argv[]) {
   int option_index = 0;
   int outputPixFmt = -1;
   Options options;
+  ImageProcessParameters params;
 
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
@@ -1022,9 +1020,8 @@ int main(int argc, char *argv[]) {
   absWhiteThreshold = WHITE * (whiteThreshold);
   absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
   absGrayfilterThreshold = WHITE * (grayfilterThreshold);
-  deskewScanRangeRad = degreesToRadians(deskewScanRange);
-  deskewScanStepRad = degreesToRadians(deskewScanStep);
-  deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
+
+  params = imageProcessParameters(deskewScanRange, deskewScanStep, deskewScanDeviation);
 
   for (int nr = options.startSheet; (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
     char inputFilesBuffer[2][255];
@@ -1758,7 +1755,7 @@ int main(int argc, char *argv[]) {
         // auto-deskew each mask
         for (int i = 0; i < maskCount; i++) {
           saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
-          float rotation = detectRotation(sheet, mask[i]);
+          float rotation = detectRotation(sheet, mask[i], &params);
           saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
 
           if (verbose >= VERBOSE_NORMAL) {
