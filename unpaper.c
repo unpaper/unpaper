@@ -6,6 +6,7 @@
 
 /* --- The main program  -------------------------------------------------- */
 
+#include <assert.h>
 #include <getopt.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -19,6 +20,7 @@
 #include <libavutil/avutil.h>
 
 #include "imageprocess.h"
+#include "options.h"
 #include "parse.h"
 #include "tools.h"
 #include "unpaper.h"
@@ -58,13 +60,6 @@ float deskewScanRangeRad;
 float deskewScanStepRad;
 float deskewScanDeviationRad;
 
-int layout = LAYOUT_SINGLE;
-int startSheet = 1;
-int endSheet = -1;
-int startInput = -1;
-int startOutput = -1;
-int inputCount = 1;
-int outputCount = 1;
 int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
 int sheetBackground = WHITE24;
 int preRotate = 0;
@@ -138,28 +133,95 @@ float blackThreshold = 0.33;
 bool writeoutput = true;
 bool multisheets = true;
 
-// 0: allow all, -1: disable all, n: individual entries
-struct MultiIndex noBlackfilterMultiIndex = {0, NULL};
-struct MultiIndex noNoisefilterMultiIndex = {0, NULL};
-struct MultiIndex noBlurfilterMultiIndex = {0, NULL};
-struct MultiIndex noGrayfilterMultiIndex = {0, NULL};
-struct MultiIndex noMaskScanMultiIndex = {0, NULL};
-struct MultiIndex noMaskCenterMultiIndex = {0, NULL};
-struct MultiIndex noDeskewMultiIndex = {0, NULL};
-struct MultiIndex noWipeMultiIndex = {0, NULL};
-struct MultiIndex noBorderMultiIndex = {0, NULL};
-struct MultiIndex noBorderScanMultiIndex = {0, NULL};
-struct MultiIndex noBorderAlignMultiIndex = {0, NULL};
-
-// default: process all between start-sheet and end-sheet
-struct MultiIndex sheetMultiIndex = {-1, NULL};
-struct MultiIndex excludeMultiIndex = {0, NULL};
-struct MultiIndex ignoreMultiIndex = {0, NULL};
-struct MultiIndex insertBlank = {0, NULL};
-struct MultiIndex replaceBlank = {0, NULL};
-
 bool overwrite = false;
 int dpi = 300;
+
+// We use these for the "val" field in struct option, for getopt_long_only().
+// These are for the options that do not have single characters as short options.
+//
+// The values start at 0x7e because this is above all the values for the
+// short-option characters (e.g. 0x7e is '~', but there is no '~" short option,
+// so we start with that).
+enum LONG_OPTION_VALUES {
+  OPT_START_SHEET = 0x7e,
+  OPT_END_SHEET,
+  OPT_START_INPUT,
+  OPT_START_OUTPUT,
+  OPT_SHEET_BACKGROUND,
+  OPT_PRE_ROTATE,
+  OPT_POST_ROTATE,
+  OPT_POST_MIRROR,
+  OPT_PRE_SHIFT,
+  OPT_POST_SHIFT,
+  OPT_PRE_MASK,
+  OPT_POST_SIZE,
+  OPT_STRETCH,
+  OPT_POST_STRETCH,
+  OPT_POST_ZOOM,
+  OPT_PRE_WIPE,
+  OPT_POST_WIPE,
+  OPT_MIDDLE_WIPE,
+  OPT_PRE_BORDER,
+  OPT_POST_BORDER,
+  OPT_NO_BLACK_FILTER,
+  OPT_BLACK_FILTER_SCAN_DIRECTION,
+  OPT_BLACK_FILTER_SCAN_SIZE,
+  OPT_BLACK_FILTER_SCAN_DEPTH,
+  OPT_BLACK_FILTER_SCAN_STEP,
+  OPT_BLACK_FILTER_SCAN_THRESHOLD,
+  OPT_BLACK_FILTER_SCAN_EXCLUDE,
+  OPT_BLACK_FILTER_INTENSITY,
+  OPT_NO_NOISE_FILTER,
+  OPT_NOISE_FILTER_INTENSITY,
+  OPT_NO_BLUR_FILTER,
+  OPT_BLUR_FILTER_SIZE,
+  OPT_BLUR_FILTER_STEP,
+  OPT_BLUR_FILTER_INTENSITY,
+  OPT_NO_GRAY_FILTER,
+  OPT_GRAY_FILTER_SIZE,
+  OPT_GRAY_FILTER_STEP,
+  OPT_GRAY_FILTER_THRESHOLD,
+  OPT_NO_MASK_SCAN,
+  OPT_MASK_SCAN_DIRECTION,
+  OPT_MASK_SCAN_SIZE,
+  OPT_MASK_SCAN_DEPTH,
+  OPT_MASK_SCAN_STEP,
+  OPT_MASK_SCAN_THRESHOLD,
+  OPT_MASK_SCAN_MINIMUM,
+  OPT_MASK_SCAN_MAXIMUM,
+  OPT_MASK_COLOR,
+  OPT_NO_MASK_CENTER,
+  OPT_NO_DESKEW,
+  OPT_DESKEW_SCAN_DIRECTION,
+  OPT_DESKEW_SCAN_SIZE,
+  OPT_DESKEW_SCAN_DEPTH,
+  OPT_DESKEW_SCAN_RANGE,
+  OPT_DESKEW_SCAN_STEP,
+  OPT_DESKEW_SCAN_DEVIATION,
+  OPT_NO_BORDER_SCAN,
+  OPT_BORDER_SCAN_DIRECTION,
+  OPT_BORDER_SCAN_SIZE,
+  OPT_BORDER_SCAN_STEP,
+  OPT_BORDER_SCAN_THRESHOLD,
+  OPT_BORDER_ALIGN,
+  OPT_BORDER_MARGIN,
+  OPT_NO_BORDER_ALIGN,
+  OPT_NO_WIPE,
+  OPT_NO_BORDER,
+  OPT_INPUT_PAGES,
+  OPT_OUTPUT_PAGES,
+  OPT_INPUT_FILE_SEQUENCE,
+  OPT_OUTPUT_FILE_SEQUENCE,
+  OPT_INSERT_BLANK,
+  OPT_REPLACE_BLANK,
+  OPT_NO_MULTI_PAGES,
+  OPT_DPI,
+  OPT_OVERWRITE,
+  OPT_VERBOSE_MORE,
+  OPT_DEBUG,
+  OPT_DEBUG_SAVE,
+  OPT_INTERPOLATE,
+};
 
 /**
  * Print an error and exit process
@@ -201,10 +263,13 @@ int main(int argc, char *argv[]) {
   int outputNr;
   int option_index = 0;
   int outputPixFmt = -1;
+  Options options;
 
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
   // -------------------------------------------------------------------
+
+  optionsInit(&options);
 
   while (true) {
     int c;
@@ -216,145 +281,145 @@ int main(int argc, char *argv[]) {
         {"layout", required_argument, NULL, 'l'},
         {"#", required_argument, NULL, '#'},
         {"sheet", required_argument, NULL, '#'},
-        {"start", required_argument, NULL, 0x7e},
-        {"start-sheet", required_argument, NULL, 0x7e},
-        {"end", required_argument, NULL, 0x7f},
-        {"end-sheet", required_argument, NULL, 0x7f},
-        {"start-input", required_argument, NULL, 0x80},
-        {"si", required_argument, NULL, 0x80},
-        {"start-output", required_argument, NULL, 0x81},
-        {"so", required_argument, NULL, 0x81},
+        {"start", required_argument, NULL, OPT_START_SHEET},
+        {"start-sheet", required_argument, NULL, OPT_START_SHEET},
+        {"end", required_argument, NULL, OPT_END_SHEET},
+        {"end-sheet", required_argument, NULL, OPT_END_SHEET},
+        {"start-input", required_argument, NULL, OPT_START_INPUT},
+        {"si", required_argument, NULL, OPT_START_INPUT},
+        {"start-output", required_argument, NULL, OPT_START_OUTPUT},
+        {"so", required_argument, NULL, OPT_START_OUTPUT},
         {"sheet-size", required_argument, NULL, 'S'},
-        {"sheet-background", required_argument, NULL, 0x82},
+        {"sheet-background", required_argument, NULL, OPT_SHEET_BACKGROUND},
         {"exclude", optional_argument, NULL, 'x'},
         {"no-processing", required_argument, NULL, 'n'},
-        {"pre-rotate", required_argument, NULL, 0x83},
-        {"post-rotate", required_argument, NULL, 0x84},
+        {"pre-rotate", required_argument, NULL, OPT_PRE_ROTATE},
+        {"post-rotate", required_argument, NULL, OPT_POST_ROTATE},
         {"pre-mirror", required_argument, NULL, 'M'},
-        {"post-mirror", required_argument, NULL, 0x85},
-        {"pre-shift", required_argument, NULL, 0x86},
-        {"post-shift", required_argument, NULL, 0x87},
-        {"pre-mask", required_argument, NULL, 0x88},
+        {"post-mirror", required_argument, NULL, OPT_POST_MIRROR},
+        {"pre-shift", required_argument, NULL, OPT_PRE_SHIFT},
+        {"post-shift", required_argument, NULL, OPT_POST_SHIFT},
+        {"pre-mask", required_argument, NULL, OPT_PRE_MASK},
         {"size", required_argument, NULL, 's'},
-        {"post-size", required_argument, NULL, 0x89},
-        {"stretch", required_argument, NULL, 0x8a},
-        {"post-stretch", required_argument, NULL, 0x8b},
+        {"post-size", required_argument, NULL, OPT_POST_SIZE},
+        {"stretch", required_argument, NULL, OPT_STRETCH},
+        {"post-stretch", required_argument, NULL, OPT_POST_STRETCH},
         {"zoom", required_argument, NULL, 'z'},
-        {"post-zoom", required_argument, NULL, 0x8c},
+        {"post-zoom", required_argument, NULL, OPT_POST_ZOOM},
         {"mask-scan-point", required_argument, NULL, 'p'},
         {"mask", required_argument, NULL, 'm'},
         {"wipe", required_argument, NULL, 'W'},
-        {"pre-wipe", required_argument, NULL, 0x8d},
-        {"post-wipe", required_argument, NULL, 0x8e},
-        {"middle-wipe", required_argument, NULL, 0x8f},
-        {"mw", required_argument, NULL, 0x8f},
+        {"pre-wipe", required_argument, NULL, OPT_PRE_WIPE},
+        {"post-wipe", required_argument, NULL, OPT_POST_WIPE},
+        {"middle-wipe", required_argument, NULL, OPT_MIDDLE_WIPE},
+        {"mw", required_argument, NULL, OPT_MIDDLE_WIPE},
         {"border", required_argument, NULL, 'B'},
-        {"pre-border", required_argument, NULL, 0x90},
-        {"post-border", required_argument, NULL, 0x91},
-        {"no-blackfilter", optional_argument, NULL, 0x92},
-        {"blackfilter-scan-direction", required_argument, NULL, 0x93},
-        {"bn", required_argument, NULL, 0x93},
-        {"blackfilter-scan-size", required_argument, NULL, 0x94},
-        {"bs", required_argument, NULL, 0x94},
-        {"blackfilter-scan-depth", required_argument, NULL, 0x95},
-        {"bd", required_argument, NULL, 0x95},
-        {"blackfilter-scan-step", required_argument, NULL, 0x96},
-        {"bp", required_argument, NULL, 0x96},
-        {"blackfilter-scan-threshold", required_argument, NULL, 0x97},
-        {"bt", required_argument, NULL, 0x97},
-        {"blackfilter-scan-exclude", required_argument, NULL, 0x98},
-        {"bx", required_argument, NULL, 0x98},
-        {"blackfilter-intensity", required_argument, NULL, 0x99},
-        {"bi", required_argument, NULL, 0x99},
-        {"no-noisefilter", optional_argument, NULL, 0x9a},
-        {"noisefilter-intensity", required_argument, NULL, 0x9b},
-        {"ni", required_argument, NULL, 0x9b},
-        {"no-blurfilter", optional_argument, NULL, 0x9c},
-        {"blurfilter-size", required_argument, NULL, 0x9d},
-        {"ls", required_argument, NULL, 0x9d},
-        {"blurfilter-step", required_argument, NULL, 0x9e},
-        {"lp", required_argument, NULL, 0x9e},
-        {"blurfilter-intensity", required_argument, NULL, 0x9f},
-        {"li", required_argument, NULL, 0x9f},
-        {"no-grayfilter", optional_argument, NULL, 0xa0},
-        {"grayfilter-size", required_argument, NULL, 0xa1},
-        {"gs", required_argument, NULL, 0xa1},
-        {"grayfilter-step", required_argument, NULL, 0xa2},
-        {"gp", required_argument, NULL, 0xa2},
-        {"grayfilter-threshold", required_argument, NULL, 0xa3},
-        {"gt", required_argument, NULL, 0xa3},
-        {"no-mask-scan", optional_argument, NULL, 0xa4},
-        {"mask-scan-direction", required_argument, NULL, 0xa5},
-        {"mn", required_argument, NULL, 0xa5},
-        {"mask-scan-size", required_argument, NULL, 0xa6},
-        {"ms", required_argument, NULL, 0xa6},
-        {"mask-scan-depth", required_argument, NULL, 0xa7},
-        {"md", required_argument, NULL, 0xa7},
-        {"mask-scan-step", required_argument, NULL, 0xa8},
-        {"mp", required_argument, NULL, 0xa8},
-        {"mask-scan-threshold", required_argument, NULL, 0xa9},
-        {"mt", required_argument, NULL, 0xa9},
-        {"mask-scan-minimum", required_argument, NULL, 0xaa},
-        {"mm", required_argument, NULL, 0xaa},
-        {"mask-scan-maximum", required_argument, NULL, 0xab},
-        {"mM", required_argument, NULL, 0xab},
-        {"mask-color", required_argument, NULL, 0xac},
-        {"mc", required_argument, NULL, 0xac},
-        {"no-mask-center", optional_argument, NULL, 0xad},
-        {"no-deskew", optional_argument, NULL, 0xae},
-        {"deskew-scan-direction", required_argument, NULL, 0xaf},
-        {"dn", required_argument, NULL, 0xaf},
-        {"deskew-scan-size", required_argument, NULL, 0xb0},
-        {"ds", required_argument, NULL, 0xb0},
-        {"deskew-scan-depth", required_argument, NULL, 0xb1},
-        {"dd", required_argument, NULL, 0xb1},
-        {"deskew-scan-range", required_argument, NULL, 0xb2},
-        {"dr", required_argument, NULL, 0xb2},
-        {"deskew-scan-step", required_argument, NULL, 0xb3},
-        {"dp", required_argument, NULL, 0xb3},
-        {"deskew-scan-deviation", required_argument, NULL, 0xb4},
-        {"dv", required_argument, NULL, 0xb4},
-        {"no-border-scan", optional_argument, NULL, 0xb5},
-        {"border-scan-direction", required_argument, NULL, 0xb6},
-        {"Bn", required_argument, NULL, 0xb6},
-        {"border-scan-size", required_argument, NULL, 0xb7},
-        {"Bs", required_argument, NULL, 0xb7},
-        {"border-scan-step", required_argument, NULL, 0xb8},
-        {"Bp", required_argument, NULL, 0xb8},
-        {"border-scan-threshold", required_argument, NULL, 0xb9},
-        {"Bt", required_argument, NULL, 0xb9},
-        {"border-align", required_argument, NULL, 0xba},
-        {"Ba", required_argument, NULL, 0xba},
-        {"border-margin", required_argument, NULL, 0xbb},
-        {"Bm", required_argument, NULL, 0xbb},
-        {"no-border-align", optional_argument, NULL, 0xbc},
-        {"no-wipe", optional_argument, NULL, 0xbd},
-        {"no-border", optional_argument, NULL, 0xbe},
+        {"pre-border", required_argument, NULL, OPT_PRE_BORDER},
+        {"post-border", required_argument, NULL, OPT_POST_BORDER},
+        {"no-blackfilter", optional_argument, NULL, OPT_NO_BLACK_FILTER},
+        {"blackfilter-scan-direction", required_argument, NULL, OPT_BLACK_FILTER_SCAN_DIRECTION},
+        {"bn", required_argument, NULL, OPT_BLACK_FILTER_SCAN_DIRECTION},
+        {"blackfilter-scan-size", required_argument, NULL, OPT_BLACK_FILTER_SCAN_SIZE},
+        {"bs", required_argument, NULL, OPT_BLACK_FILTER_SCAN_SIZE},
+        {"blackfilter-scan-depth", required_argument, NULL, OPT_BLACK_FILTER_SCAN_DEPTH},
+        {"bd", required_argument, NULL, OPT_BLACK_FILTER_SCAN_DEPTH},
+        {"blackfilter-scan-step", required_argument, NULL, OPT_BLACK_FILTER_SCAN_STEP},
+        {"bp", required_argument, NULL, OPT_BLACK_FILTER_SCAN_STEP},
+        {"blackfilter-scan-threshold", required_argument, NULL, OPT_BLACK_FILTER_SCAN_THRESHOLD},
+        {"bt", required_argument, NULL, OPT_BLACK_FILTER_SCAN_THRESHOLD},
+        {"blackfilter-scan-exclude", required_argument, NULL, OPT_BLACK_FILTER_SCAN_EXCLUDE},
+        {"bx", required_argument, NULL, OPT_BLACK_FILTER_SCAN_EXCLUDE},
+        {"blackfilter-intensity", required_argument, NULL, OPT_BLACK_FILTER_INTENSITY},
+        {"bi", required_argument, NULL, OPT_BLACK_FILTER_INTENSITY},
+        {"no-noisefilter", optional_argument, NULL, OPT_NO_NOISE_FILTER},
+        {"noisefilter-intensity", required_argument, NULL, OPT_NOISE_FILTER_INTENSITY},
+        {"ni", required_argument, NULL, OPT_NOISE_FILTER_INTENSITY},
+        {"no-blurfilter", optional_argument, NULL, OPT_NO_BLUR_FILTER},
+        {"blurfilter-size", required_argument, NULL, OPT_BLUR_FILTER_SIZE},
+        {"ls", required_argument, NULL, OPT_BLUR_FILTER_SIZE},
+        {"blurfilter-step", required_argument, NULL, OPT_BLUR_FILTER_STEP},
+        {"lp", required_argument, NULL, OPT_BLUR_FILTER_STEP},
+        {"blurfilter-intensity", required_argument, NULL, OPT_BLUR_FILTER_INTENSITY},
+        {"li", required_argument, NULL, OPT_BLUR_FILTER_INTENSITY},
+        {"no-grayfilter", optional_argument, NULL, OPT_NO_GRAY_FILTER},
+        {"grayfilter-size", required_argument, NULL, OPT_GRAY_FILTER_SIZE},
+        {"gs", required_argument, NULL, OPT_GRAY_FILTER_SIZE},
+        {"grayfilter-step", required_argument, NULL, OPT_GRAY_FILTER_STEP},
+        {"gp", required_argument, NULL, OPT_GRAY_FILTER_STEP},
+        {"grayfilter-threshold", required_argument, NULL, OPT_GRAY_FILTER_THRESHOLD},
+        {"gt", required_argument, NULL, OPT_GRAY_FILTER_THRESHOLD},
+        {"no-mask-scan", optional_argument, NULL, OPT_NO_MASK_SCAN},
+        {"mask-scan-direction", required_argument, NULL, OPT_MASK_SCAN_DIRECTION},
+        {"mn", required_argument, NULL, OPT_MASK_SCAN_DIRECTION},
+        {"mask-scan-size", required_argument, NULL, OPT_MASK_SCAN_SIZE},
+        {"ms", required_argument, NULL, OPT_MASK_SCAN_SIZE},
+        {"mask-scan-depth", required_argument, NULL, OPT_MASK_SCAN_DEPTH},
+        {"md", required_argument, NULL, OPT_MASK_SCAN_DEPTH},
+        {"mask-scan-step", required_argument, NULL, OPT_MASK_SCAN_STEP},
+        {"mp", required_argument, NULL, OPT_MASK_SCAN_STEP},
+        {"mask-scan-threshold", required_argument, NULL, OPT_MASK_SCAN_THRESHOLD},
+        {"mt", required_argument, NULL, OPT_MASK_SCAN_THRESHOLD},
+        {"mask-scan-minimum", required_argument, NULL, OPT_MASK_SCAN_MINIMUM},
+        {"mm", required_argument, NULL, OPT_MASK_SCAN_MINIMUM},
+        {"mask-scan-maximum", required_argument, NULL, OPT_MASK_SCAN_MAXIMUM},
+        {"mM", required_argument, NULL, OPT_MASK_SCAN_MAXIMUM},
+        {"mask-color", required_argument, NULL, OPT_MASK_COLOR},
+        {"mc", required_argument, NULL, OPT_MASK_COLOR},
+        {"no-mask-center", optional_argument, NULL, OPT_NO_MASK_CENTER},
+        {"no-deskew", optional_argument, NULL, OPT_NO_DESKEW},
+        {"deskew-scan-direction", required_argument, NULL, OPT_DESKEW_SCAN_DIRECTION},
+        {"dn", required_argument, NULL, OPT_DESKEW_SCAN_DIRECTION},
+        {"deskew-scan-size", required_argument, NULL, OPT_DESKEW_SCAN_SIZE},
+        {"ds", required_argument, NULL, OPT_DESKEW_SCAN_SIZE},
+        {"deskew-scan-depth", required_argument, NULL, OPT_DESKEW_SCAN_DEPTH},
+        {"dd", required_argument, NULL, OPT_DESKEW_SCAN_DEPTH},
+        {"deskew-scan-range", required_argument, NULL, OPT_DESKEW_SCAN_RANGE},
+        {"dr", required_argument, NULL, OPT_DESKEW_SCAN_RANGE},
+        {"deskew-scan-step", required_argument, NULL, OPT_DESKEW_SCAN_STEP},
+        {"dp", required_argument, NULL, OPT_DESKEW_SCAN_STEP},
+        {"deskew-scan-deviation", required_argument, NULL, OPT_DESKEW_SCAN_DEVIATION},
+        {"dv", required_argument, NULL, OPT_DESKEW_SCAN_DEVIATION},
+        {"no-border-scan", optional_argument, NULL, OPT_NO_BORDER_SCAN},
+        {"border-scan-direction", required_argument, NULL, OPT_BORDER_SCAN_DIRECTION},
+        {"Bn", required_argument, NULL, OPT_BORDER_SCAN_DIRECTION},
+        {"border-scan-size", required_argument, NULL, OPT_BORDER_SCAN_SIZE},
+        {"Bs", required_argument, NULL, OPT_BORDER_SCAN_SIZE},
+        {"border-scan-step", required_argument, NULL, OPT_BORDER_SCAN_STEP},
+        {"Bp", required_argument, NULL, OPT_BORDER_SCAN_STEP},
+        {"border-scan-threshold", required_argument, NULL, OPT_BORDER_SCAN_THRESHOLD},
+        {"Bt", required_argument, NULL, OPT_BORDER_SCAN_THRESHOLD},
+        {"border-align", required_argument, NULL, OPT_BORDER_ALIGN},
+        {"Ba", required_argument, NULL, OPT_BORDER_ALIGN},
+        {"border-margin", required_argument, NULL, OPT_BORDER_MARGIN},
+        {"Bm", required_argument, NULL, OPT_BORDER_MARGIN},
+        {"no-border-align", optional_argument, NULL, OPT_NO_BORDER_ALIGN},
+        {"no-wipe", optional_argument, NULL, OPT_NO_WIPE},
+        {"no-border", optional_argument, NULL, OPT_NO_BORDER},
         {"white-threshold", required_argument, NULL, 'w'},
         {"black-threshold", required_argument, NULL, 'b'},
-        {"input-pages", required_argument, NULL, 0xbf},
-        {"ip", required_argument, NULL, 0xbf},
-        {"output-pages", required_argument, NULL, 0xc0},
-        {"op", required_argument, NULL, 0xc0},
-        {"input-file-sequence", required_argument, NULL, 0xc1},
-        {"if", required_argument, NULL, 0xc1},
-        {"output-file-sequence", required_argument, NULL, 0xc2},
-        {"of", required_argument, NULL, 0xc2},
-        {"insert-blank", required_argument, NULL, 0xc3},
-        {"replace-blank", required_argument, NULL, 0xc4},
+        {"input-pages", required_argument, NULL, OPT_INPUT_PAGES},
+        {"ip", required_argument, NULL, OPT_INPUT_PAGES},
+        {"output-pages", required_argument, NULL, OPT_OUTPUT_PAGES},
+        {"op", required_argument, NULL, OPT_OUTPUT_PAGES},
+        {"input-file-sequence", required_argument, NULL, OPT_INPUT_FILE_SEQUENCE},
+        {"if", required_argument, NULL, OPT_INPUT_FILE_SEQUENCE},
+        {"output-file-sequence", required_argument, NULL, OPT_OUTPUT_FILE_SEQUENCE},
+        {"of", required_argument, NULL, OPT_OUTPUT_FILE_SEQUENCE},
+        {"insert-blank", required_argument, NULL, OPT_INSERT_BLANK},
+        {"replace-blank", required_argument, NULL, OPT_REPLACE_BLANK},
         {"test-only", no_argument, NULL, 'T'},
-        {"no-multi-pages", no_argument, NULL, 0xc6},
-        {"dpi", required_argument, NULL, 0xc7},
+        {"no-multi-pages", no_argument, NULL, OPT_NO_MULTI_PAGES},
+        {"dpi", required_argument, NULL, OPT_DPI},
         {"type", required_argument, NULL, 't'},
         {"quiet", no_argument, NULL, 'q'},
-        {"overwrite", no_argument, NULL, 0xc8},
+        {"overwrite", no_argument, NULL, OPT_OVERWRITE},
         {"verbose", no_argument, NULL, 'v'},
-        {"vv", no_argument, NULL, 0xca},
-        {"debug", no_argument, NULL, 0xcb},
-        {"vvv", no_argument, NULL, 0xcb},
-        {"debug-save", no_argument, NULL, 0xcc},
-        {"vvvv", no_argument, NULL, 0xcc},
-        {"interpolate", required_argument, NULL, 0xcd},
+        {"vv", no_argument, NULL, OPT_VERBOSE_MORE},
+        {"debug", no_argument, NULL, OPT_DEBUG},
+        {"vvv", no_argument, NULL, OPT_DEBUG},
+        {"debug-save", no_argument, NULL, OPT_DEBUG_SAVE},
+        {"vvvv", no_argument, NULL, OPT_DEBUG_SAVE},
+        {"interpolate", required_argument, NULL, OPT_INTERPOLATE},
         {NULL, no_argument, NULL, 0}};
 
     c = getopt_long_only(argc, argv, "hVl:S:x::n::M:s:z:p:m:W:B:w:b:Tt:qv",
@@ -374,58 +439,58 @@ int main(int argc, char *argv[]) {
 
     case 'l':
       if (strcmp(optarg, "single") == 0) {
-        layout = LAYOUT_SINGLE;
+        options.layout = LAYOUT_SINGLE;
       } else if (strcmp(optarg, "double") == 0) {
-        layout = LAYOUT_DOUBLE;
+        options.layout = LAYOUT_DOUBLE;
       } else if (strcmp(optarg, "none") == 0) {
-        layout = LAYOUT_NONE;
+        options.layout = LAYOUT_NONE;
       } else {
         errOutput("unknown layout mode '%s'.", optarg);
       }
       break;
 
     case '#':
-      parseMultiIndex(optarg, &sheetMultiIndex);
+      parseMultiIndex(optarg, &options.sheetMultiIndex);
       // allow 0 as start sheet, might be overwritten by --start-sheet again
-      if (sheetMultiIndex.count > 0 && startSheet > sheetMultiIndex.indexes[0])
-        startSheet = sheetMultiIndex.indexes[0];
+      if (options.sheetMultiIndex.count > 0 && options.startSheet > options.sheetMultiIndex.indexes[0])
+        options.startSheet = options.sheetMultiIndex.indexes[0];
       break;
 
-    case 0x7e:
-      sscanf(optarg, "%d", &startSheet);
+    case OPT_START_SHEET:
+      sscanf(optarg, "%d", &options.startSheet);
       break;
 
-    case 0x7f:
-      sscanf(optarg, "%d", &endSheet);
+    case OPT_END_SHEET:
+      sscanf(optarg, "%d", &options.endSheet);
       break;
 
-    case 0x80:
-      sscanf(optarg, "%d", &startInput);
+    case OPT_START_INPUT:
+      sscanf(optarg, "%d", &options.startInput);
       break;
 
-    case 0x81:
-      sscanf(optarg, "%d", &startOutput);
+    case OPT_START_OUTPUT:
+      sscanf(optarg, "%d", &options.startOutput);
       break;
 
     case 'S':
       parseSize(optarg, sheetSize, dpi);
       break;
 
-    case 0x82:
+    case OPT_SHEET_BACKGROUND:
       sheetBackground = parseColor(optarg);
       break;
 
     case 'x':
-      parseMultiIndex(optarg, &excludeMultiIndex);
-      if (excludeMultiIndex.count == -1)
-        excludeMultiIndex.count = 0; // 'exclude all' makes no sense
+      parseMultiIndex(optarg, &options.excludeMultiIndex);
+      if (options.excludeMultiIndex.count == -1)
+        options.excludeMultiIndex.count = 0; // 'exclude all' makes no sense
       break;
 
     case 'n':
-      parseMultiIndex(optarg, &ignoreMultiIndex);
+      parseMultiIndex(optarg, &options.ignoreMultiIndex);
       break;
 
-    case 0x83:
+    case OPT_PRE_ROTATE:
       sscanf(optarg, "%d", &preRotate);
       if ((preRotate != 0) && (abs(preRotate) != 90)) {
         fprintf(
@@ -435,7 +500,7 @@ int main(int argc, char *argv[]) {
       }
       break;
 
-    case 0x84:
+    case OPT_POST_ROTATE:
       sscanf(optarg, "%d", &postRotate);
       if ((postRotate != 0) && (abs(postRotate) != 90)) {
         fprintf(
@@ -450,19 +515,19 @@ int main(int argc, char *argv[]) {
           parseDirections(optarg); // s = "v", "v,h", "vertical,horizontal", ...
       break;
 
-    case 0x85:
+    case OPT_POST_MIRROR:
       postMirror = parseDirections(optarg);
       break;
 
-    case 0x86:
+    case OPT_PRE_SHIFT:
       parseSize(optarg, preShift, dpi);
       break;
 
-    case 0x87:
+    case OPT_POST_SHIFT:
       parseSize(optarg, postShift, dpi);
       break;
 
-    case 0x88:
+    case OPT_PRE_MASK:
       if (preMaskCount < MAX_MASKS) {
         left = -1;
         top = -1;
@@ -486,15 +551,15 @@ int main(int argc, char *argv[]) {
       parseSize(optarg, size, dpi);
       break;
 
-    case 0x89:
+    case OPT_POST_SIZE:
       parseSize(optarg, postSize, dpi);
       break;
 
-    case 0x8a:
+    case OPT_STRETCH:
       parseSize(optarg, stretchSize, dpi);
       break;
 
-    case 0x8b:
+    case OPT_POST_STRETCH:
       parseSize(optarg, postStretchSize, dpi);
       break;
 
@@ -502,7 +567,7 @@ int main(int argc, char *argv[]) {
       sscanf(optarg, "%f", &zoomFactor);
       break;
 
-    case 0x8c:
+    case OPT_POST_ZOOM:
       sscanf(optarg, "%f", &postZoomFactor);
       break;
 
@@ -563,7 +628,7 @@ int main(int argc, char *argv[]) {
       }
       break;
 
-    case 0x8d:
+    case OPT_PRE_WIPE:
       if (preWipeCount < MAX_MASKS) {
         left = -1;
         top = -1;
@@ -583,7 +648,7 @@ int main(int argc, char *argv[]) {
       }
       break;
 
-    case 0x8e:
+    case OPT_POST_WIPE:
       if (postWipeCount < MAX_MASKS) {
         left = -1;
         top = -1;
@@ -604,7 +669,7 @@ int main(int argc, char *argv[]) {
       }
       break;
 
-    case 0x8f:
+    case OPT_MIDDLE_WIPE:
       parseInts(optarg, middleWipe);
       break;
 
@@ -613,41 +678,41 @@ int main(int argc, char *argv[]) {
              &border[BOTTOM]);
       break;
 
-    case 0x90:
+    case OPT_PRE_BORDER:
       sscanf(optarg, "%d,%d,%d,%d", &preBorder[LEFT], &preBorder[TOP],
              &preBorder[RIGHT], &preBorder[BOTTOM]);
       break;
 
-    case 0x91:
+    case OPT_POST_BORDER:
       sscanf(optarg, "%d,%d,%d,%d", &postBorder[LEFT], &postBorder[TOP],
              &postBorder[RIGHT], &postBorder[BOTTOM]);
       break;
 
-    case 0x92:
-      parseMultiIndex(optarg, &noBlackfilterMultiIndex);
+    case OPT_NO_BLACK_FILTER:
+      parseMultiIndex(optarg, &options.noBlackfilterMultiIndex);
       break;
 
-    case 0x93:
+    case OPT_BLACK_FILTER_SCAN_DIRECTION:
       blackfilterScanDirections = parseDirections(optarg);
       break;
 
-    case 0x94:
+    case OPT_BLACK_FILTER_SCAN_SIZE:
       parseInts(optarg, blackfilterScanSize);
       break;
 
-    case 0x95:
+    case OPT_BLACK_FILTER_SCAN_DEPTH:
       parseInts(optarg, blackfilterScanDepth);
       break;
 
-    case 0x96:
+    case OPT_BLACK_FILTER_SCAN_STEP:
       parseInts(optarg, blackfilterScanStep);
       break;
 
-    case 0x97:
+    case OPT_BLACK_FILTER_SCAN_THRESHOLD:
       sscanf(optarg, "%f", &blackfilterScanThreshold);
       break;
 
-    case 0x98:
+    case OPT_BLACK_FILTER_SCAN_EXCLUDE:
       if (blackfilterExcludeCount < MAX_MASKS) {
         left = -1;
         top = -1;
@@ -668,158 +733,158 @@ int main(int argc, char *argv[]) {
       }
       break;
 
-    case 0x99:
+    case OPT_BLACK_FILTER_INTENSITY:
       sscanf(optarg, "%d", &blackfilterIntensity);
       break;
 
-    case 0x9a:
-      parseMultiIndex(optarg, &noNoisefilterMultiIndex);
+    case OPT_NO_NOISE_FILTER:
+      parseMultiIndex(optarg, &options.noNoisefilterMultiIndex);
       break;
 
-    case 0x9b:
+    case OPT_NOISE_FILTER_INTENSITY:
       sscanf(optarg, "%d", &noisefilterIntensity);
       break;
 
-    case 0x9c:
-      parseMultiIndex(optarg, &noBlurfilterMultiIndex);
+    case OPT_NO_BLUR_FILTER:
+      parseMultiIndex(optarg, &options.noBlurfilterMultiIndex);
       break;
 
-    case 0x9d:
+    case OPT_BLUR_FILTER_SIZE:
       parseInts(optarg, blurfilterScanSize);
       break;
 
-    case 0x9e:
+    case OPT_BLUR_FILTER_STEP:
       parseInts(optarg, blurfilterScanStep);
       break;
 
-    case 0x9f:
+    case OPT_BLUR_FILTER_INTENSITY:
       sscanf(optarg, "%f", &blurfilterIntensity);
       break;
 
-    case 0xa0:
-      parseMultiIndex(optarg, &noGrayfilterMultiIndex);
+    case OPT_NO_GRAY_FILTER:
+      parseMultiIndex(optarg, &options.noGrayfilterMultiIndex);
       break;
 
-    case 0xa1:
+    case OPT_GRAY_FILTER_SIZE:
       parseInts(optarg, grayfilterScanSize);
       break;
 
-    case 0xa2:
+    case OPT_GRAY_FILTER_STEP:
       parseInts(optarg, grayfilterScanStep);
       break;
 
-    case 0xa3:
+    case OPT_GRAY_FILTER_THRESHOLD:
       sscanf(optarg, "%f", &grayfilterThreshold);
       break;
 
-    case 0xa4:
-      parseMultiIndex(optarg, &noMaskScanMultiIndex);
+    case OPT_NO_MASK_SCAN:
+      parseMultiIndex(optarg, &options.noMaskScanMultiIndex);
       break;
 
-    case 0xa5:
+    case OPT_MASK_SCAN_DIRECTION:
       maskScanDirections = parseDirections(optarg);
       break;
 
-    case 0xa6:
+    case OPT_MASK_SCAN_SIZE:
       parseInts(optarg, maskScanSize);
       break;
 
-    case 0xa7:
+    case OPT_MASK_SCAN_DEPTH:
       parseInts(optarg, maskScanDepth);
       break;
 
-    case 0xa8:
+    case OPT_MASK_SCAN_STEP:
       parseInts(optarg, maskScanStep);
       break;
 
-    case 0xa9:
+    case OPT_MASK_SCAN_THRESHOLD:
       parseFloats(optarg, maskScanThreshold);
       break;
 
-    case 0xaa:
+    case OPT_MASK_SCAN_MINIMUM:
       sscanf(optarg, "%d,%d", &maskScanMinimum[WIDTH],
              &maskScanMinimum[HEIGHT]);
       break;
 
-    case 0xab:
+    case OPT_MASK_SCAN_MAXIMUM:
       sscanf(optarg, "%d,%d", &maskScanMaximum[WIDTH],
              &maskScanMaximum[HEIGHT]);
       break;
 
-    case 0xac:
+    case OPT_MASK_COLOR:
       sscanf(optarg, "%d", &maskColor);
       break;
 
-    case 0xad:
-      parseMultiIndex(optarg, &noMaskCenterMultiIndex);
+    case OPT_NO_MASK_CENTER:
+      parseMultiIndex(optarg, &options.noMaskCenterMultiIndex);
       break;
 
-    case 0xae:
-      parseMultiIndex(optarg, &noDeskewMultiIndex);
+    case OPT_NO_DESKEW:
+      parseMultiIndex(optarg, &options.noDeskewMultiIndex);
       break;
 
-    case 0xaf:
+    case OPT_DESKEW_SCAN_DIRECTION:
       deskewScanEdges = parseEdges(optarg);
       break;
 
-    case 0xb0:
+    case OPT_DESKEW_SCAN_SIZE:
       sscanf(optarg, "%d", &deskewScanSize);
       break;
 
-    case 0xb1:
+    case OPT_DESKEW_SCAN_DEPTH:
       sscanf(optarg, "%f", &deskewScanDepth);
       break;
 
-    case 0xb2:
+    case OPT_DESKEW_SCAN_RANGE:
       sscanf(optarg, "%f", &deskewScanRange);
       break;
 
-    case 0xb3:
+    case OPT_DESKEW_SCAN_STEP:
       sscanf(optarg, "%f", &deskewScanStep);
       break;
 
-    case 0xb4:
+    case OPT_DESKEW_SCAN_DEVIATION:
       sscanf(optarg, "%f", &deskewScanDeviation);
       break;
 
-    case 0xb5:
-      parseMultiIndex(optarg, &noBorderScanMultiIndex);
+    case OPT_NO_BORDER_SCAN:
+      parseMultiIndex(optarg, &options.noBorderScanMultiIndex);
       break;
 
-    case 0xb6:
+    case OPT_BORDER_SCAN_DIRECTION:
       borderScanDirections = parseDirections(optarg);
       break;
 
-    case 0xb7:
+    case OPT_BORDER_SCAN_SIZE:
       parseInts(optarg, borderScanSize);
       break;
 
-    case 0xb8:
+    case OPT_BORDER_SCAN_STEP:
       parseInts(optarg, borderScanStep);
       break;
 
-    case 0xb9:
+    case OPT_BORDER_SCAN_THRESHOLD:
       parseInts(optarg, borderScanThreshold);
       break;
 
-    case 0xba:
+    case OPT_BORDER_ALIGN:
       borderAlign = parseEdges(optarg);
       break;
 
-    case 0xbb:
+    case OPT_BORDER_MARGIN:
       parseSize(optarg, borderAlignMargin, dpi);
       break;
 
-    case 0xbc:
-      parseMultiIndex(optarg, &noBorderAlignMultiIndex);
+    case OPT_NO_BORDER_ALIGN:
+      parseMultiIndex(optarg, &options.noBorderAlignMultiIndex);
       break;
 
-    case 0xbd:
-      parseMultiIndex(optarg, &noWipeMultiIndex);
+    case OPT_NO_WIPE:
+      parseMultiIndex(optarg, &options.noWipeMultiIndex);
       break;
 
-    case 0xbe:
-      parseMultiIndex(optarg, &noBorderMultiIndex);
+    case OPT_NO_BORDER:
+      parseMultiIndex(optarg, &options.noBorderMultiIndex);
       break;
 
     case 'w':
@@ -830,57 +895,53 @@ int main(int argc, char *argv[]) {
       sscanf(optarg, "%f", &blackThreshold);
       break;
 
-    case 0xbf:
-      sscanf(optarg, "%d", &inputCount);
-      if (!(inputCount >= 1 && inputCount <= 2)) {
+    case OPT_INPUT_PAGES:
+      sscanf(optarg, "%d", &options.inputCount);
+      if (!(options.inputCount >= 1 && options.inputCount <= 2)) {
         fprintf(
             stderr,
             "cannot set --input-pages value other than 1 or 2, ignoring.\n");
-        inputCount = 1;
+        options.inputCount = 1;
       }
 
       break;
 
-    case 0xc0:
-      sscanf(optarg, "%d", &outputCount);
-      if (!(outputCount >= 1 && outputCount <= 2)) {
+    case OPT_OUTPUT_PAGES:
+      sscanf(optarg, "%d", &options.outputCount);
+      if (!(options.outputCount >= 1 && options.outputCount <= 2)) {
         fprintf(
             stderr,
             "cannot set --output-pages value other than 1 or 2, ignoring.\n");
-        outputCount = 1;
+        options.outputCount = 1;
       }
 
       break;
 
-    case 0xc1:
-    case 0xc2:
+    case OPT_INPUT_FILE_SEQUENCE:
+    case OPT_OUTPUT_FILE_SEQUENCE:
       errOutput(
-          "--input-file-sequence and --output-file sequence are deprecated and "
+          "--input-file-sequence and --output-file-sequence are deprecated and "
           "unimplemented.\n"
           "Please pass input output pairs as arguments to unpaper instead.");
       break;
 
-    case 0xc3:
-      parseMultiIndex(optarg, &insertBlank);
+    case OPT_INSERT_BLANK:
+      parseMultiIndex(optarg, &options.insertBlank);
       break;
 
-    case 0xc4:
-      parseMultiIndex(optarg, &replaceBlank);
+    case OPT_REPLACE_BLANK:
+      parseMultiIndex(optarg, &options.replaceBlank);
       break;
 
     case 'T':
       writeoutput = false;
       break;
 
-    case 0xc5:
-      // Deprecated function, ignore.
-      break;
-
-    case 0xc6:
+    case OPT_NO_MULTI_PAGES:
       multisheets = false;
       break;
 
-    case 0xc7:
+    case OPT_DPI:
       sscanf(optarg, "%d", &dpi);
       break;
 
@@ -898,7 +959,7 @@ int main(int argc, char *argv[]) {
       verbose = VERBOSE_QUIET;
       break;
 
-    case 0xc8:
+    case OPT_OVERWRITE:
       overwrite = true;
       break;
 
@@ -906,19 +967,19 @@ int main(int argc, char *argv[]) {
       verbose = VERBOSE_NORMAL;
       break;
 
-    case 0xca:
+    case OPT_VERBOSE_MORE:
       verbose = VERBOSE_MORE;
       break;
 
-    case 0xcb:
+    case OPT_DEBUG:
       verbose = VERBOSE_DEBUG;
       break;
 
-    case 0xcc:
+    case OPT_DEBUG_SAVE:
       verbose = VERBOSE_DEBUG_SAVE;
       break;
 
-    case 0xcd:
+    case OPT_INTERPOLATE:
       if (strcmp(optarg, "nearest") == 0) {
         interpolateType = INTERP_NN;
       } else if (strcmp(optarg, "linear") == 0) {
@@ -945,16 +1006,16 @@ int main(int argc, char *argv[]) {
   if (verbose >= VERBOSE_NORMAL)
     printf(WELCOME); // welcome message
 
-  if (startInput == -1)
-    startInput = (startSheet - 1) * inputCount + 1;
-  if (startOutput == -1)
-    startOutput = (startSheet - 1) * outputCount + 1;
+  if (options.startInput == -1)
+    options.startInput = (options.startSheet - 1) * options.inputCount + 1;
+  if (options.startOutput == -1)
+    options.startOutput = (options.startSheet - 1) * options.outputCount + 1;
 
-  inputNr = startInput;
-  outputNr = startOutput;
+  inputNr = options.startInput;
+  outputNr = options.startOutput;
 
-  if (!multisheets && endSheet == -1)
-    endSheet = startSheet;
+  if (!multisheets && options.endSheet == -1)
+    options.endSheet = options.startSheet;
 
   // Calculate the constant absolute values based on the relative parameters.
   absBlackThreshold = WHITE * (1.0 - blackThreshold);
@@ -965,7 +1026,7 @@ int main(int argc, char *argv[]) {
   deskewScanStepRad = degreesToRadians(deskewScanStep);
   deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
 
-  for (int nr = startSheet; (endSheet == -1) || (nr <= endSheet); nr++) {
+  for (int nr = options.startSheet; (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
     char inputFilesBuffer[2][255];
     char outputFilesBuffer[2][255];
     char *inputFileNames[2];
@@ -976,9 +1037,11 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------
 
     bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
-    for (int i = 0; i < inputCount; i++) {
-      bool ins = isInMultiIndex(inputNr, insertBlank);
-      bool repl = isInMultiIndex(inputNr, replaceBlank);
+    bool outputWildcard = false;
+
+    for (int i = 0; i < options.inputCount; i++) {
+      bool ins = isInMultiIndex(inputNr, options.insertBlank);
+      bool repl = isInMultiIndex(inputNr, options.replaceBlank);
 
       if (repl) {
         inputFileNames[i] = NULL;
@@ -989,8 +1052,8 @@ int main(int argc, char *argv[]) {
         sprintf(inputFilesBuffer[i], argv[optind], inputNr++);
         inputFileNames[i] = inputFilesBuffer[i];
       } else if (optind >= argc) {
-        if (endSheet == -1) {
-          endSheet = nr - 1;
+        if (options.endSheet == -1) {
+          options.endSheet = nr - 1;
           goto sheet_end;
         } else {
           errOutput("not enough input files given.");
@@ -1009,8 +1072,8 @@ int main(int argc, char *argv[]) {
       if (inputFileNames[i] != NULL) {
         struct stat statBuf;
         if (stat(inputFileNames[i], &statBuf) != 0) {
-          if (endSheet == -1) {
-            endSheet = nr - 1;
+          if (options.endSheet == -1) {
+            options.endSheet = nr - 1;
             goto sheet_end;
           } else {
             errOutput("unable to open file %s.", inputFileNames[i]);
@@ -1025,8 +1088,8 @@ int main(int argc, char *argv[]) {
                           // it over the array boundary
       errOutput("not enough output files given.");
     }
-    bool outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
-    for (int i = 0; i < outputCount; i++) {
+    outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
+    for (int i = 0; i < options.outputCount; i++) {
       if (outputWildcard) {
         sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
         outputFileNames[i] = outputFilesBuffer[i];
@@ -1053,8 +1116,8 @@ int main(int argc, char *argv[]) {
     // --- process single sheet                                    ---
     // ---------------------------------------------------------------
 
-    if (isInMultiIndex(nr, sheetMultiIndex) &&
-        (!isInMultiIndex(nr, excludeMultiIndex))) {
+    if (isInMultiIndex(nr, options.sheetMultiIndex) &&
+        (!isInMultiIndex(nr, options.excludeMultiIndex))) {
       char s1[1023]; // buffers for result of implode()
       char s2[1023];
 
@@ -1065,24 +1128,24 @@ int main(int argc, char *argv[]) {
       if (verbose > VERBOSE_QUIET) {
         if (multisheets) {
           printf("Processing sheet #%d: %s -> %s\n", nr,
-                 implode(s1, (const char **)inputFileNames, inputCount),
-                 implode(s2, (const char **)outputFileNames, outputCount));
+                 implode(s1, (const char **)inputFileNames, options.inputCount),
+                 implode(s2, (const char **)outputFileNames, options.outputCount));
         } else {
           printf("Processing sheet: %s -> %s\n",
-                 implode(s1, (const char **)inputFileNames, inputCount),
-                 implode(s2, (const char **)outputFileNames, outputCount));
+                 implode(s1, (const char **)inputFileNames, options.inputCount),
+                 implode(s2, (const char **)outputFileNames, options.outputCount));
         }
       }
 
       // load input image(s)
-      for (int j = 0; j < inputCount; j++) {
+      for (int j = 0; j < options.inputCount; j++) {
         if (inputFileNames[j] !=
             NULL) { // may be null if --insert-blank or --replace-blank
           if (verbose >= VERBOSE_MORE)
             printf("loading file %s.\n", inputFileNames[j]);
 
           loadImage(inputFileNames[j], &page);
-          saveDebug("_loaded_%d.pnm", inputNr - inputCount + j, page);
+          saveDebug("_loaded_%d.pnm", inputNr - options.inputCount + j, page);
 
           if (outputPixFmt == -1 && page != NULL) {
             outputPixFmt = page->format;
@@ -1102,7 +1165,7 @@ int main(int argc, char *argv[]) {
             if (sheetSize[WIDTH] != -1) {
               w = sheetSize[WIDTH];
             } else {
-              w = page->width * inputCount;
+              w = page->width * options.inputCount;
             }
           }
           if (h == -1) {
@@ -1122,14 +1185,14 @@ int main(int argc, char *argv[]) {
           initImage(&sheet, w, h, AV_PIX_FMT_RGB24, true);
         }
         if (page != NULL) {
-          saveDebug("_page%d.pnm", inputNr - inputCount + j, page);
-          saveDebug("_before_center_page%d.pnm", inputNr - inputCount + j,
+          saveDebug("_page%d.pnm", inputNr - options.inputCount + j, page);
+          saveDebug("_before_center_page%d.pnm", inputNr - options.inputCount + j,
                     sheet);
 
-          centerImage(page, (w * j / inputCount), 0, (w / inputCount), h,
+          centerImage(page, (w * j / options.inputCount), 0, (w / options.inputCount), h,
                       sheet);
 
-          saveDebug("_after_center_page%d.pnm", inputNr - inputCount + j,
+          saveDebug("_after_center_page%d.pnm", inputNr - options.inputCount + j,
                     sheet);
         }
       }
@@ -1185,13 +1248,18 @@ int main(int argc, char *argv[]) {
       // parameters and size are known now
 
       if (verbose >= VERBOSE_MORE) {
-        switch (layout) {
+        switch (options.layout) {
+        case LAYOUT_NONE:
+          printf("layout: none\n");
+          break;
         case LAYOUT_SINGLE:
           printf("layout: single\n");
           break;
         case LAYOUT_DOUBLE:
           printf("layout: double\n");
           break;
+        default:
+          assert(false); // unreachable
         }
 
         if (preRotate != 0) {
@@ -1238,7 +1306,7 @@ int main(int argc, char *argv[]) {
         if (postZoomFactor != 1.0) {
           printf("post-zoom: %f\n", postZoomFactor);
         }
-        if (noBlackfilterMultiIndex.count != -1) {
+        if (options.noBlackfilterMultiIndex.count != -1) {
           printf("blackfilter-scan-direction: %s\n",
                  getDirections(blackfilterScanDirections));
           printf("blackfilter-scan-size: [%d,%d]\n", blackfilterScanSize[0],
@@ -1258,49 +1326,49 @@ int main(int argc, char *argv[]) {
             printf("\n");
           }
           printf("blackfilter-intensity: %d\n", blackfilterIntensity);
-          if (noBlackfilterMultiIndex.count > 0) {
+          if (options.noBlackfilterMultiIndex.count > 0) {
             printf("blackfilter DISABLED for sheets: ");
-            printMultiIndex(noBlackfilterMultiIndex);
+            printMultiIndex(options.noBlackfilterMultiIndex);
           }
         } else {
           printf("blackfilter DISABLED for all sheets.\n");
         }
-        if (noNoisefilterMultiIndex.count != -1) {
+        if (options.noNoisefilterMultiIndex.count != -1) {
           printf("noisefilter-intensity: %d\n", noisefilterIntensity);
-          if (noNoisefilterMultiIndex.count > 0) {
+          if (options.noNoisefilterMultiIndex.count > 0) {
             printf("noisefilter DISABLED for sheets: ");
-            printMultiIndex(noNoisefilterMultiIndex);
+            printMultiIndex(options.noNoisefilterMultiIndex);
           }
         } else {
           printf("noisefilter DISABLED for all sheets.\n");
         }
-        if (noBlurfilterMultiIndex.count != -1) {
+        if (options.noBlurfilterMultiIndex.count != -1) {
           printf("blurfilter-size: [%d,%d]\n", blurfilterScanSize[0],
                  blurfilterScanSize[1]);
           printf("blurfilter-step: [%d,%d]\n", blurfilterScanStep[0],
                  blurfilterScanStep[1]);
           printf("blurfilter-intensity: %f\n", blurfilterIntensity);
-          if (noBlurfilterMultiIndex.count > 0) {
+          if (options.noBlurfilterMultiIndex.count > 0) {
             printf("blurfilter DISABLED for sheets: ");
-            printMultiIndex(noBlurfilterMultiIndex);
+            printMultiIndex(options.noBlurfilterMultiIndex);
           }
         } else {
           printf("blurfilter DISABLED for all sheets.\n");
         }
-        if (noGrayfilterMultiIndex.count != -1) {
+        if (options.noGrayfilterMultiIndex.count != -1) {
           printf("grayfilter-size: [%d,%d]\n", grayfilterScanSize[0],
                  grayfilterScanSize[1]);
           printf("grayfilter-step: [%d,%d]\n", grayfilterScanStep[0],
                  grayfilterScanStep[1]);
           printf("grayfilter-threshold: %f\n", grayfilterThreshold);
-          if (noGrayfilterMultiIndex.count > 0) {
+          if (options.noGrayfilterMultiIndex.count > 0) {
             printf("grayfilter DISABLED for sheets: ");
-            printMultiIndex(noGrayfilterMultiIndex);
+            printMultiIndex(options.noGrayfilterMultiIndex);
           }
         } else {
           printf("grayfilter DISABLED for all sheets.\n");
         }
-        if (noMaskScanMultiIndex.count != -1) {
+        if (options.noMaskScanMultiIndex.count != -1) {
           printf("mask points: ");
           for (int i = 0; i < pointCount; i++) {
             printf("(%d,%d) ", point[i][X], point[i][Y]);
@@ -1319,14 +1387,14 @@ int main(int argc, char *argv[]) {
           printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[0],
                  maskScanMaximum[1]);
           printf("mask-color: %d\n", maskColor);
-          if (noMaskScanMultiIndex.count > 0) {
+          if (options.noMaskScanMultiIndex.count > 0) {
             printf("mask-scan DISABLED for sheets: ");
-            printMultiIndex(noMaskScanMultiIndex);
+            printMultiIndex(options.noMaskScanMultiIndex);
           }
         } else {
           printf("mask-scan DISABLED for all sheets.\n");
         }
-        if (noDeskewMultiIndex.count != -1) {
+        if (options.noDeskewMultiIndex.count != -1) {
           printf("deskew-scan-direction: ");
           printEdges(deskewScanEdges);
           printf("deskew-scan-size: %d\n", deskewScanSize);
@@ -1334,14 +1402,14 @@ int main(int argc, char *argv[]) {
           printf("deskew-scan-range: %f\n", deskewScanRange);
           printf("deskew-scan-step: %f\n", deskewScanStep);
           printf("deskew-scan-deviation: %f\n", deskewScanDeviation);
-          if (noDeskewMultiIndex.count > 0) {
+          if (options.noDeskewMultiIndex.count > 0) {
             printf("deskew-scan DISABLED for sheets: ");
-            printMultiIndex(noDeskewMultiIndex);
+            printMultiIndex(options.noDeskewMultiIndex);
           }
         } else {
           printf("deskew-scan DISABLED for all sheets.\n");
         }
-        if (noWipeMultiIndex.count != -1) {
+        if (options.noWipeMultiIndex.count != -1) {
           if (wipeCount > 0) {
             printf("wipe areas: ");
             for (int i = 0; i < wipeCount; i++) {
@@ -1356,7 +1424,7 @@ int main(int argc, char *argv[]) {
         if (middleWipe[0] > 0 || middleWipe[1] > 0) {
           printf("middle-wipe (l,r): %d,%d\n", middleWipe[0], middleWipe[1]);
         }
-        if (noBorderMultiIndex.count != -1) {
+        if (options.noBorderMultiIndex.count != -1) {
           if (border[LEFT] != 0 || border[TOP] != 0 || border[RIGHT] != 0 ||
               border[BOTTOM] != 0) {
             printf("explicit border: [%d,%d,%d,%d]\n", border[LEFT],
@@ -1365,7 +1433,7 @@ int main(int argc, char *argv[]) {
         } else {
           printf("border DISABLED for all sheets.\n");
         }
-        if (noBorderScanMultiIndex.count != -1) {
+        if (options.noBorderScanMultiIndex.count != -1) {
           printf("border-scan-direction: %s\n",
                  getDirections(borderScanDirections));
           printf("border-scan-size: [%d,%d]\n", borderScanSize[0],
@@ -1374,9 +1442,9 @@ int main(int argc, char *argv[]) {
                  borderScanStep[1]);
           printf("border-scan-threshold: [%d,%d]\n", borderScanThreshold[0],
                  borderScanThreshold[1]);
-          if (noBorderScanMultiIndex.count > 0) {
+          if (options.noBorderScanMultiIndex.count > 0) {
             printf("border-scan DISABLED for sheets: ");
-            printMultiIndex(noBorderScanMultiIndex);
+            printMultiIndex(options.noBorderScanMultiIndex);
           }
           printf("border-align: ");
           printEdges(borderAlign);
@@ -1407,9 +1475,9 @@ int main(int argc, char *argv[]) {
         if (postRotate != 0) {
           printf("post-rotate: %d\n", postRotate);
         }
-        // if (ignoreMultiIndex.count > 0) {
+        // if (options.ignoreMultiIndex.count > 0) {
         //    printf("EXCLUDE sheets: ");
-        //    printMultiIndex(ignoreMultiIndex);
+        //    printMultiIndex(options.ignoreMultiIndex);
         //}
         printf("white-threshold: %f\n", whiteThreshold);
         printf("black-threshold: %f\n", blackThreshold);
@@ -1417,26 +1485,26 @@ int main(int argc, char *argv[]) {
                ((sheetBackground == BLACK24) ? "black" : "white"),
                sheetBackground);
         printf("dpi: %d\n", dpi);
-        printf("input-files per sheet: %d\n", inputCount);
-        printf("output-files per sheet: %d\n", outputCount);
+        printf("input-files per sheet: %d\n", options.inputCount);
+        printf("output-files per sheet: %d\n", options.outputCount);
         if ((sheetSize[WIDTH] != -1) || (sheetSize[HEIGHT] != -1)) {
           printf("sheet size forced to: %d x %d pixels\n", sheetSize[WIDTH],
                  sheetSize[HEIGHT]);
         }
         printf("input-file-sequence:  %s\n",
-               implode(s1, (const char **)inputFileNames, inputCount));
+               implode(s1, (const char **)inputFileNames, options.inputCount));
         printf("output-file-sequence: %s\n",
-               implode(s1, (const char **)outputFileNames, outputCount));
+               implode(s1, (const char **)outputFileNames, options.outputCount));
         if (overwrite) {
           printf("OVERWRITING EXISTING FILES\n");
         }
         printf("\n");
       }
       if (verbose >= VERBOSE_NORMAL) {
-        printf("input-file%s for sheet %d: %s\n", pluralS(inputCount), nr,
-               implode(s1, (const char **)inputFileNames, inputCount));
-        printf("output-file%s for sheet %d: %s\n", pluralS(outputCount), nr,
-               implode(s1, (const char **)outputFileNames, outputCount));
+        printf("input-file%s for sheet %d: %s\n", pluralS(options.inputCount), nr,
+               implode(s1, (const char **)inputFileNames, options.inputCount));
+        printf("output-file%s for sheet %d: %s\n", pluralS(options.outputCount), nr,
+               implode(s1, (const char **)outputFileNames, options.outputCount));
         printf("sheet size: %dx%d\n", sheet->width, sheet->height);
         printf("...\n");
       }
@@ -1484,7 +1552,7 @@ int main(int argc, char *argv[]) {
       // handle sheet layout
 
       // LAYOUT_SINGLE
-      if (layout == LAYOUT_SINGLE) {
+      if (options.layout == LAYOUT_SINGLE) {
         // set middle of sheet as single starting point for mask detection
         if (pointCount == 0) { // no manual settings, use auto-values
           point[pointCount][X] = sheet->width / 2;
@@ -1519,7 +1587,7 @@ int main(int argc, char *argv[]) {
         }
 
         // LAYOUT_DOUBLE
-      } else if (layout == LAYOUT_DOUBLE) {
+      } else if (options.layout == LAYOUT_DOUBLE) {
         // set two middle of left/right side of sheet as starting points for
         // mask detection
         if (pointCount == 0) { // no manual settings, use auto-values
@@ -1586,17 +1654,17 @@ int main(int argc, char *argv[]) {
       }
 
       // pre-wipe
-      if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
         applyWipes(preWipe, preWipeCount, sheet);
       }
 
       // pre-border
-      if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noBorderMultiIndex, options.ignoreMultiIndex)) {
         applyBorder(preBorder, sheet);
       }
 
       // black area filter
-      if (!isExcluded(nr, noBlackfilterMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noBlackfilterMultiIndex, options.ignoreMultiIndex)) {
         saveDebug("_before-blackfilter%d.pnm", nr, sheet);
         blackfilter(sheet);
         saveDebug("_after-blackfilter%d.pnm", nr, sheet);
@@ -1607,7 +1675,7 @@ int main(int argc, char *argv[]) {
       }
 
       // noise filter
-      if (!isExcluded(nr, noNoisefilterMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noNoisefilterMultiIndex, options.ignoreMultiIndex)) {
         if (verbose >= VERBOSE_NORMAL) {
           printf("noise-filter ...");
         }
@@ -1624,7 +1692,7 @@ int main(int argc, char *argv[]) {
       }
 
       // blur filter
-      if (!isExcluded(nr, noBlurfilterMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noBlurfilterMultiIndex, options.ignoreMultiIndex)) {
         if (verbose >= VERBOSE_NORMAL) {
           printf("blur-filter...");
         }
@@ -1641,7 +1709,7 @@ int main(int argc, char *argv[]) {
       }
 
       // mask-detection
-      if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noMaskScanMultiIndex, options.ignoreMultiIndex)) {
         detectMasks(sheet);
       } else {
         if (verbose >= VERBOSE_MORE) {
@@ -1657,7 +1725,7 @@ int main(int argc, char *argv[]) {
       }
 
       // gray filter
-      if (!isExcluded(nr, noGrayfilterMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noGrayfilterMultiIndex, options.ignoreMultiIndex)) {
         if (verbose >= VERBOSE_NORMAL) {
           printf("gray-filter...");
         }
@@ -1674,12 +1742,12 @@ int main(int argc, char *argv[]) {
       }
 
       // rotation-detection
-      if ((!isExcluded(nr, noDeskewMultiIndex, ignoreMultiIndex))) {
+      if ((!isExcluded(nr, options.noDeskewMultiIndex, options.ignoreMultiIndex))) {
         saveDebug("_before-deskew%d.pnm", nr, sheet);
 
         // detect masks again, we may get more precise results now after first
         // masking and grayfilter
-        if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
+        if (!isExcluded(nr, options.noMaskScanMultiIndex, options.ignoreMultiIndex)) {
           detectMasks(sheet);
         } else {
           if (verbose >= VERBOSE_MORE) {
@@ -1731,11 +1799,11 @@ int main(int argc, char *argv[]) {
 
       // auto-center masks on either single-page or double-page layout
       if (!isExcluded(
-              nr, noMaskCenterMultiIndex,
-              ignoreMultiIndex)) { // (maskCount==pointCount to make sure all
-                                   // masks had correctly been detected)
+              nr, options.noMaskCenterMultiIndex,
+              options.ignoreMultiIndex)) { // (maskCount==pointCount to make sure all
+                                           // masks had correctly been detected)
         // perform auto-masking again to get more precise masks after rotation
-        if (!isExcluded(nr, noMaskScanMultiIndex, ignoreMultiIndex)) {
+        if (!isExcluded(nr, options.noMaskScanMultiIndex, options.ignoreMultiIndex)) {
           detectMasks(sheet);
         } else {
           if (verbose >= VERBOSE_MORE) {
@@ -1756,7 +1824,7 @@ int main(int argc, char *argv[]) {
       }
 
       // explicit wipe
-      if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
         applyWipes(wipe, wipeCount, sheet);
       } else {
         if (verbose >= VERBOSE_MORE) {
@@ -1765,7 +1833,7 @@ int main(int argc, char *argv[]) {
       }
 
       // explicit border
-      if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noBorderMultiIndex, options.ignoreMultiIndex)) {
         applyBorder(border, sheet);
       } else {
         if (verbose >= VERBOSE_MORE) {
@@ -1774,7 +1842,7 @@ int main(int argc, char *argv[]) {
       }
 
       // border-detection
-      if (!isExcluded(nr, noBorderScanMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noBorderScanMultiIndex, options.ignoreMultiIndex)) {
         int autoborder[MAX_MASKS][EDGES_COUNT];
         int autoborderMask[MAX_MASKS][EDGES_COUNT];
         saveDebug("_before-border%d.pnm", nr, sheet);
@@ -1785,7 +1853,7 @@ int main(int argc, char *argv[]) {
         applyMasks(autoborderMask, outsideBorderscanMaskCount, sheet);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
           // border-centering
-          if (!isExcluded(nr, noBorderAlignMultiIndex, ignoreMultiIndex)) {
+          if (!isExcluded(nr, options.noBorderAlignMultiIndex, options.ignoreMultiIndex)) {
             alignMask(autoborderMask[i], outsideBorderscanMask[i], sheet);
           } else {
             if (verbose >= VERBOSE_MORE) {
@@ -1801,12 +1869,12 @@ int main(int argc, char *argv[]) {
       }
 
       // post-wipe
-      if (!isExcluded(nr, noWipeMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
         applyWipes(postWipe, postWipeCount, sheet);
       }
 
       // post-border
-      if (!isExcluded(nr, noBorderMultiIndex, ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.noBorderMultiIndex, options.ignoreMultiIndex)) {
         applyBorder(postBorder, sheet);
       }
 
@@ -1882,9 +1950,9 @@ int main(int argc, char *argv[]) {
           outputPixFmt = sheet->format;
         }
 
-        for (int j = 0; j < outputCount; j++) {
+        for (int j = 0; j < options.outputCount; j++) {
           // get pagebuffer
-          initImage(&page, sheet->width / outputCount, sheet->height,
+          initImage(&page, sheet->width / options.outputCount, sheet->height,
                     sheet->format, false);
           copyImageArea(page->width * j, 0, page->width, page->height, sheet, 0,
                         0, page);
