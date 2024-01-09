@@ -31,17 +31,7 @@ extern unsigned int absBlackThreshold;
 extern unsigned int absWhiteThreshold;
 extern unsigned int absBlackfilterScanThreshold;
 extern unsigned int absGrayfilterThreshold;
-extern float deskewScanRangeRad;
-extern float deskewScanStepRad;
-extern float deskewScanDeviationRad;
 
-extern int layout;
-extern int startSheet;
-extern int endSheet;
-extern int startInput;
-extern int startOutput;
-extern int inputCount;
-extern int outputCount;
 extern int sheetSize[DIMENSIONS_COUNT];
 extern int sheetBackground;
 extern int preRotate;
@@ -115,23 +105,6 @@ extern float blackThreshold;
 extern bool writeoutput;
 extern bool multisheets;
 
-extern struct MultiIndex noBlackfilterMultiIndex;
-extern struct MultiIndex noNoisefilterMultiIndex;
-extern struct MultiIndex noBlurfilterMultiIndex;
-extern struct MultiIndex noGrayfilterMultiIndex;
-extern struct MultiIndex noMaskScanMultiIndex;
-extern struct MultiIndex noMaskCenterMultiIndex;
-extern struct MultiIndex noDeskewMultiIndex;
-extern struct MultiIndex noWipeMultiIndex;
-extern struct MultiIndex noBorderMultiIndex;
-extern struct MultiIndex noBorderScanMultiIndex;
-extern struct MultiIndex noBorderAlignMultiIndex;
-extern struct MultiIndex sheetMultiIndex;
-extern struct MultiIndex excludeMultiIndex;
-extern struct MultiIndex ignoreMultiIndex;
-extern struct MultiIndex insertBlank;
-extern struct MultiIndex replaceBlank;
-
 extern int autoborder[MAX_MASKS][EDGES_COUNT];
 extern int autoborderMask[MAX_MASKS][EDGES_COUNT];
 extern bool overwrite;
@@ -147,8 +120,6 @@ void saveDebug(char *filenameTemplate, int index, AVFrame *image)
     __attribute__((format(printf, 1, 0)));
 
 /* --- arithmetic tool functions ------------------------------------------ */
-
-static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
 
 static inline void limit(int *i, int max) {
   if (*i > max) {
