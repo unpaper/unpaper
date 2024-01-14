@@ -23,7 +23,7 @@
  * image processing functions                                               *
  ****************************************************************************/
 
-static inline bool inMask(int x, int y, Mask mask) {
+static inline bool inMask(int x, int y, const Mask mask) {
   return (x >= mask[LEFT]) && (x <= mask[RIGHT]) && (y >= mask[TOP]) &&
          (y <= mask[BOTTOM]);
 }
@@ -31,15 +31,15 @@ static inline bool inMask(int x, int y, Mask mask) {
 /**
  * Tests if masks a and b overlap.
  */
-static inline bool masksOverlap(Mask a, Mask b) {
+static inline bool masksOverlap(const Mask a, const Mask b) {
   return (inMask(a[LEFT], a[TOP], b) || inMask(a[RIGHT], a[BOTTOM], b));
 }
 
 /**
  * Tests if at least one mask in masks overlaps with m.
  */
-static bool masksOverlapAny(Mask m,
-                            Mask *masks, int masksCount) {
+static bool masksOverlapAny(const Mask m,
+                            const Mask *masks, int masksCount) {
   for (int i = 0; i < masksCount; i++) {
     if (masksOverlap(m, masks[i])) {
       return true;
@@ -61,7 +61,7 @@ static bool masksOverlapAny(Mask m,
  * this is negative for negative radians.
  */
 static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
-                                  AVFrame *image, Mask mask) {
+                                  AVFrame *image, const Mask mask) {
   int width = mask[RIGHT] - mask[LEFT] + 1;
   int height = mask[BOTTOM] - mask[TOP] + 1;
   int mid;
@@ -167,7 +167,7 @@ static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
  * is non-zero, and what sign this shifting value has.
  */
 static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
-                                Mask mask) {
+                                const Mask mask) {
   // either shiftX or shiftY is 0, the other value is -i|+i
   // depending on shiftX/shiftY the start edge for shifting is determined
   int maxPeak = 0;
@@ -194,7 +194,7 @@ static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
  * the horizontal or vertical edges of the area specified by left, top, right,
  * bottom.
  */
-float detectRotation(AVFrame *image, Mask mask) {
+float detectRotation(AVFrame *image, const Mask mask) {
   float rotation[4];
   int count = 0;
   float total;
@@ -584,12 +584,12 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY,
  * no mask could be detected
  */
 static bool detectMask(int startX, int startY, int maskScanDirections,
-                       int maskScanSize[DIRECTIONS_COUNT],
-                       int maskScanDepth[DIRECTIONS_COUNT],
-                       int maskScanStep[DIRECTIONS_COUNT],
-                       float maskScanThreshold[DIRECTIONS_COUNT],
-                       int maskScanMinimum[DIMENSIONS_COUNT],
-                       int maskScanMaximum[DIMENSIONS_COUNT], int *left,
+                       const int maskScanSize[DIRECTIONS_COUNT],
+                       const int maskScanDepth[DIRECTIONS_COUNT],
+                       const int maskScanStep[DIRECTIONS_COUNT],
+                       const float maskScanThreshold[DIRECTIONS_COUNT],
+                       const int maskScanMinimum[DIMENSIONS_COUNT],
+                       const int maskScanMaximum[DIMENSIONS_COUNT], int *left,
                        int *top, int *right, int *bottom, AVFrame *image) {
   int width;
   int height;
@@ -814,7 +814,7 @@ void flipRotate(int direction, AVFrame **image) {
  */
 static void blackfilterScan(int stepX, int stepY, int size, int dep,
                             unsigned int absBlackfilterScanThreshold,
-                            Mask *exclude,
+                            const Mask *exclude,
                             int excludeCount, int intensity, AVFrame *image) {
   int left;
   int top;
@@ -1090,8 +1090,8 @@ int grayfilter(AVFrame *image) {
  * Moves a rectangular area of pixels to be centered above the centerX, centerY
  * coordinates.
  */
-void centerMask(AVFrame *image, int center[COORDINATES_COUNT],
-                Mask mask) {
+void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
+                const Mask mask) {
   AVFrame *newimage;
 
   const int width = mask[RIGHT] - mask[LEFT] + 1;
@@ -1125,7 +1125,7 @@ void centerMask(AVFrame *image, int center[COORDINATES_COUNT],
  * Moves a rectangular area of pixels to be centered inside a specified area
  * coordinates.
  */
-void alignMask(Mask mask, Mask outside,
+void alignMask(const Mask mask, const Mask outside,
                AVFrame *image) {
   AVFrame *newimage;
   int targetX;
@@ -1166,7 +1166,7 @@ void alignMask(Mask mask, Mask outside,
  *
  * @param x1..y2 area inside of which border is to be detected
  */
-static int detectBorderEdge(Mask outsideMask, int stepX, int stepY,
+static int detectBorderEdge(const Mask outsideMask, int stepX, int stepY,
                             int size, int threshold, AVFrame *image) {
   int left;
   int top;
@@ -1223,7 +1223,7 @@ static int detectBorderEdge(Mask outsideMask, int stepX, int stepY,
  * Detects a border of completely non-black pixels around the area
  * outsideBorder[LEFT],outsideBorder[TOP]-outsideBorder[RIGHT],outsideBorder[BOTTOM].
  */
-void detectBorder(int border[EDGES_COUNT], Mask outsideMask,
+void detectBorder(int border[EDGES_COUNT], const Mask outsideMask,
                   AVFrame *image) {
   border[LEFT] = outsideMask[LEFT];
   border[TOP] = outsideMask[TOP];
@@ -1256,7 +1256,7 @@ void detectBorder(int border[EDGES_COUNT], Mask outsideMask,
 /**
  * Converts a border-tuple to a mask-tuple.
  */
-void borderToMask(int border[EDGES_COUNT], Mask mask,
+void borderToMask(const int border[EDGES_COUNT], Mask mask,
                   AVFrame *image) {
   mask[LEFT] = border[LEFT];
   mask[TOP] = border[TOP];
@@ -1273,7 +1273,7 @@ void borderToMask(int border[EDGES_COUNT], Mask mask,
  * Applies a border to the whole image. All pixels in the border range at the
  * edges of the sheet will be cleared.
  */
-void applyBorder(int border[EDGES_COUNT], AVFrame *image) {
+void applyBorder(const int border[EDGES_COUNT], AVFrame *image) {
   Mask mask;
 
   if (border[LEFT] != 0 || border[TOP] != 0 || border[RIGHT] != 0 ||

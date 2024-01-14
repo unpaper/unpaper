@@ -16,7 +16,7 @@
 
 /* --- deskewing ---------------------------------------------------------- */
 
-float detectRotation(AVFrame *image, Mask mask);
+float detectRotation(AVFrame *image, const Mask mask);
 
 void rotate(const float radians, AVFrame *source, AVFrame *target);
 
@@ -66,15 +66,15 @@ int grayfilter(AVFrame *image);
 
 /* --- border-detection --------------------------------------------------- */
 
-void centerMask(AVFrame *image, int center[COORDINATES_COUNT],
-                Mask mask);
+void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
+                const Mask mask);
 
-void alignMask(Mask mask, Mask outside, AVFrame *image);
+void alignMask(const Mask mask, const Mask outside, AVFrame *image);
 
-void detectBorder(int border[EDGES_COUNT], Mask outsideMask,
+void detectBorder(int border[EDGES_COUNT], const Mask outsideMask,
                   AVFrame *image);
 
-void borderToMask(int border[EDGES_COUNT], Mask mask,
+void borderToMask(const int border[EDGES_COUNT], Mask mask,
                   AVFrame *image);
 
-void applyBorder(int border[EDGES_COUNT], AVFrame *image);
+void applyBorder(const int border[EDGES_COUNT], AVFrame *image);
