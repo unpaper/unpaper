@@ -26,9 +26,6 @@ int getPixel(int x, int y, AVFrame *image);
 
 uint8_t getPixelDarknessInverse(int x, int y, AVFrame *image);
 
-int clearRect(const int left, const int top, const int right, const int bottom,
-              AVFrame *image, const int blackwhite);
-
 void copyImageArea(const int x, const int y, const int width, const int height,
                    AVFrame *source, const int toX, const int toY,
                    AVFrame *target);

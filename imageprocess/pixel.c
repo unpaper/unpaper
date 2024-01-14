@@ -13,8 +13,8 @@
 
 void errOutput(const char *fmt, ...);
 
-#define WHITE 0xFF
-#define BLACK 0x00
+#define WHITE_COMPONENT 0xFF
+#define BLACK_COMPONENT 0x00
 
 #define max3(a, b, c)                                                          \
   ({                                                                           \
@@ -64,16 +64,16 @@ static Pixel get_pixel_components(AVFrame *image, Point coords,
   case AV_PIX_FMT_MONOWHITE:
     pix = image->data[0] + (coords.y * image->linesize[0] + coords.x / 8);
     if (*pix & (128 >> (coords.x % 8)))
-      pixel.r = pixel.g = pixel.b = BLACK;
+      pixel.r = pixel.g = pixel.b = BLACK_COMPONENT;
     else
-      pixel.r = pixel.g = pixel.b = WHITE;
+      pixel.r = pixel.g = pixel.b = WHITE_COMPONENT;
     break;
   case AV_PIX_FMT_MONOBLACK:
     pix = image->data[0] + (coords.y * image->linesize[0] + coords.x / 8);
     if (*pix & (128 >> (coords.x % 8)))
-      pixel.r = pixel.g = pixel.b = WHITE;
+      pixel.r = pixel.g = pixel.b = WHITE_COMPONENT;
     else
-      pixel.r = pixel.g = pixel.b = BLACK;
+      pixel.r = pixel.g = pixel.b = BLACK_COMPONENT;
     break;
   default:
     errOutput("unknown pixel format.");
@@ -86,18 +86,18 @@ static Pixel get_pixel_components(AVFrame *image, Point coords,
  * Always returns a color-compatible value (which may be interpreted as 8-bit
  * grayscale)
  *
- * @return color or grayscale-value of the requested pixel, or WHITE if the
- * coordinates are outside the image
+ * @return color or grayscale-value of the requested pixel, or WHITE_COMPONENT
+ * if the coordinates are outside the image
  */
 Pixel get_pixel(AVFrame *image, Point coords) {
-  return get_pixel_components(image, coords, WHITE);
+  return get_pixel_components(image, coords, WHITE_COMPONENT);
 }
 
 /**
  * Returns the grayscale (=brightness) value of a single pixel.
  *
- * @return grayscale-value of the requested pixel, or WHITE if the coordinates
- * are outside the image
+ * @return grayscale-value of the requested pixel, or WHITE_COMPONENT if the
+ * coordinates are outside the image
  */
 uint8_t get_pixel_grayscale(AVFrame *image, Point coords) {
   return pixel_grayscale(get_pixel(image, coords));
@@ -113,10 +113,10 @@ uint8_t get_pixel_grayscale(AVFrame *image, Point coords) {
  * For grayscale images, this value is equal to the pixel brightness.
  *
  * @return lightness-value (the higher, the lighter) of the requested pixel, or
- * WHITE if the coordinates are outside the image
+ * WHITE_COMPONENT if the coordinates are outside the image
  */
 uint8_t get_pixel_lightness(AVFrame *image, Point coords) {
-  Pixel p = get_pixel_components(image, coords, WHITE);
+  Pixel p = get_pixel_components(image, coords, WHITE_COMPONENT);
   return min3(p.r, p.g, p.b);
 }
 
@@ -130,10 +130,10 @@ uint8_t get_pixel_lightness(AVFrame *image, Point coords) {
  * For grayscale images, this value is equal to the pixel brightness.
  *
  * @return inverse-darkness-value (the LOWER, the darker) of the requested
- * pixel, or WHITE if the coordinates are outside the image
+ * pixel, or WHITE_COMPONENT if the coordinates are outside the image
  */
 uint8_t get_pixel_darkness_inverse(AVFrame *image, Point coords) {
-  Pixel p = get_pixel_components(image, coords, WHITE);
+  Pixel p = get_pixel_components(image, coords, WHITE_COMPONENT);
   return max3(p.r, p.g, p.b);
 }
 
@@ -152,8 +152,9 @@ bool set_pixel(AVFrame *image, Point coords, Pixel pixel,
     return false; // nop
   }
 
-  uint8_t pixelbw =
-      pixel_grayscale(pixel) < abs_black_threshold ? BLACK : WHITE;
+  uint8_t pixelbw = pixel_grayscale(pixel) < abs_black_threshold
+                        ? BLACK_COMPONENT
+                        : WHITE_COMPONENT;
 
   switch (image->format) {
   case AV_PIX_FMT_GRAY8:
@@ -175,9 +176,9 @@ bool set_pixel(AVFrame *image, Point coords, Pixel pixel,
     pixelbw = ~pixelbw; // reverse compared to following case
   case AV_PIX_FMT_MONOBLACK:
     pix = image->data[0] + (coords.y * image->linesize[0] + coords.x / 8);
-    if (pixelbw == WHITE) {
+    if (pixelbw == WHITE_COMPONENT) {
       *pix = *pix | (128 >> (coords.x % 8));
-    } else if (pixelbw == BLACK) {
+    } else if (pixelbw == BLACK_COMPONENT) {
       *pix = *pix & ~(128 >> (coords.x % 8));
     }
     break;

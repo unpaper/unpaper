@@ -20,6 +20,8 @@ typedef struct {
   uint8_t b;
 } Pixel;
 
+static const Pixel PIXEL_WHITE = {0xFF, 0xFF, 0xFF};
+
 Pixel get_pixel(AVFrame *image, Point coords);
 uint8_t get_pixel_grayscale(AVFrame *image, Point coords);
 uint8_t get_pixel_lightness(AVFrame *image, Point coords);
