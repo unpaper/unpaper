@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: MIT
 
 *~
-.vscode
+.vscode/
 _deps/
 _build/
 builddir/
 tests/__pycache__/
+venv/
