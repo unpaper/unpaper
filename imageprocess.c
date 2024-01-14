@@ -1114,9 +1114,7 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
     wipe_rectangle(
         image,
         (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
-        (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
-                sheetBackground & 0xff},
-        absBlackThreshold);
+        sheetBackgroundPixel, absBlackThreshold);
     copy_rectangle(newimage, image, RECT_FULL_IMAGE, (Point){targetX, targetY},
                    absBlackThreshold);
     av_frame_free(&newimage);
@@ -1168,9 +1166,7 @@ void alignMask(const Mask mask, const Mask outside, AVFrame *image) {
   wipe_rectangle(
       image,
       (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
-      (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
-              sheetBackground & 0xff},
-      absBlackThreshold);
+      sheetBackgroundPixel, absBlackThreshold);
   copy_rectangle(newimage, image, RECT_FULL_IMAGE, (Point){targetX, targetY},
                  absBlackThreshold);
   av_frame_free(&newimage);

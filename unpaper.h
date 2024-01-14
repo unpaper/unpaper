@@ -14,6 +14,7 @@
 #include <libavutil/frame.h>
 
 #include "constants.h"
+#include "imageprocess/pixel.h"
 
 /* --- preprocessor macros ------------------------------------------------ */
 
@@ -27,6 +28,7 @@ __attribute__((noreturn));
 extern VERBOSE_LEVEL verbose;
 extern INTERP_FUNCTIONS interpolateType;
 
+extern Pixel sheetBackgroundPixel;
 extern unsigned int absBlackThreshold;
 extern unsigned int absWhiteThreshold;
 extern unsigned int absBlackfilterScanThreshold;
