@@ -14,6 +14,7 @@
 #include <libavutil/frame.h>
 
 #include "constants.h"
+#include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
 
 /* --- preprocessor macros ------------------------------------------------ */
@@ -156,29 +157,6 @@ static inline void limit(int *i, int max) {
     *i = max;
   }
 }
-
-#define max(a, b)                                                              \
-  ({                                                                           \
-    __typeof__(a) _a = (a);                                                    \
-    __typeof__(b) _b = (b);                                                    \
-    _a > _b ? _a : _b;                                                         \
-  })
-
-#define max3(a, b, c)                                                          \
-  ({                                                                           \
-    __typeof__(a) _a = (a);                                                    \
-    __typeof__(b) _b = (b);                                                    \
-    __typeof__(c) _c = (c);                                                    \
-    (_a > _b ? (_a > _c ? _a : _c) : (_b > _c ? _b : _c));                     \
-  })
-
-#define min3(a, b, c)                                                          \
-  ({                                                                           \
-    __typeof__(a) _a = (a);                                                    \
-    __typeof__(b) _b = (b);                                                    \
-    __typeof__(c) _c = (c);                                                    \
-    (_a < _b ? (_a < _c ? _a : _c) : (_b < _c ? _b : _c));                     \
-  })
 
 #define red(pixel) ((pixel >> 16) & 0xff)
 #define green(pixel) ((pixel >> 8) & 0xff)

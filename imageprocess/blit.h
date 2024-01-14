@@ -4,13 +4,10 @@
 
 #pragma once
 
-#include "pixel.h"
+#include <libavutil/frame.h>
+#include <stdint.h>
 
-typedef struct {
-  Point vertex[2];
-} Rectangle;
-
-static const Rectangle RECT_FULL_IMAGE = {{POINT_ORIGIN, POINT_INFINITY}};
+#include "primitives.h"
 
 uint64_t wipe_rectangle(AVFrame *image, Rectangle input_area, Pixel color,
                         uint8_t abs_black_threshold);
