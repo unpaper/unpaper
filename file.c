@@ -102,13 +102,13 @@ void loadImage(const char *filename, AVFrame **image) {
   case AV_PIX_FMT_PAL8:
     initImage(image, frame->width, frame->height, AV_PIX_FMT_RGB24, -1);
 
+    Rectangle area = clip_rectangle(frame, RECT_FULL_IMAGE);
+
     const uint32_t *palette = (const uint32_t *)frame->data[1];
-    for (int y = 0; y < frame->height; y++) {
-      for (int x = 0; x < frame->width; x++) {
-        const uint8_t palette_index =
-            frame->data[0][frame->linesize[0] * y + x];
-        setPixel(palette[palette_index], x, y, *image);
-      }
+    scan_rectangle(area) {
+      const uint8_t palette_index = frame->data[0][frame->linesize[0] * y + x];
+      set_pixel(*image, (Point){x, y},
+                pixelValueToPixel(palette[palette_index]), absBlackThreshold);
     }
     break;
 
