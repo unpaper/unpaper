@@ -14,6 +14,9 @@ typedef struct {
   int32_t y;
 } Point;
 
+static const Point POINT_ORIGIN = {0, 0};
+static const Point POINT_INFINITY = {INT32_MAX, INT32_MAX};
+
 typedef struct {
   uint8_t r;
   uint8_t g;

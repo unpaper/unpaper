@@ -20,6 +20,8 @@
 #include <libavutil/avutil.h>
 
 #include "imageprocess.h"
+#include "imageprocess/blit.h"
+#include "imageprocess/pixel.h"
 #include "parse.h"
 #include "tools.h"
 #include "unpaper.h"
@@ -1714,15 +1716,20 @@ int main(int argc, char *argv[]) {
                       true);
 
             // copy area to rotate into rSource
-            copyImageArea(mask[i][LEFT], mask[i][TOP], rect->width,
-                          rect->height, sheet, 0, 0, rect);
+            copy_rectangle(sheet, rect,
+                           (Rectangle){{
+                               {mask[i][LEFT], mask[i][TOP]},
+                               POINT_INFINITY, // let it clip
+                           }},
+                           POINT_ORIGIN, absBlackThreshold);
 
             // rotate
             rotate(-rotation, rect, rectTarget);
 
             // copy result back into whole image
-            copyImageArea(0, 0, rectTarget->width, rectTarget->height,
-                          rectTarget, mask[i][LEFT], mask[i][TOP], sheet);
+            copy_rectangle(rectTarget, sheet, RECT_FULL_IMAGE,
+                           (Point){mask[i][LEFT], mask[i][TOP]},
+                           absBlackThreshold);
 
             av_frame_free(&rect);
             av_frame_free(&rectTarget);
@@ -1893,8 +1900,11 @@ int main(int argc, char *argv[]) {
           // get pagebuffer
           initImage(&page, sheet->width / outputCount, sheet->height,
                     sheet->format, false);
-          copyImageArea(page->width * j, 0, page->width, page->height, sheet, 0,
-                        0, page);
+          copy_rectangle(
+              sheet, page,
+              (Rectangle){{{page->width * j, 0},
+                           {page->width * j + page->width, page->height}}},
+              POINT_ORIGIN, absBlackThreshold);
 
           if (verbose >= VERBOSE_MORE) {
             printf("saving file %s.\n", outputFileNames[j]);

@@ -43,8 +43,7 @@ void initImage(AVFrame **image, int width, int height, int pixel_format,
         .b = sheetBackground & 0xff,
     };
 
-    wipe_rectangle(*image, (Rectangle){{{0, 0}, {0x7FFFFFFF, 0x7FFFFFFF}}}, p,
-                   absBlackThreshold);
+    wipe_rectangle(*image, RECT_FULL_IMAGE, p, absBlackThreshold);
   }
 }
 
@@ -64,18 +63,6 @@ int getPixel(int x, int y, AVFrame *image) {
   return pixelValue(p.r, p.g, p.b);
 }
 
-static uint8_t getPixelGrayscale(int x, int y, AVFrame *image) {
-  return get_pixel_grayscale(image, (Point){x, y});
-}
-
-static uint8_t getPixelLightness(int x, int y, AVFrame *image) {
-  return get_pixel_lightness(image, (Point){x, y});
-}
-
-uint8_t getPixelDarknessInverse(int x, int y, AVFrame *image) {
-  return get_pixel_darkness_inverse(image, (Point){x, y});
-}
-
 /**
  * Sets the color/grayscale value of a single pixel to white.
  *
@@ -85,22 +72,6 @@ uint8_t getPixelDarknessInverse(int x, int y, AVFrame *image) {
 static bool clearPixel(int x, int y, AVFrame *image) {
   return set_pixel(image, (Point){x, y}, (Pixel){WHITE, WHITE, WHITE},
                    absBlackThreshold);
-}
-
-/**
- * Copies one area of an image into another.
- */
-void copyImageArea(const int x, const int y, const int width, const int height,
-                   AVFrame *source, const int toX, const int toY,
-                   AVFrame *target) {
-
-  // naive but generic implementation
-  for (int row = 0; row < height; row++) {
-    for (int col = 0; col < width; col++) {
-      const int pixel = getPixel(x + col, y + row, source);
-      setPixel(pixel, toX + col, toY + row, target);
-    }
-  }
 }
 
 /**
@@ -132,7 +103,8 @@ static void centerImageArea(int x, int y, int w, int h, AVFrame *source,
     y += (h - hh) / 2;
     h = hh;
   }
-  copyImageArea(x, y, w, h, source, toX, toY, target);
+  copy_rectangle(source, target, (Rectangle){{{x, y}, {x + w, y + h}}},
+                 (Point){toX, toY}, absBlackThreshold);
 }
 
 /**
@@ -142,54 +114,6 @@ void centerImage(AVFrame *source, int toX, int toY, int ww, int hh,
                  AVFrame *target) {
   centerImageArea(0, 0, source->width, source->height, source, toX, toY, ww, hh,
                   target);
-}
-
-/**
- * Returns the average brightness of a rectangular area.
- */
-uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2,
-                              const int y2, AVFrame *image) {
-  unsigned int total = 0;
-  const int count = (x2 - x1 + 1) * (y2 - y1 + 1);
-
-  for (int y = y1; y <= y2; y++) {
-    for (int x = x1; x <= x2; x++) {
-      total += getPixelGrayscale(x, y, image);
-    }
-  }
-  return WHITE - (total / count);
-}
-
-/**
- * Returns the inverseaverage lightness of a rectangular area.
- */
-uint8_t inverseLightnessRect(const int x1, const int y1, const int x2,
-                             const int y2, AVFrame *image) {
-  unsigned int total = 0;
-  const int count = (x2 - x1 + 1) * (y2 - y1 + 1);
-
-  for (int y = y1; y <= y2; y++) {
-    for (int x = x1; x <= x2; x++) {
-      total += getPixelLightness(x, y, image);
-    }
-  }
-  return WHITE - (total / count);
-}
-
-/**
- * Returns the average darkness of a rectangular area.
- */
-uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2,
-                     AVFrame *image) {
-  unsigned int total = 0;
-  const int count = (x2 - x1 + 1) * (y2 - y1 + 1);
-
-  for (int y = y1; y <= y2; y++) {
-    for (int x = x1; x <= x2; x++) {
-      total += getPixelDarknessInverse(x, y, image);
-    }
-  }
-  return WHITE - (total / count);
 }
 
 /**
@@ -203,7 +127,7 @@ int countPixelsRect(int left, int top, int right, int bottom, int minColor,
 
   for (int y = top; y <= bottom; y++) {
     for (int x = left; x <= right; x++) {
-      const int pixel = getPixelGrayscale(x, y, image);
+      const int pixel = get_pixel_grayscale(image, (Point){x, y});
       if ((pixel >= minColor) && (pixel <= maxBrightness)) {
         if (clear == true) {
           clearPixel(x, y, image);
@@ -228,7 +152,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level,
   // upper and lower rows
   for (int xx = x - level; xx <= x + level; xx++) {
     // upper row
-    uint8_t pixel = getPixelLightness(xx, y - level, image);
+    uint8_t pixel = get_pixel_lightness(image, (Point){xx, y - level});
     if (pixel < whiteMin) { // non-light pixel found
       if (clear == true) {
         clearPixel(xx, y - level, image);
@@ -236,7 +160,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level,
       count++;
     }
     // lower row
-    pixel = getPixelLightness(xx, y + level, image);
+    pixel = get_pixel_lightness(image, (Point){xx, y + level});
     if (pixel < whiteMin) {
       if (clear == true) {
         clearPixel(xx, y + level, image);
@@ -247,7 +171,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level,
   // middle rows
   for (int yy = y - (level - 1); yy <= y + (level - 1); yy++) {
     // first col
-    uint8_t pixel = getPixelLightness(x - level, yy, image);
+    uint8_t pixel = get_pixel_lightness(image, (Point){x - level, yy});
     if (pixel < whiteMin) {
       if (clear == true) {
         clearPixel(x - level, yy, image);
@@ -255,7 +179,7 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level,
       count++;
     }
     // last col
-    pixel = getPixelLightness(x + level, yy, image);
+    pixel = get_pixel_lightness(image, (Point){x + level, yy});
     if (pixel < whiteMin) {
       if (clear == true) {
         clearPixel(x + level, yy, image);
@@ -334,7 +258,7 @@ static int fillLine(int x, int y, int stepX, int stepY, int color,
   while (true) {
     x += stepX;
     y += stepY;
-    uint8_t pixel = getPixelGrayscale(x, y, image);
+    uint8_t pixel = get_pixel_grayscale(image, (Point){x, y});
     if ((pixel >= maskMin) && (pixel <= maskMax)) {
       intensityCount = intensity; // reset counter
     } else {
@@ -387,7 +311,7 @@ static void floodFillAroundLine(int x, int y, int stepX, int stepY,
 void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity,
                AVFrame *image) {
   // is current pixel to be filled?
-  const int pixel = getPixelGrayscale(x, y, image);
+  uint8_t pixel = get_pixel_grayscale(image, (Point){x, y});
   if ((pixel >= maskMin) && (pixel <= maskMax)) {
     // first, fill a 'cross' (both vertical, horizontal line)
     setPixel(color, x, y, image);

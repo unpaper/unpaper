@@ -145,7 +145,7 @@ static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
       yy = y[lineStep];
       y[lineStep] += shiftY;
       if (inMask(xx, yy, mask)) {
-        pixel = getPixelDarknessInverse(xx, yy, image);
+        pixel = get_pixel_darkness_inverse(image, (Point){xx, yy});
         blackness += (255 - pixel);
       }
     }
@@ -554,8 +554,8 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY,
   }
 
   while (true) { // !
-    const uint8_t blackness =
-        inverseBrightnessRect(left, top, right, bottom, image);
+    const uint8_t blackness = inverse_brightness_rect(
+        image, (Rectangle){{{left, top}, {right, bottom}}});
     total += blackness;
     count++;
     // is blackness below threshold*average?
@@ -860,7 +860,7 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep,
     alreadyExcludedMessage = false;
     while ((l < image->width) &&
            (t < image->height)) { // single scanning "stripe"
-      uint8_t blackness = darknessRect(l, t, r, b, image);
+      uint8_t blackness = darkness_rect(image, (Rectangle){{{l, t}, {r, b}}});
       if (blackness >=
           absBlackfilterScanThreshold) { // found a solidly black area
         Mask mask = {l, t, r, b};
@@ -934,7 +934,7 @@ int noisefilter(AVFrame *image) {
   count = 0;
   for (int y = 0; y < image->height; y++) {
     for (int x = 0; x < image->width; x++) {
-      uint8_t pixel = getPixelDarknessInverse(x, y, image);
+      uint8_t pixel = get_pixel_darkness_inverse(image, (Point){x, y});
       if (pixel < absWhiteThreshold) { // one dark pixel found
         neighbors = countPixelNeighbors(
             x, y, noisefilterIntensity, absWhiteThreshold,
@@ -1054,13 +1054,14 @@ int grayfilter(AVFrame *image) {
   int top = 0;
   int right = grayfilterScanSize[HORIZONTAL] - 1;
   int bottom = grayfilterScanSize[VERTICAL] - 1;
-  int result = 0;
+  uint64_t result = 0;
 
   while (true) {
     int count = countPixelsRect(left, top, right, bottom, 0, absBlackThreshold,
                                 false, image);
     if (count == 0) {
-      uint8_t lightness = inverseLightnessRect(left, top, right, bottom, image);
+      uint8_t lightness = inverse_lightness_rect(
+          image, (Rectangle){{{left, top}, {right, bottom}}});
       if (lightness <
           absGrayfilterThreshold) { // (lower threshold->more deletion)
         result +=
@@ -1106,14 +1107,18 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
              targetX - mask[LEFT], targetY - mask[TOP]);
     }
     initImage(&newimage, width, height, image->format, false);
-    copyImageArea(mask[LEFT], mask[TOP], width, height, image, 0, 0, newimage);
+    copy_rectangle(
+        image, newimage,
+        (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
+        POINT_ORIGIN, absBlackThreshold);
     wipe_rectangle(
         image,
         (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
         (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
                 sheetBackground & 0xff},
         absBlackThreshold);
-    copyImageArea(0, 0, width, height, newimage, targetX, targetY, image);
+    copy_rectangle(newimage, image, RECT_FULL_IMAGE, (Point){targetX, targetY},
+                   absBlackThreshold);
     av_frame_free(&newimage);
   } else {
     if (verbose >= VERBOSE_NORMAL) {
@@ -1156,15 +1161,18 @@ void alignMask(const Mask mask, const Mask outside, AVFrame *image) {
            targetX - mask[LEFT], targetY - mask[TOP]);
   }
   initImage(&newimage, width, height, image->format, true);
-  copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0,
-                newimage);
+  copy_rectangle(
+      image, newimage,
+      (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
+      POINT_ORIGIN, absBlackThreshold);
   wipe_rectangle(
       image,
       (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
       (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
               sheetBackground & 0xff},
       absBlackThreshold);
-  copyImageArea(0, 0, width, height, newimage, targetX, targetY, image);
+  copy_rectangle(newimage, image, RECT_FULL_IMAGE, (Point){targetX, targetY},
+                 absBlackThreshold);
   av_frame_free(&newimage);
 }
 
