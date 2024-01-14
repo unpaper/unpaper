@@ -72,7 +72,6 @@ void alignMask(const Mask mask, const Mask outside, AVFrame *image);
 void detectBorder(int border[EDGES_COUNT], const Mask outsideMask,
                   AVFrame *image);
 
-void borderToMask(const int border[EDGES_COUNT], Mask mask,
-                  AVFrame *image);
+void borderToMask(const int border[EDGES_COUNT], Mask mask, AVFrame *image);
 
 void applyBorder(const int border[EDGES_COUNT], AVFrame *image);
