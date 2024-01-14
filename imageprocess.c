@@ -14,10 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <libavutil/common.h>
-
 #include "imageprocess.h"
 #include "imageprocess/blit.h"
+#include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
 #include "tools.h"
 #include "unpaper.h"
@@ -267,120 +266,6 @@ float detectRotation(AVFrame *image, const Mask mask) {
 }
 
 /**
- * Nearest-neighbour interpolation.
- */
-static int nearest(float x, float y, AVFrame *source) {
-  // Round to nearest location.
-  int x1 = (int)roundf(x);
-  int y1 = (int)roundf(y);
-  return getPixel(x1, y1, source);
-}
-
-/**
- * 1-D cubic interpolation. Clamps the return value between 0 and 255 to
- * support 8-bit colour images.
- */
-static int cubic(float x, int a, int b, int c, int d) {
-  int result = b + 0.5f * x *
-                       (c - a +
-                        x * (2.0f * a - 5.0f * b + 4.0f * c - d +
-                             x * (3.0f * (b - c) + d - a)));
-
-  return av_clip_uint8(result);
-}
-
-/**
- * 1-D cubic interpolation
- * This function expects (and returns) colour pixel values.
- */
-static int cubicPixel(float x, int a, int b, int c, int d) {
-  int red = cubic(x, red(a), red(b), red(c), red(d));
-  int green = cubic(x, green(a), green(b), green(c), green(d));
-  int blue = cubic(x, blue(a), blue(b), blue(c), blue(d));
-  return pixelValue(red, green, blue);
-}
-
-/**
- * 2-D bicubic interpolation
- */
-static int bicubicInterpolate(float x, float y, AVFrame *source) {
-  int fx = (int)x;
-  int fy = (int)y;
-
-  int v[4];
-  for (int i = -1; i < 3; ++i) {
-    v[i + 1] = cubicPixel(
-        x - fx, getPixel(fx - 1, fy + i, source), getPixel(fx, fy + i, source),
-        getPixel(fx + 1, fy + i, source), getPixel(fx + 2, fy + i, source));
-  }
-  return cubicPixel(y - fy, v[0], v[1], v[2], v[3]);
-}
-
-/**
- * 1-D linear interpolation.
- */
-static int linear(float x, int a, int b) { return (1.0f - x) * a + x * b; }
-
-/**
- * 1-D linear interpolation
- * This function expects (and returns) colour pixel values.
- */
-static int linearPixel(float x, int a, int b) {
-  int red = linear(x, red(a), red(b));
-  int green = linear(x, green(a), green(b));
-  int blue = linear(x, blue(a), blue(b));
-  return pixelValue(red, green, blue);
-}
-
-/**
- * 2-D bilinear interpolation
- */
-static int bilinearInterpolate(float x, float y, AVFrame *source) {
-  int x1 = (int)x;
-  int x2 = (int)ceilf(x);
-  int y1 = (int)y;
-  int y2 = (int)ceilf(y);
-
-  // Check edge conditions to avoid divide-by-zero
-  if (x2 > source->width || y2 > source->height)
-    return getPixel(x, y, source);
-  else if (x2 == x1 && y2 == y1)
-    return getPixel(x, y, source);
-  else if (x2 == x1) {
-    int p1 = getPixel(x1, y1, source);
-    int p2 = getPixel(x1, y2, source);
-    return linearPixel(y - y1, p1, p2);
-  } else if (y2 == y1) {
-    int p1 = getPixel(x1, y1, source);
-    int p2 = getPixel(x2, y1, source);
-    return linearPixel(x - x1, p1, p2);
-  }
-
-  int pixel1 = getPixel(x1, y1, source);
-  int pixel2 = getPixel(x2, y1, source);
-  int pixel3 = getPixel(x1, y2, source);
-  int pixel4 = getPixel(x2, y2, source);
-
-  int val1 = linearPixel(x - x1, pixel1, pixel2);
-  int val2 = linearPixel(x - x1, pixel3, pixel4);
-  return linearPixel(y - y1, val1, val2);
-}
-
-/**
- * 2-D bilinear interpolation
- * The method chosen depends on the global interpolateType variable.
- */
-static int interpolate(float x, float y, AVFrame *source) {
-  if (interpolateType == INTERP_NN) {
-    return nearest(x, y, source);
-  } else if (interpolateType == INTERP_LINEAR) {
-    return bilinearInterpolate(x, y, source);
-  } else {
-    return bicubicInterpolate(x, y, source);
-  }
-}
-
-/**
  * Rotates a whole image buffer by the specified radians, around its
  * middle-point. (To rotate parts of an image, extract the part with copyBuffer,
  * rotate, and re-paste with copyBuffer.)
@@ -399,8 +284,9 @@ void rotate(const float radians, AVFrame *source, AVFrame *target) {
     for (int x = 0; x < w; x++) {
       const float srcX = midX + (x - midX) * cosval + (y - midY) * sinval;
       const float srcY = midY + (y - midY) * cosval - (x - midX) * sinval;
-      const int pixel = interpolate(srcX, srcY, source);
-      setPixel(pixel, x, y, target);
+      const Pixel pxl =
+          interpolate(source, (FloatPoint){srcX, srcY}, interpolateType);
+      set_pixel(target, (Point){x, y}, pxl, absBlackThreshold);
     }
   }
 }
@@ -419,8 +305,9 @@ static void stretchTo(AVFrame *source, AVFrame *target) {
   for (int y = 0; y < target->height; y++) {
     for (int x = 0; x < target->width; x++) {
       // calculate average pixel value in source matrix
-      const int pixel = interpolate(x * xRatio, y * yRatio, source);
-      setPixel(pixel, x, y, target);
+      const Pixel pxl = interpolate(
+          source, (FloatPoint){x * xRatio, y * yRatio}, interpolateType);
+      set_pixel(target, (Point){x, y}, pxl, absBlackThreshold);
     }
   }
 }
