@@ -1,3 +1,8 @@
+// Copyright © 2024 Federico Mena Quintero
+// SPDX-FileCopyrightText: 2005 The unpaper authors
+//
+// SPDX-License-Identifier: GPL-2.0-only
+
 #include <string.h>
 
 #include "options.h"
