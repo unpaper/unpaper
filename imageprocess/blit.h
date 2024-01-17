@@ -10,7 +10,10 @@ typedef struct {
   Point vertex[2];
 } Rectangle;
 
-#define RECT_FULL_IMAGE (Rectangle){{POINT_ORIGIN, POINT_INFINITY}}
+#define RECT_FULL_IMAGE                                                        \
+  (Rectangle) {                                                                \
+    { POINT_ORIGIN, POINT_INFINITY }                                           \
+  }
 
 uint64_t wipe_rectangle(AVFrame *image, Rectangle input_area, Pixel color,
                         uint8_t abs_black_threshold);

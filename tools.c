@@ -37,13 +37,8 @@ void initImage(AVFrame **image, int width, int height, int pixel_format,
   }
 
   if (fill) {
-    Pixel p = {
-        .r = (sheetBackground >> 16) & 0xff,
-        .g = (sheetBackground >> 8) & 0xff,
-        .b = sheetBackground & 0xff,
-    };
-
-    wipe_rectangle(*image, RECT_FULL_IMAGE, p, absBlackThreshold);
+    wipe_rectangle(*image, RECT_FULL_IMAGE, sheetBackgroundPixel,
+                   absBlackThreshold);
   }
 }
 
@@ -83,11 +78,9 @@ static bool clearPixel(int x, int y, AVFrame *image) {
 static void centerImageArea(int x, int y, int w, int h, AVFrame *source,
                             int toX, int toY, int ww, int hh, AVFrame *target) {
   if ((w < ww) || (h < hh)) { // white rest-border will remain, so clear first
-    wipe_rectangle(
-        target, (Rectangle){{{toX, toY}, {toX + ww - 1, toY + hh - 1}}},
-        (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
-                sheetBackground & 0xff},
-        absBlackThreshold);
+    wipe_rectangle(target,
+                   (Rectangle){{{toX, toY}, {toX + ww - 1, toY + hh - 1}}},
+                   sheetBackgroundPixel, absBlackThreshold);
   }
   if (w < ww) {
     toX += (ww - w) / 2;
