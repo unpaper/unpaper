@@ -112,12 +112,6 @@ float maskScanThreshold[DIRECTIONS_COUNT] = {0.1, 0.1};
 int maskScanMinimum[DIMENSIONS_COUNT] = {100, 100};
 int maskScanMaximum[DIMENSIONS_COUNT] = {-1, -1}; // set default later
 int maskColor = WHITE24;
-int deskewScanEdges = (1 << LEFT) | (1 << RIGHT);
-int deskewScanSize = 1500;
-float deskewScanDepth = 0.5;
-float deskewScanRange = 5.0;
-float deskewScanStep = 0.1;
-float deskewScanDeviation = 1.0;
 int borderScanDirections = (1 << VERTICAL);
 int borderScanSize[DIRECTIONS_COUNT] = {5, 5};
 int borderScanStep[DIRECTIONS_COUNT] = {5, 5};
@@ -246,6 +240,13 @@ int main(int argc, char *argv[]) {
   int option_index = 0;
   int outputPixFmt = -1;
   Options options;
+
+  int deskewScanEdges = (1 << LEFT) | (1 << RIGHT);
+  int deskewScanSize = 1500;
+  float deskewScanDepth = 0.5;
+  float deskewScanRange = 5.0;
+  float deskewScanStep = 0.1;
+  float deskewScanDeviation = 1.0;
   DeskewParameters deskewParams;
 
   // -------------------------------------------------------------------
