@@ -31,7 +31,7 @@ configure_file(input: 'version.h.in', output: 'version.h', configuration: conf_d
 
 unpaper = executable(
     'unpaper',
-    'file.c', 'imageprocess.c', 'parse.c', 'tools.c', 'unpaper.c',
+    'file.c', 'imageprocess.c', 'parse.c', 'options.c', 'tools.c', 'unpaper.c',
     'imageprocess/blit.c',
     'imageprocess/interpolate.c',
     'imageprocess/fill.c',
