@@ -39,7 +39,6 @@ extern float deskewScanRangeRad;
 extern float deskewScanStepRad;
 extern float deskewScanDeviationRad;
 
-extern int startSheet;
 extern int endSheet;
 extern int startInput;
 extern int startOutput;
