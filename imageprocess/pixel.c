@@ -9,28 +9,13 @@
 #include <libavutil/frame.h>
 #include <libavutil/pixfmt.h>
 
-#include "pixel.h"
+#include "imageprocess/math_util.h"
+#include "imageprocess/pixel.h"
 
 void errOutput(const char *fmt, ...);
 
 #define WHITE_COMPONENT 0xFF
 #define BLACK_COMPONENT 0x00
-
-#define max3(a, b, c)                                                          \
-  ({                                                                           \
-    __typeof__(a) _a = (a);                                                    \
-    __typeof__(b) _b = (b);                                                    \
-    __typeof__(c) _c = (c);                                                    \
-    (_a > _b ? (_a > _c ? _a : _c) : (_b > _c ? _b : _c));                     \
-  })
-
-#define min3(a, b, c)                                                          \
-  ({                                                                           \
-    __typeof__(a) _a = (a);                                                    \
-    __typeof__(b) _b = (b);                                                    \
-    __typeof__(c) _c = (c);                                                    \
-    (_a < _b ? (_a < _c ? _a : _c) : (_b < _c ? _b : _c));                     \
-  })
 
 static inline uint8_t pixel_grayscale(Pixel pixel) {
   return (pixel.r + pixel.g + pixel.b) / 3;
