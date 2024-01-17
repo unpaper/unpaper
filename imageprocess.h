@@ -14,9 +14,20 @@
  * image processing functions                                               *
  ****************************************************************************/
 
+typedef struct {
+  float deskewScanRangeRad;
+  float deskewScanStepRad;
+  float deskewScanDeviationRad;
+} ImageProcessParameters;
+
+ImageProcessParameters imageProcessParameters(float deskewScanRange,
+                                              float deskewScanStep,
+                                              float deskewScanDeviation);
+
 /* --- deskewing ---------------------------------------------------------- */
 
-float detectRotation(AVFrame *image, const Mask mask);
+float detectRotation(AVFrame *image, const Mask mask,
+                     const ImageProcessParameters *params);
 
 void rotate(const float radians, AVFrame *source, AVFrame *target);
 

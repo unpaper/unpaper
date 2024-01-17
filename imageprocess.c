@@ -22,6 +22,20 @@
 #include "tools.h"
 #include "unpaper.h"
 
+static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
+
+ImageProcessParameters imageProcessParameters(float deskewScanRange,
+                                              float deskewScanStep,
+                                              float deskewScanDeviation) {
+  ImageProcessParameters params = {
+      .deskewScanRangeRad = degreesToRadians(deskewScanRange),
+      .deskewScanStepRad = degreesToRadians(deskewScanStep),
+      .deskewScanDeviationRad = degreesToRadians(deskewScanDeviation),
+  };
+
+  return params;
+}
+
 /****************************************************************************
  * image processing functions                                               *
  ****************************************************************************/
@@ -163,7 +177,8 @@ static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
  * is non-zero, and what sign this shifting value has.
  */
 static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
-                                const Mask mask) {
+                                const Mask mask,
+                                const ImageProcessParameters *params) {
   // either shiftX or shiftY is 0, the other value is -i|+i
   // depending on shiftX/shiftY the start edge for shifting is determined
   int maxPeak = 0;
@@ -171,8 +186,8 @@ static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
 
   // iteratively increase test angle, alternating between +/- sign while
   // increasing absolute value
-  for (float rotation = 0.0; rotation <= deskewScanRangeRad;
-       rotation = (rotation >= 0.0) ? -(rotation + deskewScanStepRad)
+  for (float rotation = 0.0; rotation <= params->deskewScanRangeRad;
+       rotation = (rotation >= 0.0) ? -(rotation + params->deskewScanStepRad)
                                     : -rotation) {
     float m = tanf(rotation);
     int peak = detectEdgeRotationPeak(m, shiftX, shiftY, image, mask);
@@ -190,7 +205,8 @@ static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
  * the horizontal or vertical edges of the area specified by left, top, right,
  * bottom.
  */
-float detectRotation(AVFrame *image, const Mask mask) {
+float detectRotation(AVFrame *image, const Mask mask,
+                     const ImageProcessParameters *params) {
   float rotation[4];
   int count = 0;
   float total;
@@ -199,7 +215,7 @@ float detectRotation(AVFrame *image, const Mask mask) {
 
   if ((deskewScanEdges & 1 << LEFT) != 0) {
     // left
-    rotation[count] = detectEdgeRotation(1, 0, image, mask);
+    rotation[count] = detectEdgeRotation(1, 0, image, mask, params);
     if (verbose >= VERBOSE_NORMAL) {
       printf("detected rotation left: [%d,%d,%d,%d]: %f\n", mask[LEFT],
              mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
@@ -208,7 +224,7 @@ float detectRotation(AVFrame *image, const Mask mask) {
   }
   if ((deskewScanEdges & 1 << TOP) != 0) {
     // top
-    rotation[count] = -detectEdgeRotation(0, 1, image, mask);
+    rotation[count] = -detectEdgeRotation(0, 1, image, mask, params);
     if (verbose >= VERBOSE_NORMAL) {
       printf("detected rotation top: [%d,%d,%d,%d]: %f\n", mask[LEFT],
              mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
@@ -217,7 +233,7 @@ float detectRotation(AVFrame *image, const Mask mask) {
   }
   if ((deskewScanEdges & 1 << RIGHT) != 0) {
     // right
-    rotation[count] = detectEdgeRotation(-1, 0, image, mask);
+    rotation[count] = detectEdgeRotation(-1, 0, image, mask, params);
     if (verbose >= VERBOSE_NORMAL) {
       printf("detected rotation right: [%d,%d,%d,%d]: %f\n", mask[LEFT],
              mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
@@ -226,7 +242,7 @@ float detectRotation(AVFrame *image, const Mask mask) {
   }
   if ((deskewScanEdges & 1 << BOTTOM) != 0) {
     // bottom
-    rotation[count] = -detectEdgeRotation(0, -1, image, mask);
+    rotation[count] = -detectEdgeRotation(0, -1, image, mask, params);
     if (verbose >= VERBOSE_NORMAL) {
       printf("detected rotation bottom: [%d,%d,%d,%d]: %f\n", mask[LEFT],
              mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
@@ -247,10 +263,10 @@ float detectRotation(AVFrame *image, const Mask mask) {
   if (verbose >= VERBOSE_NORMAL) {
     printf("rotation average: %f  deviation: %f  rotation-scan-deviation "
            "(maximum): %f  [%d,%d,%d,%d]\n",
-           average, deviation, deskewScanDeviationRad, mask[LEFT], mask[TOP],
-           mask[RIGHT], mask[BOTTOM]);
+           average, deviation, params->deskewScanDeviationRad, mask[LEFT],
+           mask[TOP], mask[RIGHT], mask[BOTTOM]);
   }
-  if (deviation <= deskewScanDeviationRad) {
+  if (deviation <= params->deskewScanDeviationRad) {
     return average;
   } else {
     if (verbose >= VERBOSE_NONE) {
