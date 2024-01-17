@@ -33,6 +33,7 @@ unpaper = executable(
     'unpaper',
     'file.c', 'imageprocess.c', 'parse.c', 'options.c', 'tools.c', 'unpaper.c',
     'imageprocess/blit.c',
+    'imageprocess/deskew.c',
     'imageprocess/interpolate.c',
     'imageprocess/fill.c',
     'imageprocess/pixel.c',
