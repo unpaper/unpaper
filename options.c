@@ -14,6 +14,7 @@ void optionsInit(Options *o) {
   memset(o, 0, sizeof(Options));
 
   o->layout = LAYOUT_SINGLE;
+  o->startSheet = 1;
 
   // default: process all between start-sheet and end-sheet
   // This does not use .count = 0 because we use the -1 as a sentinel for "all
