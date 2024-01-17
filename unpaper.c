@@ -63,8 +63,6 @@ float deskewScanRangeRad;
 float deskewScanStepRad;
 float deskewScanDeviationRad;
 
-int inputCount = 1;
-int outputCount = 1;
 int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
 int sheetBackground = WHITE24;
 int preRotate = 0;
@@ -921,23 +919,23 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_INPUT_PAGES:
-      sscanf(optarg, "%d", &inputCount);
-      if (!(inputCount >= 1 && inputCount <= 2)) {
+      sscanf(optarg, "%d", &options.inputCount);
+      if (!(options.inputCount >= 1 && options.inputCount <= 2)) {
         fprintf(
             stderr,
             "cannot set --input-pages value other than 1 or 2, ignoring.\n");
-        inputCount = 1;
+        options.inputCount = 1;
       }
 
       break;
 
     case OPT_OUTPUT_PAGES:
-      sscanf(optarg, "%d", &outputCount);
-      if (!(outputCount >= 1 && outputCount <= 2)) {
+      sscanf(optarg, "%d", &options.outputCount);
+      if (!(options.outputCount >= 1 && options.outputCount <= 2)) {
         fprintf(
             stderr,
             "cannot set --output-pages value other than 1 or 2, ignoring.\n");
-        outputCount = 1;
+        options.outputCount = 1;
       }
 
       break;
@@ -1032,9 +1030,9 @@ int main(int argc, char *argv[]) {
     printf(WELCOME); // welcome message
 
   if (options.startInput == -1)
-    options.startInput = (options.startSheet - 1) * inputCount + 1;
+    options.startInput = (options.startSheet - 1) * options.inputCount + 1;
   if (options.startOutput == -1)
-    options.startOutput = (options.startSheet - 1) * outputCount + 1;
+    options.startOutput = (options.startSheet - 1) * options.outputCount + 1;
 
   inputNr = options.startInput;
   outputNr = options.startOutput;
@@ -1066,7 +1064,7 @@ int main(int argc, char *argv[]) {
     bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
     bool outputWildcard = false;
 
-    for (int i = 0; i < inputCount; i++) {
+    for (int i = 0; i < options.inputCount; i++) {
       bool ins = isInMultiIndex(inputNr, options.insertBlank);
       bool repl = isInMultiIndex(inputNr, options.replaceBlank);
 
@@ -1116,7 +1114,7 @@ int main(int argc, char *argv[]) {
       errOutput("not enough output files given.");
     }
     outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
-    for (int i = 0; i < outputCount; i++) {
+    for (int i = 0; i < options.outputCount; i++) {
       if (outputWildcard) {
         sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
         outputFileNames[i] = outputFilesBuffer[i];
@@ -1154,25 +1152,27 @@ int main(int argc, char *argv[]) {
       }
       if (verbose > VERBOSE_QUIET) {
         if (multisheets) {
-          printf("Processing sheet #%d: %s -> %s\n", nr,
-                 implode(s1, (const char **)inputFileNames, inputCount),
-                 implode(s2, (const char **)outputFileNames, outputCount));
+          printf(
+              "Processing sheet #%d: %s -> %s\n", nr,
+              implode(s1, (const char **)inputFileNames, options.inputCount),
+              implode(s2, (const char **)outputFileNames, options.outputCount));
         } else {
-          printf("Processing sheet: %s -> %s\n",
-                 implode(s1, (const char **)inputFileNames, inputCount),
-                 implode(s2, (const char **)outputFileNames, outputCount));
+          printf(
+              "Processing sheet: %s -> %s\n",
+              implode(s1, (const char **)inputFileNames, options.inputCount),
+              implode(s2, (const char **)outputFileNames, options.outputCount));
         }
       }
 
       // load input image(s)
-      for (int j = 0; j < inputCount; j++) {
+      for (int j = 0; j < options.inputCount; j++) {
         if (inputFileNames[j] !=
             NULL) { // may be null if --insert-blank or --replace-blank
           if (verbose >= VERBOSE_MORE)
             printf("loading file %s.\n", inputFileNames[j]);
 
           loadImage(inputFileNames[j], &page);
-          saveDebug("_loaded_%d.pnm", inputNr - inputCount + j, page);
+          saveDebug("_loaded_%d.pnm", inputNr - options.inputCount + j, page);
 
           if (outputPixFmt == -1 && page != NULL) {
             outputPixFmt = page->format;
@@ -1192,7 +1192,7 @@ int main(int argc, char *argv[]) {
             if (sheetSize[WIDTH] != -1) {
               w = sheetSize[WIDTH];
             } else {
-              w = page->width * inputCount;
+              w = page->width * options.inputCount;
             }
           }
           if (h == -1) {
@@ -1212,15 +1212,15 @@ int main(int argc, char *argv[]) {
           initImage(&sheet, w, h, AV_PIX_FMT_RGB24, true);
         }
         if (page != NULL) {
-          saveDebug("_page%d.pnm", inputNr - inputCount + j, page);
-          saveDebug("_before_center_page%d.pnm", inputNr - inputCount + j,
-                    sheet);
+          saveDebug("_page%d.pnm", inputNr - options.inputCount + j, page);
+          saveDebug("_before_center_page%d.pnm",
+                    inputNr - options.inputCount + j, sheet);
 
-          centerImage(page, (w * j / inputCount), 0, (w / inputCount), h,
-                      sheet);
+          centerImage(page, (w * j / options.inputCount), 0,
+                      (w / options.inputCount), h, sheet);
 
-          saveDebug("_after_center_page%d.pnm", inputNr - inputCount + j,
-                    sheet);
+          saveDebug("_after_center_page%d.pnm",
+                    inputNr - options.inputCount + j, sheet);
         }
       }
 
@@ -1512,26 +1512,30 @@ int main(int argc, char *argv[]) {
                ((sheetBackground == BLACK24) ? "black" : "white"),
                sheetBackground);
         printf("dpi: %d\n", dpi);
-        printf("input-files per sheet: %d\n", inputCount);
-        printf("output-files per sheet: %d\n", outputCount);
+        printf("input-files per sheet: %d\n", options.inputCount);
+        printf("output-files per sheet: %d\n", options.outputCount);
         if ((sheetSize[WIDTH] != -1) || (sheetSize[HEIGHT] != -1)) {
           printf("sheet size forced to: %d x %d pixels\n", sheetSize[WIDTH],
                  sheetSize[HEIGHT]);
         }
         printf("input-file-sequence:  %s\n",
-               implode(s1, (const char **)inputFileNames, inputCount));
-        printf("output-file-sequence: %s\n",
-               implode(s1, (const char **)outputFileNames, outputCount));
+               implode(s1, (const char **)inputFileNames, options.inputCount));
+        printf(
+            "output-file-sequence: %s\n",
+            implode(s1, (const char **)outputFileNames, options.outputCount));
         if (overwrite) {
           printf("OVERWRITING EXISTING FILES\n");
         }
         printf("\n");
       }
       if (verbose >= VERBOSE_NORMAL) {
-        printf("input-file%s for sheet %d: %s\n", pluralS(inputCount), nr,
-               implode(s1, (const char **)inputFileNames, inputCount));
-        printf("output-file%s for sheet %d: %s\n", pluralS(outputCount), nr,
-               implode(s1, (const char **)outputFileNames, outputCount));
+        printf("input-file%s for sheet %d: %s\n", pluralS(options.inputCount),
+               nr,
+               implode(s1, (const char **)inputFileNames, options.inputCount));
+        printf(
+            "output-file%s for sheet %d: %s\n", pluralS(options.outputCount),
+            nr,
+            implode(s1, (const char **)outputFileNames, options.outputCount));
         printf("sheet size: %dx%d\n", sheet->width, sheet->height);
         printf("...\n");
       }
@@ -1995,9 +1999,9 @@ int main(int argc, char *argv[]) {
           outputPixFmt = sheet->format;
         }
 
-        for (int j = 0; j < outputCount; j++) {
+        for (int j = 0; j < options.outputCount; j++) {
           // get pagebuffer
-          initImage(&page, sheet->width / outputCount, sheet->height,
+          initImage(&page, sheet->width / options.outputCount, sheet->height,
                     sheet->format, false);
           copy_rectangle(
               sheet, page,
