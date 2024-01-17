@@ -58,7 +58,9 @@ test(
     'pytest suite',
     python,
     args: [
-        '-m', 'pytest', meson.project_source_root() + '/tests/unpaper_tests.py'
+        '-m', 'pytest',
+        '--basetemp=' + meson.current_build_dir() + '/test_output/',
+        meson.project_source_root() + '/tests/unpaper_tests.py'
     ],
     env: [
         'TEST_IMGSRC_DIR=' + meson.project_source_root() + '/tests/source_images/',
