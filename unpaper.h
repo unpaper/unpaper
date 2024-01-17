@@ -87,12 +87,6 @@ extern float maskScanThreshold[DIRECTIONS_COUNT];
 extern int maskScanMinimum[DIMENSIONS_COUNT];
 extern int maskScanMaximum[DIMENSIONS_COUNT]; // set default later
 extern int maskColor;
-extern int deskewScanEdges;
-extern int deskewScanSize;
-extern float deskewScanDepth;
-extern float deskewScanRange;
-extern float deskewScanStep;
-extern float deskewScanDeviation;
 extern int borderScanDirections;
 extern int borderScanSize[DIRECTIONS_COUNT];
 extern int borderScanStep[DIRECTIONS_COUNT];
