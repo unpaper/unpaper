@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 /* --- tool functions for parameter parsing and verbose output ------------ */
 
 int parseDirections(char *s);
