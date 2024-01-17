@@ -16,4 +16,6 @@ void optionsInit(Options *o) {
 
   o->excludeMultiIndex = (struct MultiIndex){.count = 0, .indexes = NULL};
   o->ignoreMultiIndex = (struct MultiIndex){.count = 0, .indexes = NULL};
+  o->insertBlank = (struct MultiIndex){.count = 0, .indexes = NULL};
+  o->replaceBlank = (struct MultiIndex){.count = 0, .indexes = NULL};
 }
