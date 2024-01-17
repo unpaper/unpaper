@@ -11,63 +11,9 @@
 #include <libavutil/avutil.h>
 #include <libavutil/pixfmt.h>
 
+#include "imageprocess/pixel.h"
 #include "tools.h"
 #include "unpaper.h"
-
-/****************************************************************************
- * tool functions                                                           *
- *   - arithmetic tool functions                                            *
- *   - tool functions for image handling                                    *
- ****************************************************************************/
-
-static inline uint8_t pixelGrayscale(uint8_t r, uint8_t g, uint8_t b) {
-  return (r + g + b) / 3;
-}
-
-/* --- tool functions for image handling ---------------------------------- */
-
-static void getPixelComponents(AVFrame *image, int x, int y, uint8_t *r,
-                               uint8_t *g, uint8_t *b, uint8_t defval) {
-  uint8_t *pix;
-
-  if ((x < 0) || (x >= image->width) || (y < 0) || (y >= image->height)) {
-    *r = *g = *b = defval;
-    return;
-  }
-
-  switch (image->format) {
-  case AV_PIX_FMT_GRAY8:
-    pix = image->data[0] + (y * image->linesize[0] + x);
-    *r = *g = *b = *pix;
-    break;
-  case AV_PIX_FMT_Y400A:
-    pix = image->data[0] + (y * image->linesize[0] + x * 2);
-    *r = *g = *b = *pix;
-    break;
-  case AV_PIX_FMT_RGB24:
-    pix = image->data[0] + (y * image->linesize[0] + x * 3);
-    *r = pix[0];
-    *g = pix[1];
-    *b = pix[2];
-    break;
-  case AV_PIX_FMT_MONOWHITE:
-    pix = image->data[0] + (y * image->linesize[0] + x / 8);
-    if (*pix & (128 >> (x % 8)))
-      *r = *g = *b = BLACK;
-    else
-      *r = *g = *b = WHITE;
-    break;
-  case AV_PIX_FMT_MONOBLACK:
-    pix = image->data[0] + (y * image->linesize[0] + x / 8);
-    if (*pix & (128 >> (x % 8)))
-      *r = *g = *b = WHITE;
-    else
-      *r = *g = *b = BLACK;
-    break;
-  default:
-    errOutput("unknown pixel format.");
-  }
-}
 
 /**
  * Allocates a memory block for storing image data and fills the IMAGE-struct
@@ -98,117 +44,32 @@ void initImage(AVFrame **image, int width, int height, int pixel_format,
   }
 }
 
-/**
- * Sets the color/grayscale value of a single pixel.
- *
- * @return true if the pixel has been changed, false if the original color was
- * the one to set
- */
 bool setPixel(int pixel, int x, int y, AVFrame *image) {
-  uint8_t *pix;
+  Pixel p = {
+      .r = (pixel >> 16) & 0xff,
+      .g = (pixel >> 8) & 0xff,
+      .b = pixel & 0xff,
+  };
 
-  if ((x < 0) || (x >= image->width) || (y < 0) || (y >= image->height)) {
-    return false; // nop
-  }
-
-  uint8_t r = (pixel >> 16) & 0xff;
-  uint8_t g = (pixel >> 8) & 0xff;
-  uint8_t b = pixel & 0xff;
-
-  uint8_t pixelbw = pixelGrayscale(r, g, b) < absBlackThreshold ? BLACK : WHITE;
-
-  switch (image->format) {
-  case AV_PIX_FMT_GRAY8:
-    pix = image->data[0] + (y * image->linesize[0] + x);
-    *pix = pixelGrayscale(r, g, b);
-    break;
-  case AV_PIX_FMT_Y400A:
-    pix = image->data[0] + (y * image->linesize[0] + x * 2);
-    pix[0] = pixelGrayscale(r, g, b);
-    pix[1] = 0xFF; // no alpha.
-    break;
-  case AV_PIX_FMT_RGB24:
-    pix = image->data[0] + (y * image->linesize[0] + x * 3);
-    pix[0] = r;
-    pix[1] = g;
-    pix[2] = b;
-    break;
-  case AV_PIX_FMT_MONOWHITE:
-    pixelbw = ~pixelbw; // reverse compared to following case
-  case AV_PIX_FMT_MONOBLACK:
-    pix = image->data[0] + (y * image->linesize[0] + x / 8);
-    if (pixelbw == WHITE) {
-      *pix = *pix | (128 >> (x % 8));
-    } else if (pixelbw == BLACK) {
-      *pix = *pix & ~(128 >> (x % 8));
-    }
-    break;
-  default:
-    errOutput("unknown pixel format.");
-  }
-  return true;
+  return set_pixel(image, (Point){x, y}, p, absBlackThreshold);
 }
 
-/**
- * Returns the color or grayscale value of a single pixel.
- * Always returns a color-compatible value (which may be interpreted as 8-bit
- * grayscale)
- *
- * @return color or grayscale-value of the requested pixel, or WHITE if the
- * coordinates are outside the image
- */
 int getPixel(int x, int y, AVFrame *image) {
-  uint8_t r, g, b;
-  getPixelComponents(image, x, y, &r, &g, &b, WHITE);
-  return pixelValue(r, g, b);
+  Pixel p = get_pixel(image, (Point){x, y});
+
+  return pixelValue(p.r, p.g, p.b);
 }
 
-/**
- * Returns the grayscale (=brightness) value of a single pixel.
- *
- * @return grayscale-value of the requested pixel, or WHITE if the coordinates
- * are outside the image
- */
 static uint8_t getPixelGrayscale(int x, int y, AVFrame *image) {
-  uint8_t r, g, b;
-  getPixelComponents(image, x, y, &r, &g, &b, WHITE);
-  return pixelGrayscale(r, g, b);
+  return get_pixel_grayscale(image, (Point){x, y});
 }
 
-/**
- * Returns the 'lightness' value of a single pixel. For color images, this
- * value denotes the minimum brightness of a single color-component in the
- * total color, which means that any color is considered 'dark' which has
- * either the red, the green or the blue component (or, of course, several
- * of them) set to a high value. In some way, this is a measure how close a
- * color is to white.
- * For grayscale images, this value is equal to the pixel brightness.
- *
- * @return lightness-value (the higher, the lighter) of the requested pixel, or
- * WHITE if the coordinates are outside the image
- */
 static uint8_t getPixelLightness(int x, int y, AVFrame *image) {
-  uint8_t r, g, b;
-  getPixelComponents(image, x, y, &r, &g, &b, WHITE);
-  return min3(r, g, b);
+  return get_pixel_lightness(image, (Point){x, y});
 }
 
-/**
- * Returns the 'inverse-darkness' value of a single pixel. For color images,
- * this value denotes the maximum brightness of a single color-component in the
- * total color, which means that any color is considered 'light' which has
- * either the red, the green or the blue component (or, of course, several
- * of them) set to a high value. In some way, this is a measure how far away a
- * color is to black.
- * For grayscale images, this value is equal to the pixel brightness.
- *
- * @return inverse-darkness-value (the LOWER, the darker) of the requested
- * pixel, or WHITE if the coordinates are outside the image
- */
 uint8_t getPixelDarknessInverse(int x, int y, AVFrame *image) {
-  uint8_t r, g, b;
-  getPixelComponents(image, x, y, &r, &g, &b, WHITE);
-  return max3(r, g, b);
+  return get_pixel_darkness_inverse(image, (Point){x, y});
 }
 
 /**
@@ -218,7 +79,8 @@ uint8_t getPixelDarknessInverse(int x, int y, AVFrame *image) {
  * the one to set
  */
 static bool clearPixel(int x, int y, AVFrame *image) {
-  return setPixel(WHITE24, x, y, image);
+  return set_pixel(image, (Point){x, y}, (Pixel){WHITE, WHITE, WHITE},
+                   absBlackThreshold);
 }
 
 /**
@@ -487,7 +349,7 @@ static int fillLine(int x, int y, int stepX, int stepY, int color,
       intensityCount = intensity; // reset counter
     } else {
       intensityCount--; // allow maximum of 'intensity' pixels to be bright,
-                        // until stop
+      // until stop
     }
     if ((intensityCount > 0) && (x >= 0) && (x < w) && (y >= 0) && (y < h)) {
       setPixel(color, x, y, image);
