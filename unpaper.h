@@ -72,7 +72,6 @@ extern float blackfilterScanThreshold;
 extern int blackfilterExcludeCount;
 extern int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
 extern int blackfilterIntensity;
-extern int noisefilterIntensity;
 extern int blurfilterScanSize[DIRECTIONS_COUNT];
 extern int blurfilterScanStep[DIRECTIONS_COUNT];
 extern float blurfilterIntensity;

@@ -25,8 +25,3 @@ void centerImage(AVFrame *source, int toX, int toY, int ww, int hh,
 
 int countPixelsRect(int left, int top, int right, int bottom, int minColor,
                     int maxBrightness, bool clear, AVFrame *image);
-
-int countPixelNeighbors(int x, int y, int intensity, int whiteMin,
-                        AVFrame *image);
-
-void clearPixelNeighbors(int x, int y, int whiteMin, AVFrame *image);

@@ -21,6 +21,7 @@
 #include "imageprocess.h"
 #include "imageprocess/blit.h"
 #include "imageprocess/deskew.h"
+#include "imageprocess/filters.h"
 #include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
 #include "options.h"
@@ -97,7 +98,6 @@ float blackfilterScanThreshold = 0.95;
 int blackfilterExcludeCount = 0;
 int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
 int blackfilterIntensity = 20;
-int noisefilterIntensity = 4;
 int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
 int blurfilterScanStep[DIRECTIONS_COUNT] = {50, 50};
 float blurfilterIntensity = 0.01;
@@ -248,6 +248,7 @@ int main(int argc, char *argv[]) {
   float deskewScanStep = 0.1;
   float deskewScanDeviation = 1.0;
   DeskewParameters deskewParams;
+  int noisefilterIntensity = 4;
 
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
@@ -1684,9 +1685,11 @@ int main(int argc, char *argv[]) {
         verboseLog(VERBOSE_NORMAL, "noise-filter ...");
 
         saveDebug("_before-noisefilter%d.pnm", nr, sheet);
-        int filterResult = noisefilter(sheet);
+        uint64_t filterResult = noisefilter(
+            sheet, noisefilterIntensity, absWhiteThreshold, absBlackThreshold);
         saveDebug("_after-noisefilter%d.pnm", nr, sheet);
-        verboseLog(VERBOSE_NORMAL, " deleted %d clusters.\n", filterResult);
+        verboseLog(VERBOSE_NORMAL, " deleted %" PRId64 " clusters.\n",
+                   filterResult);
 
       } else {
         verboseLog(VERBOSE_MORE, "+ noisefilter DISABLED for sheet %d\n", nr);
