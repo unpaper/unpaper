@@ -14,6 +14,7 @@
 #include <libavutil/frame.h>
 
 #include "constants.h"
+#include "imageprocess/interpolate.h"
 #include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
 
@@ -27,7 +28,7 @@ __attribute__((noreturn));
 /* --- global variable ---------------------------------------------------- */
 
 extern VERBOSE_LEVEL verbose;
-extern INTERP_FUNCTIONS interpolateType;
+extern Interpolation interpolateType;
 
 extern Pixel sheetBackgroundPixel;
 extern unsigned int absBlackThreshold;
