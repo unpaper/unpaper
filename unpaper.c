@@ -63,7 +63,6 @@ float deskewScanRangeRad;
 float deskewScanStepRad;
 float deskewScanDeviationRad;
 
-int endSheet = -1;
 int startInput = -1;
 int startOutput = -1;
 int inputCount = 1;
@@ -489,7 +488,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_END_SHEET:
-      sscanf(optarg, "%d", &endSheet);
+      sscanf(optarg, "%d", &options.endSheet);
       break;
 
     case OPT_START_INPUT:
@@ -1042,8 +1041,8 @@ int main(int argc, char *argv[]) {
   inputNr = startInput;
   outputNr = startOutput;
 
-  if (!multisheets && endSheet == -1)
-    endSheet = options.startSheet;
+  if (!multisheets && options.endSheet == -1)
+    options.endSheet = options.startSheet;
 
   // Calculate the constant absolute values based on the relative parameters.
   sheetBackgroundPixel = pixelValueToPixel(sheetBackground);
@@ -1055,8 +1054,8 @@ int main(int argc, char *argv[]) {
   deskewScanStepRad = degreesToRadians(deskewScanStep);
   deskewScanDeviationRad = degreesToRadians(deskewScanDeviation);
 
-  for (int nr = options.startSheet; (endSheet == -1) || (nr <= endSheet);
-       nr++) {
+  for (int nr = options.startSheet;
+       (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
     char inputFilesBuffer[2][255];
     char outputFilesBuffer[2][255];
     char *inputFileNames[2];
@@ -1082,8 +1081,8 @@ int main(int argc, char *argv[]) {
         sprintf(inputFilesBuffer[i], argv[optind], inputNr++);
         inputFileNames[i] = inputFilesBuffer[i];
       } else if (optind >= argc) {
-        if (endSheet == -1) {
-          endSheet = nr - 1;
+        if (options.endSheet == -1) {
+          options.endSheet = nr - 1;
           goto sheet_end;
         } else {
           errOutput("not enough input files given.");
@@ -1102,8 +1101,8 @@ int main(int argc, char *argv[]) {
       if (inputFileNames[i] != NULL) {
         struct stat statBuf;
         if (stat(inputFileNames[i], &statBuf) != 0) {
-          if (endSheet == -1) {
-            endSheet = nr - 1;
+          if (options.endSheet == -1) {
+            options.endSheet = nr - 1;
             goto sheet_end;
           } else {
             errOutput("unable to open file %s.", inputFileNames[i]);
