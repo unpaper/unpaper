@@ -35,9 +35,6 @@ extern unsigned int absBlackThreshold;
 extern unsigned int absWhiteThreshold;
 extern unsigned int absBlackfilterScanThreshold;
 extern unsigned int absGrayfilterThreshold;
-extern float deskewScanRangeRad;
-extern float deskewScanStepRad;
-extern float deskewScanDeviationRad;
 
 extern int sheetSize[DIMENSIONS_COUNT];
 extern int sheetBackground;
@@ -127,8 +124,6 @@ void saveDebug(char *filenameTemplate, int index, AVFrame *image)
     __attribute__((format(printf, 1, 0)));
 
 /* --- arithmetic tool functions ------------------------------------------ */
-
-static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
 
 static inline void limit(int *i, int max) {
   if (*i > max) {
