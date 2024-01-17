@@ -155,8 +155,6 @@ struct MultiIndex noBorderMultiIndex = {0, NULL};
 struct MultiIndex noBorderScanMultiIndex = {0, NULL};
 struct MultiIndex noBorderAlignMultiIndex = {0, NULL};
 
-// default: process all between start-sheet and end-sheet
-struct MultiIndex sheetMultiIndex = {-1, NULL};
 struct MultiIndex excludeMultiIndex = {0, NULL};
 struct MultiIndex ignoreMultiIndex = {0, NULL};
 struct MultiIndex insertBlank = {0, NULL};
@@ -392,10 +390,11 @@ int main(int argc, char *argv[]) {
       break;
 
     case '#':
-      parseMultiIndex(optarg, &sheetMultiIndex);
+      parseMultiIndex(optarg, &options.sheetMultiIndex);
       // allow 0 as start sheet, might be overwritten by --start-sheet again
-      if (sheetMultiIndex.count > 0 && startSheet > sheetMultiIndex.indexes[0])
-        startSheet = sheetMultiIndex.indexes[0];
+      if (options.sheetMultiIndex.count > 0 &&
+          startSheet > options.sheetMultiIndex.indexes[0])
+        startSheet = options.sheetMultiIndex.indexes[0];
       break;
 
     case 0x7e:
@@ -1063,7 +1062,7 @@ int main(int argc, char *argv[]) {
     // --- process single sheet                                    ---
     // ---------------------------------------------------------------
 
-    if (isInMultiIndex(nr, sheetMultiIndex) &&
+    if (isInMultiIndex(nr, options.sheetMultiIndex) &&
         (!isInMultiIndex(nr, excludeMultiIndex))) {
       char s1[1023]; // buffers for result of implode()
       char s2[1023];
