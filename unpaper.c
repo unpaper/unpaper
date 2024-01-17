@@ -21,6 +21,7 @@
 
 #include "imageprocess.h"
 #include "imageprocess/blit.h"
+#include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
 #include "parse.h"
 #include "tools.h"
@@ -50,7 +51,7 @@
 
 VERBOSE_LEVEL verbose = VERBOSE_NONE;
 
-INTERP_FUNCTIONS interpolateType = INTERP_CUBIC;
+Interpolation interpolateType = INTERP_CUBIC;
 
 Pixel sheetBackgroundPixel;
 unsigned int absBlackThreshold;
