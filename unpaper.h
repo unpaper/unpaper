@@ -39,8 +39,6 @@ extern float deskewScanRangeRad;
 extern float deskewScanStepRad;
 extern float deskewScanDeviationRad;
 
-extern int startInput;
-extern int startOutput;
 extern int inputCount;
 extern int outputCount;
 extern int sheetSize[DIMENSIONS_COUNT];

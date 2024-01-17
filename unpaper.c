@@ -63,8 +63,6 @@ float deskewScanRangeRad;
 float deskewScanStepRad;
 float deskewScanDeviationRad;
 
-int startInput = -1;
-int startOutput = -1;
 int inputCount = 1;
 int outputCount = 1;
 int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
@@ -492,11 +490,11 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_START_INPUT:
-      sscanf(optarg, "%d", &startInput);
+      sscanf(optarg, "%d", &options.startInput);
       break;
 
     case OPT_START_OUTPUT:
-      sscanf(optarg, "%d", &startOutput);
+      sscanf(optarg, "%d", &options.startOutput);
       break;
 
     case 'S':
@@ -1033,13 +1031,13 @@ int main(int argc, char *argv[]) {
   if (verbose >= VERBOSE_NORMAL)
     printf(WELCOME); // welcome message
 
-  if (startInput == -1)
-    startInput = (options.startSheet - 1) * inputCount + 1;
-  if (startOutput == -1)
-    startOutput = (options.startSheet - 1) * outputCount + 1;
+  if (options.startInput == -1)
+    options.startInput = (options.startSheet - 1) * inputCount + 1;
+  if (options.startOutput == -1)
+    options.startOutput = (options.startSheet - 1) * outputCount + 1;
 
-  inputNr = startInput;
-  outputNr = startOutput;
+  inputNr = options.startInput;
+  outputNr = options.startOutput;
 
   if (!multisheets && options.endSheet == -1)
     options.endSheet = options.startSheet;
