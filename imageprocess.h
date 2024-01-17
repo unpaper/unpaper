@@ -18,11 +18,16 @@ typedef struct {
   float deskewScanRangeRad;
   float deskewScanStepRad;
   float deskewScanDeviationRad;
+  bool deskewEdgeLeft;
+  bool deskewEdgeTop;
+  bool deskewEdgeRight;
+  bool deskewEdgeBottom;
 } DeskewParameters;
 
 DeskewParameters imageProcessParameters(float deskewScanRange,
                                         float deskewScanStep,
-                                        float deskewScanDeviation);
+                                        float deskewScanDeviation,
+                                        int deskewScanEdges);
 
 /* --- deskewing ---------------------------------------------------------- */
 

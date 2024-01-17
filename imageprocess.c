@@ -26,11 +26,16 @@ static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
 
 DeskewParameters imageProcessParameters(float deskewScanRange,
                                         float deskewScanStep,
-                                        float deskewScanDeviation) {
+                                        float deskewScanDeviation,
+                                        int deskewScanEdges) {
   DeskewParameters params = {
       .deskewScanRangeRad = degreesToRadians(deskewScanRange),
       .deskewScanStepRad = degreesToRadians(deskewScanStep),
       .deskewScanDeviationRad = degreesToRadians(deskewScanDeviation),
+      .deskewEdgeLeft = deskewScanEdges & 1 << LEFT,
+      .deskewEdgeTop = deskewScanEdges & 1 << TOP,
+      .deskewEdgeRight = deskewScanEdges & 1 << RIGHT,
+      .deskewEdgeBottom = deskewScanEdges & 1 << BOTTOM,
   };
 
   return params;
@@ -213,7 +218,7 @@ float detectRotation(AVFrame *image, const Mask mask,
   float average;
   float deviation;
 
-  if ((deskewScanEdges & 1 << LEFT) != 0) {
+  if (params->deskewEdgeLeft) {
     // left
     rotation[count] = detectEdgeRotation(1, 0, image, mask, params);
     if (verbose >= VERBOSE_NORMAL) {
@@ -222,7 +227,7 @@ float detectRotation(AVFrame *image, const Mask mask,
     }
     count++;
   }
-  if ((deskewScanEdges & 1 << TOP) != 0) {
+  if (params->deskewEdgeTop) {
     // top
     rotation[count] = -detectEdgeRotation(0, 1, image, mask, params);
     if (verbose >= VERBOSE_NORMAL) {
@@ -231,7 +236,7 @@ float detectRotation(AVFrame *image, const Mask mask,
     }
     count++;
   }
-  if ((deskewScanEdges & 1 << RIGHT) != 0) {
+  if (params->deskewEdgeRight) {
     // right
     rotation[count] = detectEdgeRotation(-1, 0, image, mask, params);
     if (verbose >= VERBOSE_NORMAL) {
@@ -240,7 +245,7 @@ float detectRotation(AVFrame *image, const Mask mask,
     }
     count++;
   }
-  if ((deskewScanEdges & 1 << BOTTOM) != 0) {
+  if (params->deskewEdgeBottom) {
     // bottom
     rotation[count] = -detectEdgeRotation(0, -1, image, mask, params);
     if (verbose >= VERBOSE_NORMAL) {
