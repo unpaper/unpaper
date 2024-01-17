@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <libavutil/common.h>
+
 #include "imageprocess.h"
 #include "tools.h"
 #include "unpaper.h"
@@ -281,11 +283,8 @@ static int cubic(float x, int a, int b, int c, int d) {
                        (c - a +
                         x * (2.0f * a - 5.0f * b + 4.0f * c - d +
                              x * (3.0f * (b - c) + d - a)));
-  if (result > 255)
-    result = 255;
-  if (result < 0)
-    result = 0;
-  return result;
+
+  return av_clip_uint8(result);
 }
 
 /**
