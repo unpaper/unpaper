@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2024 Diego Elio Pettenò
+#
+# SPDX-License-Identifier: 0BSD
+
+meson >= 0.57
+ninja
+sphinx >= 3.4
+pytest
+pillow
