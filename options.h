@@ -12,6 +12,7 @@ typedef struct {
 
   struct MultiIndex sheetMultiIndex;
   struct MultiIndex excludeMultiIndex;
+  struct MultiIndex ignoreMultiIndex;
 } Options;
 
 void optionsInit(Options *o);
