@@ -52,6 +52,7 @@ VERBOSE_LEVEL verbose = VERBOSE_NONE;
 
 INTERP_FUNCTIONS interpolateType = INTERP_CUBIC;
 
+Pixel sheetBackgroundPixel;
 unsigned int absBlackThreshold;
 unsigned int absWhiteThreshold;
 unsigned int absBlackfilterScanThreshold;
@@ -959,6 +960,9 @@ int main(int argc, char *argv[]) {
     endSheet = startSheet;
 
   // Calculate the constant absolute values based on the relative parameters.
+  sheetBackgroundPixel =
+      (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
+              sheetBackground & 0xff};
   absBlackThreshold = WHITE * (1.0 - blackThreshold);
   absWhiteThreshold = WHITE * (whiteThreshold);
   absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
