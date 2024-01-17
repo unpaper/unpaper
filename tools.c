@@ -43,17 +43,6 @@ void initImage(AVFrame **image, int width, int height, int pixel_format,
 }
 
 /**
- * Sets the color/grayscale value of a single pixel to white.
- *
- * @return true if the pixel has been changed, false if the original color was
- * the one to set
- */
-static bool clearPixel(int x, int y, AVFrame *image) {
-  return set_pixel(image, (Point){x, y}, (Pixel){WHITE, WHITE, WHITE},
-                   absBlackThreshold);
-}
-
-/**
  * Centers one area of an image inside an area of another image.
  * If the source area is smaller than the target area, is is equally
  * surrounded by a white border, if it is bigger, it gets equally cropped
@@ -104,10 +93,11 @@ int countPixelsRect(int left, int top, int right, int bottom, int minColor,
 
   for (int y = top; y <= bottom; y++) {
     for (int x = left; x <= right; x++) {
-      const int pixel = get_pixel_grayscale(image, (Point){x, y});
+      Point p = {x, y};
+      const int pixel = get_pixel_grayscale(image, p);
       if ((pixel >= minColor) && (pixel <= maxBrightness)) {
         if (clear == true) {
-          clearPixel(x, y, image);
+          set_pixel(image, p, PIXEL_WHITE, absBlackThreshold);
         }
         count++;
       }
@@ -128,56 +118,46 @@ static int countPixelNeighborsLevel(int x, int y, bool clear, int level,
 
   // upper and lower rows
   for (int xx = x - level; xx <= x + level; xx++) {
+    Point upper = {xx, y - level}, lower = {xx, y + level};
+
     // upper row
-    uint8_t pixel = get_pixel_lightness(image, (Point){xx, y - level});
+    uint8_t pixel = get_pixel_lightness(image, upper);
     if (pixel < whiteMin) { // non-light pixel found
       if (clear == true) {
-        clearPixel(xx, y - level, image);
+        set_pixel(image, upper, PIXEL_WHITE, absBlackThreshold);
       }
       count++;
     }
     // lower row
-    pixel = get_pixel_lightness(image, (Point){xx, y + level});
+    pixel = get_pixel_lightness(image, lower);
     if (pixel < whiteMin) {
       if (clear == true) {
-        clearPixel(xx, y + level, image);
+        set_pixel(image, lower, PIXEL_WHITE, absBlackThreshold);
       }
       count++;
     }
   }
   // middle rows
   for (int yy = y - (level - 1); yy <= y + (level - 1); yy++) {
+    Point first = {x - level, yy}, last = {x + level, yy};
+
     // first col
-    uint8_t pixel = get_pixel_lightness(image, (Point){x - level, yy});
+    uint8_t pixel = get_pixel_lightness(image, first);
     if (pixel < whiteMin) {
       if (clear == true) {
-        clearPixel(x - level, yy, image);
+        set_pixel(image, first, PIXEL_WHITE, absBlackThreshold);
       }
       count++;
     }
     // last col
-    pixel = get_pixel_lightness(image, (Point){x + level, yy});
+    pixel = get_pixel_lightness(image, last);
     if (pixel < whiteMin) {
       if (clear == true) {
-        clearPixel(x + level, yy, image);
+        set_pixel(image, last, PIXEL_WHITE, absBlackThreshold);
       }
       count++;
     }
   }
-  /* old version, not optimized:
-  for (yy = y-level; yy <= y+level; yy++) {
-      for (xx = x-level; xx <= x+level; xx++) {
-          if (abs(xx-x)==level || abs(yy-y)==level) {
-              pixel = getPixelLightness(xx, yy, image);
-              if (pixel < whiteMin) {
-                  if (clear==true) {
-                      clearPixel(xx, yy, image);
-                  }
-                  count++;
-              }
-          }
-      }
-  }*/
   return count;
 }
 
@@ -207,7 +187,7 @@ int countPixelNeighbors(int x, int y, int intensity, int whiteMin,
 void clearPixelNeighbors(int x, int y, int whiteMin, AVFrame *image) {
   int lCount = -1;
 
-  clearPixel(x, y, image);
+  set_pixel(image, (Point){x, y}, PIXEL_WHITE, absBlackThreshold);
 
   // lCount will become 0, otherwise countPixelNeighbors() would previously have
   // delivered a bigger value (and this here would not have been called)
