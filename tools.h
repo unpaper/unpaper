@@ -24,23 +24,8 @@ bool setPixel(int pixel, const int x, const int y, AVFrame *image);
 
 int getPixel(int x, int y, AVFrame *image);
 
-uint8_t getPixelDarknessInverse(int x, int y, AVFrame *image);
-
-void copyImageArea(const int x, const int y, const int width, const int height,
-                   AVFrame *source, const int toX, const int toY,
-                   AVFrame *target);
-
 void centerImage(AVFrame *source, int toX, int toY, int ww, int hh,
                  AVFrame *target);
-
-uint8_t inverseBrightnessRect(const int x1, const int y1, const int x2,
-                              const int y2, AVFrame *image);
-
-uint8_t inverseLightnessRect(const int x1, const int y1, const int x2,
-                             const int y2, AVFrame *image);
-
-uint8_t darknessRect(const int x1, const int y1, const int x2, const int y2,
-                     AVFrame *image);
 
 int countPixelsRect(int left, int top, int right, int bottom, int minColor,
                     int maxBrightness, bool clear, AVFrame *image);
