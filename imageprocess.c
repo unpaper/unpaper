@@ -10,7 +10,6 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -19,6 +18,7 @@
 #include "imageprocess/fill.h"
 #include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
+#include "lib/logging.h"
 #include "tools.h"
 #include "unpaper.h"
 
@@ -221,37 +221,33 @@ float detectRotation(AVFrame *image, const Mask mask,
   if (params->deskewEdgeLeft) {
     // left
     rotation[count] = detectEdgeRotation(1, 0, image, mask, params);
-    if (verbose >= VERBOSE_NORMAL) {
-      printf("detected rotation left: [%d,%d,%d,%d]: %f\n", mask[LEFT],
-             mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
-    }
+    verboseLog(VERBOSE_NORMAL, "detected rotation left: [%d,%d,%d,%d]: %f\n",
+               mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM],
+               rotation[count]);
     count++;
   }
   if (params->deskewEdgeTop) {
     // top
     rotation[count] = -detectEdgeRotation(0, 1, image, mask, params);
-    if (verbose >= VERBOSE_NORMAL) {
-      printf("detected rotation top: [%d,%d,%d,%d]: %f\n", mask[LEFT],
-             mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
-    }
+    verboseLog(VERBOSE_NORMAL, "detected rotation top: [%d,%d,%d,%d]: %f\n",
+               mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM],
+               rotation[count]);
     count++;
   }
   if (params->deskewEdgeRight) {
     // right
     rotation[count] = detectEdgeRotation(-1, 0, image, mask, params);
-    if (verbose >= VERBOSE_NORMAL) {
-      printf("detected rotation right: [%d,%d,%d,%d]: %f\n", mask[LEFT],
-             mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
-    }
+    verboseLog(VERBOSE_NORMAL, "detected rotation right: [%d,%d,%d,%d]: %f\n",
+               mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM],
+               rotation[count]);
     count++;
   }
   if (params->deskewEdgeBottom) {
     // bottom
     rotation[count] = -detectEdgeRotation(0, -1, image, mask, params);
-    if (verbose >= VERBOSE_NORMAL) {
-      printf("detected rotation bottom: [%d,%d,%d,%d]: %f\n", mask[LEFT],
-             mask[TOP], mask[RIGHT], mask[BOTTOM], rotation[count]);
-    }
+    verboseLog(VERBOSE_NORMAL, "detected rotation bottom: [%d,%d,%d,%d]: %f\n",
+               mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM],
+               rotation[count]);
     count++;
   }
 
@@ -265,18 +261,15 @@ float detectRotation(AVFrame *image, const Mask mask,
     total += powf(rotation[i] - average, 2);
   }
   deviation = sqrtf(total);
-  if (verbose >= VERBOSE_NORMAL) {
-    printf("rotation average: %f  deviation: %f  rotation-scan-deviation "
-           "(maximum): %f  [%d,%d,%d,%d]\n",
-           average, deviation, params->deskewScanDeviationRad, mask[LEFT],
-           mask[TOP], mask[RIGHT], mask[BOTTOM]);
-  }
+  verboseLog(VERBOSE_NORMAL,
+             "rotation average: %f  deviation: %f  rotation-scan-deviation "
+             "(maximum): %f  [%d,%d,%d,%d]\n",
+             average, deviation, params->deskewScanDeviationRad, mask[LEFT],
+             mask[TOP], mask[RIGHT], mask[BOTTOM]);
   if (deviation <= params->deskewScanDeviationRad) {
     return average;
   } else {
-    if (verbose >= VERBOSE_NONE) {
-      printf("out of deviation range - NO ROTATING\n");
-    }
+    verboseLog(VERBOSE_NONE, "out of deviation range - NO ROTATING\n");
     return 0.0;
   }
 }
@@ -313,10 +306,8 @@ static void stretchTo(AVFrame *source, AVFrame *target) {
   const float xRatio = source->width / (float)target->width;
   const float yRatio = source->height / (float)target->height;
 
-  if (verbose >= VERBOSE_MORE) {
-    printf("stretching %dx%d -> %dx%d\n", source->width, source->height,
-           target->width, target->height);
-  }
+  verboseLog(VERBOSE_MORE, "stretching %dx%d -> %dx%d\n", source->width,
+             source->height, target->width, target->height);
 
   for (int y = 0; y < target->height; y++) {
     for (int x = 0; x < target->width; x++) {
@@ -357,10 +348,8 @@ void resize(int w, int h, AVFrame **image) {
   float wRat = (float)w / (*image)->width;
   float hRat = (float)h / (*image)->height;
 
-  if (verbose >= VERBOSE_NORMAL) {
-    printf("resizing %dx%d -> %dx%d\n", (*image)->width, (*image)->height, w,
-           h);
-  }
+  verboseLog(VERBOSE_NORMAL, "resizing %dx%d -> %dx%d\n", (*image)->width,
+             (*image)->height, w, h);
 
   if (wRat < hRat) { // horizontally more shrinking/less enlarging is needed:
                      // fill width fully, adjust height
@@ -578,20 +567,17 @@ void detectMasks(AVFrame *image) {
         mask[maskCount][RIGHT] = right;
         mask[maskCount][BOTTOM] = bottom;
         maskCount++;
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("auto-masking (%d,%d): %d,%d,%d,%d", point[i][X], point[i][Y],
-                 left, top, right, bottom);
-          if (maskValid[i] ==
-              false) { // (mask had been auto-set to full page size)
-            printf(" (invalid detection, using full page size)");
-          }
-          printf("\n");
+        verboseLog(VERBOSE_NORMAL, "auto-masking (%d,%d): %d,%d,%d,%d",
+                   point[i][X], point[i][Y], left, top, right, bottom);
+        if (maskValid[i] ==
+            false) { // (mask had been auto-set to full page size)
+          verboseLog(VERBOSE_NORMAL,
+                     " (invalid detection, using full page size)");
         }
+        verboseLog(VERBOSE_NORMAL, "\n");
       } else {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("auto-masking (%d,%d): NO MASK FOUND\n", point[i][X],
-                 point[i][Y]);
-        }
+        verboseLog(VERBOSE_NORMAL, "auto-masking (%d,%d): NO MASK FOUND\n",
+                   point[i][X], point[i][Y]);
       }
     }
   }
@@ -640,10 +626,9 @@ void applyWipes(const Mask *area, int areaCount, AVFrame *image) {
       }
     }
 
-    if (verbose >= VERBOSE_MORE) {
-      printf("wipe [%d,%d,%d,%d]: %" PRIu64 " pixels\n", rect.vertex[0].x,
-             rect.vertex[0].y, rect.vertex[1].x, rect.vertex[1].y, count);
-    }
+    verboseLog(VERBOSE_MORE, "wipe [%d,%d,%d,%d]: %" PRIu64 " pixels\n",
+               rect.vertex[0].x, rect.vertex[0].y, rect.vertex[1].x,
+               rect.vertex[1].y, count);
   }
 }
 
@@ -775,10 +760,9 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep,
         const Mask mask = {l, t, r, b};
         const Rectangle area = maskToRectangle(mask);
         if (!masksOverlapAny(mask, exclude, excludeCount)) {
-          if (verbose >= VERBOSE_NORMAL) {
-            printf("black-area flood-fill: [%d,%d,%d,%d]\n", l, t, r, b);
-            alreadyExcludedMessage = false;
-          }
+          verboseLog(VERBOSE_NORMAL, "black-area flood-fill: [%d,%d,%d,%d]\n",
+                     l, t, r, b);
+          alreadyExcludedMessage = false;
           // start flood-fill in this area (on each pixel to make sure we get
           // everything, in most cases first flood-fill from first pixel will
           // delete all other black pixels in the area already)
@@ -787,8 +771,9 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep,
                        intensity, absBlackThreshold);
           }
         } else {
-          if ((verbose >= VERBOSE_NORMAL) && (!alreadyExcludedMessage)) {
-            printf("black-area EXCLUDED: [%d,%d,%d,%d]\n", l, t, r, b);
+          if (!alreadyExcludedMessage) {
+            verboseLog(VERBOSE_NORMAL, "black-area EXCLUDED: [%d,%d,%d,%d]\n",
+                       l, t, r, b);
             alreadyExcludedMessage = true; // do this only once per scan-stripe,
                                            // otherwise too many messages
           }
@@ -1013,25 +998,22 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
   Rectangle clipped_area = clip_rectangle(image, new_area);
 
   if (memcmp(&new_area, &clipped_area, sizeof(new_area)) == 0) {
-    if (verbose >= VERBOSE_NORMAL) {
-      printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", area.vertex[0].x,
-             area.vertex[0].y, area.vertex[1].x, area.vertex[1].y, center[X],
-             center[Y], target.x - area.vertex[0].x,
-             target.y - area.vertex[0].y);
-    }
+    verboseLog(VERBOSE_NORMAL, "centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n",
+               area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
+               area.vertex[1].y, center[X], center[Y],
+               target.x - area.vertex[0].x, target.y - area.vertex[0].y);
     initImage(&newimage, size.width, size.height, image->format, false);
     copy_rectangle(image, newimage, area, POINT_ORIGIN, absBlackThreshold);
     wipe_rectangle(image, area, sheetBackgroundPixel, absBlackThreshold);
     copy_rectangle(newimage, image, RECT_FULL_IMAGE, target, absBlackThreshold);
     av_frame_free(&newimage);
   } else {
-    if (verbose >= VERBOSE_NORMAL) {
-      printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d - NO CENTERING "
-             "(would shift area outside visible image)\n",
-             area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
-             area.vertex[1].y, center[X], center[Y],
-             target.x - area.vertex[0].x, target.y - area.vertex[0].y);
-    }
+    verboseLog(VERBOSE_NORMAL,
+               "centering mask [%d,%d,%d,%d] (%d,%d): %d, %d - NO CENTERING "
+               "(would shift area outside visible image)\n",
+               area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
+               area.vertex[1].y, center[X], center[Y],
+               target.x - area.vertex[0].x, target.y - area.vertex[0].y);
   }
 }
 
@@ -1062,13 +1044,11 @@ void alignMask(const Mask mask, const Mask outside, AVFrame *image) {
   } else {
     target.y = (outside[TOP] + outside[BOTTOM] - inside_size.height) / 2;
   }
-  if (verbose >= VERBOSE_NORMAL) {
-    printf("aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n",
-           inside_area.vertex[0].x, inside_area.vertex[0].y,
-           inside_area.vertex[1].x, inside_area.vertex[1].y, target.x, target.y,
-           target.x - inside_area.vertex[0].x,
-           target.y - inside_area.vertex[0].y);
-  }
+  verboseLog(VERBOSE_NORMAL, "aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n",
+             inside_area.vertex[0].x, inside_area.vertex[0].y,
+             inside_area.vertex[1].x, inside_area.vertex[1].y, target.x,
+             target.y, target.x - inside_area.vertex[0].x,
+             target.y - inside_area.vertex[0].y);
   initImage(&newimage, inside_size.width, inside_size.height, image->format,
             true);
   copy_rectangle(image, newimage, inside_area, POINT_ORIGIN, absBlackThreshold);
@@ -1162,11 +1142,10 @@ void detectBorder(int border[EDGES_COUNT], const Mask outsideMask,
         outsideMask, 0, -borderScanStep[VERTICAL], borderScanSize[VERTICAL],
         borderScanThreshold[VERTICAL], image);
   }
-  if (verbose >= VERBOSE_NORMAL) {
-    printf("border detected: (%d,%d,%d,%d) in [%d,%d,%d,%d]\n", border[LEFT],
-           border[TOP], border[RIGHT], border[BOTTOM], outsideMask[LEFT],
-           outsideMask[TOP], outsideMask[RIGHT], outsideMask[BOTTOM]);
-  }
+  verboseLog(VERBOSE_NORMAL,
+             "border detected: (%d,%d,%d,%d) in [%d,%d,%d,%d]\n", border[LEFT],
+             border[TOP], border[RIGHT], border[BOTTOM], outsideMask[LEFT],
+             outsideMask[TOP], outsideMask[RIGHT], outsideMask[BOTTOM]);
 }
 
 /**
@@ -1177,11 +1156,9 @@ void borderToMask(const int border[EDGES_COUNT], Mask mask, AVFrame *image) {
   mask[TOP] = border[TOP];
   mask[RIGHT] = image->width - border[RIGHT] - 1;
   mask[BOTTOM] = image->height - border[BOTTOM] - 1;
-  if (verbose >= VERBOSE_DEBUG) {
-    printf("border [%d,%d,%d,%d] -> mask [%d,%d,%d,%d]\n", border[LEFT],
-           border[TOP], border[RIGHT], border[BOTTOM], mask[LEFT], mask[TOP],
-           mask[RIGHT], mask[BOTTOM]);
-  }
+  verboseLog(VERBOSE_DEBUG, "border [%d,%d,%d,%d] -> mask [%d,%d,%d,%d]\n",
+             border[LEFT], border[TOP], border[RIGHT], border[BOTTOM],
+             mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM]);
 }
 
 /**
@@ -1194,11 +1171,9 @@ void applyBorder(const int border[EDGES_COUNT], AVFrame *image) {
   if (border[LEFT] != 0 || border[TOP] != 0 || border[RIGHT] != 0 ||
       border[BOTTOM] != 0) {
     borderToMask(border, mask, image);
-    if (verbose >= VERBOSE_NORMAL) {
-      printf("applying border (%d,%d,%d,%d) [%d,%d,%d,%d]\n", border[LEFT],
-             border[TOP], border[RIGHT], border[BOTTOM], mask[LEFT], mask[TOP],
-             mask[RIGHT], mask[BOTTOM]);
-    }
+    verboseLog(VERBOSE_NORMAL, "applying border (%d,%d,%d,%d) [%d,%d,%d,%d]\n",
+               border[LEFT], border[TOP], border[RIGHT], border[BOTTOM],
+               mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM]);
     applyMasks(&mask, 1, image);
   }
 }

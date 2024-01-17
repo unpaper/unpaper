@@ -37,6 +37,7 @@ unpaper = executable(
     'imageprocess/fill.c',
     'imageprocess/pixel.c',
     'imageprocess/primitives.c',
+    'lib/logging.c',
     dependencies : unpaper_deps,
     install : true,
 )

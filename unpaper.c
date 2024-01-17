@@ -8,7 +8,6 @@
 
 #include <assert.h>
 #include <getopt.h>
-#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -49,8 +48,6 @@
           "Report bugs at https://github.com/unpaper/unpaper/issues\n"
 
 /* --- global variable ---------------------------------------------------- */
-
-VERBOSE_LEVEL verbose = VERBOSE_NONE;
 
 Interpolation interpolateType = INTERP_CUBIC;
 
@@ -223,23 +220,6 @@ enum LONG_OPTION_VALUES {
   OPT_DEBUG_SAVE,
   OPT_INTERPOLATE,
 };
-
-/**
- * Print an error and exit process
- */
-void errOutput(const char *fmt, ...) {
-  va_list vl;
-
-  fprintf(stderr, "unpaper: error: ");
-
-  va_start(vl, fmt);
-  vfprintf(stderr, fmt, vl);
-  va_end(vl);
-
-  fprintf(stderr, "\nTry 'man unpaper' for more information.\n");
-
-  exit(1);
-}
 
 /****************************************************************************
  * MAIN()                                                                   *
@@ -1024,8 +1004,7 @@ int main(int argc, char *argv[]) {
   if (optind + 2 > argc)
     errOutput("no input or output files given.\n");
 
-  if (verbose >= VERBOSE_NORMAL)
-    printf(WELCOME); // welcome message
+  verboseLog(VERBOSE_NORMAL, WELCOME); // welcome message
 
   if (options.startInput == -1)
     options.startInput = (options.startSheet - 1) * options.inputCount + 1;
@@ -1084,12 +1063,10 @@ int main(int argc, char *argv[]) {
       } else {
         inputFileNames[i] = argv[optind++];
       }
-      if (verbose >= VERBOSE_DEBUG) {
-        if (inputFileNames[i] == NULL) {
-          printf("added blank input file\n");
-        } else {
-          printf("added input file %s\n", inputFileNames[i]);
-        }
+      if (inputFileNames[i] == NULL) {
+        verboseLog(VERBOSE_DEBUG, "added blank input file\n");
+      } else {
+        verboseLog(VERBOSE_DEBUG, "added input file %s\n", inputFileNames[i]);
       }
 
       if (inputFileNames[i] != NULL) {
@@ -1121,9 +1098,7 @@ int main(int argc, char *argv[]) {
       } else {
         outputFileNames[i] = argv[optind++];
       }
-      if (verbose >= VERBOSE_DEBUG) {
-        printf("added output file %s\n", outputFileNames[i]);
-      }
+      verboseLog(VERBOSE_DEBUG, "added output file %s\n", outputFileNames[i]);
 
       if (!overwrite) {
         struct stat statbuf;
@@ -1144,30 +1119,28 @@ int main(int argc, char *argv[]) {
       char s1[1023]; // buffers for result of implode()
       char s2[1023];
 
-      if (verbose >= VERBOSE_NORMAL) {
-        printf("\n-------------------------------------------------------------"
-               "------------------\n");
-      }
-      if (verbose > VERBOSE_QUIET) {
-        if (multisheets) {
-          printf(
-              "Processing sheet #%d: %s -> %s\n", nr,
-              implode(s1, (const char **)inputFileNames, options.inputCount),
-              implode(s2, (const char **)outputFileNames, options.outputCount));
-        } else {
-          printf(
-              "Processing sheet: %s -> %s\n",
-              implode(s1, (const char **)inputFileNames, options.inputCount),
-              implode(s2, (const char **)outputFileNames, options.outputCount));
-        }
+      verboseLog(
+          VERBOSE_NORMAL,
+          "\n-------------------------------------------------------------"
+          "------------------\n");
+
+      if (multisheets) {
+        verboseLog(
+            VERBOSE_NORMAL, "Processing sheet #%d: %s -> %s\n", nr,
+            implode(s1, (const char **)inputFileNames, options.inputCount),
+            implode(s2, (const char **)outputFileNames, options.outputCount));
+      } else {
+        verboseLog(
+            VERBOSE_NORMAL, "Processing sheet: %s -> %s\n",
+            implode(s1, (const char **)inputFileNames, options.inputCount),
+            implode(s2, (const char **)outputFileNames, options.outputCount));
       }
 
       // load input image(s)
       for (int j = 0; j < options.inputCount; j++) {
         if (inputFileNames[j] !=
             NULL) { // may be null if --insert-blank or --replace-blank
-          if (verbose >= VERBOSE_MORE)
-            printf("loading file %s.\n", inputFileNames[j]);
+          verboseLog(VERBOSE_MORE, "loading file %s.\n", inputFileNames[j]);
 
           loadImage(inputFileNames[j], &page);
           saveDebug("_loaded_%d.pnm", inputNr - options.inputCount + j, page);
@@ -1178,9 +1151,8 @@ int main(int argc, char *argv[]) {
 
           // pre-rotate
           if (preRotate != 0) {
-            if (verbose >= VERBOSE_NORMAL) {
-              printf("pre-rotating %d degrees.\n", preRotate);
-            }
+            verboseLog(VERBOSE_NORMAL, "pre-rotating %d degrees.\n", preRotate);
+
             flipRotate(preRotate / 90, &page);
           }
 
@@ -1228,9 +1200,10 @@ int main(int argc, char *argv[]) {
         // last chance: try to get previous (unstretched/not zoomed) sheet size
         w = previousWidth;
         h = previousHeight;
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("need to guess sheet size from previous sheet: %dx%d\n", w, h);
-        }
+        verboseLog(VERBOSE_NORMAL,
+                   "need to guess sheet size from previous sheet: %dx%d\n", w,
+                   h);
+
         if ((w == -1) || (h == -1)) {
           errOutput("sheet size unknown, use at least one input file per "
                     "sheet, or force using --sheet-size.");
@@ -1244,25 +1217,24 @@ int main(int argc, char *argv[]) {
 
       // pre-mirroring
       if (preMirror != 0) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("pre-mirroring %s\n", getDirections(preMirror));
-        }
+        verboseLog(VERBOSE_NORMAL, "pre-mirroring %s\n",
+                   getDirections(preMirror));
+
         mirror(preMirror, sheet);
       }
 
       // pre-shifting
       if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("pre-shifting [%d,%d]\n", preShift[WIDTH], preShift[HEIGHT]);
-        }
+        verboseLog(VERBOSE_NORMAL, "pre-shifting [%d,%d]\n", preShift[WIDTH],
+                   preShift[HEIGHT]);
+
         shift(preShift[WIDTH], preShift[HEIGHT], &sheet);
       }
 
       // pre-masking
       if (preMaskCount > 0) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("pre-masking\n ");
-        }
+        verboseLog(VERBOSE_NORMAL, "pre-masking\n ");
+
         applyMasks(preMask, preMaskCount, sheet);
       }
 
@@ -1526,17 +1498,17 @@ int main(int argc, char *argv[]) {
         }
         printf("\n");
       }
-      if (verbose >= VERBOSE_NORMAL) {
-        printf("input-file%s for sheet %d: %s\n", pluralS(options.inputCount),
-               nr,
-               implode(s1, (const char **)inputFileNames, options.inputCount));
-        printf(
-            "output-file%s for sheet %d: %s\n", pluralS(options.outputCount),
-            nr,
-            implode(s1, (const char **)outputFileNames, options.outputCount));
-        printf("sheet size: %dx%d\n", sheet->width, sheet->height);
-        printf("...\n");
-      }
+      verboseLog(
+          VERBOSE_NORMAL, "input-file%s for sheet %d: %s\n",
+          pluralS(options.inputCount), nr,
+          implode(s1, (const char **)inputFileNames, options.inputCount));
+      verboseLog(
+          VERBOSE_NORMAL, "output-file%s for sheet %d: %s\n",
+          pluralS(options.outputCount), nr,
+          implode(s1, (const char **)outputFileNames, options.outputCount));
+      verboseLog(VERBOSE_NORMAL, "sheet size: %dx%d\n", sheet->width,
+                 sheet->height);
+      verboseLog(VERBOSE_NORMAL, "...\n");
 
       // -------------------------------------------------------
       // --- process image data                              ---
@@ -1700,45 +1672,35 @@ int main(int argc, char *argv[]) {
         blackfilter(sheet);
         saveDebug("_after-blackfilter%d.pnm", nr, sheet);
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ blackfilter DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ blackfilter DISABLED for sheet %d\n", nr);
       }
 
       // noise filter
       if (!isExcluded(nr, options.noNoisefilterMultiIndex,
                       options.ignoreMultiIndex)) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("noise-filter ...");
-        }
+        verboseLog(VERBOSE_NORMAL, "noise-filter ...");
+
         saveDebug("_before-noisefilter%d.pnm", nr, sheet);
         int filterResult = noisefilter(sheet);
         saveDebug("_after-noisefilter%d.pnm", nr, sheet);
-        if (verbose >= VERBOSE_NORMAL) {
-          printf(" deleted %d clusters.\n", filterResult);
-        }
+        verboseLog(VERBOSE_NORMAL, " deleted %d clusters.\n", filterResult);
+
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ noisefilter DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ noisefilter DISABLED for sheet %d\n", nr);
       }
 
       // blur filter
       if (!isExcluded(nr, options.noBlurfilterMultiIndex,
                       options.ignoreMultiIndex)) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("blur-filter...");
-        }
+        verboseLog(VERBOSE_NORMAL, "blur-filter...");
+
         saveDebug("_before-blurfilter%d.pnm", nr, sheet);
         int filterResult = blurfilter(sheet);
         saveDebug("_after-blurfilter%d.pnm", nr, sheet);
-        if (verbose >= VERBOSE_NORMAL) {
-          printf(" deleted %d pixels.\n", filterResult);
-        }
+        verboseLog(VERBOSE_NORMAL, " deleted %d pixels.\n", filterResult);
+
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ blurfilter DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ blurfilter DISABLED for sheet %d\n", nr);
       }
 
       // mask-detection
@@ -1746,9 +1708,7 @@ int main(int argc, char *argv[]) {
                       options.ignoreMultiIndex)) {
         detectMasks(sheet);
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ mask-scan DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ mask-scan DISABLED for sheet %d\n", nr);
       }
 
       // permanently apply masks
@@ -1761,19 +1721,14 @@ int main(int argc, char *argv[]) {
       // gray filter
       if (!isExcluded(nr, options.noGrayfilterMultiIndex,
                       options.ignoreMultiIndex)) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("gray-filter...");
-        }
+        verboseLog(VERBOSE_NORMAL, "gray-filter...");
+
         saveDebug("_before-grayfilter%d.pnm", nr, sheet);
         int filterResult = grayfilter(sheet);
         saveDebug("_after-grayfilter%d.pnm", nr, sheet);
-        if (verbose >= VERBOSE_NORMAL) {
-          printf(" deleted %d pixels.\n", filterResult);
-        }
+        verboseLog(VERBOSE_NORMAL, " deleted %d pixels.\n", filterResult);
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ grayfilter DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ grayfilter DISABLED for sheet %d\n", nr);
       }
 
       // rotation-detection
@@ -1787,9 +1742,7 @@ int main(int argc, char *argv[]) {
                         options.ignoreMultiIndex)) {
           detectMasks(sheet);
         } else {
-          if (verbose >= VERBOSE_MORE) {
-            printf("(mask-scan before deskewing disabled)\n");
-          }
+          verboseLog(VERBOSE_MORE, "(mask-scan before deskewing disabled)\n");
         }
 
         // auto-deskew each mask
@@ -1798,9 +1751,8 @@ int main(int argc, char *argv[]) {
           float rotation = detectRotation(sheet, mask[i], &deskewParams);
           saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
 
-          if (verbose >= VERBOSE_NORMAL) {
-            printf("rotate (%d,%d): %f\n", point[i][X], point[i][Y], rotation);
-          }
+          verboseLog(VERBOSE_NORMAL, "rotate (%d,%d): %f\n", point[i][X],
+                     point[i][Y], rotation);
 
           if (rotation != 0.0) {
             AVFrame *rect;
@@ -1834,9 +1786,7 @@ int main(int argc, char *argv[]) {
 
         saveDebug("_after-deskew%d.pnm", nr, sheet);
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ deskewing DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ deskewing DISABLED for sheet %d\n", nr);
       }
 
       // auto-center masks on either single-page or double-page layout
@@ -1849,9 +1799,7 @@ int main(int argc, char *argv[]) {
                         options.ignoreMultiIndex)) {
           detectMasks(sheet);
         } else {
-          if (verbose >= VERBOSE_MORE) {
-            printf("(mask-scan before centering disabled)\n");
-          }
+          verboseLog(VERBOSE_MORE, "(mask-scan before centering disabled)\n");
         }
 
         saveDebug("_before-centering%d.pnm", nr, sheet);
@@ -1861,18 +1809,15 @@ int main(int argc, char *argv[]) {
         }
         saveDebug("_after-centering%d.pnm", nr, sheet);
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ auto-centering DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ auto-centering DISABLED for sheet %d\n",
+                   nr);
       }
 
       // explicit wipe
       if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
         applyWipes(wipe, wipeCount, sheet);
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ wipe DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ wipe DISABLED for sheet %d\n", nr);
       }
 
       // explicit border
@@ -1880,9 +1825,7 @@ int main(int argc, char *argv[]) {
                       options.ignoreMultiIndex)) {
         applyBorder(border, sheet);
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ border DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ border DISABLED for sheet %d\n", nr);
       }
 
       // border-detection
@@ -1902,16 +1845,13 @@ int main(int argc, char *argv[]) {
                           options.ignoreMultiIndex)) {
             alignMask(autoborderMask[i], outsideBorderscanMask[i], sheet);
           } else {
-            if (verbose >= VERBOSE_MORE) {
-              printf("+ border-centering DISABLED for sheet %d\n", nr);
-            }
+            verboseLog(VERBOSE_MORE,
+                       "+ border-centering DISABLED for sheet %d\n", nr);
           }
         }
         saveDebug("_after-border%d.pnm", nr, sheet);
       } else {
-        if (verbose >= VERBOSE_MORE) {
-          printf("+ border-scan DISABLED for sheet %d\n", nr);
-        }
+        verboseLog(VERBOSE_MORE, "+ border-scan DISABLED for sheet %d\n", nr);
       }
 
       // post-wipe
@@ -1927,26 +1867,21 @@ int main(int argc, char *argv[]) {
 
       // post-mirroring
       if (postMirror != 0) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("post-mirroring %s\n", getDirections(postMirror));
-        }
+        verboseLog(VERBOSE_NORMAL, "post-mirroring %s\n",
+                   getDirections(postMirror));
         mirror(postMirror, sheet);
       }
 
       // post-shifting
       if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("post-shifting [%d,%d]\n", postShift[WIDTH],
-                 postShift[HEIGHT]);
-        }
+        verboseLog(VERBOSE_NORMAL, "post-shifting [%d,%d]\n", postShift[WIDTH],
+                   postShift[HEIGHT]);
         shift(postShift[WIDTH], postShift[HEIGHT], &sheet);
       }
 
       // post-rotating
       if (postRotate != 0) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("post-rotating %d degrees.\n", postRotate);
-        }
+        verboseLog(VERBOSE_NORMAL, "post-rotating %d degrees.\n", postRotate);
         flipRotate(postRotate / 90, &sheet);
       }
 
@@ -1987,9 +1922,7 @@ int main(int argc, char *argv[]) {
       // write split pages output
 
       if (writeoutput == true) {
-        if (verbose >= VERBOSE_NORMAL) {
-          printf("writing output.\n");
-        }
+        verboseLog(VERBOSE_NORMAL, "writing output.\n");
         // write files
         saveDebug("_before-save%d.pnm", nr, sheet);
 
@@ -2007,9 +1940,7 @@ int main(int argc, char *argv[]) {
                            {page->width * j + page->width, page->height}}},
               POINT_ORIGIN, absBlackThreshold);
 
-          if (verbose >= VERBOSE_MORE) {
-            printf("saving file %s.\n", outputFileNames[j]);
-          }
+          verboseLog(VERBOSE_MORE, "saving file %s.\n", outputFileNames[j]);
 
           saveImage(outputFileNames[j], page, outputPixFmt);
 

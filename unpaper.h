@@ -17,17 +17,14 @@
 #include "imageprocess/interpolate.h"
 #include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
+#include "lib/logging.h"
 
 /* --- preprocessor macros ------------------------------------------------ */
 
 #define pluralS(i) ((i > 1) ? "s" : "")
 
-void errOutput(const char *fmt, ...) __attribute__((format(printf, 1, 2)))
-__attribute__((noreturn));
-
 /* --- global variable ---------------------------------------------------- */
 
-extern VERBOSE_LEVEL verbose;
 extern Interpolation interpolateType;
 
 extern Pixel sheetBackgroundPixel;
