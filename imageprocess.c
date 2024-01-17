@@ -15,7 +15,6 @@
 #include <string.h>
 
 #include "imageprocess.h"
-#include "parse.h" //for maksOverlapAny
 #include "tools.h"
 #include "unpaper.h"
 
