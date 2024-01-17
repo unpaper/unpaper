@@ -129,8 +129,6 @@ extern struct MultiIndex noWipeMultiIndex;
 extern struct MultiIndex noBorderMultiIndex;
 extern struct MultiIndex noBorderScanMultiIndex;
 extern struct MultiIndex noBorderAlignMultiIndex;
-extern struct MultiIndex insertBlank;
-extern struct MultiIndex replaceBlank;
 
 extern int autoborder[MAX_MASKS][EDGES_COUNT];
 extern int autoborderMask[MAX_MASKS][EDGES_COUNT];
