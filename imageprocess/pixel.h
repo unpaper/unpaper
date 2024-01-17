@@ -9,24 +9,7 @@
 
 #include <libavutil/frame.h>
 
-typedef struct {
-  int32_t x;
-  int32_t y;
-} Point;
-
-#define POINT_ORIGIN                                                           \
-  (Point) { 0, 0 }
-#define POINT_INFINITY                                                         \
-  (Point) { INT32_MAX, INT32_MAX }
-
-typedef struct {
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-} Pixel;
-
-#define PIXEL_WHITE                                                            \
-  (Pixel) { 0xFF, 0xFF, 0xFF }
+#include "imageprocess/primitives.h"
 
 Pixel get_pixel(AVFrame *image, Point coords);
 uint8_t get_pixel_grayscale(AVFrame *image, Point coords);
