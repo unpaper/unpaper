@@ -293,7 +293,7 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
       }
 
       multiIndex->indexes[(multiIndex->count)++] = index;
-      if (c == '-') {   // range is specified: get range end
+      if (c == '-') { // range is specified: get range end
         if (components < 3) {
           errOutput("Invalid multi-index string \"%s\".", optarg);
         }

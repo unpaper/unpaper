@@ -139,7 +139,7 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
   char errbuff[1024];
 
   if (avformat_alloc_output_context2(&out_ctx, NULL, "image2", filename) < 0 ||
-    out_ctx == NULL) {
+      out_ctx == NULL) {
     errOutput("unable to allocate output context.");
   }
 
