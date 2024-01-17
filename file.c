@@ -15,6 +15,7 @@
 #include <libavutil/avutil.h>
 #include <libavutil/opt.h>
 
+#include "imageprocess/blit.h"
 #include "tools.h"
 #include "unpaper.h"
 
@@ -169,7 +170,8 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
 
   if (input->format != outputPixFmt) {
     initImage(&output, input->width, input->height, outputPixFmt, -1);
-    copyImageArea(0, 0, input->width, input->height, input, 0, 0, output);
+    copy_rectangle(input, output, RECT_FULL_IMAGE, POINT_ORIGIN,
+                   absBlackThreshold);
   }
 
   codec = avcodec_find_encoder(output_codec);
