@@ -20,6 +20,7 @@
 
 #include "imageprocess.h"
 #include "imageprocess/blit.h"
+#include "imageprocess/deskew.h"
 #include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
 #include "options.h"
@@ -1024,8 +1025,9 @@ int main(int argc, char *argv[]) {
   absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
   absGrayfilterThreshold = WHITE * (grayfilterThreshold);
 
-  deskewParams = imageProcessParameters(deskewScanRange, deskewScanStep,
-                                        deskewScanDeviation, deskewScanEdges);
+  deskewParams = validate_deskew_parameters(deskewScanRange, deskewScanStep,
+                                            deskewScanDeviation, deskewScanSize,
+                                            deskewScanDepth, deskewScanEdges);
 
   for (int nr = options.startSheet;
        (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
@@ -1748,7 +1750,8 @@ int main(int argc, char *argv[]) {
         // auto-deskew each mask
         for (int i = 0; i < maskCount; i++) {
           saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
-          float rotation = detectRotation(sheet, mask[i], &deskewParams);
+          float rotation =
+              detect_rotation(sheet, maskToRectangle(mask[i]), deskewParams);
           saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
 
           verboseLog(VERBOSE_NORMAL, "rotate (%d,%d): %f\n", point[i][X],
@@ -1772,7 +1775,8 @@ int main(int argc, char *argv[]) {
                            POINT_ORIGIN, absBlackThreshold);
 
             // rotate
-            rotate(-rotation, rect, rectTarget);
+            rotate(rect, rectTarget, -rotation, absBlackThreshold,
+                   interpolateType);
 
             // copy result back into whole image
             copy_rectangle(rectTarget, sheet, RECT_FULL_IMAGE,
