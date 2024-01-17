@@ -44,10 +44,6 @@ void flipRotate(int direction, AVFrame **image);
 
 void blackfilter(AVFrame *image);
 
-/* --- noisefilter -------------------------------------------------------- */
-
-int noisefilter(AVFrame *image);
-
 /* --- blurfilter --------------------------------------------------------- */
 
 int blurfilter(AVFrame *image);

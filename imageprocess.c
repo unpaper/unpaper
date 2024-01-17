@@ -558,36 +558,6 @@ void blackfilter(AVFrame *image) {
   }
 }
 
-/* --- noisefilter -------------------------------------------------------- */
-
-/**
- * Applies a simple noise filter to the image.
- *
- * @param intensity maximum cluster size to delete
- */
-int noisefilter(AVFrame *image) {
-  int count;
-  int neighbors;
-
-  count = 0;
-  for (int y = 0; y < image->height; y++) {
-    for (int x = 0; x < image->width; x++) {
-      uint8_t pixel = get_pixel_darkness_inverse(image, (Point){x, y});
-      if (pixel < absWhiteThreshold) { // one dark pixel found
-        neighbors = countPixelNeighbors(
-            x, y, noisefilterIntensity, absWhiteThreshold,
-            image); // get number of non-light pixels in neighborhood
-        if (neighbors <=
-            noisefilterIntensity) { // ...not more than 'intensity'?
-          clearPixelNeighbors(x, y, absWhiteThreshold, image); // delete area
-          count++;
-        }
-      }
-    }
-  }
-  return count;
-}
-
 /* --- blurfilter --------------------------------------------------------- */
 
 /**
