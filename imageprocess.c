@@ -34,7 +34,7 @@ static inline bool inMask(int x, int y, const Mask mask) {
  * Tests if masks a and b overlap.
  */
 static inline bool masksOverlap(const Mask a, const Mask b) {
-  return (inMask(a[LEFT], a[TOP], b) || inMask(a[RIGHT], a[BOTTOM], b));
+  return rectangles_overlap(maskToRectangle(a), maskToRectangle(b));
 }
 
 /**
@@ -389,12 +389,8 @@ void shift(int shiftX, int shiftY, AVFrame **image) {
   initImage(&newimage, (*image)->width, (*image)->height, (*image)->format,
             true);
 
-  for (int y = 0; y < (*image)->height; y++) {
-    for (int x = 0; x < (*image)->width; x++) {
-      const int pixel = getPixel(x, y, *image);
-      setPixel(pixel, x + shiftX, y + shiftY, newimage);
-    }
-  }
+  copy_rectangle(*image, newimage, RECT_FULL_IMAGE, POINT_ORIGIN,
+                 absBlackThreshold);
   replaceImage(image, &newimage);
 }
 
@@ -593,16 +589,18 @@ void applyMasks(const Mask *masks, const int masksCount, AVFrame *image) {
   if (masksCount <= 0) {
     return;
   }
-  for (int y = 0; y < image->height; y++) {
-    for (int x = 0; x < image->width; x++) {
-      // in any mask?
-      bool m = false;
-      for (int i = 0; i < masksCount; i++) {
-        m = m || inMask(x, y, masks[i]);
-      }
-      if (m == false) {
-        setPixel(maskColor, x, y, image);
-      }
+
+  Pixel maskPixelColor = pixelValueToPixel(maskColor);
+  Rectangle full_image = clip_rectangle(image, RECT_FULL_IMAGE);
+
+  scan_rectangle(full_image) {
+    // in any mask?
+    bool m = false;
+    for (int i = 0; i < masksCount; i++) {
+      m = m || inMask(x, y, masks[i]);
+    }
+    if (m == false) {
+      set_pixel(image, (Point){x, y}, maskPixelColor, absBlackThreshold);
     }
   }
 }
@@ -614,18 +612,21 @@ void applyMasks(const Mask *masks, const int masksCount, AVFrame *image) {
  * is set to wipeColor.
  */
 void applyWipes(const Mask *area, int areaCount, AVFrame *image) {
+  Pixel maskPixelColor = pixelValueToPixel(maskColor);
+
   for (int i = 0; i < areaCount; i++) {
-    int count = 0;
-    for (int y = area[i][TOP]; y <= area[i][BOTTOM]; y++) {
-      for (int x = area[i][LEFT]; x <= area[i][RIGHT]; x++) {
-        if (setPixel(maskColor, x, y, image)) {
-          count++;
-        }
+    uint64_t count = 0;
+    Rectangle rect = maskToRectangle(area[i]);
+
+    scan_rectangle(rect) {
+      if (set_pixel(image, (Point){x, y}, maskPixelColor, absBlackThreshold)) {
+        count++;
       }
     }
+
     if (verbose >= VERBOSE_MORE) {
-      printf("wipe [%d,%d,%d,%d]: %d pixels\n", area[i][LEFT], area[i][TOP],
-             area[i][RIGHT], area[i][BOTTOM], count);
+      printf("wipe [%d,%d,%d,%d]: %" PRIu64 " pixels\n", rect.vertex[0].x,
+             rect.vertex[0].y, rect.vertex[1].x, rect.vertex[1].y, count);
     }
   }
 }
@@ -653,10 +654,12 @@ void mirror(int directions, AVFrame *image) {
     }
     for (int x = 0; x <= untilX; x++) {
       const int xx = (horizontal == true) ? (image->width - x - 1) : x;
-      const int pixel1 = getPixel(x, y, image);
-      const int pixel2 = getPixel(xx, yy, image);
-      setPixel(pixel2, x, y, image);
-      setPixel(pixel1, xx, yy, image);
+      Point point1 = {x, y};
+      Point point2 = {xx, yy};
+      Pixel pixel1 = get_pixel(image, point1);
+      Pixel pixel2 = get_pixel(image, point2);
+      set_pixel(image, point1, pixel2, absBlackThreshold);
+      set_pixel(image, point2, pixel1, absBlackThreshold);
     }
   }
 }
@@ -680,8 +683,11 @@ void flipRotate(int direction, AVFrame **image) {
     for (int x = 0; x < (*image)->width; x++) {
       const int yy =
           ((direction < 0) ? (*image)->width - 1 : 0) + x * direction;
-      const int pixel = getPixel(x, y, *image);
-      setPixel(pixel, xx, yy, newimage);
+
+      Point point1 = {x, y};
+      Point point2 = {xx, yy};
+
+      set_pixel(newimage, point2, get_pixel(*image, point1), absBlackThreshold);
     }
   }
   replaceImage(image, &newimage);
@@ -994,14 +1000,10 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
              targetX - mask[LEFT], targetY - mask[TOP]);
     }
     initImage(&newimage, width, height, image->format, false);
-    copy_rectangle(
-        image, newimage,
-        (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
-        POINT_ORIGIN, absBlackThreshold);
-    wipe_rectangle(
-        image,
-        (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
-        sheetBackgroundPixel, absBlackThreshold);
+    copy_rectangle(image, newimage, maskToRectangle(mask), POINT_ORIGIN,
+                   absBlackThreshold);
+    wipe_rectangle(image, maskToRectangle(mask), sheetBackgroundPixel,
+                   absBlackThreshold);
     copy_rectangle(newimage, image, RECT_FULL_IMAGE, (Point){targetX, targetY},
                    absBlackThreshold);
     av_frame_free(&newimage);
@@ -1046,14 +1048,10 @@ void alignMask(const Mask mask, const Mask outside, AVFrame *image) {
            targetX - mask[LEFT], targetY - mask[TOP]);
   }
   initImage(&newimage, width, height, image->format, true);
-  copy_rectangle(
-      image, newimage,
-      (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
-      POINT_ORIGIN, absBlackThreshold);
-  wipe_rectangle(
-      image,
-      (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
-      sheetBackgroundPixel, absBlackThreshold);
+  copy_rectangle(image, newimage, maskToRectangle(mask), POINT_ORIGIN,
+                 absBlackThreshold);
+  wipe_rectangle(image, maskToRectangle(mask), sheetBackgroundPixel,
+                 absBlackThreshold);
   copy_rectangle(newimage, image, RECT_FULL_IMAGE, (Point){targetX, targetY},
                  absBlackThreshold);
   av_frame_free(&newimage);
