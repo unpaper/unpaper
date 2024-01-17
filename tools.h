@@ -20,10 +20,6 @@ static inline void replaceImage(AVFrame **image, AVFrame **newimage) {
   *image = *newimage;
 }
 
-bool setPixel(int pixel, const int x, const int y, AVFrame *image);
-
-int getPixel(int x, int y, AVFrame *image);
-
 void centerImage(AVFrame *source, int toX, int toY, int ww, int hh,
                  AVFrame *target);
 
@@ -34,6 +30,3 @@ int countPixelNeighbors(int x, int y, int intensity, int whiteMin,
                         AVFrame *image);
 
 void clearPixelNeighbors(int x, int y, int whiteMin, AVFrame *image);
-
-void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity,
-               AVFrame *image);

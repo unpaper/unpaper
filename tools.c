@@ -42,22 +42,6 @@ void initImage(AVFrame **image, int width, int height, int pixel_format,
   }
 }
 
-bool setPixel(int pixel, int x, int y, AVFrame *image) {
-  Pixel p = {
-      .r = (pixel >> 16) & 0xff,
-      .g = (pixel >> 8) & 0xff,
-      .b = pixel & 0xff,
-  };
-
-  return set_pixel(image, (Point){x, y}, p, absBlackThreshold);
-}
-
-int getPixel(int x, int y, AVFrame *image) {
-  Pixel p = get_pixel(image, (Point){x, y});
-
-  return pixelValue(p.r, p.g, p.b);
-}
-
 /**
  * Sets the color/grayscale value of a single pixel to white.
  *
@@ -229,102 +213,5 @@ void clearPixelNeighbors(int x, int y, int whiteMin, AVFrame *image) {
   // delivered a bigger value (and this here would not have been called)
   for (int level = 1; lCount != 0; level++) {
     lCount = countPixelNeighborsLevel(x, y, true, level, whiteMin, image);
-  }
-}
-
-/**
- * Solidly fills a line of pixels heading towards a specified direction
- * until color-changes in the pixels to overwrite exceed the 'intensity'
- * parameter.
- *
- * @param stepX either -1 or 1, if stepY is 0, else 0
- * @param stepY either -1 or 1, if stepX is 0, else 0
- */
-static int fillLine(int x, int y, int stepX, int stepY, int color,
-                    uint8_t maskMin, uint8_t maskMax, int intensity,
-                    AVFrame *image) {
-  int distance = 0;
-  int intensityCount = 1; // first pixel must match, otherwise directly exit
-  const int w = image->width;
-  const int h = image->height;
-
-  while (true) {
-    x += stepX;
-    y += stepY;
-    uint8_t pixel = get_pixel_grayscale(image, (Point){x, y});
-    if ((pixel >= maskMin) && (pixel <= maskMax)) {
-      intensityCount = intensity; // reset counter
-    } else {
-      intensityCount--; // allow maximum of 'intensity' pixels to be bright,
-      // until stop
-    }
-    if ((intensityCount > 0) && (x >= 0) && (x < w) && (y >= 0) && (y < h)) {
-      setPixel(color, x, y, image);
-      distance++;
-    } else {
-      return distance; // exit here
-    }
-  }
-}
-
-/**
- * Start flood-filling around the edges of a line which has previously been
- * filled using fillLine(). Here, the flood-fill algorithm performs its
- * indirect recursion.
- *
- * @param stepX either -1 or 1, if stepY is 0, else 0
- * @param stepY either -1 or 1, if stepX is 0, else 0
- * @see fillLine()
- */
-static void floodFillAroundLine(int x, int y, int stepX, int stepY,
-                                int distance, int color, int maskMin,
-                                int maskMax, int intensity, AVFrame *image) {
-  for (int d = 0; d < distance; d++) {
-    if (stepX != 0) {
-      x += stepX;
-      floodFill(x, y + 1, color, maskMin, maskMax, intensity,
-                image); // indirect recursion
-      floodFill(x, y - 1, color, maskMin, maskMax, intensity,
-                image); // indirect recursion
-    } else {            // stepY != 0
-      y += stepY;
-      floodFill(x + 1, y, color, maskMin, maskMax, intensity,
-                image); // indirect recursion
-      floodFill(x - 1, y, color, maskMin, maskMax, intensity,
-                image); // indirect recursion
-    }
-  }
-}
-
-/**
- * Flood-fill an area of pixels. (Naive implementation, optimizable.)
- *
- * @see earlier header-declaration to enable indirect recursive calls
- */
-void floodFill(int x, int y, int color, int maskMin, int maskMax, int intensity,
-               AVFrame *image) {
-  // is current pixel to be filled?
-  uint8_t pixel = get_pixel_grayscale(image, (Point){x, y});
-  if ((pixel >= maskMin) && (pixel <= maskMax)) {
-    // first, fill a 'cross' (both vertical, horizontal line)
-    setPixel(color, x, y, image);
-    const int left =
-        fillLine(x, y, -1, 0, color, maskMin, maskMax, intensity, image);
-    const int top =
-        fillLine(x, y, 0, -1, color, maskMin, maskMax, intensity, image);
-    const int right =
-        fillLine(x, y, 1, 0, color, maskMin, maskMax, intensity, image);
-    const int bottom =
-        fillLine(x, y, 0, 1, color, maskMin, maskMax, intensity, image);
-    // now recurse on each neighborhood-pixel of the cross (most recursions will
-    // immediately return)
-    floodFillAroundLine(x, y, -1, 0, left, color, maskMin, maskMax, intensity,
-                        image);
-    floodFillAroundLine(x, y, 0, -1, top, color, maskMin, maskMax, intensity,
-                        image);
-    floodFillAroundLine(x, y, 1, 0, right, color, maskMin, maskMax, intensity,
-                        image);
-    floodFillAroundLine(x, y, 0, 1, bottom, color, maskMin, maskMax, intensity,
-                        image);
   }
 }
