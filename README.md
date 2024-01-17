@@ -68,6 +68,17 @@ mileage may vary.
 Tests depend on `pytest` and `pillow`, which will be auto-detected by
 Meson.
 
+Development Hints
+-----------------
+
+The project includes configuration for [pre-commit](https://pre-commit.com/)
+which is integrated with GitHub Actions CI. If you're using git for
+devleopment, you can install it with
+`pip install pre-commit && pre-commit --install`.
+
+Using [Sapling](https://sapling-scm.com/) with this repository is possible
+and diffs can be reviewed as a stack.
+
 Further Information
 -------------------
 
