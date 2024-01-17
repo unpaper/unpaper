@@ -10,6 +10,7 @@
 typedef struct {
   LAYOUTS layout;
   int startSheet;
+  int endSheet;
 
   struct MultiIndex sheetMultiIndex;
   struct MultiIndex excludeMultiIndex;
