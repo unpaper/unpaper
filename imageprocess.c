@@ -32,21 +32,15 @@ static inline bool inMask(int x, int y, const Mask mask) {
 }
 
 /**
- * Tests if masks a and b overlap.
- */
-static inline bool masksOverlap(const Mask a, const Mask b) {
-  return rectangles_overlap(maskToRectangle(a), maskToRectangle(b));
-}
-
-/**
  * Tests if at least one mask in masks overlaps with m.
  */
 static bool masksOverlapAny(const Mask m, const Mask *masks, int masksCount) {
-  for (int i = 0; i < masksCount; i++) {
-    if (masksOverlap(m, masks[i])) {
+  Rectangle area = maskToRectangle(m);
+
+  for (int i = 0; i < masksCount; i++)
+    if (rectangles_overlap(area, maskToRectangle(masks[i])))
       return true;
-    }
-  }
+
   return false;
 }
 
@@ -988,32 +982,34 @@ int grayfilter(AVFrame *image) {
 void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
                 const Mask mask) {
   AVFrame *newimage;
+  const Rectangle area = maskToRectangle(mask);
+  const RectangleSize size = size_of_rectangle(area);
 
-  const int width = mask[RIGHT] - mask[LEFT] + 1;
-  const int height = mask[BOTTOM] - mask[TOP] + 1;
-  const int targetX = center[X] - width / 2;
-  const int targetY = center[Y] - height / 2;
-  if ((targetX >= 0) && (targetY >= 0) && ((targetX + width) <= image->width) &&
-      ((targetY + height) <= image->height)) {
+  const Point target = {center[X] - size.width / 2,
+                        center[Y] - size.height / 2};
+
+  Rectangle new_area = rectangle_from_size(target, size);
+  Rectangle clipped_area = clip_rectangle(image, new_area);
+
+  if (memcmp(&new_area, &clipped_area, sizeof(new_area)) == 0) {
     if (verbose >= VERBOSE_NORMAL) {
-      printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT],
-             mask[TOP], mask[RIGHT], mask[BOTTOM], center[X], center[Y],
-             targetX - mask[LEFT], targetY - mask[TOP]);
+      printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", area.vertex[0].x,
+             area.vertex[0].y, area.vertex[1].x, area.vertex[1].y, center[X],
+             center[Y], target.x - area.vertex[0].x,
+             target.y - area.vertex[0].y);
     }
-    initImage(&newimage, width, height, image->format, false);
-    copy_rectangle(image, newimage, maskToRectangle(mask), POINT_ORIGIN,
-                   absBlackThreshold);
-    wipe_rectangle(image, maskToRectangle(mask), sheetBackgroundPixel,
-                   absBlackThreshold);
-    copy_rectangle(newimage, image, RECT_FULL_IMAGE, (Point){targetX, targetY},
-                   absBlackThreshold);
+    initImage(&newimage, size.width, size.height, image->format, false);
+    copy_rectangle(image, newimage, area, POINT_ORIGIN, absBlackThreshold);
+    wipe_rectangle(image, area, sheetBackgroundPixel, absBlackThreshold);
+    copy_rectangle(newimage, image, RECT_FULL_IMAGE, target, absBlackThreshold);
     av_frame_free(&newimage);
   } else {
     if (verbose >= VERBOSE_NORMAL) {
       printf("centering mask [%d,%d,%d,%d] (%d,%d): %d, %d - NO CENTERING "
              "(would shift area outside visible image)\n",
-             mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], center[X],
-             center[Y], targetX - mask[LEFT], targetY - mask[TOP]);
+             area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
+             area.vertex[1].y, center[X], center[Y],
+             target.x - area.vertex[0].x, target.y - area.vertex[0].y);
     }
   }
 }
@@ -1024,37 +1020,39 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
  */
 void alignMask(const Mask mask, const Mask outside, AVFrame *image) {
   AVFrame *newimage;
-  int targetX;
-  int targetY;
+  const Rectangle inside_area = maskToRectangle(mask);
+  const RectangleSize inside_size = size_of_rectangle(inside_area);
 
-  const int width = mask[RIGHT] - mask[LEFT] + 1;
-  const int height = mask[BOTTOM] - mask[TOP] + 1;
+  Point target;
+
   if (borderAlign & 1 << LEFT) {
-    targetX = outside[LEFT] + borderAlignMargin[HORIZONTAL];
+    target.x = outside[LEFT] + borderAlignMargin[HORIZONTAL];
   } else if (borderAlign & 1 << RIGHT) {
-    targetX = outside[RIGHT] - width - borderAlignMargin[HORIZONTAL];
+    target.x =
+        outside[RIGHT] - inside_size.width - borderAlignMargin[HORIZONTAL];
   } else {
-    targetX = (outside[LEFT] + outside[RIGHT] - width) / 2;
+    target.x = (outside[LEFT] + outside[RIGHT] - inside_size.width) / 2;
   }
   if (borderAlign & 1 << TOP) {
-    targetY = outside[TOP] + borderAlignMargin[VERTICAL];
+    target.y = outside[TOP] + borderAlignMargin[VERTICAL];
   } else if (borderAlign & 1 << BOTTOM) {
-    targetY = outside[BOTTOM] - height - borderAlignMargin[VERTICAL];
+    target.y =
+        outside[BOTTOM] - inside_size.height - borderAlignMargin[VERTICAL];
   } else {
-    targetY = (outside[TOP] + outside[BOTTOM] - height) / 2;
+    target.y = (outside[TOP] + outside[BOTTOM] - inside_size.height) / 2;
   }
   if (verbose >= VERBOSE_NORMAL) {
-    printf("aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n", mask[LEFT],
-           mask[TOP], mask[RIGHT], mask[BOTTOM], targetX, targetY,
-           targetX - mask[LEFT], targetY - mask[TOP]);
+    printf("aligning mask [%d,%d,%d,%d] (%d,%d): %d, %d\n",
+           inside_area.vertex[0].x, inside_area.vertex[0].y,
+           inside_area.vertex[1].x, inside_area.vertex[1].y, target.x, target.y,
+           target.x - inside_area.vertex[0].x,
+           target.y - inside_area.vertex[0].y);
   }
-  initImage(&newimage, width, height, image->format, true);
-  copy_rectangle(image, newimage, maskToRectangle(mask), POINT_ORIGIN,
-                 absBlackThreshold);
-  wipe_rectangle(image, maskToRectangle(mask), sheetBackgroundPixel,
-                 absBlackThreshold);
-  copy_rectangle(newimage, image, RECT_FULL_IMAGE, (Point){targetX, targetY},
-                 absBlackThreshold);
+  initImage(&newimage, inside_size.width, inside_size.height, image->format,
+            true);
+  copy_rectangle(image, newimage, inside_area, POINT_ORIGIN, absBlackThreshold);
+  wipe_rectangle(image, inside_area, sheetBackgroundPixel, absBlackThreshold);
+  copy_rectangle(newimage, image, RECT_FULL_IMAGE, target, absBlackThreshold);
   av_frame_free(&newimage);
 }
 
