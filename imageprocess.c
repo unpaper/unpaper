@@ -17,6 +17,8 @@
 #include <libavutil/common.h>
 
 #include "imageprocess.h"
+#include "imageprocess/blit.h"
+#include "imageprocess/pixel.h"
 #include "tools.h"
 #include "unpaper.h"
 
@@ -1014,7 +1016,8 @@ int blurfilter(AVFrame *image) {
 
       if ((((float)max) / total) <=
           blurfilterIntensity) { // Not enough dark pixels
-        clearRect(left, top, right, bottom, image, WHITE24);
+        wipe_rectangle(image, (Rectangle){{{left, top}, {right, bottom}}},
+                       PIXEL_WHITE, absBlackThreshold);
         result += curCounts[block];
         curCounts[block] = total; // Update information
       }
@@ -1060,7 +1063,9 @@ int grayfilter(AVFrame *image) {
       uint8_t lightness = inverseLightnessRect(left, top, right, bottom, image);
       if (lightness <
           absGrayfilterThreshold) { // (lower threshold->more deletion)
-        result += clearRect(left, top, right, bottom, image, WHITE24);
+        result +=
+            wipe_rectangle(image, (Rectangle){{{left, top}, {right, bottom}}},
+                           PIXEL_WHITE, absBlackThreshold);
       }
     }
     if (left < image->width) { // not yet at end of row
@@ -1102,8 +1107,12 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
     }
     initImage(&newimage, width, height, image->format, false);
     copyImageArea(mask[LEFT], mask[TOP], width, height, image, 0, 0, newimage);
-    clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image,
-              sheetBackground);
+    wipe_rectangle(
+        image,
+        (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
+        (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
+                sheetBackground & 0xff},
+        absBlackThreshold);
     copyImageArea(0, 0, width, height, newimage, targetX, targetY, image);
     av_frame_free(&newimage);
   } else {
@@ -1149,8 +1158,12 @@ void alignMask(const Mask mask, const Mask outside, AVFrame *image) {
   initImage(&newimage, width, height, image->format, true);
   copyImageArea(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image, 0, 0,
                 newimage);
-  clearRect(mask[LEFT], mask[TOP], mask[RIGHT], mask[BOTTOM], image,
-            sheetBackground);
+  wipe_rectangle(
+      image,
+      (Rectangle){{{mask[LEFT], mask[TOP]}, {mask[RIGHT], mask[BOTTOM]}}},
+      (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
+              sheetBackground & 0xff},
+      absBlackThreshold);
   copyImageArea(0, 0, width, height, newimage, targetX, targetY, image);
   av_frame_free(&newimage);
 }

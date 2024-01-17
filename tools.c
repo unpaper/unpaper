@@ -11,6 +11,7 @@
 #include <libavutil/avutil.h>
 #include <libavutil/pixfmt.h>
 
+#include "imageprocess/blit.h"
 #include "imageprocess/pixel.h"
 #include "tools.h"
 #include "unpaper.h"
@@ -36,11 +37,14 @@ void initImage(AVFrame **image, int width, int height, int pixel_format,
   }
 
   if (fill) {
-    for (int y = 0; y < (*image)->height; y++) {
-      for (int x = 0; x < (*image)->width; x++) {
-        setPixel(sheetBackground, x, y, *image);
-      }
-    }
+    Pixel p = {
+        .r = (sheetBackground >> 16) & 0xff,
+        .g = (sheetBackground >> 8) & 0xff,
+        .b = sheetBackground & 0xff,
+    };
+
+    wipe_rectangle(*image, (Rectangle){{{0, 0}, {0x7FFFFFFF, 0x7FFFFFFF}}}, p,
+                   absBlackThreshold);
   }
 }
 
@@ -84,24 +88,6 @@ static bool clearPixel(int x, int y, AVFrame *image) {
 }
 
 /**
- * Clears a rectangular area of pixels with either black or white.
- * @return The number of pixels actually changed from black (dark) to white.
- */
-int clearRect(const int left, const int top, const int right, const int bottom,
-              AVFrame *image, const int blackwhite) {
-  int count = 0;
-
-  for (int y = top; y <= bottom; y++) {
-    for (int x = left; x <= right; x++) {
-      if (setPixel(blackwhite, x, y, image)) {
-        count++;
-      }
-    }
-  }
-  return count;
-}
-
-/**
  * Copies one area of an image into another.
  */
 void copyImageArea(const int x, const int y, const int width, const int height,
@@ -126,7 +112,11 @@ void copyImageArea(const int x, const int y, const int width, const int height,
 static void centerImageArea(int x, int y, int w, int h, AVFrame *source,
                             int toX, int toY, int ww, int hh, AVFrame *target) {
   if ((w < ww) || (h < hh)) { // white rest-border will remain, so clear first
-    clearRect(toX, toY, toX + ww - 1, toY + hh - 1, target, sheetBackground);
+    wipe_rectangle(
+        target, (Rectangle){{{toX, toY}, {toX + ww - 1, toY + hh - 1}}},
+        (Pixel){(sheetBackground >> 16) & 0xff, (sheetBackground >> 8) & 0xff,
+                sheetBackground & 0xff},
+        absBlackThreshold);
   }
   if (w < ww) {
     toX += (ww - w) / 2;
