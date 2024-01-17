@@ -19,9 +19,9 @@ jobs:
       matrix:
         compiler: [gcc, clang]
         meson_setup_flags:
-          - ""
-          - "--buildtype=debugoptimized"
-          - "--buildtype=debugoptimized -Db_lto=true"
+          - "-Dwerror=true"
+          - "--buildtype=debugoptimized -Dwerror=true"
+          - "--buildtype=debugoptimized -Dwerror=true -Db_lto=true"
 
     steps:
     - uses: actions/checkout@v3
