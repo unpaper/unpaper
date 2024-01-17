@@ -118,18 +118,6 @@ extern float blackThreshold;
 extern bool writeoutput;
 extern bool multisheets;
 
-extern struct MultiIndex noBlackfilterMultiIndex;
-extern struct MultiIndex noNoisefilterMultiIndex;
-extern struct MultiIndex noBlurfilterMultiIndex;
-extern struct MultiIndex noGrayfilterMultiIndex;
-extern struct MultiIndex noMaskScanMultiIndex;
-extern struct MultiIndex noMaskCenterMultiIndex;
-extern struct MultiIndex noDeskewMultiIndex;
-extern struct MultiIndex noWipeMultiIndex;
-extern struct MultiIndex noBorderMultiIndex;
-extern struct MultiIndex noBorderScanMultiIndex;
-extern struct MultiIndex noBorderAlignMultiIndex;
-
 extern int autoborder[MAX_MASKS][EDGES_COUNT];
 extern int autoborderMask[MAX_MASKS][EDGES_COUNT];
 extern bool overwrite;
