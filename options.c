@@ -13,4 +13,6 @@ void optionsInit(Options *o) {
 
   // default: process all between start-sheet and end-sheet
   o->sheetMultiIndex = (struct MultiIndex){.count = -1, .indexes = NULL};
+
+  o->excludeMultiIndex = (struct MultiIndex){.count = 0, .indexes = NULL};
 }
