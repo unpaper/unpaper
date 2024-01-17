@@ -16,6 +16,7 @@
 
 #include "imageprocess.h"
 #include "imageprocess/blit.h"
+#include "imageprocess/fill.h"
 #include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
 #include "tools.h"
@@ -756,7 +757,8 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep,
       uint8_t blackness = darkness_rect(image, (Rectangle){{{l, t}, {r, b}}});
       if (blackness >=
           absBlackfilterScanThreshold) { // found a solidly black area
-        Mask mask = {l, t, r, b};
+        const Mask mask = {l, t, r, b};
+        const Rectangle area = maskToRectangle(mask);
         if (!masksOverlapAny(mask, exclude, excludeCount)) {
           if (verbose >= VERBOSE_NORMAL) {
             printf("black-area flood-fill: [%d,%d,%d,%d]\n", l, t, r, b);
@@ -765,10 +767,9 @@ static void blackfilterScan(int stepX, int stepY, int size, int dep,
           // start flood-fill in this area (on each pixel to make sure we get
           // everything, in most cases first flood-fill from first pixel will
           // delete all other black pixels in the area already)
-          for (int y = t; y <= b; y++) {
-            for (int x = l; x <= r; x++) {
-              floodFill(x, y, WHITE24, 0, absBlackThreshold, intensity, image);
-            }
+          scan_rectangle(area) {
+            flood_fill(image, (Point){x, y}, PIXEL_WHITE, 0, absBlackThreshold,
+                       intensity, absBlackThreshold);
           }
         } else {
           if ((verbose >= VERBOSE_NORMAL) && (!alreadyExcludedMessage)) {
