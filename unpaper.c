@@ -23,6 +23,7 @@
 #include "imageprocess/blit.h"
 #include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
+#include "options.h"
 #include "parse.h"
 #include "tools.h"
 #include "unpaper.h"
@@ -62,7 +63,6 @@ float deskewScanRangeRad;
 float deskewScanStepRad;
 float deskewScanDeviationRad;
 
-static LAYOUTS layout = LAYOUT_SINGLE;
 int startSheet = 1;
 int endSheet = -1;
 int startInput = -1;
@@ -205,10 +205,13 @@ int main(int argc, char *argv[]) {
   int outputNr;
   int option_index = 0;
   int outputPixFmt = -1;
+  Options options;
 
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
   // -------------------------------------------------------------------
+
+  optionsInit(&options);
 
   while (true) {
     int c;
@@ -378,11 +381,11 @@ int main(int argc, char *argv[]) {
 
     case 'l':
       if (strcmp(optarg, "single") == 0) {
-        layout = LAYOUT_SINGLE;
+        options.layout = LAYOUT_SINGLE;
       } else if (strcmp(optarg, "double") == 0) {
-        layout = LAYOUT_DOUBLE;
+        options.layout = LAYOUT_DOUBLE;
       } else if (strcmp(optarg, "none") == 0) {
-        layout = LAYOUT_NONE;
+        options.layout = LAYOUT_NONE;
       } else {
         errOutput("unknown layout mode '%s'.", optarg);
       }
@@ -1192,7 +1195,7 @@ int main(int argc, char *argv[]) {
       // parameters and size are known now
 
       if (verbose >= VERBOSE_MORE) {
-        switch (layout) {
+        switch (options.layout) {
         case LAYOUT_NONE:
           printf("layout: none\n");
           break;
@@ -1496,7 +1499,7 @@ int main(int argc, char *argv[]) {
       // handle sheet layout
 
       // LAYOUT_SINGLE
-      if (layout == LAYOUT_SINGLE) {
+      if (options.layout == LAYOUT_SINGLE) {
         // set middle of sheet as single starting point for mask detection
         if (pointCount == 0) { // no manual settings, use auto-values
           point[pointCount][X] = sheet->width / 2;
@@ -1531,7 +1534,7 @@ int main(int argc, char *argv[]) {
         }
 
         // LAYOUT_DOUBLE
-      } else if (layout == LAYOUT_DOUBLE) {
+      } else if (options.layout == LAYOUT_DOUBLE) {
         // set two middle of left/right side of sheet as starting points for
         // mask detection
         if (pointCount == 0) { // no manual settings, use auto-values
