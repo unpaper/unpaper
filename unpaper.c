@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
   int option_index = 0;
   int outputPixFmt = -1;
   Options options;
-  ImageProcessParameters params;
+  DeskewParameters deskewParams;
 
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
@@ -1045,8 +1045,8 @@ int main(int argc, char *argv[]) {
   absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
   absGrayfilterThreshold = WHITE * (grayfilterThreshold);
 
-  params = imageProcessParameters(deskewScanRange, deskewScanStep,
-                                  deskewScanDeviation);
+  deskewParams = imageProcessParameters(deskewScanRange, deskewScanStep,
+                                        deskewScanDeviation);
 
   for (int nr = options.startSheet;
        (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
@@ -1795,7 +1795,7 @@ int main(int argc, char *argv[]) {
         // auto-deskew each mask
         for (int i = 0; i < maskCount; i++) {
           saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
-          float rotation = detectRotation(sheet, mask[i], &params);
+          float rotation = detectRotation(sheet, mask[i], &deskewParams);
           saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
 
           if (verbose >= VERBOSE_NORMAL) {

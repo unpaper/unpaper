@@ -24,10 +24,10 @@
 
 static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
 
-ImageProcessParameters imageProcessParameters(float deskewScanRange,
-                                              float deskewScanStep,
-                                              float deskewScanDeviation) {
-  ImageProcessParameters params = {
+DeskewParameters imageProcessParameters(float deskewScanRange,
+                                        float deskewScanStep,
+                                        float deskewScanDeviation) {
+  DeskewParameters params = {
       .deskewScanRangeRad = degreesToRadians(deskewScanRange),
       .deskewScanStepRad = degreesToRadians(deskewScanStep),
       .deskewScanDeviationRad = degreesToRadians(deskewScanDeviation),
@@ -178,7 +178,7 @@ static int detectEdgeRotationPeak(float m, int shiftX, int shiftY,
  */
 static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
                                 const Mask mask,
-                                const ImageProcessParameters *params) {
+                                const DeskewParameters *params) {
   // either shiftX or shiftY is 0, the other value is -i|+i
   // depending on shiftX/shiftY the start edge for shifting is determined
   int maxPeak = 0;
@@ -206,7 +206,7 @@ static float detectEdgeRotation(int shiftX, int shiftY, AVFrame *image,
  * bottom.
  */
 float detectRotation(AVFrame *image, const Mask mask,
-                     const ImageProcessParameters *params) {
+                     const DeskewParameters *params) {
   float rotation[4];
   int count = 0;
   float total;
