@@ -1046,7 +1046,7 @@ int main(int argc, char *argv[]) {
   absGrayfilterThreshold = WHITE * (grayfilterThreshold);
 
   deskewParams = imageProcessParameters(deskewScanRange, deskewScanStep,
-                                        deskewScanDeviation);
+                                        deskewScanDeviation, deskewScanEdges);
 
   for (int nr = options.startSheet;
        (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
