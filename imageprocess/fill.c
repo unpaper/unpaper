@@ -13,8 +13,8 @@
  * @param step_x either -1 or 1, if step_y is 0, else 0
  * @param step_y either -1 or 1, if step_x is 0, else 0
  */
-static uint64_t fill_line(AVFrame *image, Point p, int8_t step_x, int8_t step_y,
-                          Pixel color, uint8_t mask_min, uint8_t mask_max,
+static uint64_t fill_line(AVFrame *image, Point p, Delta step, Pixel color,
+                          uint8_t mask_min, uint8_t mask_max,
                           uint64_t intensity, uint8_t abs_black_threshold) {
   uint64_t distance = 0;
   uint64_t intensityCount =
@@ -23,8 +23,7 @@ static uint64_t fill_line(AVFrame *image, Point p, int8_t step_x, int8_t step_y,
   Rectangle area = clip_rectangle(image, RECT_FULL_IMAGE);
 
   while (true) {
-    p.x += step_x;
-    p.y += step_y;
+    p = shift_point(p, step);
     uint8_t pixel = get_pixel_grayscale(image, p);
 
     if ((pixel >= mask_min) && (pixel <= mask_max)) {
@@ -52,25 +51,25 @@ static uint64_t fill_line(AVFrame *image, Point p, int8_t step_x, int8_t step_y,
  * @param step_y either -1 or 1, if step_x is 0, else 0
  * @see fillLine()
  */
-static void flood_fill_around_line(AVFrame *image, Point p, int8_t step_x,
-                                   int8_t step_y, uint64_t distance,
-                                   Pixel color, uint8_t mask_min,
-                                   uint8_t mask_max, uint64_t intensity,
+static void flood_fill_around_line(AVFrame *image, Point p, Delta step,
+                                   uint64_t distance, Pixel color,
+                                   uint8_t mask_min, uint8_t mask_max,
+                                   uint64_t intensity,
                                    uint8_t abs_black_threshold) {
   for (uint64_t d = 0; d < distance; d++) {
-    if (step_x != 0) {
-      p.x += step_x;
+    if (step.horizontal != 0) {
+      p.x += step.horizontal;
       // indirect recursion
-      flood_fill(image, (Point){p.x, p.y + 1}, color, mask_min, mask_max,
+      flood_fill(image, shift_point(p, DELTA_DOWNWARD), color, mask_min,
+                 mask_max, intensity, abs_black_threshold);
+      flood_fill(image, shift_point(p, DELTA_UPWARD), color, mask_min, mask_max,
                  intensity, abs_black_threshold);
-      flood_fill(image, (Point){p.x, p.y - 1}, color, mask_min, mask_max,
-                 intensity, abs_black_threshold);
-    } else { // step_y != 0
-      p.y += step_y;
-      flood_fill(image, (Point){p.x + 1, p.y}, color, mask_min, mask_max,
-                 intensity, abs_black_threshold);
-      flood_fill(image, (Point){p.x - 1, p.y}, color, mask_min, mask_max,
-                 intensity, abs_black_threshold);
+    } else { // step.vertical != 0
+      p.y += step.vertical;
+      flood_fill(image, shift_point(p, DELTA_RIGHTWARD), color, mask_min,
+                 mask_max, intensity, abs_black_threshold);
+      flood_fill(image, shift_point(p, DELTA_LEFTWARD), color, mask_min,
+                 mask_max, intensity, abs_black_threshold);
     }
   }
 }
@@ -88,23 +87,23 @@ void flood_fill(AVFrame *image, Point p, Pixel color, uint8_t mask_min,
   if ((pixel >= mask_min) && (pixel <= mask_max)) {
     // first, fill a 'cross' (both vertical, horizontal line)
     set_pixel(image, p, color, abs_black_threshold);
-    const uint64_t left = fill_line(image, p, -1, 0, color, mask_min, mask_max,
-                                    intensity, abs_black_threshold);
-    const uint64_t top = fill_line(image, p, 0, -1, color, mask_min, mask_max,
-                                   intensity, abs_black_threshold);
-    const uint64_t right = fill_line(image, p, 1, 0, color, mask_min, mask_max,
-                                     intensity, abs_black_threshold);
-    const uint64_t bottom = fill_line(image, p, 0, 1, color, mask_min, mask_max,
-                                      intensity, abs_black_threshold);
+    const uint64_t left = fill_line(image, p, DELTA_LEFTWARD, color, mask_min,
+                                    mask_max, intensity, abs_black_threshold);
+    const uint64_t top = fill_line(image, p, DELTA_UPWARD, color, mask_min,
+                                   mask_max, intensity, abs_black_threshold);
+    const uint64_t right = fill_line(image, p, DELTA_RIGHTWARD, color, mask_min,
+                                     mask_max, intensity, abs_black_threshold);
+    const uint64_t bottom = fill_line(image, p, DELTA_DOWNWARD, color, mask_min,
+                                      mask_max, intensity, abs_black_threshold);
     // now recurse on each neighborhood-pixel of the cross (most recursions will
     // immediately return)
-    flood_fill_around_line(image, p, -1, 0, left, color, mask_min, mask_max,
-                           intensity, abs_black_threshold);
-    flood_fill_around_line(image, p, 0, -1, top, color, mask_min, mask_max,
-                           intensity, abs_black_threshold);
-    flood_fill_around_line(image, p, 1, 0, right, color, mask_min, mask_max,
-                           intensity, abs_black_threshold);
-    flood_fill_around_line(image, p, 0, 1, bottom, color, mask_min, mask_max,
-                           intensity, abs_black_threshold);
+    flood_fill_around_line(image, p, DELTA_LEFTWARD, left, color, mask_min,
+                           mask_max, intensity, abs_black_threshold);
+    flood_fill_around_line(image, p, DELTA_UPWARD, top, color, mask_min,
+                           mask_max, intensity, abs_black_threshold);
+    flood_fill_around_line(image, p, DELTA_RIGHTWARD, right, color, mask_min,
+                           mask_max, intensity, abs_black_threshold);
+    flood_fill_around_line(image, p, DELTA_DOWNWARD, bottom, color, mask_min,
+                           mask_max, intensity, abs_black_threshold);
   }
 }

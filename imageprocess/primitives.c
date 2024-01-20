@@ -7,6 +7,20 @@
 #include "imageprocess/primitives.h"
 #include "imageprocess/math_util.h"
 
+Delta distance_between(Point a, Point b) {
+  return (Delta){
+      b.x - a.x,
+      b.y - a.y,
+  };
+}
+
+Point shift_point(Point p, Delta d) {
+  return (Point){
+      p.x + d.horizontal,
+      p.y + d.vertical,
+  };
+}
+
 Rectangle rectangle_from_size(Point origin, RectangleSize size) {
   return (Rectangle){
       .vertex =
@@ -61,6 +75,13 @@ Rectangle clip_rectangle(AVFrame *image, Rectangle area) {
   };
 }
 
+Rectangle shift_rectangle(Rectangle rect, Delta d) {
+  return (Rectangle){{
+      shift_point(rect.vertex[0], d),
+      shift_point(rect.vertex[1], d),
+  }};
+}
+
 uint64_t count_pixels(Rectangle area) {
   RectangleSize size = size_of_rectangle(area);
 
@@ -72,6 +93,11 @@ bool point_in_rectangle(Point p, Rectangle input_area) {
 
   return (p.x >= area.vertex[0].x && p.x <= area.vertex[1].x &&
           p.y >= area.vertex[0].y && p.y <= area.vertex[1].y);
+}
+
+bool rectangle_in_rectangle(Rectangle inner, Rectangle outer) {
+  return point_in_rectangle(inner.vertex[0], outer) &&
+         point_in_rectangle(inner.vertex[1], outer);
 }
 
 bool rectangles_overlap(Rectangle first_input, Rectangle second_input) {

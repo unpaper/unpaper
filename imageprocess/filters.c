@@ -50,50 +50,24 @@ BlackfilterParameters validate_blackfilter_parameters(
 }
 
 static void blackfilter_scan(AVFrame *image, BlackfilterParameters params,
-                             int32_t stepX, int32_t stepY,
+                             Delta step, RectangleSize stripe_size, Delta shift,
                              uint8_t abs_black_threshold) {
-  if (stepX != 0 && stepY != 0) {
-    errOutput("blackfilter_scan() called with two positive steps, impossible! "
+  if (step.horizontal != 0 && step.vertical != 0) {
+    errOutput("blackfilter_scan() called with diagonal steps, impossible! "
               "(%" PRId32 ", %" PRId32 ")",
-              stepX, stepY);
+              step.horizontal, step.vertical);
   }
 
   const Rectangle full_image = clip_rectangle(image, RECT_FULL_IMAGE);
 
-  Point filter_origin = POINT_ORIGIN;
-  RectangleSize filter_stripe_size;
-  uint32_t shiftX, shiftY;
-  if (stepX != 0) { // horizontal scanning
-    filter_stripe_size = (RectangleSize){
-        params.scan_size.width,
-        params.scan_depth.vertical,
-    };
-    shiftX = 0;
-    shiftY = params.scan_depth.vertical;
-  } else if (stepY != 0) { // vertical scanning
-    filter_stripe_size = (RectangleSize){
-        params.scan_depth.horizontal,
-        params.scan_size.height,
-    };
-    shiftX = params.scan_depth.horizontal;
-    shiftY = 0;
-  } else {
-    errOutput("blackfilter_scan() called with two zero steps, impossible!");
-  }
-
-  while (point_in_rectangle(filter_origin, full_image)) {
-    Rectangle area = rectangle_from_size(filter_origin, filter_stripe_size);
-
+  Rectangle area = rectangle_from_size(POINT_ORIGIN, stripe_size);
+  while (point_in_rectangle(area.vertex[0], full_image)) {
     // Make sure last stripe does not reach outside the sheet, shift back
     // inside. We don't use clipping to avoid changing the filter size!
-    if (!point_in_rectangle(area.vertex[0], full_image)) {
-      int32_t diffX = area.vertex[1].x - image->width + 1;
-      int32_t diffY = area.vertex[1].y - image->height + 1;
+    if (!point_in_rectangle(area.vertex[1], full_image)) {
+      Delta d = distance_between(area.vertex[1], full_image.vertex[1]);
 
-      area.vertex[0].x -= diffX;
-      area.vertex[0].y -= diffY;
-      area.vertex[1].x -= diffX;
-      area.vertex[1].y -= diffY;
+      area = shift_rectangle(area, d);
     }
 
     bool already_excluded_logged = false;
@@ -126,13 +100,10 @@ static void blackfilter_scan(AVFrame *image, BlackfilterParameters params,
         }
       }
 
-      filter_origin.x += stepX;
-      filter_origin.y += stepY;
-      area = rectangle_from_size(filter_origin, filter_stripe_size);
+      area = shift_rectangle(area, step);
     } while (point_in_rectangle(area.vertex[0], full_image));
 
-    filter_origin.x += shiftX;
-    filter_origin.y = shiftY;
+    area = shift_rectangle(area, shift);
   }
 }
 
@@ -145,14 +116,18 @@ void blackfilter(AVFrame *image, BlackfilterParameters params,
                  uint8_t abs_black_threshold) {
   // Left-to-Right scan.
   if (params.scan_horizontal) {
-    blackfilter_scan(image, params, params.scan_step.horizontal, 0,
-                     abs_black_threshold);
+    blackfilter_scan(
+        image, params, (Delta){params.scan_step.horizontal, 0},
+        (RectangleSize){params.scan_size.width, params.scan_depth.vertical},
+        (Delta){0, params.scan_depth.vertical}, abs_black_threshold);
   }
 
   // To-to-Bottom scan.
   if (params.scan_vertical) {
-    blackfilter_scan(image, params, 0, params.scan_step.vertical,
-                     abs_black_threshold);
+    blackfilter_scan(
+        image, params, (Delta){0, params.scan_step.vertical},
+        (RectangleSize){params.scan_depth.horizontal, params.scan_size.height},
+        (Delta){params.scan_depth.horizontal, 0}, abs_black_threshold);
   }
 }
 

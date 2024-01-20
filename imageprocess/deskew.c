@@ -43,8 +43,8 @@ validate_deskew_parameters(float deskewScanRange, float deskewScanStep,
  * this is negative for negative radians.
  */
 static int detect_edge_rotation_peak(AVFrame *image, const Rectangle mask,
-                                     const DeskewParameters params, int shiftX,
-                                     int shiftY, float m) {
+                                     const DeskewParameters params, Delta shift,
+                                     float m) {
   RectangleSize size = size_of_rectangle(mask);
   int mid;
   int half;
@@ -65,7 +65,7 @@ static int detect_edge_rotation_peak(AVFrame *image, const Rectangle mask,
   int accumulatedBlackness = 0;
   int deskewScanSize = params.deskewScanSize;
 
-  if (shiftY == 0) { // horizontal detection
+  if (shift.vertical == 0) { // horizontal detection
     if (deskewScanSize == -1) {
       deskewScanSize = size.height;
     }
@@ -75,8 +75,8 @@ static int detect_edge_rotation_peak(AVFrame *image, const Rectangle mask,
     half = deskewScanSize / 2;
     outerOffset = (int)(fabsf(m) * half);
     mid = size.height / 2;
-    sideOffset = shiftX > 0 ? mask.vertex[0].x - outerOffset
-                            : mask.vertex[1].x + outerOffset;
+    sideOffset = shift.horizontal > 0 ? mask.vertex[0].x - outerOffset
+                                      : mask.vertex[1].x + outerOffset;
     X = sideOffset + half * m;
     Y = mask.vertex[0].y + mid - half;
     stepX = -m;
@@ -90,8 +90,8 @@ static int detect_edge_rotation_peak(AVFrame *image, const Rectangle mask,
     half = deskewScanSize / 2;
     outerOffset = (int)(fabsf(m) * half);
     mid = size.width / 2;
-    sideOffset = shiftY > 0 ? mask.vertex[0].x - outerOffset
-                            : mask.vertex[1].x + outerOffset;
+    sideOffset = shift.vertical > 0 ? mask.vertex[0].x - outerOffset
+                                    : mask.vertex[1].x + outerOffset;
     X = mask.vertex[0].x + mid - half;
     Y = sideOffset - (half * m);
     stepX = 1.0;
@@ -118,8 +118,7 @@ static int detect_edge_rotation_peak(AVFrame *image, const Rectangle mask,
     blackness = 0;
     for (int lineStep = 0; lineStep < deskewScanSize; lineStep++) {
       Point pt = p[lineStep];
-      p[lineStep].x += shiftX;
-      p[lineStep].y += shiftY;
+      p[lineStep] = shift_point(pt, shift);
       if (point_in_rectangle(pt, mask)) {
         pixel = get_pixel_darkness_inverse(image, pt);
         blackness += (255 - pixel);
@@ -145,8 +144,7 @@ static int detect_edge_rotation_peak(AVFrame *image, const Rectangle mask,
  * is non-zero, and what sign this shifting value has.
  */
 static float detect_edge_rotation(AVFrame *image, const Rectangle mask,
-                                  const DeskewParameters params, int8_t shiftX,
-                                  int8_t shiftY) {
+                                  const DeskewParameters params, Delta shift) {
   // either shiftX or shiftY is 0, the other value is -i|+i
   // depending on shiftX/shiftY the start edge for shifting is determined
   int max_peak = 0;
@@ -158,8 +156,7 @@ static float detect_edge_rotation(AVFrame *image, const Rectangle mask,
        rotation = (rotation >= 0.0) ? -(rotation + params.deskewScanStepRad)
                                     : -rotation) {
     float m = tanf(rotation);
-    int peak =
-        detect_edge_rotation_peak(image, mask, params, shiftX, shiftY, m);
+    int peak = detect_edge_rotation_peak(image, mask, params, shift, m);
     if (peak > max_peak) {
       detected_rotation = rotation;
       max_peak = peak;
@@ -183,7 +180,8 @@ float detect_rotation(AVFrame *image, const Rectangle mask,
 
   if (params.deskewEdgeLeft) {
     // left
-    rotation[count] = detect_edge_rotation(image, mask, params, 1, 0);
+    rotation[count] =
+        detect_edge_rotation(image, mask, params, DELTA_RIGHTWARD);
     verboseLog(VERBOSE_NORMAL, "detected rotation left: [%d,%d,%d,%d]: %f\n",
                mask.vertex[0].x, mask.vertex[0].y, mask.vertex[1].x,
                mask.vertex[1].y, rotation[count]);
@@ -191,7 +189,8 @@ float detect_rotation(AVFrame *image, const Rectangle mask,
   }
   if (params.deskewEdgeTop) {
     // top
-    rotation[count] = -detect_edge_rotation(image, mask, params, 0, 1);
+    rotation[count] =
+        -detect_edge_rotation(image, mask, params, DELTA_DOWNWARD);
     verboseLog(VERBOSE_NORMAL, "detected rotation top: [%d,%d,%d,%d]: %f\n",
                mask.vertex[0].x, mask.vertex[0].y, mask.vertex[1].x,
                mask.vertex[1].y, rotation[count]);
@@ -199,7 +198,7 @@ float detect_rotation(AVFrame *image, const Rectangle mask,
   }
   if (params.deskewEdgeRight) {
     // right
-    rotation[count] = detect_edge_rotation(image, mask, params, -1, 0);
+    rotation[count] = detect_edge_rotation(image, mask, params, DELTA_LEFTWARD);
     verboseLog(VERBOSE_NORMAL, "detected rotation right: [%d,%d,%d,%d]: %f\n",
                mask.vertex[0].x, mask.vertex[0].y, mask.vertex[1].x,
                mask.vertex[1].y, rotation[count]);
@@ -207,7 +206,7 @@ float detect_rotation(AVFrame *image, const Rectangle mask,
   }
   if (params.deskewEdgeBottom) {
     // bottom
-    rotation[count] = -detect_edge_rotation(image, mask, params, 0, -1);
+    rotation[count] = -detect_edge_rotation(image, mask, params, DELTA_UPWARD);
     verboseLog(VERBOSE_NORMAL, "detected rotation bottom: [%d,%d,%d,%d]: %f\n",
                mask.vertex[0].x, mask.vertex[0].y, mask.vertex[1].x,
                mask.vertex[1].y, rotation[count]);

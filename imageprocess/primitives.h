@@ -21,6 +21,23 @@ typedef struct {
   (Point) { INT32_MAX, INT32_MAX }
 
 typedef struct {
+  int32_t horizontal;
+  int32_t vertical;
+} Delta;
+
+Delta distance_between(Point a, Point b);
+Point shift_point(Point p, Delta d);
+
+#define DELTA_UPWARD                                                           \
+  (Delta) { 0, -1 }
+#define DELTA_DOWNWARD                                                         \
+  (Delta) { 0, 1 }
+#define DELTA_LEFTWARD                                                         \
+  (Delta) { -1, 0 }
+#define DELTA_RIGHTWARD                                                        \
+  (Delta) { 1, 0 }
+
+typedef struct {
   uint8_t r;
   uint8_t g;
   uint8_t b;
@@ -51,8 +68,12 @@ Rectangle rectangle_from_size(Point origin, RectangleSize size);
 RectangleSize size_of_rectangle(Rectangle rect);
 Rectangle normalize_rectangle(Rectangle input);
 Rectangle clip_rectangle(AVFrame *image, Rectangle area);
+Rectangle shift_rectangle(Rectangle rect, Delta d);
+
 uint64_t count_pixels(Rectangle area);
+
 bool point_in_rectangle(Point p, Rectangle input_area);
+bool rectangle_in_rectangle(Rectangle inner, Rectangle outer);
 bool rectangles_overlap(Rectangle first_input, Rectangle second_input);
 bool rectangle_overlap_any(Rectangle first_input, size_t count,
                            Rectangle *rectangles);
