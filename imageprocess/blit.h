@@ -20,3 +20,15 @@ uint64_t count_pixels_within_brightness(AVFrame *image, Rectangle area,
                                         uint8_t min_brightness,
                                         uint8_t max_brightness, bool clear,
                                         uint8_t abs_black_threshold);
+
+typedef int8_t RotationDirection;
+static const RotationDirection ROTATE_CLOCKWISE = 1;
+static const RotationDirection ROTATE_ANTICLOCKWISE = -1;
+
+// Rotates an image clockwise or anti-clockwise in 90-degrees.
+void flip_rotate_90(AVFrame **pImage, RotationDirection direction,
+                    uint8_t abs_black_threshold);
+
+// Mirrors an image either horizontally, vertically, or both.
+void mirror(AVFrame *image, bool horizontal, bool vertical,
+            uint8_t abs_black_threshold);
