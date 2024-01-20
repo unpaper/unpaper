@@ -12,7 +12,7 @@ pull_request_rules:
       - "status-success=Build and test on Linux (gcc, --buildtype=debugoptimized -Dwerror=true)"
       - "status-success=Build and test on Linux (gcc, --buildtype=debugoptimized -Dwerror=true -Db_lto=true)"
       - "status-success=Build and test on Linux (clang, -Dwerror=true)"
-      - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized  -Dwerror=true)"
+      - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized -Dwerror=true)"
       - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized -Dwerror=true -Db_lto=true)"
       - "status-success=pre-commit"
     actions:
