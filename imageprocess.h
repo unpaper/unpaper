@@ -48,10 +48,6 @@ void blackfilter(AVFrame *image);
 
 int blurfilter(AVFrame *image);
 
-/* --- grayfilter --------------------------------------------------------- */
-
-int grayfilter(AVFrame *image);
-
 /* --- border-detection --------------------------------------------------- */
 
 void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],

@@ -31,7 +31,6 @@ extern Pixel sheetBackgroundPixel;
 extern unsigned int absBlackThreshold;
 extern unsigned int absWhiteThreshold;
 extern unsigned int absBlackfilterScanThreshold;
-extern unsigned int absGrayfilterThreshold;
 
 extern int sheetSize[DIMENSIONS_COUNT];
 extern int sheetBackground;
@@ -75,9 +74,6 @@ extern int blackfilterIntensity;
 extern int blurfilterScanSize[DIRECTIONS_COUNT];
 extern int blurfilterScanStep[DIRECTIONS_COUNT];
 extern float blurfilterIntensity;
-extern int grayfilterScanSize[DIRECTIONS_COUNT];
-extern int grayfilterScanStep[DIRECTIONS_COUNT];
-extern float grayfilterThreshold;
 extern int maskScanDirections;
 extern int maskScanSize[DIRECTIONS_COUNT];
 extern int maskScanDepth[DIRECTIONS_COUNT];
