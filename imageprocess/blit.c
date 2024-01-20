@@ -87,3 +87,25 @@ uint8_t darkness_rect(AVFrame *image, Rectangle input_area) {
 
   return 0xFF - (darkness / count);
 }
+
+uint64_t count_pixels_within_brightness(AVFrame *image, Rectangle area,
+                                        uint8_t min_brightness,
+                                        uint8_t max_brightness, bool clear,
+                                        uint8_t abs_black_threshold) {
+  uint64_t count = 0;
+
+  scan_rectangle(area) {
+    Point p = {x, y};
+    uint8_t brightness = get_pixel_grayscale(image, p);
+    if (brightness < min_brightness || brightness > max_brightness) {
+      continue;
+    }
+
+    if (clear) {
+      set_pixel(image, p, PIXEL_WHITE, abs_black_threshold);
+    }
+    count++;
+  }
+
+  return count;
+}

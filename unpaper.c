@@ -57,7 +57,6 @@ Pixel sheetBackgroundPixel;
 unsigned int absBlackThreshold;
 unsigned int absWhiteThreshold;
 unsigned int absBlackfilterScanThreshold;
-unsigned int absGrayfilterThreshold;
 
 int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
 int sheetBackground = WHITE24;
@@ -101,9 +100,6 @@ int blackfilterIntensity = 20;
 int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
 int blurfilterScanStep[DIRECTIONS_COUNT] = {50, 50};
 float blurfilterIntensity = 0.01;
-int grayfilterScanSize[DIRECTIONS_COUNT] = {50, 50};
-int grayfilterScanStep[DIRECTIONS_COUNT] = {20, 20};
-float grayfilterThreshold = 0.5;
 int maskScanDirections = (1 << HORIZONTAL);
 int maskScanSize[DIRECTIONS_COUNT] = {50, 50};
 int maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
@@ -248,6 +244,10 @@ int main(int argc, char *argv[]) {
   float deskewScanStep = 0.1;
   float deskewScanDeviation = 1.0;
   DeskewParameters deskewParams;
+  int grayfilterScanSize[DIRECTIONS_COUNT] = {50, 50};
+  int grayfilterScanStep[DIRECTIONS_COUNT] = {20, 20};
+  float grayfilterThreshold = 0.5;
+  GrayfilterParameters grayfilterParams;
   int noisefilterIntensity = 4;
 
   // -------------------------------------------------------------------
@@ -1025,11 +1025,14 @@ int main(int argc, char *argv[]) {
   absBlackThreshold = WHITE * (1.0 - blackThreshold);
   absWhiteThreshold = WHITE * (whiteThreshold);
   absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
-  absGrayfilterThreshold = WHITE * (grayfilterThreshold);
 
   deskewParams = validate_deskew_parameters(deskewScanRange, deskewScanStep,
                                             deskewScanDeviation, deskewScanSize,
                                             deskewScanDepth, deskewScanEdges);
+  grayfilterParams = validate_grayfilter_parameters(
+      grayfilterScanSize[HORIZONTAL], grayfilterScanSize[VERTICAL],
+      grayfilterScanStep[HORIZONTAL], grayfilterScanStep[VERTICAL],
+      grayfilterThreshold);
 
   for (int nr = options.startSheet;
        (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
@@ -1730,9 +1733,11 @@ int main(int argc, char *argv[]) {
         verboseLog(VERBOSE_NORMAL, "gray-filter...");
 
         saveDebug("_before-grayfilter%d.pnm", nr, sheet);
-        int filterResult = grayfilter(sheet);
+        uint64_t filterResult =
+            grayfilter(sheet, grayfilterParams, absBlackThreshold);
         saveDebug("_after-grayfilter%d.pnm", nr, sheet);
-        verboseLog(VERBOSE_NORMAL, " deleted %d pixels.\n", filterResult);
+        verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
+                   filterResult);
       } else {
         verboseLog(VERBOSE_MORE, "+ grayfilter DISABLED for sheet %d\n", nr);
       }

@@ -5,7 +5,13 @@
 #include <stdint.h>
 
 #include "constants.h"
+#include "imageprocess/blit.h"
+#include "imageprocess/filters.h"
 #include "imageprocess/pixel.h"
+
+/***************
+ * Noisefilter *
+ ***************/
 
 static bool noisefilter_compare_and_clear(AVFrame *image, Point p, bool clear,
                                           uint8_t min_white_level,
@@ -120,4 +126,64 @@ uint64_t noisefilter(AVFrame *image, uint64_t intensity,
     }
   }
   return count;
+}
+
+/***************
+ * Grayfilter *
+ ***************/
+
+GrayfilterParameters validate_grayfilter_parameters(uint32_t scan_size_h,
+                                                    uint32_t scan_size_v,
+                                                    uint32_t scan_step_h,
+                                                    uint32_t scan_step_v,
+                                                    float threshold) {
+  return (GrayfilterParameters){
+      .scan_size =
+          {
+              .horizontal = scan_size_h,
+              .vertical = scan_size_v,
+          },
+      .scan_step =
+          {
+              .horizontal = scan_step_h,
+              .vertical = scan_step_v,
+          },
+      .abs_threshold = 0xFF * threshold,
+  };
+}
+
+uint64_t grayfilter(AVFrame *image, GrayfilterParameters params,
+                    uint8_t abs_black_threshold) {
+  Rectangle area = {{
+      POINT_ORIGIN,
+      {params.scan_size.horizontal - 1, params.scan_size.vertical - 1},
+  }};
+  uint64_t result = 0;
+
+  do {
+    uint64_t count = count_pixels_within_brightness(
+        image, area, 0, abs_black_threshold, false, abs_black_threshold);
+
+    if (count == 0) {
+      uint8_t lightness = inverse_lightness_rect(image, area);
+      // (lower threshold->more deletion)
+      if (lightness < params.abs_threshold) {
+        result += wipe_rectangle(image, area, PIXEL_WHITE, abs_black_threshold);
+      }
+    }
+
+    // Continue on the same row unless we reached the end of the row.
+    if (area.vertex[0].x < image->width) {
+      area.vertex[0].x += params.scan_step.horizontal;
+      area.vertex[1].x += params.scan_step.horizontal;
+    } else {
+      // next row:
+      area.vertex[0].x = 0;
+      area.vertex[1].x = params.scan_size.horizontal - 1;
+      area.vertex[0].y += params.scan_step.vertical;
+      area.vertex[1].y += params.scan_step.vertical;
+    }
+  } while (area.vertex[1].y <= image->height);
+
+  return result;
 }

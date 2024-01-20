@@ -649,50 +649,6 @@ int blurfilter(AVFrame *image) {
   return result;
 }
 
-/* --- grayfilter --------------------------------------------------------- */
-
-/**
- * Clears areas which do not contain any black pixels, but some "gray shade"
- * only. Two conditions have to apply before an area gets deleted: first, not a
- * single black pixel may be contained, second, a minimum threshold of blackness
- * must not be exceeded.
- */
-int grayfilter(AVFrame *image) {
-  int left = 0;
-  int top = 0;
-  int right = grayfilterScanSize[HORIZONTAL] - 1;
-  int bottom = grayfilterScanSize[VERTICAL] - 1;
-  uint64_t result = 0;
-
-  while (true) {
-    int count = countPixelsRect(left, top, right, bottom, 0, absBlackThreshold,
-                                false, image);
-    if (count == 0) {
-      uint8_t lightness = inverse_lightness_rect(
-          image, (Rectangle){{{left, top}, {right, bottom}}});
-      if (lightness <
-          absGrayfilterThreshold) { // (lower threshold->more deletion)
-        result +=
-            wipe_rectangle(image, (Rectangle){{{left, top}, {right, bottom}}},
-                           PIXEL_WHITE, absBlackThreshold);
-      }
-    }
-    if (left < image->width) { // not yet at end of row
-      left += grayfilterScanStep[HORIZONTAL];
-      right += grayfilterScanStep[HORIZONTAL];
-    } else {                         // end of row
-      if (bottom >= image->height) { // has been last row
-        return result;               // exit here
-      }
-      // next row:
-      left = 0;
-      right = grayfilterScanSize[HORIZONTAL] - 1;
-      top += grayfilterScanStep[VERTICAL];
-      bottom += grayfilterScanStep[VERTICAL];
-    }
-  }
-}
-
 /* --- border-detection --------------------------------------------------- */
 
 /**
