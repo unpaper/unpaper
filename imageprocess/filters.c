@@ -140,8 +140,8 @@ GrayfilterParameters validate_grayfilter_parameters(uint32_t scan_size_h,
   return (GrayfilterParameters){
       .scan_size =
           {
-              .horizontal = scan_size_h,
-              .vertical = scan_size_v,
+              .width = scan_size_h,
+              .height = scan_size_v,
           },
       .scan_step =
           {
@@ -154,13 +154,11 @@ GrayfilterParameters validate_grayfilter_parameters(uint32_t scan_size_h,
 
 uint64_t grayfilter(AVFrame *image, GrayfilterParameters params,
                     uint8_t abs_black_threshold) {
-  Rectangle area = {{
-      POINT_ORIGIN,
-      {params.scan_size.horizontal - 1, params.scan_size.vertical - 1},
-  }};
+  Point filter_origin = POINT_ORIGIN;
   uint64_t result = 0;
 
   do {
+    Rectangle area = rectangle_from_size(filter_origin, params.scan_size);
     uint64_t count = count_pixels_within_brightness(
         image, area, 0, abs_black_threshold, false, abs_black_threshold);
 
@@ -173,17 +171,14 @@ uint64_t grayfilter(AVFrame *image, GrayfilterParameters params,
     }
 
     // Continue on the same row unless we reached the end of the row.
-    if (area.vertex[0].x < image->width) {
-      area.vertex[0].x += params.scan_step.horizontal;
-      area.vertex[1].x += params.scan_step.horizontal;
+    if (filter_origin.x < image->width) {
+      filter_origin.x += params.scan_step.horizontal;
     } else {
       // next row:
-      area.vertex[0].x = 0;
-      area.vertex[1].x = params.scan_size.horizontal - 1;
-      area.vertex[0].y += params.scan_step.vertical;
-      area.vertex[1].y += params.scan_step.vertical;
+      filter_origin.x = 0;
+      filter_origin.y += params.scan_step.vertical;
     }
-  } while (area.vertex[1].y <= image->height);
+  } while (filter_origin.y <= image->height);
 
   return result;
 }
