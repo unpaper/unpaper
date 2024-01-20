@@ -171,3 +171,15 @@ void mirror(AVFrame *image, bool horizontal, bool vertical,
     }
   }
 }
+
+void shift_image(AVFrame **pImage, Delta d, uint8_t abs_black_threshold) {
+  AVFrame *newimage;
+
+  // allocate new buffer's memory
+  initImage(&newimage, (*pImage)->width, (*pImage)->height, (*pImage)->format,
+            true);
+
+  copy_rectangle(*pImage, newimage, RECT_FULL_IMAGE,
+                 shift_point(POINT_ORIGIN, d), abs_black_threshold);
+  replaceImage(pImage, &newimage);
+}

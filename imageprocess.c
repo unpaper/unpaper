@@ -112,24 +112,6 @@ void resize(int w, int h, AVFrame **image) {
   replaceImage(image, &resized);
 }
 
-/**
- * Shifts the image.
- *
- * @param shiftX horizontal shifting
- * @param shiftY vertical shifting
- */
-void shift(int shiftX, int shiftY, AVFrame **image) {
-  AVFrame *newimage;
-
-  // allocate new buffer's memory
-  initImage(&newimage, (*image)->width, (*image)->height, (*image)->format,
-            true);
-
-  copy_rectangle(*image, newimage, RECT_FULL_IMAGE, POINT_ORIGIN,
-                 absBlackThreshold);
-  replaceImage(image, &newimage);
-}
-
 /* --- mask-detection ----------------------------------------------------- */
 
 /**
