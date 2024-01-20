@@ -13,10 +13,7 @@ uint64_t noisefilter(AVFrame *image, uint64_t intensity,
                      uint8_t min_white_level, uint8_t abs_black_threshold);
 
 typedef struct {
-  struct {
-    uint32_t horizontal;
-    uint32_t vertical;
-  } scan_size;
+  RectangleSize scan_size;
 
   struct {
     uint32_t horizontal;
