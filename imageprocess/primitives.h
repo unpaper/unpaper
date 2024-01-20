@@ -54,3 +54,5 @@ Rectangle clip_rectangle(AVFrame *image, Rectangle area);
 uint64_t count_pixels(Rectangle area);
 bool point_in_rectangle(Point p, Rectangle input_area);
 bool rectangles_overlap(Rectangle first_input, Rectangle second_input);
+bool rectangle_overlap_any(Rectangle first_input, size_t count,
+                           Rectangle *rectangles);

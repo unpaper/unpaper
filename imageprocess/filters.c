@@ -6,9 +6,155 @@
 
 #include "constants.h"
 #include "imageprocess/blit.h"
+#include "imageprocess/fill.h"
 #include "imageprocess/filters.h"
 #include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
+#include "lib/logging.h"
+
+/***************
+ * Blackfilter *
+ ***************/
+
+BlackfilterParameters validate_blackfilter_parameters(
+    uint32_t scan_size_h, uint32_t scan_size_v, uint32_t scan_step_h,
+    uint32_t scan_step_v, uint32_t scan_depth_h, uint32_t scan_depth_v,
+    int8_t scan_directions, float threshold, int32_t intensity,
+    size_t exclusions_count, Rectangle *exclusions) {
+  return (BlackfilterParameters){
+      .scan_size =
+          {
+              .width = scan_size_h,
+              .height = scan_size_v,
+          },
+      .scan_step =
+          {
+              .horizontal = scan_step_h,
+              .vertical = scan_step_v,
+          },
+      .scan_depth =
+          {
+              .horizontal = scan_depth_h,
+              .vertical = scan_depth_v,
+          },
+
+      .scan_horizontal = !!(scan_directions & HORIZONTAL),
+      .scan_vertical = !!(scan_directions & VERTICAL),
+
+      .abs_threshold = UINT8_MAX * threshold,
+      .intensity = intensity,
+
+      .exclusions_count = exclusions_count,
+      .exclusions = exclusions,
+  };
+}
+
+static void blackfilter_scan(AVFrame *image, BlackfilterParameters params,
+                             int32_t stepX, int32_t stepY,
+                             uint8_t abs_black_threshold) {
+  if (stepX != 0 && stepY != 0) {
+    errOutput("blackfilter_scan() called with two positive steps, impossible! "
+              "(%" PRId32 ", %" PRId32 ")",
+              stepX, stepY);
+  }
+
+  const Rectangle full_image = clip_rectangle(image, RECT_FULL_IMAGE);
+
+  Point filter_origin = POINT_ORIGIN;
+  RectangleSize filter_stripe_size;
+  uint32_t shiftX, shiftY;
+  if (stepX != 0) { // horizontal scanning
+    filter_stripe_size = (RectangleSize){
+        params.scan_size.width,
+        params.scan_depth.vertical,
+    };
+    shiftX = 0;
+    shiftY = params.scan_depth.vertical;
+  } else if (stepY != 0) { // vertical scanning
+    filter_stripe_size = (RectangleSize){
+        params.scan_depth.horizontal,
+        params.scan_size.height,
+    };
+    shiftX = params.scan_depth.horizontal;
+    shiftY = 0;
+  } else {
+    errOutput("blackfilter_scan() called with two zero steps, impossible!");
+  }
+
+  while (point_in_rectangle(filter_origin, full_image)) {
+    Rectangle area = rectangle_from_size(filter_origin, filter_stripe_size);
+
+    // Make sure last stripe does not reach outside the sheet, shift back
+    // inside. We don't use clipping to avoid changing the filter size!
+    if (!point_in_rectangle(area.vertex[0], full_image)) {
+      int32_t diffX = area.vertex[1].x - image->width + 1;
+      int32_t diffY = area.vertex[1].y - image->height + 1;
+
+      area.vertex[0].x -= diffX;
+      area.vertex[0].y -= diffY;
+      area.vertex[1].x -= diffX;
+      area.vertex[1].y -= diffY;
+    }
+
+    bool already_excluded_logged = false;
+
+    do {
+      uint8_t blackness = darkness_rect(image, area);
+
+      // If we find a solidly black area.
+      if (blackness >= params.abs_threshold) {
+        if (!rectangle_overlap_any(area, params.exclusions_count,
+                                   params.exclusions)) {
+          verboseLog(VERBOSE_NORMAL, "black-area flood-fill: [%d,%d,%d,%d]\n",
+                     area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
+                     area.vertex[1].y);
+          already_excluded_logged = false;
+          // start flood-fill in this area (on each pixel to make sure we get
+          // everything, in most cases first flood-fill from first pixel will
+          // delete all other black pixels in the area already)
+          scan_rectangle(area) {
+            flood_fill(image, (Point){x, y}, PIXEL_WHITE, 0,
+                       abs_black_threshold, params.intensity,
+                       abs_black_threshold);
+          }
+        } else if (!already_excluded_logged) {
+          verboseLog(VERBOSE_NORMAL, "black-area EXCLUDED: [%d,%d,%d,%d]\n",
+                     area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
+                     area.vertex[1].y);
+          already_excluded_logged = true; // do this only once per scan-stripe,
+                                          // otherwise too many messages}
+        }
+      }
+
+      filter_origin.x += stepX;
+      filter_origin.y += stepY;
+      area = rectangle_from_size(filter_origin, filter_stripe_size);
+    } while (point_in_rectangle(area.vertex[0], full_image));
+
+    filter_origin.x += shiftX;
+    filter_origin.y = shiftY;
+  }
+}
+
+/**
+ * Filters out solidly black areas, as appearing on bad photocopies.
+ * A virtual bar of width 'size' and height 'depth' is horizontally moved
+ * above the middle of the sheet (or the full sheet, if depth ==-1).
+ */
+void blackfilter(AVFrame *image, BlackfilterParameters params,
+                 uint8_t abs_black_threshold) {
+  // Left-to-Right scan.
+  if (params.scan_horizontal) {
+    blackfilter_scan(image, params, params.scan_step.horizontal, 0,
+                     abs_black_threshold);
+  }
+
+  // To-to-Bottom scan.
+  if (params.scan_vertical) {
+    blackfilter_scan(image, params, 0, params.scan_step.vertical,
+                     abs_black_threshold);
+  }
+}
 
 /**************
  * Blurfilter *
@@ -254,7 +400,7 @@ GrayfilterParameters validate_grayfilter_parameters(uint32_t scan_size_h,
               .horizontal = scan_step_h,
               .vertical = scan_step_v,
           },
-      .abs_threshold = 0xFF * threshold,
+      .abs_threshold = UINT8_MAX * threshold,
   };
 }
 

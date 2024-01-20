@@ -56,7 +56,6 @@ Interpolation interpolateType = INTERP_CUBIC;
 Pixel sheetBackgroundPixel;
 unsigned int absBlackThreshold;
 unsigned int absWhiteThreshold;
-unsigned int absBlackfilterScanThreshold;
 
 int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
 int sheetBackground = WHITE24;
@@ -89,14 +88,6 @@ int border[EDGES_COUNT] = {0, 0, 0, 0};
 bool maskValid[MAX_MASKS];
 int preMaskCount = 0;
 int preMask[MAX_MASKS][EDGES_COUNT];
-int blackfilterScanDirections = (1 << HORIZONTAL) | (1 << VERTICAL);
-int blackfilterScanSize[DIRECTIONS_COUNT] = {20, 20};
-int blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
-int blackfilterScanStep[DIRECTIONS_COUNT] = {5, 5};
-float blackfilterScanThreshold = 0.95;
-int blackfilterExcludeCount = 0;
-int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
-int blackfilterIntensity = 20;
 int maskScanDirections = (1 << HORIZONTAL);
 int maskScanSize[DIRECTIONS_COUNT] = {50, 50};
 int maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
@@ -241,6 +232,15 @@ int main(int argc, char *argv[]) {
   float deskewScanStep = 0.1;
   float deskewScanDeviation = 1.0;
   DeskewParameters deskewParams;
+  int blackfilterScanDirections = (1 << HORIZONTAL) | (1 << VERTICAL);
+  int blackfilterScanSize[DIRECTIONS_COUNT] = {20, 20};
+  int blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
+  int blackfilterScanStep[DIRECTIONS_COUNT] = {5, 5};
+  float blackfilterScanThreshold = 0.95;
+  int blackfilterExcludeCount = 0;
+  int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
+  int blackfilterIntensity = 20;
+  BlackfilterParameters blackfilterParams;
   int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
   int blurfilterScanStep[DIRECTIONS_COUNT] = {50, 50};
   float blurfilterIntensity = 0.01;
@@ -1025,7 +1025,6 @@ int main(int argc, char *argv[]) {
   sheetBackgroundPixel = pixelValueToPixel(sheetBackground);
   absBlackThreshold = WHITE * (1.0 - blackThreshold);
   absWhiteThreshold = WHITE * (whiteThreshold);
-  absBlackfilterScanThreshold = WHITE * (blackfilterScanThreshold);
 
   deskewParams = validate_deskew_parameters(deskewScanRange, deskewScanStep,
                                             deskewScanDeviation, deskewScanSize,
@@ -1034,6 +1033,18 @@ int main(int argc, char *argv[]) {
       grayfilterScanSize[HORIZONTAL], grayfilterScanSize[VERTICAL],
       grayfilterScanStep[HORIZONTAL], grayfilterScanStep[VERTICAL],
       grayfilterThreshold);
+  // This will be reachable memory at the end of the program, we don't need to
+  // free it.
+  Rectangle blackfilterExclusionAreas[blackfilterExcludeCount];
+  for (size_t i = 0; i < blackfilterExcludeCount; i++) {
+    blackfilterExclusionAreas[i] = maskToRectangle(blackfilterExclude[i]);
+  }
+  blackfilterParams = validate_blackfilter_parameters(
+      blackfilterScanSize[HORIZONTAL], blackfilterScanSize[VERTICAL],
+      blackfilterScanStep[HORIZONTAL], blackfilterScanStep[VERTICAL],
+      blackfilterScanDepth[HORIZONTAL], blackfilterScanDepth[VERTICAL],
+      blackfilterScanDirections, blackfilterScanThreshold, blackfilterIntensity,
+      blackfilterExcludeCount, blackfilterExclusionAreas);
   blurfilterParams = validate_blurfilter_parameters(
       blurfilterScanSize[HORIZONTAL], blurfilterScanSize[VERTICAL],
       blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
@@ -1681,7 +1692,7 @@ int main(int argc, char *argv[]) {
       if (!isExcluded(nr, options.noBlackfilterMultiIndex,
                       options.ignoreMultiIndex)) {
         saveDebug("_before-blackfilter%d.pnm", nr, sheet);
-        blackfilter(sheet);
+        blackfilter(sheet, blackfilterParams, absBlackThreshold);
         saveDebug("_after-blackfilter%d.pnm", nr, sheet);
       } else {
         verboseLog(VERBOSE_MORE, "+ blackfilter DISABLED for sheet %d\n", nr);

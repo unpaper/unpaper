@@ -81,3 +81,14 @@ bool rectangles_overlap(Rectangle first_input, Rectangle second_input) {
   return point_in_rectangle(first.vertex[0], second) ||
          point_in_rectangle(first.vertex[1], second);
 }
+
+bool rectangle_overlap_any(Rectangle first_input, size_t count,
+                           Rectangle *rectangles) {
+  for (size_t n = 0; n < count; n++) {
+    if (rectangles_overlap(first_input, rectangles[n])) {
+      return true;
+    }
+  }
+
+  return false;
+}
