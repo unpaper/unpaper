@@ -7,7 +7,113 @@
 #include "constants.h"
 #include "imageprocess/blit.h"
 #include "imageprocess/filters.h"
+#include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
+
+/**************
+ * Blurfilter *
+ **************/
+
+BlurfilterParameters validate_blurfilter_parameters(uint32_t scan_size_h,
+                                                    uint32_t scan_size_v,
+                                                    uint32_t scan_step_h,
+                                                    uint32_t scan_step_v,
+                                                    float intensity) {
+  return (BlurfilterParameters){
+      .scan_size =
+          {
+              .width = scan_size_h,
+              .height = scan_size_v,
+          },
+      .scan_step =
+          {
+              .horizontal = scan_step_h,
+              .vertical = scan_step_v,
+          },
+      .intensity = intensity,
+  };
+}
+
+uint64_t blurfilter(AVFrame *image, BlurfilterParameters params,
+                    uint8_t abs_white_threshold, uint8_t abs_black_threshold) {
+  const uint32_t blocks_per_row = image->width / params.scan_size.width;
+  const uint64_t total_pixels_in_block =
+      params.scan_size.width * params.scan_size.height;
+  uint64_t result = 0;
+
+  // allocate one extra block left and right
+  uint64_t count_buffers[3][blocks_per_row + 2];
+
+  // Number of dark pixels in previous row
+  uint64_t *prevCounts = &count_buffers[0][0];
+  // Number of dark pixels in current row
+  uint64_t *curCounts = &count_buffers[0][1];
+  // Number of dark pixels in next row
+  uint64_t *nextCounts = &count_buffers[0][2];
+
+  // Left and Right.
+  curCounts[0] = total_pixels_in_block;
+  curCounts[blocks_per_row] = total_pixels_in_block;
+  nextCounts[0] = total_pixels_in_block;
+  nextCounts[blocks_per_row] = total_pixels_in_block;
+
+  const int32_t max_left = image->width - params.scan_size.width;
+  for (int32_t left = 0, block = 1; left <= max_left;
+       left += params.scan_size.width) {
+    curCounts[block++] = count_pixels_within_brightness(
+        image, rectangle_from_size((Point){left, 0}, params.scan_size), 0,
+        abs_white_threshold, false, abs_black_threshold);
+  }
+
+  // Loop through all blocks. For a block calculate the number of dark pixels in
+  // this block, the number of dark pixels in the block in the top-left corner
+  // and similarly for the block in the top-right, bottom-left and bottom-right
+  // corner. Take the maximum of these values. Clear the block if this number is
+  // not large enough compared to the total number of pixels in a block.
+  int32_t max_top = image->height - params.scan_size.height;
+  for (int32_t top = 0; top <= max_top; top += params.scan_size.height) {
+    nextCounts[0] = count_pixels_within_brightness(
+        image,
+        rectangle_from_size((Point){0, top + params.scan_step.vertical},
+                            params.scan_size),
+        0, abs_white_threshold, false, abs_black_threshold);
+
+    for (int32_t left = 0, block = 1; left <= max_left;
+         left += params.scan_size.width) {
+
+      // bottom right (has still to be calculated)
+      nextCounts[block + 1] = count_pixels_within_brightness(
+          image,
+          rectangle_from_size((Point){left + params.scan_size.width,
+                                      top + params.scan_step.vertical},
+                              params.scan_size),
+          0, abs_white_threshold, false, abs_black_threshold);
+
+      uint64_t max = max3(
+          nextCounts[block - 1], nextCounts[block + 1],
+          max3(prevCounts[block - 1], prevCounts[block + 1], curCounts[block]));
+
+      // Not enough dark pixels
+      if ((((float)max) / total_pixels_in_block) <= params.intensity) {
+        wipe_rectangle(
+            image, rectangle_from_size((Point){left, top}, params.scan_size),
+            PIXEL_WHITE, abs_black_threshold);
+        result += curCounts[block];
+        curCounts[block] = total_pixels_in_block; // Update information
+      }
+
+      block++;
+    }
+
+    // Switch Buffers
+    uint64_t *tmpCounts;
+    tmpCounts = prevCounts;
+    prevCounts = curCounts;
+    curCounts = nextCounts;
+    nextCounts = tmpCounts;
+  }
+  return result;
+}
 
 /***************
  * Noisefilter *

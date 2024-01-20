@@ -97,9 +97,6 @@ float blackfilterScanThreshold = 0.95;
 int blackfilterExcludeCount = 0;
 int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
 int blackfilterIntensity = 20;
-int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
-int blurfilterScanStep[DIRECTIONS_COUNT] = {50, 50};
-float blurfilterIntensity = 0.01;
 int maskScanDirections = (1 << HORIZONTAL);
 int maskScanSize[DIRECTIONS_COUNT] = {50, 50};
 int maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
@@ -244,6 +241,10 @@ int main(int argc, char *argv[]) {
   float deskewScanStep = 0.1;
   float deskewScanDeviation = 1.0;
   DeskewParameters deskewParams;
+  int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
+  int blurfilterScanStep[DIRECTIONS_COUNT] = {50, 50};
+  float blurfilterIntensity = 0.01;
+  BlurfilterParameters blurfilterParams;
   int grayfilterScanSize[DIRECTIONS_COUNT] = {50, 50};
   int grayfilterScanStep[DIRECTIONS_COUNT] = {20, 20};
   float grayfilterThreshold = 0.5;
@@ -1033,6 +1034,10 @@ int main(int argc, char *argv[]) {
       grayfilterScanSize[HORIZONTAL], grayfilterScanSize[VERTICAL],
       grayfilterScanStep[HORIZONTAL], grayfilterScanStep[VERTICAL],
       grayfilterThreshold);
+  blurfilterParams = validate_blurfilter_parameters(
+      blurfilterScanSize[HORIZONTAL], blurfilterScanSize[VERTICAL],
+      blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
+      blurfilterIntensity);
 
   for (int nr = options.startSheet;
        (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
@@ -1704,9 +1709,11 @@ int main(int argc, char *argv[]) {
         verboseLog(VERBOSE_NORMAL, "blur-filter...");
 
         saveDebug("_before-blurfilter%d.pnm", nr, sheet);
-        int filterResult = blurfilter(sheet);
+        uint64_t filterResult = blurfilter(
+            sheet, blurfilterParams, absWhiteThreshold, absBlackThreshold);
         saveDebug("_after-blurfilter%d.pnm", nr, sheet);
-        verboseLog(VERBOSE_NORMAL, " deleted %d pixels.\n", filterResult);
+        verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
+                   filterResult);
 
       } else {
         verboseLog(VERBOSE_MORE, "+ blurfilter DISABLED for sheet %d\n", nr);

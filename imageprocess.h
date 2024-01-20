@@ -44,10 +44,6 @@ void flipRotate(int direction, AVFrame **image);
 
 void blackfilter(AVFrame *image);
 
-/* --- blurfilter --------------------------------------------------------- */
-
-int blurfilter(AVFrame *image);
-
 /* --- border-detection --------------------------------------------------- */
 
 void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
