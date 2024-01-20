@@ -20,8 +20,6 @@ void stretch(int w, int h, AVFrame **image);
 
 void resize(int w, int h, AVFrame **image);
 
-void shift(int shiftX, int shiftY, AVFrame **image);
-
 /* --- mask-detection ----------------------------------------------------- */
 
 void detectMasks(AVFrame *image);

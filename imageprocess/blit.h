@@ -32,3 +32,6 @@ void flip_rotate_90(AVFrame **pImage, RotationDirection direction,
 // Mirrors an image either horizontally, vertically, or both.
 void mirror(AVFrame *image, bool horizontal, bool vertical,
             uint8_t abs_black_threshold);
+
+// Shifts the image.
+void shift_image(AVFrame **pImage, Delta d, uint8_t abs_black_threshold);

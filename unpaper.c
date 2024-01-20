@@ -1252,7 +1252,8 @@ int main(int argc, char *argv[]) {
         verboseLog(VERBOSE_NORMAL, "pre-shifting [%d,%d]\n", preShift[WIDTH],
                    preShift[HEIGHT]);
 
-        shift(preShift[WIDTH], preShift[HEIGHT], &sheet);
+        shift_image(&sheet, (Delta){preShift[WIDTH], preShift[HEIGHT]},
+                    absBlackThreshold);
       }
 
       // pre-masking
@@ -1909,7 +1910,9 @@ int main(int argc, char *argv[]) {
       if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
         verboseLog(VERBOSE_NORMAL, "post-shifting [%d,%d]\n", postShift[WIDTH],
                    postShift[HEIGHT]);
-        shift(postShift[WIDTH], postShift[HEIGHT], &sheet);
+
+        shift_image(&sheet, (Delta){postShift[WIDTH], postShift[HEIGHT]},
+                    absBlackThreshold);
       }
 
       // post-rotating
