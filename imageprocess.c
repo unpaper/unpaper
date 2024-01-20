@@ -547,8 +547,9 @@ static int detectBorderEdge(const Mask outsideMask, int stepX, int stepY,
   }
   result = 0;
   while (result < max) {
-    cnt = countPixelsRect(left, top, right, bottom, 0, absBlackThreshold, false,
-                          image);
+    cnt = count_pixels_within_brightness(
+        image, (Rectangle){{{left, top}, {right, bottom}}}, 0,
+        absBlackThreshold, false, absBlackThreshold);
     if (cnt >= threshold) {
       return result; // border has been found: regular exit here
     }

@@ -22,6 +22,3 @@ static inline void replaceImage(AVFrame **image, AVFrame **newimage) {
 
 void centerImage(AVFrame *source, int toX, int toY, int ww, int hh,
                  AVFrame *target);
-
-int countPixelsRect(int left, int top, int right, int bottom, int minColor,
-                    int maxBrightness, bool clear, AVFrame *image);
