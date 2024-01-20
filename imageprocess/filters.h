@@ -17,6 +17,38 @@ typedef struct {
     uint32_t vertical;
   } scan_step;
 
+  struct {
+    uint32_t horizontal;
+    uint32_t vertical;
+  } scan_depth;
+
+  bool scan_horizontal;
+  bool scan_vertical;
+
+  uint8_t abs_threshold;
+  int32_t intensity;
+
+  size_t exclusions_count;
+  Rectangle *exclusions;
+} BlackfilterParameters;
+
+void blackfilter(AVFrame *image, BlackfilterParameters params,
+                 uint8_t abs_black_threshold);
+
+BlackfilterParameters validate_blackfilter_parameters(
+    uint32_t scan_size_h, uint32_t scan_size_v, uint32_t scan_step_h,
+    uint32_t scan_step_v, uint32_t scan_depth_h, uint32_t scan_depth_v,
+    int8_t scan_directions, float threshold, int32_t intensity,
+    size_t exclusions_count, Rectangle *exclusions);
+
+typedef struct {
+  RectangleSize scan_size;
+
+  struct {
+    uint32_t horizontal;
+    uint32_t vertical;
+  } scan_step;
+
   float intensity;
 } BlurfilterParameters;
 

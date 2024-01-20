@@ -40,10 +40,6 @@ void mirror(int directions, AVFrame *image);
 
 void flipRotate(int direction, AVFrame **image);
 
-/* --- blackfilter -------------------------------------------------------- */
-
-void blackfilter(AVFrame *image);
-
 /* --- border-detection --------------------------------------------------- */
 
 void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
