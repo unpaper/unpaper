@@ -436,14 +436,14 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
   AVFrame *newimage;
   const Rectangle area = maskToRectangle(mask);
   const RectangleSize size = size_of_rectangle(area);
+  const Rectangle full_image = clip_rectangle(image, RECT_FULL_IMAGE);
 
   const Point target = {center[X] - size.width / 2,
                         center[Y] - size.height / 2};
 
   Rectangle new_area = rectangle_from_size(target, size);
-  Rectangle clipped_area = clip_rectangle(image, new_area);
 
-  if (memcmp(&new_area, &clipped_area, sizeof(new_area)) == 0) {
+  if (rectangle_in_rectangle(new_area, full_image)) {
     verboseLog(VERBOSE_NORMAL, "centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n",
                area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
                area.vertex[1].y, center[X], center[Y],
