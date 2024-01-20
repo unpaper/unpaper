@@ -81,27 +81,3 @@ void centerImage(AVFrame *source, int toX, int toY, int ww, int hh,
   centerImageArea(0, 0, source->width, source->height, source, toX, toY, ww, hh,
                   target);
 }
-
-/**
- * Counts the number of pixels in a rectangular area whose grayscale
- * values ranges between minColor and maxBrightness. Optionally, the area can
- * get cleared with white color while counting.
- */
-int countPixelsRect(int left, int top, int right, int bottom, int minColor,
-                    int maxBrightness, bool clear, AVFrame *image) {
-  int count = 0;
-
-  for (int y = top; y <= bottom; y++) {
-    for (int x = left; x <= right; x++) {
-      Point p = {x, y};
-      const int pixel = get_pixel_grayscale(image, p);
-      if ((pixel >= minColor) && (pixel <= maxBrightness)) {
-        if (clear == true) {
-          set_pixel(image, p, PIXEL_WHITE, absBlackThreshold);
-        }
-        count++;
-      }
-    }
-  }
-  return count;
-}
