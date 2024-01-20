@@ -32,14 +32,6 @@ void applyMasks(const Mask *masks, const int maskCount, AVFrame *image);
 
 void applyWipes(const Mask *area, int areaCount, AVFrame *image);
 
-/* --- mirroring ---------------------------------------------------------- */
-
-void mirror(int directions, AVFrame *image);
-
-/* --- flip-rotating ------------------------------------------------------ */
-
-void flipRotate(int direction, AVFrame **image);
-
 /* --- border-detection --------------------------------------------------- */
 
 void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],

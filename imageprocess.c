@@ -363,68 +363,6 @@ void applyWipes(const Mask *area, int areaCount, AVFrame *image) {
   }
 }
 
-/* --- mirroring ---------------------------------------------------------- */
-
-/**
- * Mirrors an image either horizontally, vertically, or both.
- */
-void mirror(int directions, AVFrame *image) {
-  const bool horizontal = !!((directions & 1 << HORIZONTAL) != 0);
-  const bool vertical = !!((directions & 1 << VERTICAL) != 0);
-  int untilX = ((horizontal == true) && (vertical == false))
-                   ? ((image->width - 1) >> 1)
-                   : (image->width - 1); // w>>1 == (int)(w-0.5)/2
-  int untilY =
-      (vertical == true) ? ((image->height - 1) >> 1) : image->height - 1;
-
-  for (int y = 0; y <= untilY; y++) {
-    const int yy = (vertical == true) ? (image->height - y - 1) : y;
-    if ((vertical == true) && (horizontal == true) &&
-        (y ==
-         yy)) { // last middle line in odd-lined image mirrored both h and v
-      untilX = ((image->width - 1) >> 1);
-    }
-    for (int x = 0; x <= untilX; x++) {
-      const int xx = (horizontal == true) ? (image->width - x - 1) : x;
-      Point point1 = {x, y};
-      Point point2 = {xx, yy};
-      Pixel pixel1 = get_pixel(image, point1);
-      Pixel pixel2 = get_pixel(image, point2);
-      set_pixel(image, point1, pixel2, absBlackThreshold);
-      set_pixel(image, point2, pixel1, absBlackThreshold);
-    }
-  }
-}
-
-/* --- flip-rotating ------------------------------------------------------ */
-
-/**
- * Rotates an image clockwise or anti-clockwise in 90-degrees.
- *
- * @param direction either -1 (rotate anti-clockwise) or 1 (rotate clockwise)
- */
-void flipRotate(int direction, AVFrame **image) {
-  AVFrame *newimage;
-
-  // exchanged width and height
-  initImage(&newimage, (*image)->height, (*image)->width, (*image)->format,
-            false);
-
-  for (int y = 0; y < (*image)->height; y++) {
-    const int xx = ((direction > 0) ? (*image)->height - 1 : 0) - y * direction;
-    for (int x = 0; x < (*image)->width; x++) {
-      const int yy =
-          ((direction < 0) ? (*image)->width - 1 : 0) + x * direction;
-
-      Point point1 = {x, y};
-      Point point2 = {xx, yy};
-
-      set_pixel(newimage, point2, get_pixel(*image, point1), absBlackThreshold);
-    }
-  }
-  replaceImage(image, &newimage);
-}
-
 /* --- border-detection --------------------------------------------------- */
 
 /**

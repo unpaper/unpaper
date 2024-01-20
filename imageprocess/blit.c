@@ -5,6 +5,7 @@
 #include "imageprocess/blit.h"
 #include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
+#include "tools.h"
 
 /**
  * Wipe a rectangular area of pixels with the defined color.
@@ -108,4 +109,65 @@ uint64_t count_pixels_within_brightness(AVFrame *image, Rectangle area,
   }
 
   return count;
+}
+
+void flip_rotate_90(AVFrame **pImage, RotationDirection direction,
+                    uint8_t abs_black_threshold) {
+  AVFrame *newimage;
+
+  // exchanged width and height
+  initImage(&newimage, (*pImage)->height, (*pImage)->width, (*pImage)->format,
+            false);
+
+  for (int y = 0; y < (*pImage)->height; y++) {
+    const int xx =
+        ((direction > 0) ? (*pImage)->height - 1 : 0) - y * direction;
+    for (int x = 0; x < (*pImage)->width; x++) {
+      const int yy =
+          ((direction < 0) ? (*pImage)->width - 1 : 0) + x * direction;
+
+      Point point1 = {x, y};
+      Point point2 = {xx, yy};
+
+      set_pixel(newimage, point2, get_pixel(*pImage, point1),
+                abs_black_threshold);
+    }
+  }
+  replaceImage(pImage, &newimage);
+}
+
+void mirror(AVFrame *image, bool horizontal, bool vertical,
+            uint8_t abs_black_threshold) {
+  Rectangle source = {{POINT_ORIGIN, POINT_INFINITY}};
+
+  if (horizontal && !vertical) {
+    source.vertex[1].x = (image->width - 1) / 2;
+  }
+
+  if (vertical) {
+    source.vertex[1].y = (image->height - 1) / 2;
+  }
+
+  source = clip_rectangle(image, source);
+
+  // Cannot use scan_rectangle() because of the midpoint turn.
+  for (int32_t y = source.vertex[0].y; y <= source.vertex[1].y; y++) {
+    int32_t yy = vertical ? image->height - y - 1 : y;
+    // Special case: the last middle line in odd-lined images that are
+    // to be mirrored both horizontally and vertically.
+    if (vertical && horizontal && y == yy) {
+      source.vertex[1].x = (image->width - 1) / 2;
+    }
+
+    for (int32_t x = 0; x <= source.vertex[1].x; x++) {
+      int32_t xx = horizontal ? image->width - x - 1 : x;
+
+      Point point1 = {x, y};
+      Point point2 = {xx, yy};
+      Pixel pixel1 = get_pixel(image, point1);
+      Pixel pixel2 = get_pixel(image, point2);
+      set_pixel(image, point1, pixel2, abs_black_threshold);
+      set_pixel(image, point2, pixel1, abs_black_threshold);
+    }
+  }
 }
