@@ -16,7 +16,6 @@
 #include <libavutil/opt.h>
 
 #include "imageprocess/blit.h"
-#include "tools.h"
 #include "unpaper.h"
 
 /**
@@ -99,10 +98,11 @@ void loadImage(const char *filename, AVFrame **image) {
     *image = av_frame_clone(frame);
     break;
 
-  case AV_PIX_FMT_PAL8:
-    initImage(image, frame->width, frame->height, AV_PIX_FMT_RGB24, -1);
-
+  case AV_PIX_FMT_PAL8: {
     Rectangle area = clip_rectangle(frame, RECT_FULL_IMAGE);
+
+    *image = create_image(size_of_rectangle(area), AV_PIX_FMT_RGB24, false,
+                          sheetBackgroundPixel, absBlackThreshold);
 
     const uint32_t *palette = (const uint32_t *)frame->data[1];
     scan_rectangle(area) {
@@ -110,7 +110,7 @@ void loadImage(const char *filename, AVFrame **image) {
       set_pixel(*image, (Point){x, y},
                 pixelValueToPixel(palette[palette_index]), absBlackThreshold);
     }
-    break;
+  } break;
 
   default:
     errOutput("unable to open file %s: unsupported pixel format", filename);
@@ -169,7 +169,9 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
   }
 
   if (input->format != outputPixFmt) {
-    initImage(&output, input->width, input->height, outputPixFmt, -1);
+    output =
+        create_image((RectangleSize){input->width, input->height}, outputPixFmt,
+                     false, sheetBackgroundPixel, absBlackThreshold);
     copy_rectangle(input, output, RECT_FULL_IMAGE, POINT_ORIGIN,
                    absBlackThreshold);
   }

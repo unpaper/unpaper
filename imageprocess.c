@@ -19,7 +19,6 @@
 #include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
 #include "lib/logging.h"
-#include "tools.h"
 #include "unpaper.h"
 
 /****************************************************************************
@@ -29,87 +28,6 @@
 static inline bool inMask(int x, int y, const Mask mask) {
   return (x >= mask[LEFT]) && (x <= mask[RIGHT]) && (y >= mask[TOP]) &&
          (y <= mask[BOTTOM]);
-}
-
-/* --- stretching / resizing / shifting ------------------------------------ */
-
-static void stretchTo(AVFrame *source, AVFrame *target) {
-  const float xRatio = source->width / (float)target->width;
-  const float yRatio = source->height / (float)target->height;
-
-  verboseLog(VERBOSE_MORE, "stretching %dx%d -> %dx%d\n", source->width,
-             source->height, target->width, target->height);
-
-  for (int y = 0; y < target->height; y++) {
-    for (int x = 0; x < target->width; x++) {
-      // calculate average pixel value in source matrix
-      const Pixel pxl = interpolate(
-          source, (FloatPoint){x * xRatio, y * yRatio}, interpolateType);
-      set_pixel(target, (Point){x, y}, pxl, absBlackThreshold);
-    }
-  }
-}
-
-void stretch(int w, int h, AVFrame **image) {
-  AVFrame *newimage;
-
-  if ((*image)->width == w && (*image)->height == h)
-    return;
-
-  // allocate new buffer's memory
-  initImage(&newimage, w, h, (*image)->format, false);
-
-  stretchTo(*image, newimage);
-
-  replaceImage(image, &newimage);
-}
-
-/**
- * Resizes the image so that the resulting sheet has a new size and the image
- * content is zoomed to fit best into the sheet, while keeping it's aspect
- * ration.
- *
- * @param w the new width to resize to
- * @param h the new height to resize to
- */
-void resize(int w, int h, AVFrame **image) {
-  AVFrame *stretched, *resized;
-  int ww;
-  int hh;
-  float wRat = (float)w / (*image)->width;
-  float hRat = (float)h / (*image)->height;
-
-  verboseLog(VERBOSE_NORMAL, "resizing %dx%d -> %dx%d\n", (*image)->width,
-             (*image)->height, w, h);
-
-  if (wRat < hRat) { // horizontally more shrinking/less enlarging is needed:
-                     // fill width fully, adjust height
-    ww = w;
-    hh = (*image)->height * w / (*image)->width;
-  } else if (hRat < wRat) {
-    ww = (*image)->width * h / (*image)->height;
-    hh = h;
-  } else { // wRat == hRat
-    ww = w;
-    hh = h;
-  }
-  initImage(&stretched, ww, hh, (*image)->format, true);
-  stretchTo(*image, stretched);
-
-  // Check if any centering needs to be done, otherwise make a new
-  // copy, center and return that.  Check for the stretched
-  // width/height to be the same rather than comparing the ratio, as
-  // it is possible that the ratios are just off enough that they
-  // generate the same width/height.
-  if ((ww == w) && (hh = h)) {
-    // don't create one more buffer if the size is the same.
-    resized = stretched;
-  } else {
-    initImage(&resized, w, h, (*image)->format, true);
-    centerImage(stretched, 0, 0, w, h, resized);
-    av_frame_free(&stretched);
-  }
-  replaceImage(image, &resized);
 }
 
 /* --- mask-detection ----------------------------------------------------- */
@@ -353,7 +271,6 @@ void applyWipes(const Mask *area, int areaCount, AVFrame *image) {
  */
 void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
                 const Mask mask) {
-  AVFrame *newimage;
   const Rectangle area = maskToRectangle(mask);
   const RectangleSize size = size_of_rectangle(area);
   const Rectangle full_image = clip_rectangle(image, RECT_FULL_IMAGE);
@@ -368,7 +285,8 @@ void centerMask(AVFrame *image, const int center[COORDINATES_COUNT],
                area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
                area.vertex[1].y, center[X], center[Y],
                target.x - area.vertex[0].x, target.y - area.vertex[0].y);
-    initImage(&newimage, size.width, size.height, image->format, false);
+    AVFrame *newimage = create_image(size, image->format, false, PIXEL_WHITE,
+                                     absBlackThreshold);
     copy_rectangle(image, newimage, area, POINT_ORIGIN, absBlackThreshold);
     wipe_rectangle(image, area, sheetBackgroundPixel, absBlackThreshold);
     copy_rectangle(newimage, image, RECT_FULL_IMAGE, target, absBlackThreshold);
@@ -415,8 +333,8 @@ void alignMask(const Mask mask, const Mask outside, AVFrame *image) {
              inside_area.vertex[1].x, inside_area.vertex[1].y, target.x,
              target.y, target.x - inside_area.vertex[0].x,
              target.y - inside_area.vertex[0].y);
-  initImage(&newimage, inside_size.width, inside_size.height, image->format,
-            true);
+  newimage = create_image(inside_size, image->format, true,
+                          sheetBackgroundPixel, absBlackThreshold);
   copy_rectangle(image, newimage, inside_area, POINT_ORIGIN, absBlackThreshold);
   wipe_rectangle(image, inside_area, sheetBackgroundPixel, absBlackThreshold);
   copy_rectangle(newimage, image, RECT_FULL_IMAGE, target, absBlackThreshold);
