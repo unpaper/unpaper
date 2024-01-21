@@ -26,7 +26,6 @@
 #include "imageprocess/pixel.h"
 #include "options.h"
 #include "parse.h"
-#include "tools.h"
 #include "unpaper.h"
 #include "version.h"
 
@@ -1202,15 +1201,17 @@ int main(int argc, char *argv[]) {
         // place image into sheet buffer
         // allocate sheet-buffer if not done yet
         if ((sheet == NULL) && (w != -1) && (h != -1)) {
-          initImage(&sheet, w, h, AV_PIX_FMT_RGB24, true);
+          sheet = create_image((RectangleSize){w, h}, AV_PIX_FMT_RGB24, true,
+                               sheetBackgroundPixel, absBlackThreshold);
         }
         if (page != NULL) {
           saveDebug("_page%d.pnm", inputNr - options.inputCount + j, page);
           saveDebug("_before_center_page%d.pnm",
                     inputNr - options.inputCount + j, sheet);
 
-          centerImage(page, (w * j / options.inputCount), 0,
-                      (w / options.inputCount), h, sheet);
+          center_image(page, sheet, (Point){(w * j / options.inputCount), 0},
+                       (RectangleSize){(w / options.inputCount), h},
+                       sheetBackgroundPixel, absBlackThreshold);
 
           saveDebug("_after_center_page%d.pnm",
                     inputNr - options.inputCount + j, sheet);
@@ -1231,7 +1232,8 @@ int main(int argc, char *argv[]) {
           errOutput("sheet size unknown, use at least one input file per "
                     "sheet, or force using --sheet-size.");
         } else {
-          initImage(&sheet, w, h, AV_PIX_FMT_RGB24, true);
+          sheet = create_image((RectangleSize){w, h}, AV_PIX_FMT_RGB24, true,
+                               sheetBackgroundPixel, absBlackThreshold);
         }
       }
 
@@ -1253,7 +1255,7 @@ int main(int argc, char *argv[]) {
                    preShift[HEIGHT]);
 
         shift_image(&sheet, (Delta){preShift[WIDTH], preShift[HEIGHT]},
-                    absBlackThreshold);
+                    sheetBackgroundPixel, absBlackThreshold);
       }
 
       // pre-masking
@@ -1555,7 +1557,8 @@ int main(int argc, char *argv[]) {
       h *= zoomFactor;
 
       saveDebug("_before-stretch%d.pnm", nr, sheet);
-      stretch(w, h, &sheet);
+      stretch_and_replace(&sheet, (RectangleSize){w, h}, interpolateType,
+                          absBlackThreshold);
       saveDebug("_after-stretch%d.pnm", nr, sheet);
 
       // size
@@ -1571,7 +1574,8 @@ int main(int argc, char *argv[]) {
           h = sheet->height;
         }
         saveDebug("_before-resize%d.pnm", nr, sheet);
-        resize(w, h, &sheet);
+        resize_and_replace(&sheet, (RectangleSize){w, h}, interpolateType,
+                           sheetBackgroundPixel, absBlackThreshold);
         saveDebug("_after-resize%d.pnm", nr, sheet);
       }
 
@@ -1787,13 +1791,15 @@ int main(int argc, char *argv[]) {
                      point[i][Y], rotation);
 
           if (rotation != 0.0) {
-            AVFrame *rect;
-            AVFrame *rectTarget;
-            initImage(&rect, (mask[i][RIGHT] - mask[i][LEFT] + 1),
-                      (mask[i][BOTTOM] - mask[i][TOP] + 1), sheet->format,
-                      false);
-            initImage(&rectTarget, rect->width, rect->height, sheet->format,
-                      true);
+            AVFrame *rect = create_image(
+                (RectangleSize){
+                    (mask[i][RIGHT] - mask[i][LEFT] + 1),
+                    (mask[i][BOTTOM] - mask[i][TOP] + 1),
+                },
+                sheet->format, false, sheetBackgroundPixel, absBlackThreshold);
+            AVFrame *rectTarget = create_image(
+                (RectangleSize){rect->width, rect->height}, sheet->format, true,
+                sheetBackgroundPixel, absBlackThreshold);
 
             // copy area to rotate into rSource
             copy_rectangle(sheet, rect,
@@ -1912,7 +1918,7 @@ int main(int argc, char *argv[]) {
                    postShift[HEIGHT]);
 
         shift_image(&sheet, (Delta){postShift[WIDTH], postShift[HEIGHT]},
-                    absBlackThreshold);
+                    sheetBackgroundPixel, absBlackThreshold);
       }
 
       // post-rotating
@@ -1936,7 +1942,8 @@ int main(int argc, char *argv[]) {
       w *= postZoomFactor;
       h *= postZoomFactor;
 
-      stretch(w, h, &sheet);
+      stretch_and_replace(&sheet, (RectangleSize){w, h}, interpolateType,
+                          absBlackThreshold);
 
       // post-size
       if ((postSize[WIDTH] != -1) || (postSize[HEIGHT] != -1)) {
@@ -1950,7 +1957,8 @@ int main(int argc, char *argv[]) {
         } else {
           h = sheet->height;
         }
-        resize(w, h, &sheet);
+        resize_and_replace(&sheet, (RectangleSize){w, h}, interpolateType,
+                           sheetBackgroundPixel, absBlackThreshold);
       }
 
       // --- write output file ---
@@ -1968,8 +1976,10 @@ int main(int argc, char *argv[]) {
 
         for (int j = 0; j < options.outputCount; j++) {
           // get pagebuffer
-          initImage(&page, sheet->width / options.outputCount, sheet->height,
-                    sheet->format, false);
+          page = create_image(
+              (RectangleSize){sheet->width / options.outputCount,
+                              sheet->height},
+              sheet->format, false, sheetBackgroundPixel, absBlackThreshold);
           copy_rectangle(
               sheet, page,
               (Rectangle){{{page->width * j, 0},
