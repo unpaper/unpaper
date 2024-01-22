@@ -44,8 +44,11 @@ def run_unpaper(
 ) -> subprocess.CompletedProcess:
     unpaper_path = os.getenv("TEST_UNPAPER_BINARY", "unpaper")
 
+    full_cmdline = [unpaper_path, "-v"] + list(cmdline)
+    print(f"Running {full_cmdline!r}")
+
     return subprocess.run(
-        [unpaper_path, "-v"] + list(cmdline),
+        full_cmdline,
         stdout=sys.stdout,
         stderr=sys.stderr,
         check=check,
@@ -307,8 +310,18 @@ def test_e3(imgsrc_path, goldendir_path, tmp_path):
 
     all_results = sorted(tmp_path.iterdir())
     assert len(all_results) == 2
-    assert compare_images(golden=(goldendir_path / "goldenE1-01.pbm"), result=result_path_1) < 0.05
-    assert compare_images(golden=(goldendir_path / "goldenE1-02.pbm"), result=result_path_2) < 0.05
+    assert (
+        compare_images(
+            golden=(goldendir_path / "goldenE1-01.pbm"), result=result_path_1
+        )
+        < 0.05
+    )
+    assert (
+        compare_images(
+            golden=(goldendir_path / "goldenE1-02.pbm"), result=result_path_2
+        )
+        < 0.05
+    )
 
 
 def test_f1(imgsrc_path, goldendir_path, tmp_path):
@@ -361,6 +374,7 @@ def test_f2(imgsrc_path, goldendir_path, tmp_path):
     assert all_results[0] == result_path
 
     assert compare_images(golden=golden_path, result=result_path) < 0.05
+
 
 def test_f3(imgsrc_path, goldendir_path, tmp_path):
     """[F3] Merging 2-page layout into single output page (with explicit input and output)."""
