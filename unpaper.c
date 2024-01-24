@@ -18,11 +18,11 @@
 
 #include <libavutil/avutil.h>
 
-#include "imageprocess.h"
 #include "imageprocess/blit.h"
 #include "imageprocess/deskew.h"
 #include "imageprocess/filters.h"
 #include "imageprocess/interpolate.h"
+#include "imageprocess/masks.h"
 #include "imageprocess/pixel.h"
 #include "options.h"
 #include "parse.h"
@@ -70,39 +70,10 @@ int stretchSize[DIRECTIONS_COUNT] = {-1, -1};
 int postStretchSize[DIRECTIONS_COUNT] = {-1, -1};
 float zoomFactor = 1.0;
 float postZoomFactor = 1.0;
-int pointCount = 0;
-int point[MAX_POINTS][COORDINATES_COUNT];
-int maskCount = 0;
-int mask[MAX_MASKS][EDGES_COUNT];
-int wipeCount = 0;
-int wipe[MAX_MASKS][EDGES_COUNT];
-int middleWipe[2] = {0, 0};
-int preWipeCount = 0;
-int preWipe[MAX_MASKS][EDGES_COUNT];
-int postWipeCount = 0;
-int postWipe[MAX_MASKS][EDGES_COUNT];
-int preBorder[EDGES_COUNT] = {0, 0, 0, 0};
-int postBorder[EDGES_COUNT] = {0, 0, 0, 0};
-int border[EDGES_COUNT] = {0, 0, 0, 0};
+Border preBorder = {0, 0, 0, 0};
+Border postBorder = {0, 0, 0, 0};
+Border border = {0, 0, 0, 0};
 bool maskValid[MAX_MASKS];
-int preMaskCount = 0;
-int preMask[MAX_MASKS][EDGES_COUNT];
-int maskScanDirections = (1 << HORIZONTAL);
-int maskScanSize[DIRECTIONS_COUNT] = {50, 50};
-int maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
-int maskScanStep[DIRECTIONS_COUNT] = {5, 5};
-float maskScanThreshold[DIRECTIONS_COUNT] = {0.1, 0.1};
-int maskScanMinimum[DIMENSIONS_COUNT] = {100, 100};
-int maskScanMaximum[DIMENSIONS_COUNT] = {-1, -1}; // set default later
-int maskColor = WHITE24;
-int borderScanDirections = (1 << VERTICAL);
-int borderScanSize[DIRECTIONS_COUNT] = {5, 5};
-int borderScanStep[DIRECTIONS_COUNT] = {5, 5};
-int borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
-int borderAlign = 0;                               // center
-int borderAlignMargin[DIRECTIONS_COUNT] = {0, 0};  // center
-int outsideBorderscanMask[MAX_PAGES][EDGES_COUNT]; // set by --layout
-int outsideBorderscanMaskCount = 0;
 float whiteThreshold = 0.9;
 float blackThreshold = 0.33;
 bool writeoutput = true;
@@ -231,6 +202,39 @@ int main(int argc, char *argv[]) {
   float deskewScanStep = 0.1;
   float deskewScanDeviation = 1.0;
   DeskewParameters deskewParams;
+  int maskScanDirections = (1 << HORIZONTAL);
+  int maskScanSize[DIRECTIONS_COUNT] = {50, 50};
+  int maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
+  int maskScanStep[DIRECTIONS_COUNT] = {5, 5};
+  float maskScanThreshold[DIRECTIONS_COUNT] = {0.1, 0.1};
+  int maskScanMinimum[DIMENSIONS_COUNT] = {100, 100};
+  int maskScanMaximum[DIMENSIONS_COUNT] = {-1, -1}; // set default later
+  MaskDetectionParameters maskDetectionParams;
+  MaskAlignmentParameters maskAlignmentParams;
+  int borderScanDirections = (1 << VERTICAL);
+  int borderScanSize[DIRECTIONS_COUNT] = {5, 5};
+  int borderScanStep[DIRECTIONS_COUNT] = {5, 5};
+  int borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
+  BorderScanParameters borderScanParams;
+  int borderAlign = 0;                              // center
+  int borderAlignMargin[DIRECTIONS_COUNT] = {0, 0}; // center
+  Pixel maskColorPixel;
+  size_t pointCount = 0;
+  Point points[MAX_POINTS];
+  size_t maskCount = 0;
+  Rectangle masks[MAX_MASKS];
+  size_t preMaskCount = 0;
+  Rectangle preMasks[MAX_MASKS];
+  int maskColor = WHITE24;
+  size_t wipeCount = 0;
+  Rectangle wipe[MAX_MASKS];
+  int middleWipe[2] = {0, 0};
+  size_t preWipeCount = 0;
+  Rectangle preWipe[MAX_MASKS];
+  size_t postWipeCount = 0;
+  Rectangle postWipe[MAX_MASKS];
+  Rectangle outsideBorderscanMask[MAX_PAGES]; // set by --layout
+  size_t outsideBorderscanMaskCount = 0;
   int blackfilterScanDirections = (1 << HORIZONTAL) | (1 << VERTICAL);
   int blackfilterScanSize[DIRECTIONS_COUNT] = {20, 20};
   int blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
@@ -539,11 +543,7 @@ int main(int argc, char *argv[]) {
         bottom = -1;
         sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
                &bottom); // x1, y1, x2, y2
-        preMask[preMaskCount][LEFT] = left;
-        preMask[preMaskCount][TOP] = top;
-        preMask[preMaskCount][RIGHT] = right;
-        preMask[preMaskCount][BOTTOM] = bottom;
-        preMaskCount++;
+        preMasks[preMaskCount++] = (Rectangle){{{left, top}, {right, bottom}}};
       } else {
         fprintf(stderr,
                 "maximum number of masks (%d) exceeded, ignoring mask %s\n",
@@ -580,9 +580,7 @@ int main(int argc, char *argv[]) {
         int x = -1;
         int y = -1;
         sscanf(optarg, "%d,%d", &x, &y);
-        point[pointCount][X] = x;
-        point[pointCount][Y] = y;
-        pointCount++;
+        points[pointCount++] = (Point){x, y};
       } else {
         fprintf(stderr,
                 "maximum number of scan points (%d) exceeded, ignoring scan "
@@ -599,10 +597,7 @@ int main(int argc, char *argv[]) {
         bottom = -1;
         sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
                &bottom); // x1, y1, x2, y2
-        mask[maskCount][LEFT] = left;
-        mask[maskCount][TOP] = top;
-        mask[maskCount][RIGHT] = right;
-        mask[maskCount][BOTTOM] = bottom;
+        masks[maskCount] = (Rectangle){{{left, top}, {right, bottom}}};
         maskValid[maskCount] = true;
         maskCount++;
       } else {
@@ -620,11 +615,7 @@ int main(int argc, char *argv[]) {
         bottom = -1;
         sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
                &bottom); // x1, y1, x2, y2
-        wipe[wipeCount][LEFT] = left;
-        wipe[wipeCount][TOP] = top;
-        wipe[wipeCount][RIGHT] = right;
-        wipe[wipeCount][BOTTOM] = bottom;
-        wipeCount++;
+        wipe[wipeCount++] = (Rectangle){{{left, top}, {right, bottom}}};
       } else {
         fprintf(stderr,
                 "maximum number of wipes (%d) exceeded, ignoring mask %s\n",
@@ -640,11 +631,7 @@ int main(int argc, char *argv[]) {
         bottom = -1;
         sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
                &bottom); // x1, y1, x2, y2
-        preWipe[preWipeCount][LEFT] = left;
-        preWipe[preWipeCount][TOP] = top;
-        preWipe[preWipeCount][RIGHT] = right;
-        preWipe[preWipeCount][BOTTOM] = bottom;
-        preWipeCount++;
+        preWipe[preWipeCount++] = (Rectangle){{{left, top}, {right, bottom}}};
       } else {
         fprintf(stderr,
                 "maximum number of pre-wipes (%d) exceeded, ignoring mask %s\n",
@@ -660,11 +647,7 @@ int main(int argc, char *argv[]) {
         bottom = -1;
         sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
                &bottom); // x1, y1, x2, y2
-        postWipe[postWipeCount][LEFT] = left;
-        postWipe[postWipeCount][TOP] = top;
-        postWipe[postWipeCount][RIGHT] = right;
-        postWipe[postWipeCount][BOTTOM] = bottom;
-        postWipeCount++;
+        postWipe[postWipeCount++] = (Rectangle){{{left, top}, {right, bottom}}};
       } else {
         fprintf(
             stderr,
@@ -678,18 +661,18 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'B':
-      sscanf(optarg, "%d,%d,%d,%d", &border[LEFT], &border[TOP], &border[RIGHT],
-             &border[BOTTOM]);
+      sscanf(optarg, "%d,%d,%d,%d", &border.left, &border.top, &border.right,
+             &border.bottom);
       break;
 
     case OPT_PRE_BORDER:
-      sscanf(optarg, "%d,%d,%d,%d", &preBorder[LEFT], &preBorder[TOP],
-             &preBorder[RIGHT], &preBorder[BOTTOM]);
+      sscanf(optarg, "%d,%d,%d,%d", &preBorder.left, &preBorder.top,
+             &preBorder.right, &preBorder.bottom);
       break;
 
     case OPT_POST_BORDER:
-      sscanf(optarg, "%d,%d,%d,%d", &postBorder[LEFT], &postBorder[TOP],
-             &postBorder[RIGHT], &postBorder[BOTTOM]);
+      sscanf(optarg, "%d,%d,%d,%d", &postBorder.left, &postBorder.top,
+             &postBorder.right, &postBorder.bottom);
       break;
 
     case OPT_NO_BLACK_FILTER:
@@ -1022,12 +1005,21 @@ int main(int argc, char *argv[]) {
 
   // Calculate the constant absolute values based on the relative parameters.
   sheetBackgroundPixel = pixelValueToPixel(sheetBackground);
+  maskColorPixel = pixelValueToPixel(maskColor);
   absBlackThreshold = WHITE * (1.0 - blackThreshold);
   absWhiteThreshold = WHITE * (whiteThreshold);
 
   deskewParams = validate_deskew_parameters(deskewScanRange, deskewScanStep,
                                             deskewScanDeviation, deskewScanSize,
                                             deskewScanDepth, deskewScanEdges);
+  maskDetectionParams = validate_mask_detection_parameters(
+      maskScanDirections, maskScanSize, maskScanDepth, maskScanStep,
+      maskScanThreshold, maskScanMinimum, maskScanMaximum);
+  maskAlignmentParams =
+      validate_mask_alignment_parameters(borderAlign, borderAlignMargin);
+  borderScanParams =
+      validate_border_scan_parameters(borderScanDirections, borderScanSize,
+                                      borderScanStep, borderScanThreshold);
   grayfilterParams = validate_grayfilter_parameters(
       grayfilterScanSize[HORIZONTAL], grayfilterScanSize[VERTICAL],
       grayfilterScanStep[HORIZONTAL], grayfilterScanStep[VERTICAL],
@@ -1262,7 +1254,8 @@ int main(int argc, char *argv[]) {
       if (preMaskCount > 0) {
         verboseLog(VERBOSE_NORMAL, "pre-masking\n ");
 
-        applyMasks(preMask, preMaskCount, sheet);
+        apply_masks(sheet, preMasks, preMaskCount, maskColorPixel,
+                    absBlackThreshold);
       }
 
       // --------------------------------------------------------------
@@ -1298,21 +1291,22 @@ int main(int argc, char *argv[]) {
         if (preWipeCount > 0) {
           printf("pre-wipe: ");
           for (int i = 0; i < preWipeCount; i++) {
-            printf("[%d,%d,%d,%d] ", preWipe[i][LEFT], preWipe[i][TOP],
-                   preWipe[i][RIGHT], preWipe[i][BOTTOM]);
+            printf("[%d,%d,%d,%d] ", preWipe[i].vertex[0].x,
+                   preWipe[i].vertex[0].y, preWipe[i].vertex[1].x,
+                   preWipe[i].vertex[1].y);
           }
           printf("\n");
         }
-        if (preBorder[LEFT] != 0 || preBorder[TOP] != 0 ||
-            preBorder[RIGHT] != 0 || preBorder[BOTTOM] != 0) {
-          printf("pre-border: [%d,%d,%d,%d]\n", preBorder[LEFT], preBorder[TOP],
-                 preBorder[RIGHT], preBorder[BOTTOM]);
+        if (memcmp(&preBorder, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
+          printf("pre-border: [%d,%d,%d,%d]\n", preBorder.left, preBorder.top,
+                 preBorder.right, preBorder.bottom);
         }
         if (preMaskCount > 0) {
           printf("pre-masking: ");
           for (int i = 0; i < preMaskCount; i++) {
-            printf("[%d,%d,%d,%d] ", preMask[i][LEFT], preMask[i][TOP],
-                   preMask[i][RIGHT], preMask[i][BOTTOM]);
+            printf("[%d,%d,%d,%d] ", preMasks[i].vertex[0].x,
+                   preMasks[i].vertex[0].y, preMasks[i].vertex[1].x,
+                   preMasks[i].vertex[1].y);
           }
           printf("\n");
         }
@@ -1395,7 +1389,7 @@ int main(int argc, char *argv[]) {
         if (options.noMaskScanMultiIndex.count != -1) {
           printf("mask points: ");
           for (int i = 0; i < pointCount; i++) {
-            printf("(%d,%d) ", point[i][X], point[i][Y]);
+            printf("(%d,%d) ", points[i].x, points[i].y);
           }
           printf("\n");
           printf("mask-scan-direction: %s\n",
@@ -1437,8 +1431,8 @@ int main(int argc, char *argv[]) {
           if (wipeCount > 0) {
             printf("wipe areas: ");
             for (int i = 0; i < wipeCount; i++) {
-              printf("[%d,%d,%d,%d] ", wipe[i][LEFT], wipe[i][TOP],
-                     wipe[i][RIGHT], wipe[i][BOTTOM]);
+              printf("[%d,%d,%d,%d] ", wipe[i].vertex[0].x, wipe[i].vertex[0].y,
+                     wipe[i].vertex[1].x, wipe[i].vertex[1].y);
             }
             printf("\n");
           }
@@ -1449,10 +1443,9 @@ int main(int argc, char *argv[]) {
           printf("middle-wipe (l,r): %d,%d\n", middleWipe[0], middleWipe[1]);
         }
         if (options.noBorderMultiIndex.count != -1) {
-          if (border[LEFT] != 0 || border[TOP] != 0 || border[RIGHT] != 0 ||
-              border[BOTTOM] != 0) {
-            printf("explicit border: [%d,%d,%d,%d]\n", border[LEFT],
-                   border[TOP], border[RIGHT], border[BOTTOM]);
+          if (memcmp(&border, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
+            printf("explicit border: [%d,%d,%d,%d]\n", border.left, border.top,
+                   border.right, border.bottom);
           }
         } else {
           printf("border DISABLED for all sheets.\n");
@@ -1480,15 +1473,15 @@ int main(int argc, char *argv[]) {
         if (postWipeCount > 0) {
           printf("post-wipe: ");
           for (int i = 0; i < postWipeCount; i++) {
-            printf("[%d,%d,%d,%d] ", postWipe[i][LEFT], postWipe[i][TOP],
-                   postWipe[i][RIGHT], postWipe[i][BOTTOM]);
+            printf("[%d,%d,%d,%d] ", postWipe[i].vertex[0].x,
+                   postWipe[i].vertex[0].y, postWipe[i].vertex[1].x,
+                   postWipe[i].vertex[1].y);
           }
           printf("\n");
         }
-        if (postBorder[LEFT] != 0 || postBorder[TOP] != 0 ||
-            postBorder[RIGHT] != 0 || postBorder[BOTTOM] != 0) {
-          printf("post-border: [%d,%d,%d,%d]\n", postBorder[LEFT],
-                 postBorder[TOP], postBorder[RIGHT], postBorder[BOTTOM]);
+        if (memcmp(&postBorder, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
+          printf("post-border: [%d,%d,%d,%d]\n", postBorder.left,
+                 postBorder.top, postBorder.right, postBorder.bottom);
         }
         if (postMirror != 0) {
           printf("post-mirror: %s\n", getDirections(postMirror));
@@ -1585,9 +1578,7 @@ int main(int argc, char *argv[]) {
       if (options.layout == LAYOUT_SINGLE) {
         // set middle of sheet as single starting point for mask detection
         if (pointCount == 0) { // no manual settings, use auto-values
-          point[pointCount][X] = sheet->width / 2;
-          point[pointCount][Y] = sheet->height / 2;
-          pointCount++;
+          points[pointCount++] = (Point){sheet->width / 2, sheet->height / 2};
         }
         if (maskScanMaximum[WIDTH] == -1) {
           maskScanMaximum[WIDTH] = sheet->width;
@@ -1609,11 +1600,8 @@ int main(int argc, char *argv[]) {
         // set single outside border to start scanning for final border-scan
         if (outsideBorderscanMaskCount ==
             0) { // no manual settings, use auto-values
-          outsideBorderscanMaskCount = 1;
-          outsideBorderscanMask[0][LEFT] = 0;
-          outsideBorderscanMask[0][RIGHT] = sheet->width - 1;
-          outsideBorderscanMask[0][TOP] = 0;
-          outsideBorderscanMask[0][BOTTOM] = sheet->height - 1;
+          outsideBorderscanMask[outsideBorderscanMaskCount++] =
+              clip_rectangle(sheet, RECT_FULL_IMAGE);
         }
 
         // LAYOUT_DOUBLE
@@ -1621,12 +1609,9 @@ int main(int argc, char *argv[]) {
         // set two middle of left/right side of sheet as starting points for
         // mask detection
         if (pointCount == 0) { // no manual settings, use auto-values
-          point[pointCount][X] = sheet->width / 4;
-          point[pointCount][Y] = sheet->height / 2;
-          pointCount++;
-          point[pointCount][X] = sheet->width - sheet->width / 4;
-          point[pointCount][Y] = sheet->height / 2;
-          pointCount++;
+          points[pointCount++] = (Point){sheet->width / 4, sheet->height / 2};
+          points[pointCount++] =
+              (Point){sheet->width - sheet->width / 4, sheet->height / 2};
         }
         if (maskScanMaximum[WIDTH] == -1) {
           maskScanMaximum[WIDTH] = sheet->width / 2;
@@ -1635,11 +1620,10 @@ int main(int argc, char *argv[]) {
           maskScanMaximum[HEIGHT] = sheet->height;
         }
         if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
-          wipe[wipeCount][LEFT] = sheet->width / 2 - middleWipe[0];
-          wipe[wipeCount][TOP] = 0;
-          wipe[wipeCount][RIGHT] = sheet->width / 2 + middleWipe[1];
-          wipe[wipeCount][BOTTOM] = sheet->height - 1;
-          wipeCount++;
+          wipe[wipeCount++] = (Rectangle){{
+              {sheet->width / 2 - middleWipe[0], 0},
+              {sheet->width / 2 + middleWipe[1], sheet->height - 1},
+          }};
         }
         // avoid inner half of each page to be blackfilter-detectable
         if (blackfilterExcludeCount ==
@@ -1663,15 +1647,10 @@ int main(int argc, char *argv[]) {
         // set two outside borders to start scanning for final border-scan
         if (outsideBorderscanMaskCount ==
             0) { // no manual settings, use auto-values
-          outsideBorderscanMaskCount = 2;
-          outsideBorderscanMask[0][LEFT] = 0;
-          outsideBorderscanMask[0][RIGHT] = sheet->width / 2;
-          outsideBorderscanMask[0][TOP] = 0;
-          outsideBorderscanMask[0][BOTTOM] = sheet->height - 1;
-          outsideBorderscanMask[1][LEFT] = sheet->width / 2;
-          outsideBorderscanMask[1][RIGHT] = sheet->width - 1;
-          outsideBorderscanMask[1][TOP] = 0;
-          outsideBorderscanMask[1][BOTTOM] = sheet->height - 1;
+          outsideBorderscanMask[outsideBorderscanMaskCount++] = (Rectangle){
+              {POINT_ORIGIN, {sheet->width / 2, sheet->height - 1}}};
+          outsideBorderscanMask[outsideBorderscanMaskCount++] = (Rectangle){
+              {{sheet->width / 2, 0}, {sheet->width - 1, sheet->height - 1}}};
         }
       }
       // if maskScanMaximum still unset (no --layout specified), set to full
@@ -1685,13 +1664,14 @@ int main(int argc, char *argv[]) {
 
       // pre-wipe
       if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
-        applyWipes(preWipe, preWipeCount, sheet);
+        apply_wipes(sheet, preWipe, preWipeCount, maskColorPixel,
+                    absBlackThreshold);
       }
 
       // pre-border
       if (!isExcluded(nr, options.noBorderMultiIndex,
                       options.ignoreMultiIndex)) {
-        applyBorder(preBorder, sheet);
+        apply_border(sheet, preBorder, maskColorPixel, absBlackThreshold);
       }
 
       // black area filter
@@ -1739,7 +1719,8 @@ int main(int argc, char *argv[]) {
       // mask-detection
       if (!isExcluded(nr, options.noMaskScanMultiIndex,
                       options.ignoreMultiIndex)) {
-        detectMasks(sheet);
+        detect_masks(sheet, maskDetectionParams, points, pointCount, maskValid,
+                     masks);
       } else {
         verboseLog(VERBOSE_MORE, "+ mask-scan DISABLED for sheet %d\n", nr);
       }
@@ -1747,7 +1728,7 @@ int main(int argc, char *argv[]) {
       // permanently apply masks
       if (maskCount > 0) {
         saveDebug("_before-masking%d.pnm", nr, sheet);
-        applyMasks(mask, maskCount, sheet);
+        apply_masks(sheet, masks, maskCount, maskColorPixel, absBlackThreshold);
         saveDebug("_after-masking%d.pnm", nr, sheet);
       }
 
@@ -1775,7 +1756,8 @@ int main(int argc, char *argv[]) {
         // masking and grayfilter
         if (!isExcluded(nr, options.noMaskScanMultiIndex,
                         options.ignoreMultiIndex)) {
-          detectMasks(sheet);
+          maskCount = detect_masks(sheet, maskDetectionParams, points,
+                                   pointCount, maskValid, masks);
         } else {
           verboseLog(VERBOSE_MORE, "(mask-scan before deskewing disabled)\n");
         }
@@ -1783,30 +1765,23 @@ int main(int argc, char *argv[]) {
         // auto-deskew each mask
         for (int i = 0; i < maskCount; i++) {
           saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
-          float rotation =
-              detect_rotation(sheet, maskToRectangle(mask[i]), deskewParams);
+          float rotation = detect_rotation(sheet, masks[i], deskewParams);
           saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
 
-          verboseLog(VERBOSE_NORMAL, "rotate (%d,%d): %f\n", point[i][X],
-                     point[i][Y], rotation);
+          verboseLog(VERBOSE_NORMAL, "rotate (%d,%d): %f\n", points[i].x,
+                     points[i].y, rotation);
 
           if (rotation != 0.0) {
-            AVFrame *rect = create_image(
-                (RectangleSize){
-                    (mask[i][RIGHT] - mask[i][LEFT] + 1),
-                    (mask[i][BOTTOM] - mask[i][TOP] + 1),
-                },
-                sheet->format, false, sheetBackgroundPixel, absBlackThreshold);
+            AVFrame *rect =
+                create_image(size_of_rectangle(masks[i]), sheet->format, false,
+                             sheetBackgroundPixel, absBlackThreshold);
             AVFrame *rectTarget = create_image(
                 (RectangleSize){rect->width, rect->height}, sheet->format, true,
                 sheetBackgroundPixel, absBlackThreshold);
 
             // copy area to rotate into rSource
             copy_rectangle(sheet, rect,
-                           (Rectangle){{
-                               {mask[i][LEFT], mask[i][TOP]},
-                               POINT_INFINITY, // let it clip
-                           }},
+                           (Rectangle){{masks[i].vertex[0], POINT_INFINITY}},
                            POINT_ORIGIN, absBlackThreshold);
 
             // rotate
@@ -1815,8 +1790,7 @@ int main(int argc, char *argv[]) {
 
             // copy result back into whole image
             copy_rectangle(rectTarget, sheet, RECT_FULL_IMAGE,
-                           (Point){mask[i][LEFT], mask[i][TOP]},
-                           absBlackThreshold);
+                           masks[i].vertex[0], absBlackThreshold);
 
             av_frame_free(&rect);
             av_frame_free(&rectTarget);
@@ -1836,7 +1810,8 @@ int main(int argc, char *argv[]) {
         // perform auto-masking again to get more precise masks after rotation
         if (!isExcluded(nr, options.noMaskScanMultiIndex,
                         options.ignoreMultiIndex)) {
-          detectMasks(sheet);
+          maskCount = detect_masks(sheet, maskDetectionParams, points,
+                                   pointCount, maskValid, masks);
         } else {
           verboseLog(VERBOSE_MORE, "(mask-scan before centering disabled)\n");
         }
@@ -1844,7 +1819,8 @@ int main(int argc, char *argv[]) {
         saveDebug("_before-centering%d.pnm", nr, sheet);
         // center masks on the sheet, according to their page position
         for (int i = 0; i < maskCount; i++) {
-          centerMask(sheet, point[i], mask[i]);
+          center_mask(sheet, points[i], masks[i], sheetBackgroundPixel,
+                      absBlackThreshold);
         }
         saveDebug("_after-centering%d.pnm", nr, sheet);
       } else {
@@ -1854,7 +1830,7 @@ int main(int argc, char *argv[]) {
 
       // explicit wipe
       if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
-        applyWipes(wipe, wipeCount, sheet);
+        apply_wipes(sheet, wipe, wipeCount, maskColorPixel, absBlackThreshold);
       } else {
         verboseLog(VERBOSE_MORE, "+ wipe DISABLED for sheet %d\n", nr);
       }
@@ -1862,7 +1838,7 @@ int main(int argc, char *argv[]) {
       // explicit border
       if (!isExcluded(nr, options.noBorderMultiIndex,
                       options.ignoreMultiIndex)) {
-        applyBorder(border, sheet);
+        apply_border(sheet, border, maskColorPixel, absBlackThreshold);
       } else {
         verboseLog(VERBOSE_MORE, "+ border DISABLED for sheet %d\n", nr);
       }
@@ -1870,19 +1846,23 @@ int main(int argc, char *argv[]) {
       // border-detection
       if (!isExcluded(nr, options.noBorderScanMultiIndex,
                       options.ignoreMultiIndex)) {
-        int autoborder[MAX_MASKS][EDGES_COUNT];
-        int autoborderMask[MAX_MASKS][EDGES_COUNT];
+        Rectangle autoborderMask[outsideBorderscanMaskCount];
         saveDebug("_before-border%d.pnm", nr, sheet);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
-          detectBorder(autoborder[i], outsideBorderscanMask[i], sheet);
-          borderToMask(autoborder[i], autoborderMask[i], sheet);
+          autoborderMask[i] =
+              border_to_mask(sheet, detect_border(sheet, borderScanParams,
+                                                  outsideBorderscanMask[i],
+                                                  absBlackThreshold));
         }
-        applyMasks(autoborderMask, outsideBorderscanMaskCount, sheet);
+        apply_masks(sheet, autoborderMask, outsideBorderscanMaskCount,
+                    maskColorPixel, absBlackThreshold);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
           // border-centering
           if (!isExcluded(nr, options.noBorderAlignMultiIndex,
                           options.ignoreMultiIndex)) {
-            alignMask(autoborderMask[i], outsideBorderscanMask[i], sheet);
+            align_mask(sheet, autoborderMask[i], outsideBorderscanMask[i],
+                       maskAlignmentParams, sheetBackgroundPixel,
+                       absBlackThreshold);
           } else {
             verboseLog(VERBOSE_MORE,
                        "+ border-centering DISABLED for sheet %d\n", nr);
@@ -1895,13 +1875,14 @@ int main(int argc, char *argv[]) {
 
       // post-wipe
       if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
-        applyWipes(postWipe, postWipeCount, sheet);
+        apply_wipes(sheet, postWipe, postWipeCount, maskColorPixel,
+                    absBlackThreshold);
       }
 
       // post-border
       if (!isExcluded(nr, options.noBorderMultiIndex,
                       options.ignoreMultiIndex)) {
-        applyBorder(postBorder, sheet);
+        apply_border(sheet, postBorder, maskColorPixel, absBlackThreshold);
       }
 
       // post-mirroring

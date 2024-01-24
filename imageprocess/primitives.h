@@ -73,6 +73,8 @@ Rectangle shift_rectangle(Rectangle rect, Delta d);
 uint64_t count_pixels(Rectangle area);
 
 bool point_in_rectangle(Point p, Rectangle input_area);
+bool point_in_rectangles_any(Point p, size_t count,
+                             const Rectangle rectangles[]);
 bool rectangle_in_rectangle(Rectangle inner, Rectangle outer);
 bool rectangles_overlap(Rectangle first_input, Rectangle second_input);
 bool rectangle_overlap_any(Rectangle first_input, size_t count,

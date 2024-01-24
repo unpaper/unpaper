@@ -44,7 +44,7 @@ def run_unpaper(
 ) -> subprocess.CompletedProcess:
     unpaper_path = os.getenv("TEST_UNPAPER_BINARY", "unpaper")
 
-    full_cmdline = [unpaper_path, "-v"] + list(cmdline)
+    full_cmdline = [unpaper_path, "-vvv"] + list(cmdline)
     print(f"Running {full_cmdline!r}")
 
     return subprocess.run(

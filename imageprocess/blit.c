@@ -51,6 +51,10 @@ uint8_t inverse_brightness_rect(AVFrame *image, Rectangle input_area) {
   Rectangle area = clip_rectangle(image, input_area);
   uint64_t count = count_pixels(area);
 
+  if (count == 0) {
+    return 0;
+  }
+
   scan_rectangle(area) {
     grayscale += get_pixel_grayscale(image, (Point){x, y});
   }
@@ -67,6 +71,10 @@ uint8_t inverse_lightness_rect(AVFrame *image, Rectangle input_area) {
   Rectangle area = clip_rectangle(image, input_area);
   uint64_t count = count_pixels(area);
 
+  if (count == 0) {
+    return 0;
+  }
+
   scan_rectangle(area) {
     lightness += get_pixel_lightness(image, (Point){x, y});
   }
@@ -82,6 +90,10 @@ uint8_t darkness_rect(AVFrame *image, Rectangle input_area) {
 
   Rectangle area = clip_rectangle(image, input_area);
   uint64_t count = count_pixels(area);
+
+  if (count == 0) {
+    return 0;
+  }
 
   scan_rectangle(area) {
     darkness += get_pixel_darkness_inverse(image, (Point){x, y});
