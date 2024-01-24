@@ -38,8 +38,8 @@ BlackfilterParameters validate_blackfilter_parameters(
               .vertical = scan_depth_v,
           },
 
-      .scan_horizontal = !!(scan_directions & HORIZONTAL),
-      .scan_vertical = !!(scan_directions & VERTICAL),
+      .scan_horizontal = !!(scan_directions & 1 << HORIZONTAL),
+      .scan_vertical = !!(scan_directions & 1 << VERTICAL),
 
       .abs_threshold = UINT8_MAX * threshold,
       .intensity = intensity,
