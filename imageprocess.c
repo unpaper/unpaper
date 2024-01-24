@@ -59,8 +59,8 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY,
     const int halfDepth = maskScanDepth / 2;
     left = startX - half;
     top = startY - halfDepth;
-    right = startX + half;
-    bottom = startY + halfDepth;
+    right = startX + half - 1;
+    bottom = startY + halfDepth - 1;
   } else { // horizontal border is to be detected, vertical shifting of scan-bar
     if (maskScanDepth == -1) {
       maskScanDepth = image->width;
@@ -68,8 +68,8 @@ static int detectEdge(int startX, int startY, int shiftX, int shiftY,
     const int halfDepth = maskScanDepth / 2;
     left = startX - halfDepth;
     top = startY - half;
-    right = startX + halfDepth;
-    bottom = startY + half;
+    right = startX + halfDepth - 1;
+    bottom = startY + half - 1;
   }
 
   while (true) { // !
