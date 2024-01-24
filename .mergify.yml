@@ -8,12 +8,7 @@ pull_request_rules:
       - or:
         - "#approved-reviews-by>=1"
         - "author=Flameeyes"
-      - "status-success=Build and test on Linux (gcc, -Dwerror=true)"
-      - "status-success=Build and test on Linux (gcc, --buildtype=debugoptimized -Dwerror=true)"
-      - "status-success=Build and test on Linux (gcc, --buildtype=debugoptimized -Dwerror=true -Db_lto=true)"
-      - "status-success=Build and test on Linux (clang, -Dwerror=true)"
-      - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized -Dwerror=true)"
-      - "status-success=Build and test on Linux (clang, --buildtype=debugoptimized -Dwerror=true -Db_lto=true)"
+      - "status-success=Build And Test Results"
       - "status-success=pre-commit"
     actions:
       merge:
