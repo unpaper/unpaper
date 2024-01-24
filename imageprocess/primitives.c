@@ -95,6 +95,17 @@ bool point_in_rectangle(Point p, Rectangle input_area) {
           p.y >= area.vertex[0].y && p.y <= area.vertex[1].y);
 }
 
+bool point_in_rectangles_any(Point p, size_t count,
+                             const Rectangle rectangles[]) {
+  for (size_t n = 0; n < count; n++) {
+    if (point_in_rectangle(p, rectangles[n])) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool rectangle_in_rectangle(Rectangle inner, Rectangle outer) {
   return point_in_rectangle(inner.vertex[0], outer) &&
          point_in_rectangle(inner.vertex[1], outer);

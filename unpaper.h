@@ -25,69 +25,8 @@
 
 /* --- global variable ---------------------------------------------------- */
 
-extern Interpolation interpolateType;
-
 extern Pixel sheetBackgroundPixel;
 extern unsigned int absBlackThreshold;
-extern unsigned int absWhiteThreshold;
-extern unsigned int absBlackfilterScanThreshold;
-
-extern int sheetSize[DIMENSIONS_COUNT];
-extern int sheetBackground;
-extern int preRotate;
-extern int postRotate;
-extern int preMirror;
-extern int postMirror;
-extern int preShift[DIRECTIONS_COUNT];
-extern int postShift[DIRECTIONS_COUNT];
-extern int size[DIRECTIONS_COUNT];
-extern int postSize[DIRECTIONS_COUNT];
-extern int stretchSize[DIRECTIONS_COUNT];
-extern int postStretchSize[DIRECTIONS_COUNT];
-extern float zoomFactor;
-extern float postZoomFactor;
-extern int pointCount;
-extern int point[MAX_POINTS][COORDINATES_COUNT];
-extern int maskCount;
-extern int mask[MAX_MASKS][EDGES_COUNT];
-extern int wipeCount;
-extern int wipe[MAX_MASKS][EDGES_COUNT];
-extern int middleWipe[2];
-extern int preWipeCount;
-extern int preWipe[MAX_MASKS][EDGES_COUNT];
-extern int postWipeCount;
-extern int postWipe[MAX_MASKS][EDGES_COUNT];
-extern int preBorder[EDGES_COUNT];
-extern int postBorder[EDGES_COUNT];
-extern int border[EDGES_COUNT];
-extern bool maskValid[MAX_MASKS];
-extern int preMaskCount;
-extern int preMask[MAX_MASKS][EDGES_COUNT];
-extern int maskScanDirections;
-extern int maskScanSize[DIRECTIONS_COUNT];
-extern int maskScanDepth[DIRECTIONS_COUNT];
-extern int maskScanStep[DIRECTIONS_COUNT];
-extern float maskScanThreshold[DIRECTIONS_COUNT];
-extern int maskScanMinimum[DIMENSIONS_COUNT];
-extern int maskScanMaximum[DIMENSIONS_COUNT]; // set default later
-extern int maskColor;
-extern int borderScanDirections;
-extern int borderScanSize[DIRECTIONS_COUNT];
-extern int borderScanStep[DIRECTIONS_COUNT];
-extern int borderScanThreshold[DIRECTIONS_COUNT];
-extern int borderAlign;                                   // center
-extern int borderAlignMargin[DIRECTIONS_COUNT];           // center
-extern int outsideBorderscanMask[MAX_PAGES][EDGES_COUNT]; // set by --layout
-extern int outsideBorderscanMaskCount;
-extern float whiteThreshold;
-extern float blackThreshold;
-extern bool writeoutput;
-extern bool multisheets;
-
-extern int autoborder[MAX_MASKS][EDGES_COUNT];
-extern int autoborderMask[MAX_MASKS][EDGES_COUNT];
-extern bool overwrite;
-extern int dpi;
 
 /* --- tool function for file handling ------------------------------------ */
 
