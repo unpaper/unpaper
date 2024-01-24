@@ -28,9 +28,7 @@ jobs:
     - uses: actions/setup-python@v3
       with:
         python-version: '3.x'
-    - name: Meson dependencies
-      run: pip install 'meson >= 0.57' ninja
-    - name: Unpaper dependencies
+    - name: Dependencies
       run: |
         sudo apt update
         sudo apt install libavcodec-dev libavutil-dev libavformat-dev python3
