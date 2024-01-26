@@ -90,20 +90,23 @@ void loadImage(const char *filename, Image *image, Pixel sheet_background,
     errOutput("error while receiving frame from decoder: %s", errbuff);
   }
 
+  Rectangle area = rectangle_from_size(
+      POINT_ORIGIN,
+      (RectangleSize){.width = frame->width, .height = frame->height});
+
   switch (frame->format) {
   case AV_PIX_FMT_Y400A: // 8-bit grayscale PNG
   case AV_PIX_FMT_GRAY8:
   case AV_PIX_FMT_RGB24:
   case AV_PIX_FMT_MONOBLACK:
   case AV_PIX_FMT_MONOWHITE:
+    *image = create_image(size_of_rectangle(area), frame->format, false,
+                          sheet_background, abs_black_threshold);
+    av_frame_free(&image->frame);
     image->frame = av_frame_clone(frame);
     break;
 
   case AV_PIX_FMT_PAL8: {
-    Rectangle area = rectangle_from_size(
-        POINT_ORIGIN,
-        (RectangleSize){.width = frame->width, .height = frame->height});
-
     *image = create_image(size_of_rectangle(area), AV_PIX_FMT_RGB24, false,
                           sheet_background, abs_black_threshold);
 
