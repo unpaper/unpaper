@@ -8,14 +8,22 @@
 
 typedef struct AVFrame AVFrame;
 
-typedef struct {
+typedef struct Image Image;
+
+typedef Pixel (*get_pixel_cb)(struct Image image, Point coords);
+typedef void (*set_pixel_cb)(struct Image image, Point coords, Pixel pixel);
+
+typedef struct Image {
   AVFrame *frame;
   Pixel background;
   uint8_t abs_black_threshold;
+
+  get_pixel_cb _get_pixel;
+  set_pixel_cb _set_pixel;
 } Image;
 
 #define EMPTY_IMAGE                                                            \
-  (Image) { NULL, PIXEL_WHITE, 0 }
+  (Image) { .frame = NULL }
 
 Image create_image(RectangleSize size, int pixel_format, bool fill,
                    Pixel sheet_background, uint8_t abs_black_threshold);

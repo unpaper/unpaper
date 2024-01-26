@@ -10,6 +10,7 @@
 #include "imageprocess/image.h"
 #include "imageprocess/primitives.h"
 
+uint8_t pixel_grayscale(Pixel pixel);
 Pixel pixel_from_value(uint32_t value);
 int compare_pixel(Pixel a, Pixel b);
 Pixel get_pixel(Image image, Point coords);
