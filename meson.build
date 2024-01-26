@@ -37,6 +37,7 @@ unpaper = executable(
     'imageprocess/interpolate.c',
     'imageprocess/fill.c',
     'imageprocess/filters.c',
+    'imageprocess/image.c',
     'imageprocess/masks.c',
     'imageprocess/pixel.c',
     'imageprocess/primitives.c',

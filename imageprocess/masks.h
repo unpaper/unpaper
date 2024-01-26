@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include <libavutil/frame.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "constants.h"
+#include "imageprocess/image.h"
 #include "imageprocess/primitives.h"
 
 typedef struct {
@@ -48,11 +48,11 @@ validate_mask_detection_parameters(int scan_directions,
                                    const int scan_mininum[DIMENSIONS_COUNT],
                                    const int scan_maximum[DIMENSIONS_COUNT]);
 
-size_t detect_masks(AVFrame *image, MaskDetectionParameters params,
+size_t detect_masks(Image image, MaskDetectionParameters params,
                     const Point points[], size_t points_count,
                     bool mask_valid[], Rectangle masks[]);
 
-void center_mask(AVFrame *image, const Point center, const Rectangle area,
+void center_mask(Image image, const Point center, const Rectangle area,
                  Pixel sheet_background, uint8_t abs_black_threshold);
 
 typedef struct {
@@ -73,14 +73,14 @@ MaskAlignmentParameters
 validate_mask_alignment_parameters(int border_align,
                                    const int margin[DIRECTIONS_COUNT]);
 
-void align_mask(AVFrame *image, const Rectangle inside_area,
+void align_mask(Image image, const Rectangle inside_area,
                 const Rectangle outside, MaskAlignmentParameters params,
                 Pixel sheet_background, uint8_t abs_black_threshold);
 
-void apply_masks(AVFrame *image, const Rectangle masks[], size_t masks_count,
+void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
                  Pixel color, uint8_t abs_black_threshold);
 
-void apply_wipes(AVFrame *image, Rectangle wipes[], size_t wipes_count,
+void apply_wipes(Image image, Rectangle wipes[], size_t wipes_count,
                  Pixel color, uint8_t abs_black_threshold);
 
 typedef struct {
@@ -92,8 +92,8 @@ typedef struct {
 
 static const Border BORDER_NULL = {0, 0, 0, 0};
 
-Rectangle border_to_mask(AVFrame *image, const Border border);
-void apply_border(AVFrame *image, const Border border, Pixel color,
+Rectangle border_to_mask(Image image, const Border border);
+void apply_border(Image image, const Border border, Pixel color,
                   uint8_t abs_black_threshold);
 
 typedef struct {
@@ -119,5 +119,5 @@ validate_border_scan_parameters(int scan_directions,
                                 const int scan_step[DIRECTIONS_COUNT],
                                 const int scan_threshold[DIRECTIONS_COUNT]);
 
-Border detect_border(AVFrame *image, BorderScanParameters params,
+Border detect_border(Image image, BorderScanParameters params,
                      const Rectangle outside_mask, uint8_t abs_black_threshold);

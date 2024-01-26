@@ -21,6 +21,7 @@
 #include "imageprocess/blit.h"
 #include "imageprocess/deskew.h"
 #include "imageprocess/filters.h"
+#include "imageprocess/image.h"
 #include "imageprocess/interpolate.h"
 #include "imageprocess/masks.h"
 #include "imageprocess/pixel.h"
@@ -1003,8 +1004,8 @@ int main(int argc, char *argv[]) {
   int h = -1;
   int previousWidth = -1;
   int previousHeight = -1;
-  AVFrame *sheet = NULL;
-  AVFrame *page = NULL;
+  Image sheet = EMPTY_IMAGE;
+  Image page = EMPTY_IMAGE;
 
   for (int nr = options.start_sheet;
        (options.end_sheet == -1) || (nr <= options.end_sheet); nr++) {
@@ -1126,8 +1127,8 @@ int main(int argc, char *argv[]) {
           saveDebug("_loaded_%d.pnm", inputNr - options.input_count + j, page,
                     sheetBackgroundPixel, absBlackThreshold);
 
-          if (outputPixFmt == -1 && page != NULL) {
-            outputPixFmt = page->format;
+          if (outputPixFmt == -1 && page.frame != NULL) {
+            outputPixFmt = page.frame->format;
           }
 
           // pre-rotate
@@ -1143,27 +1144,27 @@ int main(int argc, char *argv[]) {
             if (sheetSize[WIDTH] != -1) {
               w = sheetSize[WIDTH];
             } else {
-              w = page->width * options.input_count;
+              w = page.frame->width * options.input_count;
             }
           }
           if (h == -1) {
             if (sheetSize[HEIGHT] != -1) {
               h = sheetSize[HEIGHT];
             } else {
-              h = page->height;
+              h = page.frame->height;
             }
           }
         } else { // inputFiles[j] == NULL
-          page = NULL;
+          page = EMPTY_IMAGE;
         }
 
         // place image into sheet buffer
         // allocate sheet-buffer if not done yet
-        if ((sheet == NULL) && (w != -1) && (h != -1)) {
+        if ((sheet.frame == NULL) && (w != -1) && (h != -1)) {
           sheet = create_image((RectangleSize){w, h}, AV_PIX_FMT_RGB24, true,
                                sheetBackgroundPixel, absBlackThreshold);
         }
-        if (page != NULL) {
+        if (page.frame != NULL) {
           saveDebug("_page%d.pnm", inputNr - options.input_count + j, page,
                     sheetBackgroundPixel, absBlackThreshold);
           saveDebug("_before_center_page%d.pnm",
@@ -1182,7 +1183,7 @@ int main(int argc, char *argv[]) {
 
       // the only case that buffer is not yet initialized is if all blank pages
       // have been inserted
-      if (sheet == NULL) {
+      if (sheet.frame == NULL) {
         // last chance: try to get previous (unstretched/not zoomed) sheet size
         w = previousWidth;
         h = previousHeight;
@@ -1489,8 +1490,8 @@ int main(int argc, char *argv[]) {
           VERBOSE_NORMAL, "output-file%s for sheet %d: %s\n",
           pluralS(options.output_count), nr,
           implode(s1, (const char **)outputFileNames, options.output_count));
-      verboseLog(VERBOSE_NORMAL, "sheet size: %dx%d\n", sheet->width,
-                 sheet->height);
+      verboseLog(VERBOSE_NORMAL, "sheet size: %dx%d\n", sheet.frame->width,
+                 sheet.frame->height);
       verboseLog(VERBOSE_NORMAL, "...\n");
 
       // -------------------------------------------------------
@@ -1501,12 +1502,12 @@ int main(int argc, char *argv[]) {
       if (stretchSize[WIDTH] != -1) {
         w = stretchSize[WIDTH];
       } else {
-        w = sheet->width;
+        w = sheet.frame->width;
       }
       if (stretchSize[HEIGHT] != -1) {
         h = stretchSize[HEIGHT];
       } else {
-        h = sheet->height;
+        h = sheet.frame->height;
       }
 
       w *= zoomFactor;
@@ -1524,12 +1525,12 @@ int main(int argc, char *argv[]) {
         if (size[WIDTH] != -1) {
           w = size[WIDTH];
         } else {
-          w = sheet->width;
+          w = sheet.frame->width;
         }
         if (size[HEIGHT] != -1) {
           h = size[HEIGHT];
         } else {
-          h = sheet->height;
+          h = sheet.frame->height;
         }
         saveDebug("_before-resize%d.pnm", nr, sheet, sheetBackgroundPixel,
                   absBlackThreshold);
@@ -1545,13 +1546,14 @@ int main(int argc, char *argv[]) {
       if (options.layout == LAYOUT_SINGLE) {
         // set middle of sheet as single starting point for mask detection
         if (pointCount == 0) { // no manual settings, use auto-values
-          points[pointCount++] = (Point){sheet->width / 2, sheet->height / 2};
+          points[pointCount++] =
+              (Point){sheet.frame->width / 2, sheet.frame->height / 2};
         }
         if (maskScanMaximum[WIDTH] == -1) {
-          maskScanMaximum[WIDTH] = sheet->width;
+          maskScanMaximum[WIDTH] = sheet.frame->width;
         }
         if (maskScanMaximum[HEIGHT] == -1) {
-          maskScanMaximum[HEIGHT] = sheet->height;
+          maskScanMaximum[HEIGHT] = sheet.frame->height;
         }
         // avoid inner half of the sheet to be blackfilter-detectable
         if (blackfilterExcludeCount ==
@@ -1574,20 +1576,22 @@ int main(int argc, char *argv[]) {
         // set two middle of left/right side of sheet as starting points for
         // mask detection
         if (pointCount == 0) { // no manual settings, use auto-values
-          points[pointCount++] = (Point){sheet->width / 4, sheet->height / 2};
           points[pointCount++] =
-              (Point){sheet->width - sheet->width / 4, sheet->height / 2};
+              (Point){sheet.frame->width / 4, sheet.frame->height / 2};
+          points[pointCount++] =
+              (Point){sheet.frame->width - sheet.frame->width / 4,
+                      sheet.frame->height / 2};
         }
         if (maskScanMaximum[WIDTH] == -1) {
-          maskScanMaximum[WIDTH] = sheet->width / 2;
+          maskScanMaximum[WIDTH] = sheet.frame->width / 2;
         }
         if (maskScanMaximum[HEIGHT] == -1) {
-          maskScanMaximum[HEIGHT] = sheet->height;
+          maskScanMaximum[HEIGHT] = sheet.frame->height;
         }
         if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
           wipe[wipeCount++] = (Rectangle){{
-              {sheet->width / 2 - middleWipe[0], 0},
-              {sheet->width / 2 + middleWipe[1], sheet->height - 1},
+              {sheet.frame->width / 2 - middleWipe[0], 0},
+              {sheet.frame->width / 2 + middleWipe[1], sheet.frame->height - 1},
           }};
         }
         // avoid inner half of each page to be blackfilter-detectable
@@ -1600,7 +1604,7 @@ int main(int argc, char *argv[]) {
           };
           Point firstFilterOrigin = {sheetSize.width / 8, sheetSize.height / 4};
           Point secondFilterOrigin =
-              shift_point(firstFilterOrigin, (Delta){sheet->width / 2});
+              shift_point(firstFilterOrigin, (Delta){sheet.frame->width / 2});
 
           blackfilterExclude[blackfilterExcludeCount++] =
               rectangle_from_size(firstFilterOrigin, filterSize);
@@ -1610,19 +1614,21 @@ int main(int argc, char *argv[]) {
         // set two outside borders to start scanning for final border-scan
         if (outsideBorderscanMaskCount ==
             0) { // no manual settings, use auto-values
-          outsideBorderscanMask[outsideBorderscanMaskCount++] = (Rectangle){
-              {POINT_ORIGIN, {sheet->width / 2, sheet->height - 1}}};
-          outsideBorderscanMask[outsideBorderscanMaskCount++] = (Rectangle){
-              {{sheet->width / 2, 0}, {sheet->width - 1, sheet->height - 1}}};
+          outsideBorderscanMask[outsideBorderscanMaskCount++] =
+              (Rectangle){{POINT_ORIGIN,
+                           {sheet.frame->width / 2, sheet.frame->height - 1}}};
+          outsideBorderscanMask[outsideBorderscanMaskCount++] =
+              (Rectangle){{{sheet.frame->width / 2, 0},
+                           {sheet.frame->width - 1, sheet.frame->height - 1}}};
         }
       }
       // if maskScanMaximum still unset (no --layout specified), set to full
       // sheet size now
       if (maskScanMinimum[WIDTH] == -1) {
-        maskScanMaximum[WIDTH] = sheet->width;
+        maskScanMaximum[WIDTH] = sheet.frame->width;
       }
       if (maskScanMinimum[HEIGHT] == -1) {
-        maskScanMaximum[HEIGHT] = sheet->height;
+        maskScanMaximum[HEIGHT] = sheet.frame->height;
       }
 
       // pre-wipe
@@ -1749,12 +1755,12 @@ int main(int argc, char *argv[]) {
                      points[i].y, rotation);
 
           if (rotation != 0.0) {
-            AVFrame *rect =
-                create_image(size_of_rectangle(masks[i]), sheet->format, false,
+            Image rect =
+                create_image(size_of_rectangle(masks[i]), sheet.frame->format,
+                             false, sheetBackgroundPixel, absBlackThreshold);
+            Image rectTarget =
+                create_image(size_of_image(rect), sheet.frame->format, true,
                              sheetBackgroundPixel, absBlackThreshold);
-            AVFrame *rectTarget = create_image(
-                (RectangleSize){rect->width, rect->height}, sheet->format, true,
-                sheetBackgroundPixel, absBlackThreshold);
 
             // copy area to rotate into rSource
             copy_rectangle(sheet, rect,
@@ -1769,8 +1775,8 @@ int main(int argc, char *argv[]) {
             copy_rectangle(rectTarget, sheet, full_image(rectTarget),
                            masks[i].vertex[0], absBlackThreshold);
 
-            av_frame_free(&rect);
-            av_frame_free(&rectTarget);
+            free_image(&rect);
+            free_image(&rectTarget);
           }
         }
 
@@ -1897,12 +1903,12 @@ int main(int argc, char *argv[]) {
       if (postStretchSize[WIDTH] != -1) {
         w = postStretchSize[WIDTH];
       } else {
-        w = sheet->width;
+        w = sheet.frame->width;
       }
       if (postStretchSize[HEIGHT] != -1) {
         h = postStretchSize[HEIGHT];
       } else {
-        h = sheet->height;
+        h = sheet.frame->height;
       }
 
       w *= postZoomFactor;
@@ -1916,12 +1922,12 @@ int main(int argc, char *argv[]) {
         if (postSize[WIDTH] != -1) {
           w = postSize[WIDTH];
         } else {
-          w = sheet->width;
+          w = sheet.frame->width;
         }
         if (postSize[HEIGHT] != -1) {
           h = postSize[HEIGHT];
         } else {
-          h = sheet->height;
+          h = sheet.frame->height;
         }
         resize_and_replace(&sheet, (RectangleSize){w, h}, interpolateType,
                            sheetBackgroundPixel, absBlackThreshold);
@@ -1938,19 +1944,21 @@ int main(int argc, char *argv[]) {
                   absBlackThreshold);
 
         if (outputPixFmt == -1) {
-          outputPixFmt = sheet->format;
+          outputPixFmt = sheet.frame->format;
         }
 
         for (int j = 0; j < options.output_count; j++) {
           // get pagebuffer
           page = create_image(
-              (RectangleSize){sheet->width / options.output_count,
-                              sheet->height},
-              sheet->format, false, sheetBackgroundPixel, absBlackThreshold);
+              (RectangleSize){sheet.frame->width / options.output_count,
+                              sheet.frame->height},
+              sheet.frame->format, false, sheetBackgroundPixel,
+              absBlackThreshold);
           copy_rectangle(
               sheet, page,
-              (Rectangle){{{page->width * j, 0},
-                           {page->width * j + page->width, page->height}}},
+              (Rectangle){{{page.frame->width * j, 0},
+                           {page.frame->width * j + page.frame->width,
+                            page.frame->height}}},
               POINT_ORIGIN, absBlackThreshold);
 
           verboseLog(VERBOSE_MORE, "saving file %s.\n", outputFileNames[j]);
@@ -1958,11 +1966,10 @@ int main(int argc, char *argv[]) {
           saveImage(outputFileNames[j], page, outputPixFmt,
                     sheetBackgroundPixel, absBlackThreshold);
 
-          av_frame_free(&page);
+          free_image(&page);
         }
 
-        av_frame_free(&sheet);
-        sheet = NULL;
+        free_image(&sheet);
       }
     }
 

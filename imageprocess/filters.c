@@ -49,7 +49,7 @@ BlackfilterParameters validate_blackfilter_parameters(
   };
 }
 
-static void blackfilter_scan(AVFrame *image, BlackfilterParameters params,
+static void blackfilter_scan(Image image, BlackfilterParameters params,
                              Delta step, RectangleSize stripe_size, Delta shift,
                              uint8_t abs_black_threshold) {
   if (step.horizontal != 0 && step.vertical != 0) {
@@ -112,7 +112,7 @@ static void blackfilter_scan(AVFrame *image, BlackfilterParameters params,
  * A virtual bar of width 'size' and height 'depth' is horizontally moved
  * above the middle of the sheet (or the full sheet, if depth ==-1).
  */
-void blackfilter(AVFrame *image, BlackfilterParameters params,
+void blackfilter(Image image, BlackfilterParameters params,
                  uint8_t abs_black_threshold) {
   // Left-to-Right scan.
   if (params.scan_horizontal) {
@@ -155,9 +155,10 @@ BlurfilterParameters validate_blurfilter_parameters(uint32_t scan_size_h,
   };
 }
 
-uint64_t blurfilter(AVFrame *image, BlurfilterParameters params,
+uint64_t blurfilter(Image image, BlurfilterParameters params,
                     uint8_t abs_white_threshold, uint8_t abs_black_threshold) {
-  const uint32_t blocks_per_row = image->width / params.scan_size.width;
+  RectangleSize image_size = size_of_image(image);
+  const uint32_t blocks_per_row = image_size.width / params.scan_size.width;
   const uint64_t total_pixels_in_block =
       params.scan_size.width * params.scan_size.height;
   uint64_t result = 0;
@@ -178,7 +179,7 @@ uint64_t blurfilter(AVFrame *image, BlurfilterParameters params,
   nextCounts[0] = total_pixels_in_block;
   nextCounts[blocks_per_row] = total_pixels_in_block;
 
-  const int32_t max_left = image->width - params.scan_size.width;
+  const int32_t max_left = image_size.width - params.scan_size.width;
   for (int32_t left = 0, block = 1; left <= max_left;
        left += params.scan_size.width) {
     curCounts[block++] = count_pixels_within_brightness(
@@ -191,7 +192,7 @@ uint64_t blurfilter(AVFrame *image, BlurfilterParameters params,
   // and similarly for the block in the top-right, bottom-left and bottom-right
   // corner. Take the maximum of these values. Clear the block if this number is
   // not large enough compared to the total number of pixels in a block.
-  int32_t max_top = image->height - params.scan_size.height;
+  int32_t max_top = image_size.height - params.scan_size.height;
   for (int32_t top = 0; top <= max_top; top += params.scan_size.height) {
     nextCounts[0] = count_pixels_within_brightness(
         image,
@@ -240,7 +241,7 @@ uint64_t blurfilter(AVFrame *image, BlurfilterParameters params,
  * Noisefilter *
  ***************/
 
-static bool noisefilter_compare_and_clear(AVFrame *image, Point p, bool clear,
+static bool noisefilter_compare_and_clear(Image image, Point p, bool clear,
                                           uint8_t min_white_level,
                                           uint8_t abs_black_threshold) {
   uint8_t lightness = get_pixel_lightness(image, p);
@@ -255,7 +256,7 @@ static bool noisefilter_compare_and_clear(AVFrame *image, Point p, bool clear,
 }
 
 static uint64_t
-noisefilter_count_pixel_neighbors_level(AVFrame *image, Point p, uint32_t level,
+noisefilter_count_pixel_neighbors_level(Image image, Point p, uint32_t level,
                                         bool clear, uint8_t min_white_level,
                                         uint8_t abs_black_threshold) {
   uint64_t count = 0;
@@ -290,7 +291,7 @@ noisefilter_count_pixel_neighbors_level(AVFrame *image, Point p, uint32_t level,
   return count;
 }
 
-static uint64_t noisefilter_count_pixel_neighbors(AVFrame *image, Point p,
+static uint64_t noisefilter_count_pixel_neighbors(Image image, Point p,
                                                   uint64_t intensity,
                                                   uint8_t min_white_level,
                                                   uint8_t abs_black_threshold) {
@@ -308,7 +309,7 @@ static uint64_t noisefilter_count_pixel_neighbors(AVFrame *image, Point p,
   return count;
 }
 
-static void noisefilter_clear_pixel_neighbors(AVFrame *image, Point p,
+static void noisefilter_clear_pixel_neighbors(Image image, Point p,
                                               uint8_t min_white_level,
                                               uint8_t abs_black_threshold) {
   set_pixel(image, p, PIXEL_WHITE, abs_black_threshold);
@@ -329,8 +330,8 @@ static void noisefilter_clear_pixel_neighbors(AVFrame *image, Point p,
  *
  * @param intensity maximum cluster size to delete
  */
-uint64_t noisefilter(AVFrame *image, uint64_t intensity,
-                     uint8_t min_white_level, uint8_t abs_black_threshold) {
+uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level,
+                     uint8_t abs_black_threshold) {
   uint64_t count = 0;
   Rectangle area = full_image(image);
 
@@ -378,8 +379,9 @@ GrayfilterParameters validate_grayfilter_parameters(uint32_t scan_size_h,
   };
 }
 
-uint64_t grayfilter(AVFrame *image, GrayfilterParameters params,
+uint64_t grayfilter(Image image, GrayfilterParameters params,
                     uint8_t abs_black_threshold) {
+  RectangleSize image_size = size_of_image(image);
   Point filter_origin = POINT_ORIGIN;
   uint64_t result = 0;
 
@@ -397,14 +399,14 @@ uint64_t grayfilter(AVFrame *image, GrayfilterParameters params,
     }
 
     // Continue on the same row unless we reached the end of the row.
-    if (filter_origin.x < image->width) {
+    if (filter_origin.x < image_size.width) {
       filter_origin.x += params.scan_step.horizontal;
     } else {
       // next row:
       filter_origin.x = 0;
       filter_origin.y += params.scan_step.vertical;
     }
-  } while (filter_origin.y <= image->height);
+  } while (filter_origin.y <= image_size.height);
 
   return result;
 }

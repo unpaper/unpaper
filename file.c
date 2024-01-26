@@ -25,7 +25,7 @@
  * @param image structure to hold loaded image
  * @param type returns the type of the loaded image
  */
-void loadImage(const char *filename, AVFrame **image, Pixel sheet_background,
+void loadImage(const char *filename, Image *image, Pixel sheet_background,
                uint8_t abs_black_threshold) {
   int ret;
   AVFormatContext *s = NULL;
@@ -96,11 +96,13 @@ void loadImage(const char *filename, AVFrame **image, Pixel sheet_background,
   case AV_PIX_FMT_RGB24:
   case AV_PIX_FMT_MONOBLACK:
   case AV_PIX_FMT_MONOWHITE:
-    *image = av_frame_clone(frame);
+    image->frame = av_frame_clone(frame);
     break;
 
   case AV_PIX_FMT_PAL8: {
-    Rectangle area = full_image(frame);
+    Rectangle area = rectangle_from_size(
+        POINT_ORIGIN,
+        (RectangleSize){.width = frame->width, .height = frame->height});
 
     *image = create_image(size_of_rectangle(area), AV_PIX_FMT_RGB24, false,
                           sheet_background, abs_black_threshold);
@@ -129,14 +131,14 @@ void loadImage(const char *filename, AVFrame **image, Pixel sheet_background,
  * @param type filetype of the image to save
  * @return true on success, false on failure
  */
-void saveImage(char *filename, AVFrame *input, int outputPixFmt,
+void saveImage(char *filename, Image input, int outputPixFmt,
                Pixel sheet_background, uint8_t abs_black_threshold) {
   enum AVCodecID output_codec = -1;
   const AVCodec *codec;
   AVFormatContext *out_ctx;
   AVCodecContext *codec_ctx;
   AVStream *video_st;
-  AVFrame *output = input;
+  Image output = input;
   AVPacket *pkt = NULL;
   int ret;
   char errbuff[1024];
@@ -170,10 +172,9 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt,
     break;
   }
 
-  if (input->format != outputPixFmt) {
-    output =
-        create_image((RectangleSize){input->width, input->height}, outputPixFmt,
-                     false, sheet_background, abs_black_threshold);
+  if (input.frame->format != outputPixFmt) {
+    output = create_image(size_of_image(input), outputPixFmt, false,
+                          sheet_background, abs_black_threshold);
     copy_rectangle(input, output, full_image(input), POINT_ORIGIN,
                    abs_black_threshold);
   }
@@ -193,12 +194,12 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt,
     errOutput("could not alloc codec context");
   }
 
-  codec_ctx->width = output->width;
-  codec_ctx->height = output->height;
-  codec_ctx->pix_fmt = output->format;
-  video_st->codecpar->width = output->width;
-  video_st->codecpar->height = output->height;
-  video_st->codecpar->format = output->format;
+  codec_ctx->width = output.frame->width;
+  codec_ctx->height = output.frame->height;
+  codec_ctx->pix_fmt = output.frame->format;
+  video_st->codecpar->width = output.frame->width;
+  video_st->codecpar->height = output.frame->height;
+  video_st->codecpar->format = output.frame->format;
   video_st->time_base.den = codec_ctx->time_base.den = 1;
   video_st->time_base.num = codec_ctx->time_base.num = 1;
 
@@ -227,7 +228,7 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt,
     errOutput("unable to allocate output packet");
   }
 
-  ret = avcodec_send_frame(codec_ctx, output);
+  ret = avcodec_send_frame(codec_ctx, output.frame);
   if (ret < 0) {
     av_strerror(ret, errbuff, sizeof(errbuff));
     errOutput("unable to send frame to encoder: %s", errbuff);
@@ -247,19 +248,19 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt,
   avcodec_free_context(&codec_ctx);
   avformat_free_context(out_ctx);
 
-  if (output != input)
-    av_frame_free(&output);
+  if (output.frame != input.frame)
+    av_frame_free(&output.frame);
 }
 
 /**
  * Saves the image if full debugging mode is enabled.
  */
-void saveDebug(char *filenameTemplate, int index, AVFrame *image,
+void saveDebug(char *filenameTemplate, int index, Image image,
                Pixel sheet_background, uint8_t abs_black_threshold) {
   if (verbose >= VERBOSE_DEBUG_SAVE) {
     char debugFilename[100];
     sprintf(debugFilename, filenameTemplate, index);
-    saveImage(debugFilename, image, image->format, sheet_background,
+    saveImage(debugFilename, image, image.frame->format, sheet_background,
               abs_black_threshold);
   }
 }

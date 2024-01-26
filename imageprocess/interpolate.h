@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "imageprocess/image.h"
 #include "imageprocess/primitives.h"
 
 typedef struct {
@@ -18,4 +19,4 @@ typedef enum {
   INTERP_FUNCTIONS_COUNT
 } Interpolation;
 
-Pixel interpolate(AVFrame *image, FloatPoint coords, Interpolation function);
+Pixel interpolate(Image image, FloatPoint coords, Interpolation function);

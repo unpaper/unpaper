@@ -64,33 +64,16 @@ Rectangle shift_rectangle(Rectangle rect, Delta d) {
   }};
 }
 
-RectangleSize size_of_image(AVFrame *image) {
-  return (RectangleSize){
-      .width = image->width,
-      .height = image->height,
-  };
-}
+int compare_sizes(RectangleSize a, RectangleSize b) {
+  if (a.height == b.height && a.width == b.width) {
+    return 0;
+  }
 
-Rectangle full_image(AVFrame *image) {
-  return rectangle_from_size(POINT_ORIGIN, size_of_image(image));
-}
-
-Rectangle clip_rectangle(AVFrame *image, Rectangle area) {
-  Rectangle normal_area = normalize_rectangle(area);
-
-  return (Rectangle){
-      .vertex =
-          {
-              {
-                  .x = max(normal_area.vertex[0].x, 0),
-                  .y = max(normal_area.vertex[0].y, 0),
-              },
-              {
-                  .x = min(normal_area.vertex[1].x, (image->width - 1)),
-                  .y = min(normal_area.vertex[1].y, (image->height - 1)),
-              },
-          },
-  };
+  if (min(a.height, a.width) < min(b.height, b.width)) {
+    return -1;
+  } else {
+    return 1;
+  }
 }
 
 uint64_t count_pixels(Rectangle area) {
