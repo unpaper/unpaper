@@ -50,11 +50,6 @@ typedef struct {
   Point vertex[2];
 } Rectangle;
 
-#define RECT_FULL_IMAGE                                                        \
-  (Rectangle) {                                                                \
-    { POINT_ORIGIN, POINT_INFINITY }                                           \
-  }
-
 typedef struct {
   int32_t width;
   int32_t height;
@@ -67,8 +62,11 @@ typedef struct {
 Rectangle rectangle_from_size(Point origin, RectangleSize size);
 RectangleSize size_of_rectangle(Rectangle rect);
 Rectangle normalize_rectangle(Rectangle input);
-Rectangle clip_rectangle(AVFrame *image, Rectangle area);
 Rectangle shift_rectangle(Rectangle rect, Delta d);
+
+RectangleSize size_of_image(AVFrame *image);
+Rectangle full_image(AVFrame *image);
+Rectangle clip_rectangle(AVFrame *image, Rectangle area);
 
 uint64_t count_pixels(Rectangle area);
 

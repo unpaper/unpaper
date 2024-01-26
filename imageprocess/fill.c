@@ -20,7 +20,7 @@ static uint64_t fill_line(AVFrame *image, Point p, Delta step, Pixel color,
   uint64_t intensityCount =
       1; // first pixel must match, otherwise directly exit
 
-  Rectangle area = clip_rectangle(image, RECT_FULL_IMAGE);
+  Rectangle area = full_image(image);
 
   while (true) {
     p = shift_point(p, step);

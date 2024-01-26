@@ -244,7 +244,7 @@ float detect_rotation(AVFrame *image, const Rectangle mask,
  */
 void rotate(AVFrame *source, AVFrame *target, const float radians,
             uint8_t abs_black_threshold, Interpolation interpolate_type) {
-  Rectangle sourceRect = clip_rectangle(source, RECT_FULL_IMAGE);
+  Rectangle source_area = full_image(source);
 
   const int w = source->width;
   const int h = source->height;
@@ -255,7 +255,7 @@ void rotate(AVFrame *source, AVFrame *target, const float radians,
   const float midX = w / 2.0f;
   const float midY = h / 2.0f;
 
-  scan_rectangle(sourceRect) {
+  scan_rectangle(source_area) {
     const float srcX = midX + (x - midX) * cosval + (y - midY) * sinval;
     const float srcY = midY + (y - midY) * cosval - (x - midX) * sinval;
     const Pixel pxl =

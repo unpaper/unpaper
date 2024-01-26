@@ -216,14 +216,14 @@ size_t detect_masks(AVFrame *image, MaskDetectionParameters params,
 void center_mask(AVFrame *image, const Point center, const Rectangle area,
                  Pixel sheet_background, uint8_t abs_black_threshold) {
   const RectangleSize size = size_of_rectangle(area);
-  const Rectangle full_image = clip_rectangle(image, RECT_FULL_IMAGE);
+  const Rectangle image_area = full_image(image);
 
   const Point target =
       shift_point(center, (Delta){-size.width / 2, -size.height / 2});
 
   Rectangle new_area = rectangle_from_size(target, size);
 
-  if (rectangle_in_rectangle(new_area, full_image)) {
+  if (rectangle_in_rectangle(new_area, image_area)) {
     verboseLog(VERBOSE_NORMAL, "centering mask [%d,%d,%d,%d] (%d,%d): %d, %d\n",
                area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
                area.vertex[1].y, center.x, center.y,
@@ -232,7 +232,7 @@ void center_mask(AVFrame *image, const Point center, const Rectangle area,
                                      abs_black_threshold);
     copy_rectangle(image, newimage, area, POINT_ORIGIN, abs_black_threshold);
     wipe_rectangle(image, area, sheet_background, abs_black_threshold);
-    copy_rectangle(newimage, image, RECT_FULL_IMAGE, target,
+    copy_rectangle(newimage, image, full_image(newimage), target,
                    abs_black_threshold);
     av_frame_free(&newimage);
   } else {
@@ -304,7 +304,8 @@ void align_mask(AVFrame *image, const Rectangle inside_area,
   copy_rectangle(image, newimage, inside_area, POINT_ORIGIN,
                  abs_black_threshold);
   wipe_rectangle(image, inside_area, sheet_background, abs_black_threshold);
-  copy_rectangle(newimage, image, RECT_FULL_IMAGE, target, abs_black_threshold);
+  copy_rectangle(newimage, image, full_image(newimage), target,
+                 abs_black_threshold);
   av_frame_free(&newimage);
 }
 
@@ -318,9 +319,9 @@ void apply_masks(AVFrame *image, const Rectangle masks[], size_t masks_count,
     return;
   }
 
-  Rectangle full_image = clip_rectangle(image, RECT_FULL_IMAGE);
+  Rectangle image_area = full_image(image);
 
-  scan_rectangle(full_image) {
+  scan_rectangle(image_area) {
     Point p = {x, y};
     if (!point_in_rectangles_any(p, masks_count, masks)) {
       set_pixel(image, p, color, abs_black_threshold);

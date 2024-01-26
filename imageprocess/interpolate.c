@@ -74,7 +74,7 @@ static Pixel linear_pixel_interpolation(float factor, Pixel a, Pixel b) {
 
 // 2-D linear interpolation
 Pixel interp_bilinear(AVFrame *image, FloatPoint coords) {
-  Rectangle image_area = clip_rectangle(image, RECT_FULL_IMAGE);
+  Rectangle image_area = full_image(image);
 
   Point p1 = {(int)floorf(coords.x), (int)floorf(coords.y)};
   Point p2 = {(int)ceil(coords.x), (int)ceilf(coords.y)};

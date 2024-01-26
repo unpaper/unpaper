@@ -145,7 +145,7 @@ AVFrame *create_image(RectangleSize size, int pixel_format, bool fill,
   }
 
   if (fill) {
-    wipe_rectangle(image, RECT_FULL_IMAGE, sheet_background,
+    wipe_rectangle(image, full_image(image), sheet_background,
                    abs_black_threshold);
   }
 
@@ -170,8 +170,7 @@ void center_image(AVFrame *source, AVFrame *target, Point target_origin,
                   RectangleSize target_size, Pixel sheet_background,
                   uint8_t abs_black_threshold) {
   Point source_origin = POINT_ORIGIN;
-  RectangleSize source_size =
-      size_of_rectangle(clip_rectangle(source, RECT_FULL_IMAGE));
+  RectangleSize source_size = size_of_image(source);
 
   if (source_size.width < target_size.width ||
       source_size.height < target_size.height) {
@@ -206,7 +205,7 @@ static void stretch_frame(AVFrame *source, AVFrame *target,
   verboseLog(VERBOSE_MORE, "stretching %dx%d -> %dx%d\n", source->width,
              source->height, target->width, target->height);
 
-  Rectangle target_area = clip_rectangle(target, RECT_FULL_IMAGE);
+  Rectangle target_area = full_image(target);
   scan_rectangle(target_area) {
     const Point target_coords = {x, y};
     const FloatPoint source_coords = {x * horizontal_ratio, y * vertical_ratio};
@@ -340,7 +339,7 @@ void shift_image(AVFrame **pImage, Delta d, Pixel sheet_background,
       (RectangleSize){(*pImage)->width, (*pImage)->height}, (*pImage)->format,
       true, sheet_background, abs_black_threshold);
 
-  copy_rectangle(*pImage, newimage, RECT_FULL_IMAGE,
+  copy_rectangle(*pImage, newimage, full_image(*pImage),
                  shift_point(POINT_ORIGIN, d), abs_black_threshold);
   replace_image(pImage, &newimage);
 }
