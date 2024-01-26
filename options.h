@@ -8,32 +8,32 @@
 #include "parse.h"
 
 typedef struct {
-  LAYOUTS layout;
-  int startSheet;
-  int endSheet;
-  int startInput;
-  int startOutput;
-  int inputCount;
-  int outputCount;
+  Layouts layout;
+  int start_sheet;
+  int end_sheet;
+  int start_input;
+  int start_output;
+  int input_count;
+  int output_count;
 
-  struct MultiIndex sheetMultiIndex;
-  struct MultiIndex excludeMultiIndex;
-  struct MultiIndex ignoreMultiIndex;
-  struct MultiIndex insertBlank;
-  struct MultiIndex replaceBlank;
+  struct MultiIndex sheet_multi_index;
+  struct MultiIndex exclude_multi_index;
+  struct MultiIndex ignore_multi_index;
+  struct MultiIndex insert_blank;
+  struct MultiIndex replace_blank;
 
   // 0: allow all, -1: disable all, n: individual entries
-  struct MultiIndex noBlackfilterMultiIndex;
-  struct MultiIndex noNoisefilterMultiIndex;
-  struct MultiIndex noBlurfilterMultiIndex;
-  struct MultiIndex noGrayfilterMultiIndex;
-  struct MultiIndex noMaskScanMultiIndex;
-  struct MultiIndex noMaskCenterMultiIndex;
-  struct MultiIndex noDeskewMultiIndex;
-  struct MultiIndex noWipeMultiIndex;
-  struct MultiIndex noBorderMultiIndex;
-  struct MultiIndex noBorderScanMultiIndex;
-  struct MultiIndex noBorderAlignMultiIndex;
-} Options;
+  struct MultiIndex no_blackfilter_multi_index;
+  struct MultiIndex no_noisefilter_multi_index;
+  struct MultiIndex no_blurfilter_multi_index;
+  struct MultiIndex no_grayfilter_multi_index;
+  struct MultiIndex no_mask_scan_multi_index;
+  struct MultiIndex no_mask_center_multi_index;
+  struct MultiIndex no_deskew_multi_index;
+  struct MultiIndex no_wipe_multi_index;
+  struct MultiIndex no_border_multi_index;
+  struct MultiIndex no_border_scan_multi_index;
+  struct MultiIndex no_border_align_multi_index;
+} options;
 
-void optionsInit(Options *o);
+void options_init(options *o);
