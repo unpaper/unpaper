@@ -44,7 +44,9 @@ typedef struct {
 } Pixel;
 
 #define PIXEL_WHITE                                                            \
-  (Pixel) { 0xFF, 0xFF, 0xFF }
+  (Pixel) { UINT8_MAX, UINT8_MAX, UINT8_MAX }
+#define PIXEL_BLACK                                                            \
+  (Pixel) { 0, 0, 0 }
 
 typedef struct {
   Point vertex[2];

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "imageprocess/pixel.h"
 #include "lib/options.h"
 
 static struct MultiIndex multi_index_empty(void) {
@@ -56,4 +57,34 @@ int print_rectangle(Rectangle rect) {
   return printf("[%" PRId32 ",%" PRId32 ",%" PRId32 ",%" PRId32 "] ",
                 rect.vertex[0].x, rect.vertex[0].y, rect.vertex[1].x,
                 rect.vertex[1].y);
+}
+
+bool parse_color(const char *str, Pixel *color) {
+  if (strcmp(str, "black") == 0) {
+    *color = PIXEL_BLACK;
+    return true;
+  }
+  if (strcmp(str, "white") == 0) {
+    *color = PIXEL_WHITE;
+    return true;
+  }
+
+  uint32_t colorValue;
+  if (sscanf(str, "%" SCNd32, &colorValue) != 1) {
+    return false;
+  }
+
+  *color = pixel_from_value(colorValue);
+  return true;
+}
+
+int print_color(Pixel color) {
+  if (compare_pixel(color, PIXEL_BLACK) == 0) {
+    return printf("black");
+  }
+  if (compare_pixel(color, PIXEL_WHITE) == 0) {
+    return printf("white");
+  }
+
+  return printf("#%02x%02x%02x", color.r, color.g, color.b);
 }

@@ -67,6 +67,21 @@ static Pixel get_pixel_components(AVFrame *image, Point coords,
   return pixel;
 }
 
+Pixel pixel_from_value(uint32_t value) {
+  return (Pixel){
+      .r = (value >> 16) & 0xff,
+      .g = (value >> 8) & 0xff,
+      .b = value & 0xff,
+  };
+}
+
+int compare_pixel(Pixel a, Pixel b) {
+  if (memcmp(&a, &b, sizeof(Pixel)) == 0) {
+    return 0;
+  }
+  return pixel_grayscale(a) < pixel_grayscale(b) ? -1 : 1;
+}
+
 /* Returns the color or grayscale value of a single pixel.
  * Always returns a color-compatible value (which may be interpreted as 8-bit
  * grayscale)

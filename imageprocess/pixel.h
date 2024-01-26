@@ -11,6 +11,8 @@
 
 #include "imageprocess/primitives.h"
 
+Pixel pixel_from_value(uint32_t value);
+int compare_pixel(Pixel a, Pixel b);
 Pixel get_pixel(AVFrame *image, Point coords);
 uint8_t get_pixel_grayscale(AVFrame *image, Point coords);
 uint8_t get_pixel_lightness(AVFrame *image, Point coords);

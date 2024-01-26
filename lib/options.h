@@ -43,3 +43,6 @@ void options_init(Options *o);
 
 bool parse_rectangle(const char *str, Rectangle *rect);
 int print_rectangle(Rectangle rect);
+
+bool parse_color(const char *str, Pixel *color);
+int print_color(Pixel color);
