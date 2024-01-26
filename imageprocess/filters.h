@@ -32,8 +32,7 @@ typedef struct {
   Rectangle *exclusions;
 } BlackfilterParameters;
 
-void blackfilter(Image image, BlackfilterParameters params,
-                 uint8_t abs_black_threshold);
+void blackfilter(Image image, BlackfilterParameters params);
 
 BlackfilterParameters validate_blackfilter_parameters(
     uint32_t scan_size_h, uint32_t scan_size_v, uint32_t scan_step_h,
@@ -59,10 +58,9 @@ BlurfilterParameters validate_blurfilter_parameters(uint32_t scan_size_h,
                                                     float intensity);
 
 uint64_t blurfilter(Image image, BlurfilterParameters params,
-                    uint8_t abs_white_threshold, uint8_t abs_black_threshold);
+                    uint8_t abs_white_threshold);
 
-uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level,
-                     uint8_t abs_black_threshold);
+uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level);
 
 typedef struct {
   RectangleSize scan_size;
@@ -81,5 +79,4 @@ GrayfilterParameters validate_grayfilter_parameters(uint32_t scan_size_h,
                                                     uint32_t scan_step_v,
                                                     float threshold);
 
-uint64_t grayfilter(Image image, GrayfilterParameters params,
-                    uint8_t abs_black_threshold);
+uint64_t grayfilter(Image image, GrayfilterParameters params);
