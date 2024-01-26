@@ -50,10 +50,9 @@ validate_mask_detection_parameters(int scan_directions,
 
 size_t detect_masks(Image image, MaskDetectionParameters params,
                     const Point points[], size_t points_count,
-                    bool mask_valid[], Rectangle masks[]);
+                    Rectangle masks[]);
 
-void center_mask(Image image, const Point center, const Rectangle area,
-                 Pixel sheet_background, uint8_t abs_black_threshold);
+void center_mask(Image image, const Point center, const Rectangle area);
 
 typedef struct {
   struct {
@@ -74,14 +73,13 @@ validate_mask_alignment_parameters(int border_align,
                                    const int margin[DIRECTIONS_COUNT]);
 
 void align_mask(Image image, const Rectangle inside_area,
-                const Rectangle outside, MaskAlignmentParameters params,
-                Pixel sheet_background, uint8_t abs_black_threshold);
+                const Rectangle outside, MaskAlignmentParameters params);
 
 void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
-                 Pixel color, uint8_t abs_black_threshold);
+                 Pixel color);
 
 void apply_wipes(Image image, Rectangle wipes[], size_t wipes_count,
-                 Pixel color, uint8_t abs_black_threshold);
+                 Pixel color);
 
 typedef struct {
   int32_t left;
@@ -93,8 +91,7 @@ typedef struct {
 static const Border BORDER_NULL = {0, 0, 0, 0};
 
 Rectangle border_to_mask(Image image, const Border border);
-void apply_border(Image image, const Border border, Pixel color,
-                  uint8_t abs_black_threshold);
+void apply_border(Image image, const Border border, Pixel color);
 
 typedef struct {
   RectangleSize scan_size;
@@ -120,4 +117,4 @@ validate_border_scan_parameters(int scan_directions,
                                 const int scan_threshold[DIRECTIONS_COUNT]);
 
 Border detect_border(Image image, BorderScanParameters params,
-                     const Rectangle outside_mask, uint8_t abs_black_threshold);
+                     const Rectangle outside_mask);

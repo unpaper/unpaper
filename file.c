@@ -113,8 +113,8 @@ void loadImage(const char *filename, Image *image, Pixel sheet_background,
     const uint32_t *palette = (const uint32_t *)frame->data[1];
     scan_rectangle(area) {
       const uint8_t palette_index = frame->data[0][frame->linesize[0] * y + x];
-      set_pixel(*image, (Point){x, y}, pixel_from_value(palette[palette_index]),
-                abs_black_threshold);
+      set_pixel(*image, (Point){x, y},
+                pixel_from_value(palette[palette_index]));
     }
   } break;
 
@@ -134,8 +134,7 @@ void loadImage(const char *filename, Image *image, Pixel sheet_background,
  * @param type filetype of the image to save
  * @return true on success, false on failure
  */
-void saveImage(char *filename, Image input, int outputPixFmt,
-               Pixel sheet_background, uint8_t abs_black_threshold) {
+void saveImage(char *filename, Image input, int outputPixFmt) {
   enum AVCodecID output_codec = -1;
   const AVCodec *codec;
   AVFormatContext *out_ctx;
@@ -177,9 +176,8 @@ void saveImage(char *filename, Image input, int outputPixFmt,
 
   if (input.frame->format != outputPixFmt) {
     output = create_image(size_of_image(input), outputPixFmt, false,
-                          sheet_background, abs_black_threshold);
-    copy_rectangle(input, output, full_image(input), POINT_ORIGIN,
-                   abs_black_threshold);
+                          input.background, input.abs_black_threshold);
+    copy_rectangle(input, output, full_image(input), POINT_ORIGIN);
   }
 
   codec = avcodec_find_encoder(output_codec);
@@ -258,12 +256,10 @@ void saveImage(char *filename, Image input, int outputPixFmt,
 /**
  * Saves the image if full debugging mode is enabled.
  */
-void saveDebug(char *filenameTemplate, int index, Image image,
-               Pixel sheet_background, uint8_t abs_black_threshold) {
+void saveDebug(char *filenameTemplate, int index, Image image) {
   if (verbose >= VERBOSE_DEBUG_SAVE) {
     char debugFilename[100];
     sprintf(debugFilename, filenameTemplate, index);
-    saveImage(debugFilename, image, image.frame->format, sheet_background,
-              abs_black_threshold);
+    saveImage(debugFilename, image, image.frame->format);
   }
 }

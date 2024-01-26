@@ -4,8 +4,10 @@
 //
 // SPDX-License-Identifier: GPL-2.0-only
 
-#include "imageprocess/primitives.h"
+#include <stdlib.h>
+
 #include "imageprocess/math_util.h"
+#include "imageprocess/primitives.h"
 
 Delta distance_between(Point a, Point b) {
   return (Delta){
