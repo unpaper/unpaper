@@ -1601,7 +1601,7 @@ int main(int argc, char *argv[]) {
         if (outsideBorderscanMaskCount ==
             0) { // no manual settings, use auto-values
           outsideBorderscanMask[outsideBorderscanMaskCount++] =
-              clip_rectangle(sheet, RECT_FULL_IMAGE);
+              full_image(sheet);
         }
 
         // LAYOUT_DOUBLE
@@ -1790,7 +1790,7 @@ int main(int argc, char *argv[]) {
                    interpolateType);
 
             // copy result back into whole image
-            copy_rectangle(rectTarget, sheet, RECT_FULL_IMAGE,
+            copy_rectangle(rectTarget, sheet, full_image(rectTarget),
                            masks[i].vertex[0], absBlackThreshold);
 
             av_frame_free(&rect);

@@ -57,6 +57,24 @@ Rectangle normalize_rectangle(Rectangle input) {
   };
 }
 
+Rectangle shift_rectangle(Rectangle rect, Delta d) {
+  return (Rectangle){{
+      shift_point(rect.vertex[0], d),
+      shift_point(rect.vertex[1], d),
+  }};
+}
+
+RectangleSize size_of_image(AVFrame *image) {
+  return (RectangleSize){
+      .width = image->width,
+      .height = image->height,
+  };
+}
+
+Rectangle full_image(AVFrame *image) {
+  return rectangle_from_size(POINT_ORIGIN, size_of_image(image));
+}
+
 Rectangle clip_rectangle(AVFrame *image, Rectangle area) {
   Rectangle normal_area = normalize_rectangle(area);
 
@@ -73,13 +91,6 @@ Rectangle clip_rectangle(AVFrame *image, Rectangle area) {
               },
           },
   };
-}
-
-Rectangle shift_rectangle(Rectangle rect, Delta d) {
-  return (Rectangle){{
-      shift_point(rect.vertex[0], d),
-      shift_point(rect.vertex[1], d),
-  }};
 }
 
 uint64_t count_pixels(Rectangle area) {

@@ -99,7 +99,7 @@ void loadImage(const char *filename, AVFrame **image) {
     break;
 
   case AV_PIX_FMT_PAL8: {
-    Rectangle area = clip_rectangle(frame, RECT_FULL_IMAGE);
+    Rectangle area = full_image(frame);
 
     *image = create_image(size_of_rectangle(area), AV_PIX_FMT_RGB24, false,
                           sheetBackgroundPixel, absBlackThreshold);
@@ -172,7 +172,7 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
     output =
         create_image((RectangleSize){input->width, input->height}, outputPixFmt,
                      false, sheetBackgroundPixel, absBlackThreshold);
-    copy_rectangle(input, output, RECT_FULL_IMAGE, POINT_ORIGIN,
+    copy_rectangle(input, output, full_image(input), POINT_ORIGIN,
                    absBlackThreshold);
   }
 

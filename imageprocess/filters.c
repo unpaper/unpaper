@@ -58,14 +58,14 @@ static void blackfilter_scan(AVFrame *image, BlackfilterParameters params,
               step.horizontal, step.vertical);
   }
 
-  const Rectangle full_image = clip_rectangle(image, RECT_FULL_IMAGE);
+  const Rectangle image_area = full_image(image);
 
   Rectangle area = rectangle_from_size(POINT_ORIGIN, stripe_size);
-  while (point_in_rectangle(area.vertex[0], full_image)) {
+  while (point_in_rectangle(area.vertex[0], image_area)) {
     // Make sure last stripe does not reach outside the sheet, shift back
     // inside. We don't use clipping to avoid changing the filter size!
-    if (!point_in_rectangle(area.vertex[1], full_image)) {
-      Delta d = distance_between(area.vertex[1], full_image.vertex[1]);
+    if (!point_in_rectangle(area.vertex[1], image_area)) {
+      Delta d = distance_between(area.vertex[1], image_area.vertex[1]);
 
       area = shift_rectangle(area, d);
     }
@@ -101,7 +101,7 @@ static void blackfilter_scan(AVFrame *image, BlackfilterParameters params,
       }
 
       area = shift_rectangle(area, step);
-    } while (point_in_rectangle(area.vertex[0], full_image));
+    } while (point_in_rectangle(area.vertex[0], image_area));
 
     area = shift_rectangle(area, shift);
   }
@@ -332,23 +332,22 @@ static void noisefilter_clear_pixel_neighbors(AVFrame *image, Point p,
 uint64_t noisefilter(AVFrame *image, uint64_t intensity,
                      uint8_t min_white_level, uint8_t abs_black_threshold) {
   uint64_t count = 0;
+  Rectangle area = full_image(image);
 
-  for (int32_t y = 0; y < image->height; y++) {
-    for (int32_t x = 0; x < image->width; x++) {
-      Point p = {x, y};
+  scan_rectangle(area) {
+    Point p = {x, y};
 
-      uint8_t darkness = get_pixel_darkness_inverse(image, p);
-      if (darkness < min_white_level) { // one dark pixel found
-        // get number of non-light pixels in neighborhood
-        uint64_t neighbors = noisefilter_count_pixel_neighbors(
-            image, p, intensity, min_white_level, abs_black_threshold);
+    uint8_t darkness = get_pixel_darkness_inverse(image, p);
+    if (darkness < min_white_level) { // one dark pixel found
+      // get number of non-light pixels in neighborhood
+      uint64_t neighbors = noisefilter_count_pixel_neighbors(
+          image, p, intensity, min_white_level, abs_black_threshold);
 
-        // If not more than 'intensity', delete area.
-        if (neighbors <= intensity) {
-          noisefilter_clear_pixel_neighbors(image, p, min_white_level,
-                                            abs_black_threshold);
-          count++;
-        }
+      // If not more than 'intensity', delete area.
+      if (neighbors <= intensity) {
+        noisefilter_clear_pixel_neighbors(image, p, min_white_level,
+                                          abs_black_threshold);
+        count++;
       }
     }
   }
