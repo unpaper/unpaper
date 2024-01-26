@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <inttypes.h>
 #include <stdint.h>
 
 #include "constants.h"

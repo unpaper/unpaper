@@ -21,6 +21,7 @@ Image create_image(RectangleSize size, int pixel_format, bool fill,
                    Pixel sheet_background, uint8_t abs_black_threshold);
 void replace_image(Image *image, Image *new_image);
 void free_image(Image *image);
+Image create_compatible_image(Image source, RectangleSize size, bool fill);
 
 RectangleSize size_of_image(Image image);
 Rectangle full_image(Image image);
