@@ -147,12 +147,6 @@ enum LONG_OPTION_VALUES {
  */
 int main(int argc, char *argv[]) {
   // --- local variables ---
-  int w = -1;
-  int h = -1;
-  int previousWidth = -1;
-  int previousHeight = -1;
-  AVFrame *sheet = NULL;
-  AVFrame *page = NULL;
   int inputNr;
   int outputNr;
   int option_index = 0;
@@ -1004,6 +998,13 @@ int main(int argc, char *argv[]) {
       blurfilterScanSize[HORIZONTAL], blurfilterScanSize[VERTICAL],
       blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
       blurfilterIntensity);
+
+  int w = -1;
+  int h = -1;
+  int previousWidth = -1;
+  int previousHeight = -1;
+  AVFrame *sheet = NULL;
+  AVFrame *page = NULL;
 
   for (int nr = options.start_sheet;
        (options.end_sheet == -1) || (nr <= options.end_sheet); nr++) {
