@@ -4,6 +4,8 @@
 
 #include <math.h>
 
+#include <libavutil/mathematics.h> // for M_PI
+
 #include "constants.h"
 #include "imageprocess/deskew.h"
 #include "imageprocess/interpolate.h"

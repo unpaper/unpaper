@@ -189,8 +189,7 @@ void stretch_and_replace(Image *pImage, RectangleSize size,
   if (compare_sizes(size_of_image(*pImage), size) == 0)
     return;
 
-  Image target = create_image(size, pImage->frame->format, false, PIXEL_WHITE,
-                              abs_black_threshold);
+  Image target = create_compatible_image(*pImage, size, false);
 
   stretch_frame(*pImage, target, interpolate_type, abs_black_threshold);
   replace_image(pImage, &target);
@@ -233,8 +232,7 @@ void resize_and_replace(Image *pImage, RectangleSize size,
     return;
   }
 
-  Image resized = create_image(size, pImage->frame->format, true,
-                               sheet_background, abs_black_threshold);
+  Image resized = create_compatible_image(*pImage, size, true);
   center_image(*pImage, resized, POINT_ORIGIN, size, sheet_background,
                abs_black_threshold);
   replace_image(pImage, &resized);
@@ -245,9 +243,10 @@ void flip_rotate_90(Image *pImage, RotationDirection direction,
   RectangleSize image_size = size_of_image(*pImage);
 
   // exchanged width and height
-  Image newimage = create_image(
+  Image newimage = create_compatible_image(
+      *pImage,
       (RectangleSize){.width = image_size.height, .height = image_size.width},
-      pImage->frame->format, false, PIXEL_WHITE, abs_black_threshold);
+      false);
 
   for (int y = 0; y < image_size.height; y++) {
     const int xx =
@@ -306,8 +305,8 @@ void mirror(Image image, bool horizontal, bool vertical,
 void shift_image(Image *pImage, Delta d, Pixel sheet_background,
                  uint8_t abs_black_threshold) {
   // allocate new buffer's memory
-  Image newimage = create_image(size_of_image(*pImage), pImage->frame->format,
-                                true, sheet_background, abs_black_threshold);
+  Image newimage =
+      create_compatible_image(*pImage, size_of_image(*pImage), true);
 
   copy_rectangle(*pImage, newimage, full_image(*pImage),
                  shift_point(POINT_ORIGIN, d), abs_black_threshold);
