@@ -2,8 +2,12 @@
 //
 // SPDX-License-Identifier: GPL-2.0-only
 
-#include "imageprocess/masks.h"
+#include <inttypes.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "imageprocess/blit.h"
+#include "imageprocess/masks.h"
 #include "imageprocess/pixel.h"
 #include "imageprocess/primitives.h"
 #include "lib/logging.h"
@@ -231,8 +235,7 @@ void center_mask(Image image, const Point center, const Rectangle area,
                area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
                area.vertex[1].y, center.x, center.y,
                target.x - area.vertex[0].x, target.y - area.vertex[0].y);
-    Image newimage = create_image(size, image.frame->format, false, PIXEL_WHITE,
-                                  abs_black_threshold);
+    Image newimage = create_compatible_image(image, size, false);
     copy_rectangle(image, newimage, area, POINT_ORIGIN, abs_black_threshold);
     wipe_rectangle(image, area, sheet_background, abs_black_threshold);
     copy_rectangle(newimage, image, full_image(newimage), target,
@@ -302,8 +305,7 @@ void align_mask(Image image, const Rectangle inside_area,
              target.y, target.x - inside_area.vertex[0].x,
              target.y - inside_area.vertex[0].y);
 
-  Image newimage = create_image(inside_size, image.frame->format, true,
-                                sheet_background, abs_black_threshold);
+  Image newimage = create_compatible_image(image, inside_size, true);
   copy_rectangle(image, newimage, inside_area, POINT_ORIGIN,
                  abs_black_threshold);
   wipe_rectangle(image, inside_area, sheet_background, abs_black_threshold);

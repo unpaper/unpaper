@@ -2,8 +2,10 @@
 //
 // SPDX-License-Identifier: GPL-2.0-only
 
-#include "imageprocess/image.h"
+#include <libavutil/frame.h>
+
 #include "imageprocess/blit.h"
+#include "imageprocess/image.h"
 #include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
 #include "lib/logging.h"
@@ -14,7 +16,11 @@
  */
 Image create_image(RectangleSize size, int pixel_format, bool fill,
                    Pixel sheet_background, uint8_t abs_black_threshold) {
-  Image image = {.frame = av_frame_alloc()};
+  Image image = {
+      .frame = av_frame_alloc(),
+      .background = sheet_background,
+      .abs_black_threshold = abs_black_threshold,
+  };
 
   image.frame->width = size.width;
   image.frame->height = size.height;
@@ -38,10 +44,17 @@ Image create_image(RectangleSize size, int pixel_format, bool fill,
 void replace_image(Image *image, Image *new_image) {
   free_image(image);
   image->frame = new_image->frame;
+  image->background = new_image->background;
+  image->abs_black_threshold = new_image->abs_black_threshold;
   new_image->frame = NULL;
 }
 
 void free_image(Image *image) { av_frame_free(&image->frame); }
+
+Image create_compatible_image(Image source, RectangleSize size, bool fill) {
+  return create_image(size, source.frame->format, fill, source.background,
+                      source.abs_black_threshold);
+}
 
 RectangleSize size_of_image(Image image) {
   return (RectangleSize){

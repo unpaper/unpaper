@@ -1755,12 +1755,10 @@ int main(int argc, char *argv[]) {
                      points[i].y, rotation);
 
           if (rotation != 0.0) {
-            Image rect =
-                create_image(size_of_rectangle(masks[i]), sheet.frame->format,
-                             false, sheetBackgroundPixel, absBlackThreshold);
-            Image rectTarget =
-                create_image(size_of_image(rect), sheet.frame->format, true,
-                             sheetBackgroundPixel, absBlackThreshold);
+            Image rect = create_compatible_image(
+                sheet, size_of_rectangle(masks[i]), false);
+            Image rectTarget = create_compatible_image(
+                sheet, size_of_rectangle(masks[i]), true);
 
             // copy area to rotate into rSource
             copy_rectangle(sheet, rect,
@@ -1949,11 +1947,11 @@ int main(int argc, char *argv[]) {
 
         for (int j = 0; j < options.output_count; j++) {
           // get pagebuffer
-          page = create_image(
+          page = create_compatible_image(
+              sheet,
               (RectangleSize){sheet.frame->width / options.output_count,
                               sheet.frame->height},
-              sheet.frame->format, false, sheetBackgroundPixel,
-              absBlackThreshold);
+              false);
           copy_rectangle(
               sheet, page,
               (Rectangle){{{page.frame->width * j, 0},
