@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "lib/options.h"
@@ -42,4 +44,16 @@ void options_init(Options *o) {
   o->no_border_multi_index = multi_index_empty();
   o->no_border_scan_multi_index = multi_index_empty();
   o->no_border_align_multi_index = multi_index_empty();
+}
+
+bool parse_rectangle(const char *str, Rectangle *rect) {
+  return sscanf(str, "%" SCNd32 ",%" SCNd32 ",%" SCNd32 ",%" SCNd32 "",
+                &rect->vertex[0].x, &rect->vertex[0].y, &rect->vertex[1].x,
+                &rect->vertex[1].y) == 4;
+}
+
+int print_rectangle(Rectangle rect) {
+  return printf("[%" PRId32 ",%" PRId32 ",%" PRId32 ",%" PRId32 "]",
+                rect.vertex[0].x, rect.vertex[0].y, rect.vertex[1].x,
+                rect.vertex[1].y);
 }

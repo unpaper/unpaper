@@ -53,23 +53,6 @@ static inline int pixelValue(uint8_t r, uint8_t g, uint8_t b) {
   return (r) << 16 | (g) << 8 | (b);
 }
 
-/* Conversion functions from old types to new types */
-static inline Rectangle maskToRectangle(const Mask mask) {
-  return (Rectangle){
-      .vertex =
-          {
-              {
-                  .x = mask[LEFT],
-                  .y = mask[TOP],
-              },
-              {
-                  .x = mask[RIGHT],
-                  .y = mask[BOTTOM],
-              },
-          },
-  };
-}
-
 static inline Pixel pixelValueToPixel(uint32_t pixelValue) {
   return (Pixel){
       .r = (pixelValue >> 16) & 0xff,
