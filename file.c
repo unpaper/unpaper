@@ -25,7 +25,8 @@
  * @param image structure to hold loaded image
  * @param type returns the type of the loaded image
  */
-void loadImage(const char *filename, AVFrame **image) {
+void loadImage(const char *filename, AVFrame **image, Pixel sheet_background,
+               uint8_t abs_black_threshold) {
   int ret;
   AVFormatContext *s = NULL;
   AVCodecContext *avctx = NULL;
@@ -102,13 +103,13 @@ void loadImage(const char *filename, AVFrame **image) {
     Rectangle area = full_image(frame);
 
     *image = create_image(size_of_rectangle(area), AV_PIX_FMT_RGB24, false,
-                          sheetBackgroundPixel, absBlackThreshold);
+                          sheet_background, abs_black_threshold);
 
     const uint32_t *palette = (const uint32_t *)frame->data[1];
     scan_rectangle(area) {
       const uint8_t palette_index = frame->data[0][frame->linesize[0] * y + x];
       set_pixel(*image, (Point){x, y},
-                pixelValueToPixel(palette[palette_index]), absBlackThreshold);
+                pixelValueToPixel(palette[palette_index]), abs_black_threshold);
     }
   } break;
 
@@ -128,7 +129,8 @@ void loadImage(const char *filename, AVFrame **image) {
  * @param type filetype of the image to save
  * @return true on success, false on failure
  */
-void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
+void saveImage(char *filename, AVFrame *input, int outputPixFmt,
+               Pixel sheet_background, uint8_t abs_black_threshold) {
   enum AVCodecID output_codec = -1;
   const AVCodec *codec;
   AVFormatContext *out_ctx;
@@ -171,9 +173,9 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
   if (input->format != outputPixFmt) {
     output =
         create_image((RectangleSize){input->width, input->height}, outputPixFmt,
-                     false, sheetBackgroundPixel, absBlackThreshold);
+                     false, sheet_background, abs_black_threshold);
     copy_rectangle(input, output, full_image(input), POINT_ORIGIN,
-                   absBlackThreshold);
+                   abs_black_threshold);
   }
 
   codec = avcodec_find_encoder(output_codec);
@@ -252,10 +254,12 @@ void saveImage(char *filename, AVFrame *input, int outputPixFmt) {
 /**
  * Saves the image if full debugging mode is enabled.
  */
-void saveDebug(char *filenameTemplate, int index, AVFrame *image) {
+void saveDebug(char *filenameTemplate, int index, AVFrame *image,
+               Pixel sheet_background, uint8_t abs_black_threshold) {
   if (verbose >= VERBOSE_DEBUG_SAVE) {
     char debugFilename[100];
     sprintf(debugFilename, filenameTemplate, index);
-    saveImage(debugFilename, image, image->format);
+    saveImage(debugFilename, image, image->format, sheet_background,
+              abs_black_threshold);
   }
 }

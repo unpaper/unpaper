@@ -23,18 +23,16 @@
 
 #define pluralS(i) ((i > 1) ? "s" : "")
 
-/* --- global variable ---------------------------------------------------- */
-
-extern Pixel sheetBackgroundPixel;
-extern unsigned int absBlackThreshold;
-
 /* --- tool function for file handling ------------------------------------ */
 
-void loadImage(const char *filename, AVFrame **image);
+void loadImage(const char *filename, AVFrame **image, Pixel sheet_background,
+               uint8_t abs_black_threshold);
 
-void saveImage(char *filename, AVFrame *image, int outputPixFmt);
+void saveImage(char *filename, AVFrame *image, int outputPixFmt,
+               Pixel sheet_background, uint8_t abs_black_threshold);
 
-void saveDebug(char *filenameTemplate, int index, AVFrame *image)
+void saveDebug(char *filenameTemplate, int index, AVFrame *image,
+               Pixel sheet_background, uint8_t abs_black_threshold)
     __attribute__((format(printf, 1, 0)));
 
 /* --- arithmetic tool functions ------------------------------------------ */

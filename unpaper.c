@@ -50,38 +50,6 @@
 
 /* --- global variable ---------------------------------------------------- */
 
-Interpolation interpolateType = INTERP_CUBIC;
-
-Pixel sheetBackgroundPixel;
-unsigned int absBlackThreshold;
-unsigned int absWhiteThreshold;
-
-int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
-int sheetBackground = WHITE24;
-int preRotate = 0;
-int postRotate = 0;
-int preMirror = 0;
-int postMirror = 0;
-int preShift[DIRECTIONS_COUNT] = {0, 0};
-int postShift[DIRECTIONS_COUNT] = {0, 0};
-int size[DIRECTIONS_COUNT] = {-1, -1};
-int postSize[DIRECTIONS_COUNT] = {-1, -1};
-int stretchSize[DIRECTIONS_COUNT] = {-1, -1};
-int postStretchSize[DIRECTIONS_COUNT] = {-1, -1};
-float zoomFactor = 1.0;
-float postZoomFactor = 1.0;
-Border preBorder = {0, 0, 0, 0};
-Border postBorder = {0, 0, 0, 0};
-Border border = {0, 0, 0, 0};
-bool maskValid[MAX_MASKS];
-float whiteThreshold = 0.9;
-float blackThreshold = 0.33;
-bool writeoutput = true;
-bool multisheets = true;
-
-bool overwrite = false;
-int dpi = 300;
-
 // We use these for the "val" field in struct option, for getopt_long_only().
 // These are for the options that do not have single characters as short
 // options.
@@ -249,6 +217,38 @@ int main(int argc, char *argv[]) {
   float grayfilterThreshold = 0.5;
   GrayfilterParameters grayfilterParams;
   int noisefilterIntensity = 4;
+
+  Interpolation interpolateType = INTERP_CUBIC;
+
+  Pixel sheetBackgroundPixel;
+  unsigned int absBlackThreshold;
+  unsigned int absWhiteThreshold;
+
+  int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
+  int sheetBackground = WHITE24;
+  int preRotate = 0;
+  int postRotate = 0;
+  int preMirror = 0;
+  int postMirror = 0;
+  int preShift[DIRECTIONS_COUNT] = {0, 0};
+  int postShift[DIRECTIONS_COUNT] = {0, 0};
+  int size[DIRECTIONS_COUNT] = {-1, -1};
+  int postSize[DIRECTIONS_COUNT] = {-1, -1};
+  int stretchSize[DIRECTIONS_COUNT] = {-1, -1};
+  int postStretchSize[DIRECTIONS_COUNT] = {-1, -1};
+  float zoomFactor = 1.0;
+  float postZoomFactor = 1.0;
+  Border preBorder = {0, 0, 0, 0};
+  Border postBorder = {0, 0, 0, 0};
+  Border border = {0, 0, 0, 0};
+  bool maskValid[MAX_MASKS];
+  float whiteThreshold = 0.9;
+  float blackThreshold = 0.33;
+  bool writeoutput = true;
+  bool multisheets = true;
+
+  bool overwrite = false;
+  int dpi = 300;
 
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
@@ -1120,8 +1120,10 @@ int main(int argc, char *argv[]) {
             NULL) { // may be null if --insert-blank or --replace-blank
           verboseLog(VERBOSE_MORE, "loading file %s.\n", inputFileNames[j]);
 
-          loadImage(inputFileNames[j], &page);
-          saveDebug("_loaded_%d.pnm", inputNr - options.input_count + j, page);
+          loadImage(inputFileNames[j], &page, sheetBackgroundPixel,
+                    absBlackThreshold);
+          saveDebug("_loaded_%d.pnm", inputNr - options.input_count + j, page,
+                    sheetBackgroundPixel, absBlackThreshold);
 
           if (outputPixFmt == -1 && page != NULL) {
             outputPixFmt = page->format;
@@ -1161,16 +1163,19 @@ int main(int argc, char *argv[]) {
                                sheetBackgroundPixel, absBlackThreshold);
         }
         if (page != NULL) {
-          saveDebug("_page%d.pnm", inputNr - options.input_count + j, page);
+          saveDebug("_page%d.pnm", inputNr - options.input_count + j, page,
+                    sheetBackgroundPixel, absBlackThreshold);
           saveDebug("_before_center_page%d.pnm",
-                    inputNr - options.input_count + j, sheet);
+                    inputNr - options.input_count + j, sheet,
+                    sheetBackgroundPixel, absBlackThreshold);
 
           center_image(page, sheet, (Point){(w * j / options.input_count), 0},
                        (RectangleSize){(w / options.input_count), h},
                        sheetBackgroundPixel, absBlackThreshold);
 
           saveDebug("_after_center_page%d.pnm",
-                    inputNr - options.input_count + j, sheet);
+                    inputNr - options.input_count + j, sheet,
+                    sheetBackgroundPixel, absBlackThreshold);
         }
       }
 
@@ -1504,10 +1509,12 @@ int main(int argc, char *argv[]) {
       w *= zoomFactor;
       h *= zoomFactor;
 
-      saveDebug("_before-stretch%d.pnm", nr, sheet);
+      saveDebug("_before-stretch%d.pnm", nr, sheet, sheetBackgroundPixel,
+                absBlackThreshold);
       stretch_and_replace(&sheet, (RectangleSize){w, h}, interpolateType,
                           absBlackThreshold);
-      saveDebug("_after-stretch%d.pnm", nr, sheet);
+      saveDebug("_after-stretch%d.pnm", nr, sheet, sheetBackgroundPixel,
+                absBlackThreshold);
 
       // size
       if ((size[WIDTH] != -1) || (size[HEIGHT] != -1)) {
@@ -1521,10 +1528,12 @@ int main(int argc, char *argv[]) {
         } else {
           h = sheet->height;
         }
-        saveDebug("_before-resize%d.pnm", nr, sheet);
+        saveDebug("_before-resize%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         resize_and_replace(&sheet, (RectangleSize){w, h}, interpolateType,
                            sheetBackgroundPixel, absBlackThreshold);
-        saveDebug("_after-resize%d.pnm", nr, sheet);
+        saveDebug("_after-resize%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
       }
 
       // handle sheet layout
@@ -1629,9 +1638,11 @@ int main(int argc, char *argv[]) {
       // black area filter
       if (!isExcluded(nr, options.no_blackfilter_multi_index,
                       options.ignore_multi_index)) {
-        saveDebug("_before-blackfilter%d.pnm", nr, sheet);
+        saveDebug("_before-blackfilter%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         blackfilter(sheet, blackfilterParams, absBlackThreshold);
-        saveDebug("_after-blackfilter%d.pnm", nr, sheet);
+        saveDebug("_after-blackfilter%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
       } else {
         verboseLog(VERBOSE_MORE, "+ blackfilter DISABLED for sheet %d\n", nr);
       }
@@ -1641,10 +1652,12 @@ int main(int argc, char *argv[]) {
                       options.ignore_multi_index)) {
         verboseLog(VERBOSE_NORMAL, "noise-filter ...");
 
-        saveDebug("_before-noisefilter%d.pnm", nr, sheet);
+        saveDebug("_before-noisefilter%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         uint64_t filterResult = noisefilter(
             sheet, noisefilterIntensity, absWhiteThreshold, absBlackThreshold);
-        saveDebug("_after-noisefilter%d.pnm", nr, sheet);
+        saveDebug("_after-noisefilter%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         verboseLog(VERBOSE_NORMAL, " deleted %" PRId64 " clusters.\n",
                    filterResult);
 
@@ -1657,10 +1670,12 @@ int main(int argc, char *argv[]) {
                       options.ignore_multi_index)) {
         verboseLog(VERBOSE_NORMAL, "blur-filter...");
 
-        saveDebug("_before-blurfilter%d.pnm", nr, sheet);
+        saveDebug("_before-blurfilter%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         uint64_t filterResult = blurfilter(
             sheet, blurfilterParams, absWhiteThreshold, absBlackThreshold);
-        saveDebug("_after-blurfilter%d.pnm", nr, sheet);
+        saveDebug("_after-blurfilter%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
                    filterResult);
 
@@ -1679,9 +1694,11 @@ int main(int argc, char *argv[]) {
 
       // permanently apply masks
       if (maskCount > 0) {
-        saveDebug("_before-masking%d.pnm", nr, sheet);
+        saveDebug("_before-masking%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         apply_masks(sheet, masks, maskCount, maskColorPixel, absBlackThreshold);
-        saveDebug("_after-masking%d.pnm", nr, sheet);
+        saveDebug("_after-masking%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
       }
 
       // gray filter
@@ -1689,10 +1706,12 @@ int main(int argc, char *argv[]) {
                       options.ignore_multi_index)) {
         verboseLog(VERBOSE_NORMAL, "gray-filter...");
 
-        saveDebug("_before-grayfilter%d.pnm", nr, sheet);
+        saveDebug("_before-grayfilter%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         uint64_t filterResult =
             grayfilter(sheet, grayfilterParams, absBlackThreshold);
-        saveDebug("_after-grayfilter%d.pnm", nr, sheet);
+        saveDebug("_after-grayfilter%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
                    filterResult);
       } else {
@@ -1702,7 +1721,8 @@ int main(int argc, char *argv[]) {
       // rotation-detection
       if ((!isExcluded(nr, options.no_deskew_multi_index,
                        options.ignore_multi_index))) {
-        saveDebug("_before-deskew%d.pnm", nr, sheet);
+        saveDebug("_before-deskew%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
 
         // detect masks again, we may get more precise results now after first
         // masking and grayfilter
@@ -1716,9 +1736,11 @@ int main(int argc, char *argv[]) {
 
         // auto-deskew each mask
         for (int i = 0; i < maskCount; i++) {
-          saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
+          saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet,
+                    sheetBackgroundPixel, absBlackThreshold);
           float rotation = detect_rotation(sheet, masks[i], deskewParams);
-          saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
+          saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet,
+                    sheetBackgroundPixel, absBlackThreshold);
 
           verboseLog(VERBOSE_NORMAL, "rotate (%d,%d): %f\n", points[i].x,
                      points[i].y, rotation);
@@ -1749,7 +1771,8 @@ int main(int argc, char *argv[]) {
           }
         }
 
-        saveDebug("_after-deskew%d.pnm", nr, sheet);
+        saveDebug("_after-deskew%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
       } else {
         verboseLog(VERBOSE_MORE, "+ deskewing DISABLED for sheet %d\n", nr);
       }
@@ -1769,13 +1792,15 @@ int main(int argc, char *argv[]) {
           verboseLog(VERBOSE_MORE, "(mask-scan before centering disabled)\n");
         }
 
-        saveDebug("_before-centering%d.pnm", nr, sheet);
+        saveDebug("_before-centering%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         // center masks on the sheet, according to their page position
         for (int i = 0; i < maskCount; i++) {
           center_mask(sheet, points[i], masks[i], sheetBackgroundPixel,
                       absBlackThreshold);
         }
-        saveDebug("_after-centering%d.pnm", nr, sheet);
+        saveDebug("_after-centering%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
       } else {
         verboseLog(VERBOSE_MORE, "+ auto-centering DISABLED for sheet %d\n",
                    nr);
@@ -1801,7 +1826,8 @@ int main(int argc, char *argv[]) {
       if (!isExcluded(nr, options.no_border_scan_multi_index,
                       options.ignore_multi_index)) {
         Rectangle autoborderMask[outsideBorderscanMaskCount];
-        saveDebug("_before-border%d.pnm", nr, sheet);
+        saveDebug("_before-border%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
           autoborderMask[i] =
               border_to_mask(sheet, detect_border(sheet, borderScanParams,
@@ -1822,7 +1848,8 @@ int main(int argc, char *argv[]) {
                        "+ border-centering DISABLED for sheet %d\n", nr);
           }
         }
-        saveDebug("_after-border%d.pnm", nr, sheet);
+        saveDebug("_after-border%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
       } else {
         verboseLog(VERBOSE_MORE, "+ border-scan DISABLED for sheet %d\n", nr);
       }
@@ -1904,7 +1931,8 @@ int main(int argc, char *argv[]) {
       if (writeoutput == true) {
         verboseLog(VERBOSE_NORMAL, "writing output.\n");
         // write files
-        saveDebug("_before-save%d.pnm", nr, sheet);
+        saveDebug("_before-save%d.pnm", nr, sheet, sheetBackgroundPixel,
+                  absBlackThreshold);
 
         if (outputPixFmt == -1) {
           outputPixFmt = sheet->format;
@@ -1924,7 +1952,8 @@ int main(int argc, char *argv[]) {
 
           verboseLog(VERBOSE_MORE, "saving file %s.\n", outputFileNames[j]);
 
-          saveImage(outputFileNames[j], page, outputPixFmt);
+          saveImage(outputFileNames[j], page, outputPixFmt,
+                    sheetBackgroundPixel, absBlackThreshold);
 
           av_frame_free(&page);
         }
