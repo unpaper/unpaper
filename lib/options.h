@@ -4,7 +4,10 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 #include "constants.h"
+#include "imageprocess/primitives.h"
 #include "parse.h"
 
 typedef struct {
@@ -37,3 +40,6 @@ typedef struct {
 } Options;
 
 void options_init(Options *o);
+
+bool parse_rectangle(const char *str, Rectangle *rect);
+int print_rectangle(Rectangle rect);

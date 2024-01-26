@@ -240,8 +240,8 @@ int main(int argc, char *argv[]) {
   int blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
   int blackfilterScanStep[DIRECTIONS_COUNT] = {5, 5};
   float blackfilterScanThreshold = 0.95;
-  int blackfilterExcludeCount = 0;
-  int blackfilterExclude[MAX_MASKS][EDGES_COUNT];
+  size_t blackfilterExcludeCount = 0;
+  Rectangle blackfilterExclude[MAX_MASKS];
   int blackfilterIntensity = 20;
   BlackfilterParameters blackfilterParams;
   int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
@@ -701,17 +701,10 @@ int main(int argc, char *argv[]) {
 
     case OPT_BLACK_FILTER_SCAN_EXCLUDE:
       if (blackfilterExcludeCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        blackfilterExclude[blackfilterExcludeCount][LEFT] = left;
-        blackfilterExclude[blackfilterExcludeCount][TOP] = top;
-        blackfilterExclude[blackfilterExcludeCount][RIGHT] = right;
-        blackfilterExclude[blackfilterExcludeCount][BOTTOM] = bottom;
-        blackfilterExcludeCount++;
+        if (parse_rectangle(optarg,
+                            &blackfilterExclude[blackfilterExcludeCount])) {
+          blackfilterExcludeCount++;
+        }
       } else {
         fprintf(stderr,
                 "maximum number of blackfilter exclusion (%d) exceeded, "
@@ -1026,16 +1019,12 @@ int main(int argc, char *argv[]) {
       grayfilterThreshold);
   // This will be reachable memory at the end of the program, we don't need to
   // free it.
-  Rectangle blackfilterExclusionAreas[blackfilterExcludeCount];
-  for (size_t i = 0; i < blackfilterExcludeCount; i++) {
-    blackfilterExclusionAreas[i] = maskToRectangle(blackfilterExclude[i]);
-  }
   blackfilterParams = validate_blackfilter_parameters(
       blackfilterScanSize[HORIZONTAL], blackfilterScanSize[VERTICAL],
       blackfilterScanStep[HORIZONTAL], blackfilterScanStep[VERTICAL],
       blackfilterScanDepth[HORIZONTAL], blackfilterScanDepth[VERTICAL],
       blackfilterScanDirections, blackfilterScanThreshold, blackfilterIntensity,
-      blackfilterExcludeCount, blackfilterExclusionAreas);
+      blackfilterExcludeCount, blackfilterExclude);
   blurfilterParams = validate_blurfilter_parameters(
       blurfilterScanSize[HORIZONTAL], blurfilterScanSize[VERTICAL],
       blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
@@ -1336,10 +1325,8 @@ int main(int argc, char *argv[]) {
           printf("blackfilter-scan-threshold: %f\n", blackfilterScanThreshold);
           if (blackfilterExcludeCount > 0) {
             printf("blackfilter-scan-exclude: ");
-            for (int i = 0; i < blackfilterExcludeCount; i++) {
-              printf("[%d,%d,%d,%d] ", blackfilterExclude[i][LEFT],
-                     blackfilterExclude[i][TOP], blackfilterExclude[i][RIGHT],
-                     blackfilterExclude[i][BOTTOM]);
+            for (size_t i = 0; i < blackfilterExcludeCount; i++) {
+              print_rectangle(blackfilterExclude[i]);
             }
             printf("\n");
           }
@@ -1589,13 +1576,11 @@ int main(int argc, char *argv[]) {
         // avoid inner half of the sheet to be blackfilter-detectable
         if (blackfilterExcludeCount ==
             0) { // no manual settings, use auto-values
-          blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet->width / 4;
-          blackfilterExclude[blackfilterExcludeCount][TOP] = sheet->height / 4;
-          blackfilterExclude[blackfilterExcludeCount][RIGHT] =
-              sheet->width / 2 + sheet->width / 4;
-          blackfilterExclude[blackfilterExcludeCount][BOTTOM] =
-              sheet->height / 2 + sheet->height / 4;
-          blackfilterExcludeCount++;
+          RectangleSize sheetSize = size_of_image(sheet);
+          blackfilterExclude[blackfilterExcludeCount++] = rectangle_from_size(
+              (Point){sheetSize.width / 4, sheetSize.height / 4},
+              (RectangleSize){.width = sheetSize.width / 2,
+                              .height = sheetSize.height / 2});
         }
         // set single outside border to start scanning for final border-scan
         if (outsideBorderscanMaskCount ==
@@ -1628,21 +1613,19 @@ int main(int argc, char *argv[]) {
         // avoid inner half of each page to be blackfilter-detectable
         if (blackfilterExcludeCount ==
             0) { // no manual settings, use auto-values
-          blackfilterExclude[blackfilterExcludeCount][LEFT] = sheet->width / 8;
-          blackfilterExclude[blackfilterExcludeCount][TOP] = sheet->height / 4;
-          blackfilterExclude[blackfilterExcludeCount][RIGHT] =
-              sheet->width / 4 + sheet->width / 8;
-          blackfilterExclude[blackfilterExcludeCount][BOTTOM] =
-              sheet->height / 2 + sheet->height / 4;
-          blackfilterExcludeCount++;
-          blackfilterExclude[blackfilterExcludeCount][LEFT] =
-              sheet->width / 2 + sheet->width / 8;
-          blackfilterExclude[blackfilterExcludeCount][TOP] = sheet->height / 4;
-          blackfilterExclude[blackfilterExcludeCount][RIGHT] =
-              sheet->width / 2 + sheet->width / 4 + sheet->width / 8;
-          blackfilterExclude[blackfilterExcludeCount][BOTTOM] =
-              sheet->height / 2 + sheet->height / 4;
-          blackfilterExcludeCount++;
+          RectangleSize sheetSize = size_of_image(sheet);
+          RectangleSize filterSize = {
+              .width = sheetSize.width / 4,
+              .height = sheetSize.height / 2,
+          };
+          Point firstFilterOrigin = {sheetSize.width / 8, sheetSize.height / 4};
+          Point secondFilterOrigin =
+              shift_point(firstFilterOrigin, (Delta){sheet->width / 2});
+
+          blackfilterExclude[blackfilterExcludeCount++] =
+              rectangle_from_size(firstFilterOrigin, filterSize);
+          blackfilterExclude[blackfilterExcludeCount++] =
+              rectangle_from_size(secondFilterOrigin, filterSize);
         }
         // set two outside borders to start scanning for final border-scan
         if (outsideBorderscanMaskCount ==
