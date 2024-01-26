@@ -24,7 +24,7 @@
 #include "imageprocess/interpolate.h"
 #include "imageprocess/masks.h"
 #include "imageprocess/pixel.h"
-#include "options.h"
+#include "lib/options.h"
 #include "parse.h"
 #include "unpaper.h"
 #include "version.h"
@@ -258,7 +258,7 @@ int main(int argc, char *argv[]) {
   // --- parse parameters                                            ---
   // -------------------------------------------------------------------
 
-  optionsInit(&options);
+  options_init(&options);
 
   while (true) {
     int c;
@@ -457,27 +457,27 @@ int main(int argc, char *argv[]) {
       break;
 
     case '#':
-      parseMultiIndex(optarg, &options.sheetMultiIndex);
+      parseMultiIndex(optarg, &options.sheet_multi_index);
       // allow 0 as start sheet, might be overwritten by --start-sheet again
-      if (options.sheetMultiIndex.count > 0 &&
-          options.startSheet > options.sheetMultiIndex.indexes[0])
-        options.startSheet = options.sheetMultiIndex.indexes[0];
+      if (options.sheet_multi_index.count > 0 &&
+          options.start_sheet > options.sheet_multi_index.indexes[0])
+        options.start_sheet = options.sheet_multi_index.indexes[0];
       break;
 
     case OPT_START_SHEET:
-      sscanf(optarg, "%d", &options.startSheet);
+      sscanf(optarg, "%d", &options.start_sheet);
       break;
 
     case OPT_END_SHEET:
-      sscanf(optarg, "%d", &options.endSheet);
+      sscanf(optarg, "%d", &options.end_sheet);
       break;
 
     case OPT_START_INPUT:
-      sscanf(optarg, "%d", &options.startInput);
+      sscanf(optarg, "%d", &options.start_input);
       break;
 
     case OPT_START_OUTPUT:
-      sscanf(optarg, "%d", &options.startOutput);
+      sscanf(optarg, "%d", &options.start_output);
       break;
 
     case 'S':
@@ -489,13 +489,13 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'x':
-      parseMultiIndex(optarg, &options.excludeMultiIndex);
-      if (options.excludeMultiIndex.count == -1)
-        options.excludeMultiIndex.count = 0; // 'exclude all' makes no sense
+      parseMultiIndex(optarg, &options.exclude_multi_index);
+      if (options.exclude_multi_index.count == -1)
+        options.exclude_multi_index.count = 0; // 'exclude all' makes no sense
       break;
 
     case 'n':
-      parseMultiIndex(optarg, &options.ignoreMultiIndex);
+      parseMultiIndex(optarg, &options.ignore_multi_index);
       break;
 
     case OPT_PRE_ROTATE:
@@ -676,7 +676,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_NO_BLACK_FILTER:
-      parseMultiIndex(optarg, &options.noBlackfilterMultiIndex);
+      parseMultiIndex(optarg, &options.no_blackfilter_multi_index);
       break;
 
     case OPT_BLACK_FILTER_SCAN_DIRECTION:
@@ -725,7 +725,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_NO_NOISE_FILTER:
-      parseMultiIndex(optarg, &options.noNoisefilterMultiIndex);
+      parseMultiIndex(optarg, &options.no_noisefilter_multi_index);
       break;
 
     case OPT_NOISE_FILTER_INTENSITY:
@@ -733,7 +733,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_NO_BLUR_FILTER:
-      parseMultiIndex(optarg, &options.noBlurfilterMultiIndex);
+      parseMultiIndex(optarg, &options.no_blurfilter_multi_index);
       break;
 
     case OPT_BLUR_FILTER_SIZE:
@@ -749,7 +749,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_NO_GRAY_FILTER:
-      parseMultiIndex(optarg, &options.noGrayfilterMultiIndex);
+      parseMultiIndex(optarg, &options.no_grayfilter_multi_index);
       break;
 
     case OPT_GRAY_FILTER_SIZE:
@@ -765,7 +765,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_NO_MASK_SCAN:
-      parseMultiIndex(optarg, &options.noMaskScanMultiIndex);
+      parseMultiIndex(optarg, &options.no_mask_scan_multi_index);
       break;
 
     case OPT_MASK_SCAN_DIRECTION:
@@ -803,11 +803,11 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_NO_MASK_CENTER:
-      parseMultiIndex(optarg, &options.noMaskCenterMultiIndex);
+      parseMultiIndex(optarg, &options.no_mask_center_multi_index);
       break;
 
     case OPT_NO_DESKEW:
-      parseMultiIndex(optarg, &options.noDeskewMultiIndex);
+      parseMultiIndex(optarg, &options.no_deskew_multi_index);
       break;
 
     case OPT_DESKEW_SCAN_DIRECTION:
@@ -835,7 +835,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_NO_BORDER_SCAN:
-      parseMultiIndex(optarg, &options.noBorderScanMultiIndex);
+      parseMultiIndex(optarg, &options.no_border_scan_multi_index);
       break;
 
     case OPT_BORDER_SCAN_DIRECTION:
@@ -863,15 +863,15 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_NO_BORDER_ALIGN:
-      parseMultiIndex(optarg, &options.noBorderAlignMultiIndex);
+      parseMultiIndex(optarg, &options.no_border_align_multi_index);
       break;
 
     case OPT_NO_WIPE:
-      parseMultiIndex(optarg, &options.noWipeMultiIndex);
+      parseMultiIndex(optarg, &options.no_wipe_multi_index);
       break;
 
     case OPT_NO_BORDER:
-      parseMultiIndex(optarg, &options.noBorderMultiIndex);
+      parseMultiIndex(optarg, &options.no_border_multi_index);
       break;
 
     case 'w':
@@ -883,23 +883,23 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_INPUT_PAGES:
-      sscanf(optarg, "%d", &options.inputCount);
-      if (!(options.inputCount >= 1 && options.inputCount <= 2)) {
+      sscanf(optarg, "%d", &options.input_count);
+      if (!(options.input_count >= 1 && options.input_count <= 2)) {
         fprintf(
             stderr,
             "cannot set --input-pages value other than 1 or 2, ignoring.\n");
-        options.inputCount = 1;
+        options.input_count = 1;
       }
 
       break;
 
     case OPT_OUTPUT_PAGES:
-      sscanf(optarg, "%d", &options.outputCount);
-      if (!(options.outputCount >= 1 && options.outputCount <= 2)) {
+      sscanf(optarg, "%d", &options.output_count);
+      if (!(options.output_count >= 1 && options.output_count <= 2)) {
         fprintf(
             stderr,
             "cannot set --output-pages value other than 1 or 2, ignoring.\n");
-        options.outputCount = 1;
+        options.output_count = 1;
       }
 
       break;
@@ -913,11 +913,11 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_INSERT_BLANK:
-      parseMultiIndex(optarg, &options.insertBlank);
+      parseMultiIndex(optarg, &options.insert_blank);
       break;
 
     case OPT_REPLACE_BLANK:
-      parseMultiIndex(optarg, &options.replaceBlank);
+      parseMultiIndex(optarg, &options.replace_blank);
       break;
 
     case 'T':
@@ -992,16 +992,16 @@ int main(int argc, char *argv[]) {
 
   verboseLog(VERBOSE_NORMAL, WELCOME); // welcome message
 
-  if (options.startInput == -1)
-    options.startInput = (options.startSheet - 1) * options.inputCount + 1;
-  if (options.startOutput == -1)
-    options.startOutput = (options.startSheet - 1) * options.outputCount + 1;
+  if (options.start_input == -1)
+    options.start_input = (options.start_sheet - 1) * options.input_count + 1;
+  if (options.start_output == -1)
+    options.start_output = (options.start_sheet - 1) * options.output_count + 1;
 
-  inputNr = options.startInput;
-  outputNr = options.startOutput;
+  inputNr = options.start_input;
+  outputNr = options.start_output;
 
-  if (!multisheets && options.endSheet == -1)
-    options.endSheet = options.startSheet;
+  if (!multisheets && options.end_sheet == -1)
+    options.end_sheet = options.start_sheet;
 
   // Calculate the constant absolute values based on the relative parameters.
   sheetBackgroundPixel = pixelValueToPixel(sheetBackground);
@@ -1041,8 +1041,8 @@ int main(int argc, char *argv[]) {
       blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
       blurfilterIntensity);
 
-  for (int nr = options.startSheet;
-       (options.endSheet == -1) || (nr <= options.endSheet); nr++) {
+  for (int nr = options.start_sheet;
+       (options.end_sheet == -1) || (nr <= options.end_sheet); nr++) {
     char inputFilesBuffer[2][255];
     char outputFilesBuffer[2][255];
     char *inputFileNames[2];
@@ -1055,9 +1055,9 @@ int main(int argc, char *argv[]) {
     bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
     bool outputWildcard = false;
 
-    for (int i = 0; i < options.inputCount; i++) {
-      bool ins = isInMultiIndex(inputNr, options.insertBlank);
-      bool repl = isInMultiIndex(inputNr, options.replaceBlank);
+    for (int i = 0; i < options.input_count; i++) {
+      bool ins = isInMultiIndex(inputNr, options.insert_blank);
+      bool repl = isInMultiIndex(inputNr, options.replace_blank);
 
       if (repl) {
         inputFileNames[i] = NULL;
@@ -1068,8 +1068,8 @@ int main(int argc, char *argv[]) {
         sprintf(inputFilesBuffer[i], argv[optind], inputNr++);
         inputFileNames[i] = inputFilesBuffer[i];
       } else if (optind >= argc) {
-        if (options.endSheet == -1) {
-          options.endSheet = nr - 1;
+        if (options.end_sheet == -1) {
+          options.end_sheet = nr - 1;
           goto sheet_end;
         } else {
           errOutput("not enough input files given.");
@@ -1086,8 +1086,8 @@ int main(int argc, char *argv[]) {
       if (inputFileNames[i] != NULL) {
         struct stat statBuf;
         if (stat(inputFileNames[i], &statBuf) != 0) {
-          if (options.endSheet == -1) {
-            options.endSheet = nr - 1;
+          if (options.end_sheet == -1) {
+            options.end_sheet = nr - 1;
             goto sheet_end;
           } else {
             errOutput("unable to open file %s.", inputFileNames[i]);
@@ -1103,7 +1103,7 @@ int main(int argc, char *argv[]) {
       errOutput("not enough output files given.");
     }
     outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
-    for (int i = 0; i < options.outputCount; i++) {
+    for (int i = 0; i < options.output_count; i++) {
       if (outputWildcard) {
         sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
         outputFileNames[i] = outputFilesBuffer[i];
@@ -1128,8 +1128,8 @@ int main(int argc, char *argv[]) {
     // --- process single sheet                                    ---
     // ---------------------------------------------------------------
 
-    if (isInMultiIndex(nr, options.sheetMultiIndex) &&
-        (!isInMultiIndex(nr, options.excludeMultiIndex))) {
+    if (isInMultiIndex(nr, options.sheet_multi_index) &&
+        (!isInMultiIndex(nr, options.exclude_multi_index))) {
       char s1[1023]; // buffers for result of implode()
       char s2[1023];
 
@@ -1141,23 +1141,23 @@ int main(int argc, char *argv[]) {
       if (multisheets) {
         verboseLog(
             VERBOSE_NORMAL, "Processing sheet #%d: %s -> %s\n", nr,
-            implode(s1, (const char **)inputFileNames, options.inputCount),
-            implode(s2, (const char **)outputFileNames, options.outputCount));
+            implode(s1, (const char **)inputFileNames, options.input_count),
+            implode(s2, (const char **)outputFileNames, options.output_count));
       } else {
         verboseLog(
             VERBOSE_NORMAL, "Processing sheet: %s -> %s\n",
-            implode(s1, (const char **)inputFileNames, options.inputCount),
-            implode(s2, (const char **)outputFileNames, options.outputCount));
+            implode(s1, (const char **)inputFileNames, options.input_count),
+            implode(s2, (const char **)outputFileNames, options.output_count));
       }
 
       // load input image(s)
-      for (int j = 0; j < options.inputCount; j++) {
+      for (int j = 0; j < options.input_count; j++) {
         if (inputFileNames[j] !=
             NULL) { // may be null if --insert-blank or --replace-blank
           verboseLog(VERBOSE_MORE, "loading file %s.\n", inputFileNames[j]);
 
           loadImage(inputFileNames[j], &page);
-          saveDebug("_loaded_%d.pnm", inputNr - options.inputCount + j, page);
+          saveDebug("_loaded_%d.pnm", inputNr - options.input_count + j, page);
 
           if (outputPixFmt == -1 && page != NULL) {
             outputPixFmt = page->format;
@@ -1176,7 +1176,7 @@ int main(int argc, char *argv[]) {
             if (sheetSize[WIDTH] != -1) {
               w = sheetSize[WIDTH];
             } else {
-              w = page->width * options.inputCount;
+              w = page->width * options.input_count;
             }
           }
           if (h == -1) {
@@ -1197,16 +1197,16 @@ int main(int argc, char *argv[]) {
                                sheetBackgroundPixel, absBlackThreshold);
         }
         if (page != NULL) {
-          saveDebug("_page%d.pnm", inputNr - options.inputCount + j, page);
+          saveDebug("_page%d.pnm", inputNr - options.input_count + j, page);
           saveDebug("_before_center_page%d.pnm",
-                    inputNr - options.inputCount + j, sheet);
+                    inputNr - options.input_count + j, sheet);
 
-          center_image(page, sheet, (Point){(w * j / options.inputCount), 0},
-                       (RectangleSize){(w / options.inputCount), h},
+          center_image(page, sheet, (Point){(w * j / options.input_count), 0},
+                       (RectangleSize){(w / options.input_count), h},
                        sheetBackgroundPixel, absBlackThreshold);
 
           saveDebug("_after_center_page%d.pnm",
-                    inputNr - options.inputCount + j, sheet);
+                    inputNr - options.input_count + j, sheet);
         }
       }
 
@@ -1324,7 +1324,7 @@ int main(int argc, char *argv[]) {
         if (postZoomFactor != 1.0) {
           printf("post-zoom: %f\n", postZoomFactor);
         }
-        if (options.noBlackfilterMultiIndex.count != -1) {
+        if (options.no_blackfilter_multi_index.count != -1) {
           printf("blackfilter-scan-direction: %s\n",
                  getDirections(blackfilterScanDirections));
           printf("blackfilter-scan-size: [%d,%d]\n", blackfilterScanSize[0],
@@ -1344,49 +1344,49 @@ int main(int argc, char *argv[]) {
             printf("\n");
           }
           printf("blackfilter-intensity: %d\n", blackfilterIntensity);
-          if (options.noBlackfilterMultiIndex.count > 0) {
+          if (options.no_blackfilter_multi_index.count > 0) {
             printf("blackfilter DISABLED for sheets: ");
-            printMultiIndex(options.noBlackfilterMultiIndex);
+            printMultiIndex(options.no_blackfilter_multi_index);
           }
         } else {
           printf("blackfilter DISABLED for all sheets.\n");
         }
-        if (options.noNoisefilterMultiIndex.count != -1) {
+        if (options.no_noisefilter_multi_index.count != -1) {
           printf("noisefilter-intensity: %d\n", noisefilterIntensity);
-          if (options.noNoisefilterMultiIndex.count > 0) {
+          if (options.no_noisefilter_multi_index.count > 0) {
             printf("noisefilter DISABLED for sheets: ");
-            printMultiIndex(options.noNoisefilterMultiIndex);
+            printMultiIndex(options.no_noisefilter_multi_index);
           }
         } else {
           printf("noisefilter DISABLED for all sheets.\n");
         }
-        if (options.noBlurfilterMultiIndex.count != -1) {
+        if (options.no_blurfilter_multi_index.count != -1) {
           printf("blurfilter-size: [%d,%d]\n", blurfilterScanSize[0],
                  blurfilterScanSize[1]);
           printf("blurfilter-step: [%d,%d]\n", blurfilterScanStep[0],
                  blurfilterScanStep[1]);
           printf("blurfilter-intensity: %f\n", blurfilterIntensity);
-          if (options.noBlurfilterMultiIndex.count > 0) {
+          if (options.no_blurfilter_multi_index.count > 0) {
             printf("blurfilter DISABLED for sheets: ");
-            printMultiIndex(options.noBlurfilterMultiIndex);
+            printMultiIndex(options.no_blurfilter_multi_index);
           }
         } else {
           printf("blurfilter DISABLED for all sheets.\n");
         }
-        if (options.noGrayfilterMultiIndex.count != -1) {
+        if (options.no_grayfilter_multi_index.count != -1) {
           printf("grayfilter-size: [%d,%d]\n", grayfilterScanSize[0],
                  grayfilterScanSize[1]);
           printf("grayfilter-step: [%d,%d]\n", grayfilterScanStep[0],
                  grayfilterScanStep[1]);
           printf("grayfilter-threshold: %f\n", grayfilterThreshold);
-          if (options.noGrayfilterMultiIndex.count > 0) {
+          if (options.no_grayfilter_multi_index.count > 0) {
             printf("grayfilter DISABLED for sheets: ");
-            printMultiIndex(options.noGrayfilterMultiIndex);
+            printMultiIndex(options.no_grayfilter_multi_index);
           }
         } else {
           printf("grayfilter DISABLED for all sheets.\n");
         }
-        if (options.noMaskScanMultiIndex.count != -1) {
+        if (options.no_mask_scan_multi_index.count != -1) {
           printf("mask points: ");
           for (int i = 0; i < pointCount; i++) {
             printf("(%d,%d) ", points[i].x, points[i].y);
@@ -1405,14 +1405,14 @@ int main(int argc, char *argv[]) {
           printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[0],
                  maskScanMaximum[1]);
           printf("mask-color: %d\n", maskColor);
-          if (options.noMaskScanMultiIndex.count > 0) {
+          if (options.no_mask_scan_multi_index.count > 0) {
             printf("mask-scan DISABLED for sheets: ");
-            printMultiIndex(options.noMaskScanMultiIndex);
+            printMultiIndex(options.no_mask_scan_multi_index);
           }
         } else {
           printf("mask-scan DISABLED for all sheets.\n");
         }
-        if (options.noDeskewMultiIndex.count != -1) {
+        if (options.no_deskew_multi_index.count != -1) {
           printf("deskew-scan-direction: ");
           printEdges(deskewScanEdges);
           printf("deskew-scan-size: %d\n", deskewScanSize);
@@ -1420,14 +1420,14 @@ int main(int argc, char *argv[]) {
           printf("deskew-scan-range: %f\n", deskewScanRange);
           printf("deskew-scan-step: %f\n", deskewScanStep);
           printf("deskew-scan-deviation: %f\n", deskewScanDeviation);
-          if (options.noDeskewMultiIndex.count > 0) {
+          if (options.no_deskew_multi_index.count > 0) {
             printf("deskew-scan DISABLED for sheets: ");
-            printMultiIndex(options.noDeskewMultiIndex);
+            printMultiIndex(options.no_deskew_multi_index);
           }
         } else {
           printf("deskew-scan DISABLED for all sheets.\n");
         }
-        if (options.noWipeMultiIndex.count != -1) {
+        if (options.no_wipe_multi_index.count != -1) {
           if (wipeCount > 0) {
             printf("wipe areas: ");
             for (int i = 0; i < wipeCount; i++) {
@@ -1442,7 +1442,7 @@ int main(int argc, char *argv[]) {
         if (middleWipe[0] > 0 || middleWipe[1] > 0) {
           printf("middle-wipe (l,r): %d,%d\n", middleWipe[0], middleWipe[1]);
         }
-        if (options.noBorderMultiIndex.count != -1) {
+        if (options.no_border_multi_index.count != -1) {
           if (memcmp(&border, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
             printf("explicit border: [%d,%d,%d,%d]\n", border.left, border.top,
                    border.right, border.bottom);
@@ -1450,7 +1450,7 @@ int main(int argc, char *argv[]) {
         } else {
           printf("border DISABLED for all sheets.\n");
         }
-        if (options.noBorderScanMultiIndex.count != -1) {
+        if (options.no_border_scan_multi_index.count != -1) {
           printf("border-scan-direction: %s\n",
                  getDirections(borderScanDirections));
           printf("border-scan-size: [%d,%d]\n", borderScanSize[0],
@@ -1459,9 +1459,9 @@ int main(int argc, char *argv[]) {
                  borderScanStep[1]);
           printf("border-scan-threshold: [%d,%d]\n", borderScanThreshold[0],
                  borderScanThreshold[1]);
-          if (options.noBorderScanMultiIndex.count > 0) {
+          if (options.no_border_scan_multi_index.count > 0) {
             printf("border-scan DISABLED for sheets: ");
-            printMultiIndex(options.noBorderScanMultiIndex);
+            printMultiIndex(options.no_border_scan_multi_index);
           }
           printf("border-align: ");
           printEdges(borderAlign);
@@ -1502,17 +1502,17 @@ int main(int argc, char *argv[]) {
                ((sheetBackground == BLACK24) ? "black" : "white"),
                sheetBackground);
         printf("dpi: %d\n", dpi);
-        printf("input-files per sheet: %d\n", options.inputCount);
-        printf("output-files per sheet: %d\n", options.outputCount);
+        printf("input-files per sheet: %d\n", options.input_count);
+        printf("output-files per sheet: %d\n", options.output_count);
         if ((sheetSize[WIDTH] != -1) || (sheetSize[HEIGHT] != -1)) {
           printf("sheet size forced to: %d x %d pixels\n", sheetSize[WIDTH],
                  sheetSize[HEIGHT]);
         }
         printf("input-file-sequence:  %s\n",
-               implode(s1, (const char **)inputFileNames, options.inputCount));
+               implode(s1, (const char **)inputFileNames, options.input_count));
         printf(
             "output-file-sequence: %s\n",
-            implode(s1, (const char **)outputFileNames, options.outputCount));
+            implode(s1, (const char **)outputFileNames, options.output_count));
         if (overwrite) {
           printf("OVERWRITING EXISTING FILES\n");
         }
@@ -1520,12 +1520,12 @@ int main(int argc, char *argv[]) {
       }
       verboseLog(
           VERBOSE_NORMAL, "input-file%s for sheet %d: %s\n",
-          pluralS(options.inputCount), nr,
-          implode(s1, (const char **)inputFileNames, options.inputCount));
+          pluralS(options.input_count), nr,
+          implode(s1, (const char **)inputFileNames, options.input_count));
       verboseLog(
           VERBOSE_NORMAL, "output-file%s for sheet %d: %s\n",
-          pluralS(options.outputCount), nr,
-          implode(s1, (const char **)outputFileNames, options.outputCount));
+          pluralS(options.output_count), nr,
+          implode(s1, (const char **)outputFileNames, options.output_count));
       verboseLog(VERBOSE_NORMAL, "sheet size: %dx%d\n", sheet->width,
                  sheet->height);
       verboseLog(VERBOSE_NORMAL, "...\n");
@@ -1663,20 +1663,21 @@ int main(int argc, char *argv[]) {
       }
 
       // pre-wipe
-      if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_wipe_multi_index,
+                      options.ignore_multi_index)) {
         apply_wipes(sheet, preWipe, preWipeCount, maskColorPixel,
                     absBlackThreshold);
       }
 
       // pre-border
-      if (!isExcluded(nr, options.noBorderMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_border_multi_index,
+                      options.ignore_multi_index)) {
         apply_border(sheet, preBorder, maskColorPixel, absBlackThreshold);
       }
 
       // black area filter
-      if (!isExcluded(nr, options.noBlackfilterMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_blackfilter_multi_index,
+                      options.ignore_multi_index)) {
         saveDebug("_before-blackfilter%d.pnm", nr, sheet);
         blackfilter(sheet, blackfilterParams, absBlackThreshold);
         saveDebug("_after-blackfilter%d.pnm", nr, sheet);
@@ -1685,8 +1686,8 @@ int main(int argc, char *argv[]) {
       }
 
       // noise filter
-      if (!isExcluded(nr, options.noNoisefilterMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_noisefilter_multi_index,
+                      options.ignore_multi_index)) {
         verboseLog(VERBOSE_NORMAL, "noise-filter ...");
 
         saveDebug("_before-noisefilter%d.pnm", nr, sheet);
@@ -1701,8 +1702,8 @@ int main(int argc, char *argv[]) {
       }
 
       // blur filter
-      if (!isExcluded(nr, options.noBlurfilterMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_blurfilter_multi_index,
+                      options.ignore_multi_index)) {
         verboseLog(VERBOSE_NORMAL, "blur-filter...");
 
         saveDebug("_before-blurfilter%d.pnm", nr, sheet);
@@ -1717,8 +1718,8 @@ int main(int argc, char *argv[]) {
       }
 
       // mask-detection
-      if (!isExcluded(nr, options.noMaskScanMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_mask_scan_multi_index,
+                      options.ignore_multi_index)) {
         detect_masks(sheet, maskDetectionParams, points, pointCount, maskValid,
                      masks);
       } else {
@@ -1733,8 +1734,8 @@ int main(int argc, char *argv[]) {
       }
 
       // gray filter
-      if (!isExcluded(nr, options.noGrayfilterMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_grayfilter_multi_index,
+                      options.ignore_multi_index)) {
         verboseLog(VERBOSE_NORMAL, "gray-filter...");
 
         saveDebug("_before-grayfilter%d.pnm", nr, sheet);
@@ -1748,14 +1749,14 @@ int main(int argc, char *argv[]) {
       }
 
       // rotation-detection
-      if ((!isExcluded(nr, options.noDeskewMultiIndex,
-                       options.ignoreMultiIndex))) {
+      if ((!isExcluded(nr, options.no_deskew_multi_index,
+                       options.ignore_multi_index))) {
         saveDebug("_before-deskew%d.pnm", nr, sheet);
 
         // detect masks again, we may get more precise results now after first
         // masking and grayfilter
-        if (!isExcluded(nr, options.noMaskScanMultiIndex,
-                        options.ignoreMultiIndex)) {
+        if (!isExcluded(nr, options.no_mask_scan_multi_index,
+                        options.ignore_multi_index)) {
           maskCount = detect_masks(sheet, maskDetectionParams, points,
                                    pointCount, maskValid, masks);
         } else {
@@ -1803,13 +1804,14 @@ int main(int argc, char *argv[]) {
       }
 
       // auto-center masks on either single-page or double-page layout
-      if (!isExcluded(nr, options.noMaskCenterMultiIndex,
-                      options.ignoreMultiIndex)) { // (maskCount==pointCount to
-                                                   // make sure all masks had
-                                                   // correctly been detected)
+      if (!isExcluded(
+              nr, options.no_mask_center_multi_index,
+              options.ignore_multi_index)) { // (maskCount==pointCount to
+                                             // make sure all masks had
+                                             // correctly been detected)
         // perform auto-masking again to get more precise masks after rotation
-        if (!isExcluded(nr, options.noMaskScanMultiIndex,
-                        options.ignoreMultiIndex)) {
+        if (!isExcluded(nr, options.no_mask_scan_multi_index,
+                        options.ignore_multi_index)) {
           maskCount = detect_masks(sheet, maskDetectionParams, points,
                                    pointCount, maskValid, masks);
         } else {
@@ -1829,23 +1831,24 @@ int main(int argc, char *argv[]) {
       }
 
       // explicit wipe
-      if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_wipe_multi_index,
+                      options.ignore_multi_index)) {
         apply_wipes(sheet, wipe, wipeCount, maskColorPixel, absBlackThreshold);
       } else {
         verboseLog(VERBOSE_MORE, "+ wipe DISABLED for sheet %d\n", nr);
       }
 
       // explicit border
-      if (!isExcluded(nr, options.noBorderMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_border_multi_index,
+                      options.ignore_multi_index)) {
         apply_border(sheet, border, maskColorPixel, absBlackThreshold);
       } else {
         verboseLog(VERBOSE_MORE, "+ border DISABLED for sheet %d\n", nr);
       }
 
       // border-detection
-      if (!isExcluded(nr, options.noBorderScanMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_border_scan_multi_index,
+                      options.ignore_multi_index)) {
         Rectangle autoborderMask[outsideBorderscanMaskCount];
         saveDebug("_before-border%d.pnm", nr, sheet);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
@@ -1858,8 +1861,8 @@ int main(int argc, char *argv[]) {
                     maskColorPixel, absBlackThreshold);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
           // border-centering
-          if (!isExcluded(nr, options.noBorderAlignMultiIndex,
-                          options.ignoreMultiIndex)) {
+          if (!isExcluded(nr, options.no_border_align_multi_index,
+                          options.ignore_multi_index)) {
             align_mask(sheet, autoborderMask[i], outsideBorderscanMask[i],
                        maskAlignmentParams, sheetBackgroundPixel,
                        absBlackThreshold);
@@ -1874,14 +1877,15 @@ int main(int argc, char *argv[]) {
       }
 
       // post-wipe
-      if (!isExcluded(nr, options.noWipeMultiIndex, options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_wipe_multi_index,
+                      options.ignore_multi_index)) {
         apply_wipes(sheet, postWipe, postWipeCount, maskColorPixel,
                     absBlackThreshold);
       }
 
       // post-border
-      if (!isExcluded(nr, options.noBorderMultiIndex,
-                      options.ignoreMultiIndex)) {
+      if (!isExcluded(nr, options.no_border_multi_index,
+                      options.ignore_multi_index)) {
         apply_border(sheet, postBorder, maskColorPixel, absBlackThreshold);
       }
 
@@ -1955,10 +1959,10 @@ int main(int argc, char *argv[]) {
           outputPixFmt = sheet->format;
         }
 
-        for (int j = 0; j < options.outputCount; j++) {
+        for (int j = 0; j < options.output_count; j++) {
           // get pagebuffer
           page = create_image(
-              (RectangleSize){sheet->width / options.outputCount,
+              (RectangleSize){sheet->width / options.output_count,
                               sheet->height},
               sheet->format, false, sheetBackgroundPixel, absBlackThreshold);
           copy_rectangle(
