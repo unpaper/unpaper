@@ -53,7 +53,7 @@ bool parse_rectangle(const char *str, Rectangle *rect) {
 }
 
 int print_rectangle(Rectangle rect) {
-  return printf("[%" PRId32 ",%" PRId32 ",%" PRId32 ",%" PRId32 "]",
+  return printf("[%" PRId32 ",%" PRId32 ",%" PRId32 ",%" PRId32 "] ",
                 rect.vertex[0].x, rect.vertex[0].y, rect.vertex[1].x,
                 rect.vertex[1].y);
 }

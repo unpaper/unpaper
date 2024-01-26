@@ -181,10 +181,6 @@ int main(int argc, char *argv[]) {
   // --- local variables ---
   int w = -1;
   int h = -1;
-  int left;
-  int top;
-  int right;
-  int bottom;
   int previousWidth = -1;
   int previousHeight = -1;
   AVFrame *sheet = NULL;
@@ -537,13 +533,9 @@ int main(int argc, char *argv[]) {
 
     case OPT_PRE_MASK:
       if (preMaskCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        preMasks[preMaskCount++] = (Rectangle){{{left, top}, {right, bottom}}};
+        if (parse_rectangle(optarg, &preMasks[preMaskCount])) {
+          preMaskCount++;
+        }
       } else {
         fprintf(stderr,
                 "maximum number of masks (%d) exceeded, ignoring mask %s\n",
@@ -591,15 +583,10 @@ int main(int argc, char *argv[]) {
 
     case 'm':
       if (maskCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        masks[maskCount] = (Rectangle){{{left, top}, {right, bottom}}};
-        maskValid[maskCount] = true;
-        maskCount++;
+        if (parse_rectangle(optarg, &masks[maskCount])) {
+          maskValid[maskCount] = true;
+          maskCount++;
+        }
       } else {
         fprintf(stderr,
                 "maximum number of masks (%d) exceeded, ignoring mask %s\n",
@@ -609,13 +596,9 @@ int main(int argc, char *argv[]) {
 
     case 'W':
       if (wipeCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        wipe[wipeCount++] = (Rectangle){{{left, top}, {right, bottom}}};
+        if (parse_rectangle(optarg, &wipe[wipeCount])) {
+          wipeCount++;
+        }
       } else {
         fprintf(stderr,
                 "maximum number of wipes (%d) exceeded, ignoring mask %s\n",
@@ -625,13 +608,9 @@ int main(int argc, char *argv[]) {
 
     case OPT_PRE_WIPE:
       if (preWipeCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        preWipe[preWipeCount++] = (Rectangle){{{left, top}, {right, bottom}}};
+        if (parse_rectangle(optarg, &preWipe[preWipeCount])) {
+          preWipeCount++;
+        }
       } else {
         fprintf(stderr,
                 "maximum number of pre-wipes (%d) exceeded, ignoring mask %s\n",
@@ -641,13 +620,9 @@ int main(int argc, char *argv[]) {
 
     case OPT_POST_WIPE:
       if (postWipeCount < MAX_MASKS) {
-        left = -1;
-        top = -1;
-        right = -1;
-        bottom = -1;
-        sscanf(optarg, "%d,%d,%d,%d", &left, &top, &right,
-               &bottom); // x1, y1, x2, y2
-        postWipe[postWipeCount++] = (Rectangle){{{left, top}, {right, bottom}}};
+        if (parse_rectangle(optarg, &postWipeCount[postWipe])) {
+          postWipeCount++;
+        }
       } else {
         fprintf(
             stderr,
@@ -1280,9 +1255,7 @@ int main(int argc, char *argv[]) {
         if (preWipeCount > 0) {
           printf("pre-wipe: ");
           for (int i = 0; i < preWipeCount; i++) {
-            printf("[%d,%d,%d,%d] ", preWipe[i].vertex[0].x,
-                   preWipe[i].vertex[0].y, preWipe[i].vertex[1].x,
-                   preWipe[i].vertex[1].y);
+            print_rectangle(preWipe[i]);
           }
           printf("\n");
         }
@@ -1293,9 +1266,7 @@ int main(int argc, char *argv[]) {
         if (preMaskCount > 0) {
           printf("pre-masking: ");
           for (int i = 0; i < preMaskCount; i++) {
-            printf("[%d,%d,%d,%d] ", preMasks[i].vertex[0].x,
-                   preMasks[i].vertex[0].y, preMasks[i].vertex[1].x,
-                   preMasks[i].vertex[1].y);
+            print_rectangle(preMasks[i]);
           }
           printf("\n");
         }
@@ -1418,8 +1389,7 @@ int main(int argc, char *argv[]) {
           if (wipeCount > 0) {
             printf("wipe areas: ");
             for (int i = 0; i < wipeCount; i++) {
-              printf("[%d,%d,%d,%d] ", wipe[i].vertex[0].x, wipe[i].vertex[0].y,
-                     wipe[i].vertex[1].x, wipe[i].vertex[1].y);
+              print_rectangle(wipe[i]);
             }
             printf("\n");
           }
@@ -1460,9 +1430,7 @@ int main(int argc, char *argv[]) {
         if (postWipeCount > 0) {
           printf("post-wipe: ");
           for (int i = 0; i < postWipeCount; i++) {
-            printf("[%d,%d,%d,%d] ", postWipe[i].vertex[0].x,
-                   postWipe[i].vertex[0].y, postWipe[i].vertex[1].x,
-                   postWipe[i].vertex[1].y);
+            print_rectangle(postWipe[i]);
           }
           printf("\n");
         }
