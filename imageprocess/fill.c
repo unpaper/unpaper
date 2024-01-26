@@ -13,7 +13,7 @@
  * @param step_x either -1 or 1, if step_y is 0, else 0
  * @param step_y either -1 or 1, if step_x is 0, else 0
  */
-static uint64_t fill_line(AVFrame *image, Point p, Delta step, Pixel color,
+static uint64_t fill_line(Image image, Point p, Delta step, Pixel color,
                           uint8_t mask_min, uint8_t mask_max,
                           uint64_t intensity, uint8_t abs_black_threshold) {
   uint64_t distance = 0;
@@ -51,7 +51,7 @@ static uint64_t fill_line(AVFrame *image, Point p, Delta step, Pixel color,
  * @param step_y either -1 or 1, if step_x is 0, else 0
  * @see fillLine()
  */
-static void flood_fill_around_line(AVFrame *image, Point p, Delta step,
+static void flood_fill_around_line(Image image, Point p, Delta step,
                                    uint64_t distance, Pixel color,
                                    uint8_t mask_min, uint8_t mask_max,
                                    uint64_t intensity,
@@ -79,7 +79,7 @@ static void flood_fill_around_line(AVFrame *image, Point p, Delta step,
  *
  * @see earlier header-declaration to enable indirect recursive calls
  */
-void flood_fill(AVFrame *image, Point p, Pixel color, uint8_t mask_min,
+void flood_fill(Image image, Point p, Pixel color, uint8_t mask_min,
                 uint8_t mask_max, uint64_t intensity,
                 uint8_t abs_black_threshold) {
   // is current pixel to be filled?

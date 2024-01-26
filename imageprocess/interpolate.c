@@ -10,7 +10,7 @@
 #include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
 
-Pixel interp_nearest_neighbour(AVFrame *image, FloatPoint coords) {
+Pixel interp_nearest_neighbour(Image image, FloatPoint coords) {
   // Round to nearest location.
   Point p = {(int)roundf(coords.x), (int)roundf(coords.y)};
 
@@ -41,7 +41,7 @@ static Pixel cubic_pixel_interpolation(float factor, Pixel pxls[4]) {
 }
 
 // 2-D bicubic interpolation
-Pixel interp_bicubic(AVFrame *image, FloatPoint coords) {
+Pixel interp_bicubic(Image image, FloatPoint coords) {
   Point p = {(int)coords.x, (int)coords.y};
 
   Pixel pxls[4];
@@ -73,7 +73,7 @@ static Pixel linear_pixel_interpolation(float factor, Pixel a, Pixel b) {
 }
 
 // 2-D linear interpolation
-Pixel interp_bilinear(AVFrame *image, FloatPoint coords) {
+Pixel interp_bilinear(Image image, FloatPoint coords) {
   Rectangle image_area = full_image(image);
 
   Point p1 = {(int)floorf(coords.x), (int)floorf(coords.y)};
@@ -116,7 +116,7 @@ Pixel interp_bilinear(AVFrame *image, FloatPoint coords) {
   return linear_pixel_interpolation(coords.y - p1.y, pxl_h1, pxl_h2);
 }
 
-Pixel interpolate(AVFrame *image, FloatPoint coords, Interpolation function) {
+Pixel interpolate(Image image, FloatPoint coords, Interpolation function) {
   switch (function) {
   case INTERP_NN:
     return interp_nearest_neighbour(image, coords);

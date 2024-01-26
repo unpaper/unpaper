@@ -65,10 +65,7 @@ Rectangle rectangle_from_size(Point origin, RectangleSize size);
 RectangleSize size_of_rectangle(Rectangle rect);
 Rectangle normalize_rectangle(Rectangle input);
 Rectangle shift_rectangle(Rectangle rect, Delta d);
-
-RectangleSize size_of_image(AVFrame *image);
-Rectangle full_image(AVFrame *image);
-Rectangle clip_rectangle(AVFrame *image, Rectangle area);
+int compare_sizes(RectangleSize a, RectangleSize b);
 
 uint64_t count_pixels(Rectangle area);
 

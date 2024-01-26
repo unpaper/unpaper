@@ -12,7 +12,7 @@
  * Wipe a rectangular area of pixels with the defined color.
  * @return The number of pixels actually changed.
  */
-uint64_t wipe_rectangle(AVFrame *image, Rectangle input_area, Pixel color,
+uint64_t wipe_rectangle(Image image, Rectangle input_area, Pixel color,
                         uint8_t abs_black_threshold) {
   uint64_t count = 0;
 
@@ -27,7 +27,7 @@ uint64_t wipe_rectangle(AVFrame *image, Rectangle input_area, Pixel color,
   return count;
 }
 
-void copy_rectangle(AVFrame *source, AVFrame *target, Rectangle source_area,
+void copy_rectangle(Image source, Image target, Rectangle source_area,
                     Point target_coords, uint8_t abs_black_threshold) {
   Rectangle area = clip_rectangle(source, source_area);
 
@@ -45,7 +45,7 @@ void copy_rectangle(AVFrame *source, AVFrame *target, Rectangle source_area,
 /**
  * Returns the average brightness of a rectangular area.
  */
-uint8_t inverse_brightness_rect(AVFrame *image, Rectangle input_area) {
+uint8_t inverse_brightness_rect(Image image, Rectangle input_area) {
   uint64_t grayscale = 0;
 
   Rectangle area = clip_rectangle(image, input_area);
@@ -65,7 +65,7 @@ uint8_t inverse_brightness_rect(AVFrame *image, Rectangle input_area) {
 /**
  * Returns the inverse average lightness of a rectangular area.
  */
-uint8_t inverse_lightness_rect(AVFrame *image, Rectangle input_area) {
+uint8_t inverse_lightness_rect(Image image, Rectangle input_area) {
   uint64_t lightness = 0;
 
   Rectangle area = clip_rectangle(image, input_area);
@@ -85,7 +85,7 @@ uint8_t inverse_lightness_rect(AVFrame *image, Rectangle input_area) {
 /**
  * Returns the average darkness of a rectangular area.
  */
-uint8_t darkness_rect(AVFrame *image, Rectangle input_area) {
+uint8_t darkness_rect(Image image, Rectangle input_area) {
   uint64_t darkness = 0;
 
   Rectangle area = clip_rectangle(image, input_area);
@@ -102,7 +102,7 @@ uint8_t darkness_rect(AVFrame *image, Rectangle input_area) {
   return 0xFF - (darkness / count);
 }
 
-uint64_t count_pixels_within_brightness(AVFrame *image, Rectangle area,
+uint64_t count_pixels_within_brightness(Image image, Rectangle area,
                                         uint8_t min_brightness,
                                         uint8_t max_brightness, bool clear,
                                         uint8_t abs_black_threshold) {
@@ -125,48 +125,12 @@ uint64_t count_pixels_within_brightness(AVFrame *image, Rectangle area,
 }
 
 /**
- * Allocates a memory block for storing image data and fills the AVFrame-struct
- * with the specified values.
- */
-AVFrame *create_image(RectangleSize size, int pixel_format, bool fill,
-                      Pixel sheet_background, uint8_t abs_black_threshold) {
-  AVFrame *image;
-
-  image = av_frame_alloc();
-  image->width = size.width;
-  image->height = size.height;
-  image->format = pixel_format;
-
-  int ret = av_frame_get_buffer(image, 8);
-  if (ret < 0) {
-    char errbuff[1024];
-    av_strerror(ret, errbuff, sizeof(errbuff));
-    errOutput("unable to allocate buffer: %s", errbuff);
-  }
-
-  if (fill) {
-    wipe_rectangle(image, full_image(image), sheet_background,
-                   abs_black_threshold);
-  }
-
-  return image;
-}
-
-void replace_image(AVFrame **image, AVFrame **new_image) {
-  free_image(image);
-  *image = *new_image;
-  *new_image = NULL;
-}
-
-void free_image(AVFrame **pImage) { av_frame_free(pImage); }
-
-/**
  * Centers one area of an image inside an area of another image.
  * If the source area is smaller than the target area, is is equally
  * surrounded by a white border, if it is bigger, it gets equally cropped
  * at the edges.
  */
-void center_image(AVFrame *source, AVFrame *target, Point target_origin,
+void center_image(Image source, Image target, Point target_origin,
                   RectangleSize target_size, Pixel sheet_background,
                   uint8_t abs_black_threshold) {
   Point source_origin = POINT_ORIGIN;
@@ -196,14 +160,18 @@ void center_image(AVFrame *source, AVFrame *target, Point target_origin,
                  abs_black_threshold);
 }
 
-static void stretch_frame(AVFrame *source, AVFrame *target,
+static void stretch_frame(Image source, Image target,
                           Interpolation interpolate_type,
                           uint8_t abs_black_threshold) {
-  const float horizontal_ratio = (float)source->width / (float)target->width;
-  const float vertical_ratio = (float)source->height / (float)target->height;
+  RectangleSize source_size = size_of_image(source),
+                target_size = size_of_image(target);
+  const float horizontal_ratio =
+      (float)source_size.width / (float)target_size.width;
+  const float vertical_ratio =
+      (float)source_size.height / (float)target_size.height;
 
-  verboseLog(VERBOSE_MORE, "stretching %dx%d -> %dx%d\n", source->width,
-             source->height, target->width, target->height);
+  verboseLog(VERBOSE_MORE, "stretching %dx%d -> %dx%d\n", source_size.width,
+             source_size.height, target_size.width, target_size.height);
 
   Rectangle target_area = full_image(target);
   scan_rectangle(target_area) {
@@ -215,40 +183,41 @@ static void stretch_frame(AVFrame *source, AVFrame *target,
   }
 }
 
-void stretch_and_replace(AVFrame **pImage, RectangleSize size,
+void stretch_and_replace(Image *pImage, RectangleSize size,
                          Interpolation interpolate_type,
                          uint8_t abs_black_threshold) {
-  if ((*pImage)->width == size.width && (*pImage)->height == size.height)
+  if (compare_sizes(size_of_image(*pImage), size) == 0)
     return;
 
-  AVFrame *target = create_image(size, (*pImage)->format, false, PIXEL_WHITE,
-                                 abs_black_threshold);
+  Image target = create_image(size, pImage->frame->format, false, PIXEL_WHITE,
+                              abs_black_threshold);
 
   stretch_frame(*pImage, target, interpolate_type, abs_black_threshold);
   replace_image(pImage, &target);
 }
 
-void resize_and_replace(AVFrame **pImage, RectangleSize size,
+void resize_and_replace(Image *pImage, RectangleSize size,
                         Interpolation interpolate_type, Pixel sheet_background,
                         uint8_t abs_black_threshold) {
-  if ((*pImage)->width == size.width && (*pImage)->height == size.height)
+  RectangleSize image_size = size_of_image(*pImage);
+  if (compare_sizes(image_size, size) == 0)
     return;
 
-  verboseLog(VERBOSE_NORMAL, "resizing %dx%d -> %dx%d\n", (*pImage)->width,
-             (*pImage)->height, size.width, size.height);
+  verboseLog(VERBOSE_NORMAL, "resizing %dx%d -> %dx%d\n", image_size.width,
+             image_size.height, size.width, size.height);
 
-  const float horizontal_ratio = (float)size.width / (float)(*pImage)->width;
-  const float vertical_ratio = (float)size.height / (float)(*pImage)->height;
+  const float horizontal_ratio = (float)size.width / (float)image_size.width;
+  const float vertical_ratio = (float)size.height / (float)image_size.height;
 
   RectangleSize stretch_size;
   if (horizontal_ratio < vertical_ratio) {
     // horizontally more shrinking/less enlarging is needed:
     // fill width fully, adjust height
     stretch_size =
-        (RectangleSize){size.width, (*pImage)->height * horizontal_ratio};
+        (RectangleSize){size.width, image_size.height * horizontal_ratio};
   } else if (vertical_ratio < horizontal_ratio) {
     stretch_size =
-        (RectangleSize){(*pImage)->width * vertical_ratio, size.height};
+        (RectangleSize){image_size.width * vertical_ratio, size.height};
   } else { // wRat == hRat
     stretch_size = size;
   }
@@ -264,27 +233,28 @@ void resize_and_replace(AVFrame **pImage, RectangleSize size,
     return;
   }
 
-  AVFrame *resized = create_image(size, (*pImage)->format, true,
-                                  sheet_background, abs_black_threshold);
+  Image resized = create_image(size, pImage->frame->format, true,
+                               sheet_background, abs_black_threshold);
   center_image(*pImage, resized, POINT_ORIGIN, size, sheet_background,
                abs_black_threshold);
   replace_image(pImage, &resized);
 }
 
-void flip_rotate_90(AVFrame **pImage, RotationDirection direction,
+void flip_rotate_90(Image *pImage, RotationDirection direction,
                     uint8_t abs_black_threshold) {
+  RectangleSize image_size = size_of_image(*pImage);
 
   // exchanged width and height
-  AVFrame *newimage =
-      create_image((RectangleSize){(*pImage)->height, (*pImage)->width},
-                   (*pImage)->format, false, PIXEL_WHITE, abs_black_threshold);
+  Image newimage = create_image(
+      (RectangleSize){.width = image_size.height, .height = image_size.width},
+      pImage->frame->format, false, PIXEL_WHITE, abs_black_threshold);
 
-  for (int y = 0; y < (*pImage)->height; y++) {
+  for (int y = 0; y < image_size.height; y++) {
     const int xx =
-        ((direction > 0) ? (*pImage)->height - 1 : 0) - y * direction;
-    for (int x = 0; x < (*pImage)->width; x++) {
+        ((direction > 0) ? image_size.height - 1 : 0) - y * direction;
+    for (int x = 0; x < image_size.width; x++) {
       const int yy =
-          ((direction < 0) ? (*pImage)->width - 1 : 0) + x * direction;
+          ((direction < 0) ? image_size.width - 1 : 0) + x * direction;
 
       Point point1 = {x, y};
       Point point2 = {xx, yy};
@@ -296,31 +266,32 @@ void flip_rotate_90(AVFrame **pImage, RotationDirection direction,
   replace_image(pImage, &newimage);
 }
 
-void mirror(AVFrame *image, bool horizontal, bool vertical,
+void mirror(Image image, bool horizontal, bool vertical,
             uint8_t abs_black_threshold) {
   Rectangle source = {{POINT_ORIGIN, POINT_INFINITY}};
+  RectangleSize image_size = size_of_image(image);
 
   if (horizontal && !vertical) {
-    source.vertex[1].x = (image->width - 1) / 2;
+    source.vertex[1].x = (image_size.width - 1) / 2;
   }
 
   if (vertical) {
-    source.vertex[1].y = (image->height - 1) / 2;
+    source.vertex[1].y = (image_size.height - 1) / 2;
   }
 
   source = clip_rectangle(image, source);
 
   // Cannot use scan_rectangle() because of the midpoint turn.
   for (int32_t y = source.vertex[0].y; y <= source.vertex[1].y; y++) {
-    int32_t yy = vertical ? image->height - y - 1 : y;
+    int32_t yy = vertical ? image_size.height - y - 1 : y;
     // Special case: the last middle line in odd-lined images that are
     // to be mirrored both horizontally and vertically.
     if (vertical && horizontal && y == yy) {
-      source.vertex[1].x = (image->width - 1) / 2;
+      source.vertex[1].x = (image_size.width - 1) / 2;
     }
 
     for (int32_t x = 0; x <= source.vertex[1].x; x++) {
-      int32_t xx = horizontal ? image->width - x - 1 : x;
+      int32_t xx = horizontal ? image_size.width - x - 1 : x;
 
       Point point1 = {x, y};
       Point point2 = {xx, yy};
@@ -332,12 +303,11 @@ void mirror(AVFrame *image, bool horizontal, bool vertical,
   }
 }
 
-void shift_image(AVFrame **pImage, Delta d, Pixel sheet_background,
+void shift_image(Image *pImage, Delta d, Pixel sheet_background,
                  uint8_t abs_black_threshold) {
   // allocate new buffer's memory
-  AVFrame *newimage = create_image(
-      (RectangleSize){(*pImage)->width, (*pImage)->height}, (*pImage)->format,
-      true, sheet_background, abs_black_threshold);
+  Image newimage = create_image(size_of_image(*pImage), pImage->frame->format,
+                                true, sheet_background, abs_black_threshold);
 
   copy_rectangle(*pImage, newimage, full_image(*pImage),
                  shift_point(POINT_ORIGIN, d), abs_black_threshold);

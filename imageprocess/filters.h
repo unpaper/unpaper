@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include <libavutil/frame.h>
 #include <stdint.h>
 
+#include "imageprocess/image.h"
 #include "imageprocess/primitives.h"
 
 typedef struct {
@@ -32,7 +32,7 @@ typedef struct {
   Rectangle *exclusions;
 } BlackfilterParameters;
 
-void blackfilter(AVFrame *image, BlackfilterParameters params,
+void blackfilter(Image image, BlackfilterParameters params,
                  uint8_t abs_black_threshold);
 
 BlackfilterParameters validate_blackfilter_parameters(
@@ -58,11 +58,11 @@ BlurfilterParameters validate_blurfilter_parameters(uint32_t scan_size_h,
                                                     uint32_t scan_step_v,
                                                     float intensity);
 
-uint64_t blurfilter(AVFrame *image, BlurfilterParameters params,
+uint64_t blurfilter(Image image, BlurfilterParameters params,
                     uint8_t abs_white_threshold, uint8_t abs_black_threshold);
 
-uint64_t noisefilter(AVFrame *image, uint64_t intensity,
-                     uint8_t min_white_level, uint8_t abs_black_threshold);
+uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level,
+                     uint8_t abs_black_threshold);
 
 typedef struct {
   RectangleSize scan_size;
@@ -81,5 +81,5 @@ GrayfilterParameters validate_grayfilter_parameters(uint32_t scan_size_h,
                                                     uint32_t scan_step_v,
                                                     float threshold);
 
-uint64_t grayfilter(AVFrame *image, GrayfilterParameters params,
+uint64_t grayfilter(Image image, GrayfilterParameters params,
                     uint8_t abs_black_threshold);
