@@ -210,18 +210,6 @@ void parseSize(char *s, int i[2], int dpi) {
 }
 
 /**
- * Parses a color. Currently only "black" and "white".
- */
-int parseColor(char *s) {
-  if (strcmp(s, "black") == 0)
-    return BLACK24;
-  if (strcmp(s, "white") == 0)
-    return WHITE24;
-
-  errOutput("cannot parse color '%s'.", s);
-}
-
-/**
  * Parses either a single float string, of a pair of two floats separated
  * by a comma.
  */

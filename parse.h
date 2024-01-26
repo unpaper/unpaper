@@ -22,8 +22,6 @@ void parseInts(char *s, int i[2]);
 
 void parseSize(char *s, int i[2], int dpi);
 
-int parseColor(char *s);
-
 void parseFloats(char *s, float f[2]);
 
 char *implode(char *buf, const char *s[], int cnt);

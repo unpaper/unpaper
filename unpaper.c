@@ -176,14 +176,13 @@ int main(int argc, char *argv[]) {
   BorderScanParameters borderScanParams;
   int borderAlign = 0;                              // center
   int borderAlignMargin[DIRECTIONS_COUNT] = {0, 0}; // center
-  Pixel maskColorPixel;
+  Pixel maskColorPixel = PIXEL_WHITE;
   size_t pointCount = 0;
   Point points[MAX_POINTS];
   size_t maskCount = 0;
   Rectangle masks[MAX_MASKS];
   size_t preMaskCount = 0;
   Rectangle preMasks[MAX_MASKS];
-  int maskColor = WHITE24;
   size_t wipeCount = 0;
   Rectangle wipe[MAX_MASKS];
   int middleWipe[2] = {0, 0};
@@ -214,12 +213,11 @@ int main(int argc, char *argv[]) {
 
   Interpolation interpolateType = INTERP_CUBIC;
 
-  Pixel sheetBackgroundPixel;
+  Pixel sheetBackgroundPixel = PIXEL_WHITE;
   unsigned int absBlackThreshold;
   unsigned int absWhiteThreshold;
 
   int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
-  int sheetBackground = WHITE24;
   int preRotate = 0;
   int postRotate = 0;
   int preMirror = 0;
@@ -475,7 +473,9 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_SHEET_BACKGROUND:
-      sheetBackground = parseColor(optarg);
+      if (!parse_color(optarg, &sheetBackgroundPixel)) {
+        errOutput("invalid value for sheet-background: %s", optarg);
+      }
       break;
 
     case 'x':
@@ -761,7 +761,9 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_MASK_COLOR:
-      sscanf(optarg, "%d", &maskColor);
+      if (!parse_color(optarg, &maskColorPixel)) {
+        errOutput("invalid value for mask-color: %s", optarg);
+      }
       break;
 
     case OPT_NO_MASK_CENTER:
@@ -966,8 +968,6 @@ int main(int argc, char *argv[]) {
     options.end_sheet = options.start_sheet;
 
   // Calculate the constant absolute values based on the relative parameters.
-  sheetBackgroundPixel = pixelValueToPixel(sheetBackground);
-  maskColorPixel = pixelValueToPixel(maskColor);
   absBlackThreshold = WHITE * (1.0 - blackThreshold);
   absWhiteThreshold = WHITE * (whiteThreshold);
 
@@ -1368,7 +1368,9 @@ int main(int argc, char *argv[]) {
                  maskScanMinimum[1]);
           printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[0],
                  maskScanMaximum[1]);
-          printf("mask-color: %d\n", maskColor);
+          printf("mask-color: ");
+          print_color(maskColorPixel);
+          printf("\n");
           if (options.no_mask_scan_multi_index.count > 0) {
             printf("mask-scan DISABLED for sheets: ");
             printMultiIndex(options.no_mask_scan_multi_index);
@@ -1459,9 +1461,9 @@ int main(int argc, char *argv[]) {
         //}
         printf("white-threshold: %f\n", whiteThreshold);
         printf("black-threshold: %f\n", blackThreshold);
-        printf("sheet-background: %s %6x\n",
-               ((sheetBackground == BLACK24) ? "black" : "white"),
-               sheetBackground);
+        printf("sheet-background: ");
+        print_color(sheetBackgroundPixel);
+        printf("\n");
         printf("dpi: %d\n", dpi);
         printf("input-files per sheet: %d\n", options.input_count);
         printf("output-files per sheet: %d\n", options.output_count);

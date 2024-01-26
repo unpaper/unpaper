@@ -108,8 +108,8 @@ void loadImage(const char *filename, AVFrame **image, Pixel sheet_background,
     const uint32_t *palette = (const uint32_t *)frame->data[1];
     scan_rectangle(area) {
       const uint8_t palette_index = frame->data[0][frame->linesize[0] * y + x];
-      set_pixel(*image, (Point){x, y},
-                pixelValueToPixel(palette[palette_index]), abs_black_threshold);
+      set_pixel(*image, (Point){x, y}, pixel_from_value(palette[palette_index]),
+                abs_black_threshold);
     }
   } break;
 
