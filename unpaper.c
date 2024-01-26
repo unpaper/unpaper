@@ -234,7 +234,6 @@ int main(int argc, char *argv[]) {
   Border preBorder = {0, 0, 0, 0};
   Border postBorder = {0, 0, 0, 0};
   Border border = {0, 0, 0, 0};
-  bool maskValid[MAX_MASKS];
   float whiteThreshold = 0.9;
   float blackThreshold = 0.33;
   bool writeoutput = true;
@@ -579,7 +578,6 @@ int main(int argc, char *argv[]) {
     case 'm':
       if (maskCount < MAX_MASKS) {
         if (parse_rectangle(optarg, &masks[maskCount])) {
-          maskValid[maskCount] = true;
           maskCount++;
         }
       } else {
@@ -1675,8 +1673,7 @@ int main(int argc, char *argv[]) {
       // mask-detection
       if (!isExcluded(nr, options.no_mask_scan_multi_index,
                       options.ignore_multi_index)) {
-        detect_masks(sheet, maskDetectionParams, points, pointCount, maskValid,
-                     masks);
+        detect_masks(sheet, maskDetectionParams, points, pointCount, masks);
       } else {
         verboseLog(VERBOSE_MORE, "+ mask-scan DISABLED for sheet %d\n", nr);
       }
@@ -1712,7 +1709,7 @@ int main(int argc, char *argv[]) {
         if (!isExcluded(nr, options.no_mask_scan_multi_index,
                         options.ignore_multi_index)) {
           maskCount = detect_masks(sheet, maskDetectionParams, points,
-                                   pointCount, maskValid, masks);
+                                   pointCount, masks);
         } else {
           verboseLog(VERBOSE_MORE, "(mask-scan before deskewing disabled)\n");
         }
@@ -1764,7 +1761,7 @@ int main(int argc, char *argv[]) {
         if (!isExcluded(nr, options.no_mask_scan_multi_index,
                         options.ignore_multi_index)) {
           maskCount = detect_masks(sheet, maskDetectionParams, points,
-                                   pointCount, maskValid, masks);
+                                   pointCount, masks);
         } else {
           verboseLog(VERBOSE_MORE, "(mask-scan before centering disabled)\n");
         }
