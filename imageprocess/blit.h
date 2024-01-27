@@ -10,7 +10,7 @@
 #include "imageprocess/interpolate.h"
 #include "imageprocess/primitives.h"
 
-uint64_t wipe_rectangle(Image image, Rectangle input_area, Pixel color);
+void wipe_rectangle(Image image, Rectangle input_area, Pixel color);
 void copy_rectangle(Image source, Image target, Rectangle source_area,
                     Point target_coords);
 uint8_t inverse_brightness_rect(Image image, Rectangle input_area);
