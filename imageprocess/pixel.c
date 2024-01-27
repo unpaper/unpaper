@@ -11,64 +11,55 @@
 
 #include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
-
-void errOutput(const char *fmt, ...);
-
-#define WHITE_COMPONENT 0xFF
-#define BLACK_COMPONENT 0x00
+#include "lib/logging.h"
 
 static inline uint8_t pixel_grayscale(Pixel pixel) {
   return (pixel.r + pixel.g + pixel.b) / 3;
 }
 
-static Pixel get_pixel_components(Image image, Point coords, uint8_t defval) {
-  Pixel pixel = {defval, defval, defval};
+static Pixel get_pixel_components(Image image, Point coords) {
   uint8_t *pix;
 
   if ((coords.x < 0) || (coords.x >= image.frame->width) || (coords.y < 0) ||
       (coords.y >= image.frame->height)) {
-    return pixel;
+    return PIXEL_WHITE;
   }
 
   switch (image.frame->format) {
   case AV_PIX_FMT_GRAY8:
     pix =
         image.frame->data[0] + (coords.y * image.frame->linesize[0] + coords.x);
-    pixel.r = pixel.g = pixel.b = *pix;
-    break;
+    return (Pixel){*pix, *pix, *pix};
   case AV_PIX_FMT_Y400A:
     pix = image.frame->data[0] +
           (coords.y * image.frame->linesize[0] + coords.x * 2);
-    pixel.r = pixel.g = pixel.b = *pix;
-    break;
+    return (Pixel){*pix, *pix, *pix};
   case AV_PIX_FMT_RGB24:
     pix = image.frame->data[0] +
           (coords.y * image.frame->linesize[0] + coords.x * 3);
-    pixel.r = pix[0];
-    pixel.g = pix[1];
-    pixel.b = pix[2];
-    break;
+    return (Pixel){
+        .r = pix[0],
+        .g = pix[1],
+        .b = pix[2],
+    };
   case AV_PIX_FMT_MONOWHITE:
     pix = image.frame->data[0] +
           (coords.y * image.frame->linesize[0] + coords.x / 8);
     if (*pix & (128 >> (coords.x % 8)))
-      pixel.r = pixel.g = pixel.b = BLACK_COMPONENT;
+      return PIXEL_BLACK;
     else
-      pixel.r = pixel.g = pixel.b = WHITE_COMPONENT;
-    break;
+      return PIXEL_WHITE;
   case AV_PIX_FMT_MONOBLACK:
     pix = image.frame->data[0] +
           (coords.y * image.frame->linesize[0] + coords.x / 8);
     if (*pix & (128 >> (coords.x % 8)))
-      pixel.r = pixel.g = pixel.b = WHITE_COMPONENT;
+      return PIXEL_WHITE;
     else
-      pixel.r = pixel.g = pixel.b = BLACK_COMPONENT;
-    break;
+      return PIXEL_BLACK;
   default:
     errOutput("unknown pixel format.");
+    return PIXEL_WHITE; // technically unreachable
   }
-
-  return pixel;
 }
 
 Pixel pixel_from_value(uint32_t value) {
@@ -89,19 +80,13 @@ int compare_pixel(Pixel a, Pixel b) {
 /* Returns the color or grayscale value of a single pixel.
  * Always returns a color-compatible value (which may be interpreted as 8-bit
  * grayscale)
- *
- * @return color or grayscale-value of the requested pixel, or WHITE_COMPONENT
- * if the coordinates are outside the image
  */
 Pixel get_pixel(Image image, Point coords) {
-  return get_pixel_components(image, coords, WHITE_COMPONENT);
+  return get_pixel_components(image, coords);
 }
 
 /**
  * Returns the grayscale (=brightness) value of a single pixel.
- *
- * @return grayscale-value of the requested pixel, or WHITE_COMPONENT if the
- * coordinates are outside the image
  */
 uint8_t get_pixel_grayscale(Image image, Point coords) {
   return pixel_grayscale(get_pixel(image, coords));
@@ -117,10 +102,10 @@ uint8_t get_pixel_grayscale(Image image, Point coords) {
  * For grayscale images, this value is equal to the pixel brightness.
  *
  * @return lightness-value (the higher, the lighter) of the requested pixel, or
- * WHITE_COMPONENT if the coordinates are outside the image
+ * UINT8_MAX if the coordinates are outside the image
  */
 uint8_t get_pixel_lightness(Image image, Point coords) {
-  Pixel p = get_pixel_components(image, coords, WHITE_COMPONENT);
+  Pixel p = get_pixel_components(image, coords);
   return min3(p.r, p.g, p.b);
 }
 
@@ -134,10 +119,10 @@ uint8_t get_pixel_lightness(Image image, Point coords) {
  * For grayscale images, this value is equal to the pixel brightness.
  *
  * @return inverse-darkness-value (the LOWER, the darker) of the requested
- * pixel, or WHITE_COMPONENT if the coordinates are outside the image
+ * pixel, or UINT8_MAX if the coordinates are outside the image
  */
 uint8_t get_pixel_darkness_inverse(Image image, Point coords) {
-  Pixel p = get_pixel_components(image, coords, WHITE_COMPONENT);
+  Pixel p = get_pixel_components(image, coords);
   return max3(p.r, p.g, p.b);
 }
 
@@ -155,9 +140,7 @@ bool set_pixel(Image image, Point coords, Pixel pixel) {
     return false; // nop
   }
 
-  uint8_t pixelbw = pixel_grayscale(pixel) < image.abs_black_threshold
-                        ? BLACK_COMPONENT
-                        : WHITE_COMPONENT;
+  bool pixel_black = pixel_grayscale(pixel) < image.abs_black_threshold;
 
   switch (image.frame->format) {
   case AV_PIX_FMT_GRAY8:
@@ -179,13 +162,13 @@ bool set_pixel(Image image, Point coords, Pixel pixel) {
     pix[2] = pixel.b;
     break;
   case AV_PIX_FMT_MONOWHITE:
-    pixelbw = ~pixelbw; // reverse compared to following case
+    pixel_black = !pixel_black; // reverse compared to following case
   case AV_PIX_FMT_MONOBLACK:
     pix = image.frame->data[0] +
           (coords.y * image.frame->linesize[0] + coords.x / 8);
-    if (pixelbw == WHITE_COMPONENT) {
+    if (!pixel_black) {
       *pix = *pix | (128 >> (coords.x % 8));
-    } else if (pixelbw == BLACK_COMPONENT) {
+    } else if (pixel_black) {
       *pix = *pix & ~(128 >> (coords.x % 8));
     }
     break;
