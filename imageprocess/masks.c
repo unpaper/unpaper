@@ -336,17 +336,11 @@ void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
 void apply_wipes(Image image, Rectangle wipes[], size_t wipes_count,
                  Pixel color) {
   for (size_t i = 0; i < wipes_count; i++) {
-    uint64_t count = 0;
+    scan_rectangle(wipes[i]) { set_pixel(image, (Point){x, y}, color); }
 
-    scan_rectangle(wipes[i]) {
-      if (set_pixel(image, (Point){x, y}, color)) {
-        count++;
-      }
-    }
-
-    verboseLog(VERBOSE_MORE, "wipe [%d,%d,%d,%d]: %" PRIu64 " pixels\n",
-               wipes[i].vertex[0].x, wipes[i].vertex[0].y, wipes[i].vertex[1].x,
-               wipes[i].vertex[1].y, count);
+    verboseLog(VERBOSE_MORE, "wipe [%d,%d,%d,%d]\n", wipes[i].vertex[0].x,
+               wipes[i].vertex[0].y, wipes[i].vertex[1].x,
+               wipes[i].vertex[1].y);
   }
 }
 

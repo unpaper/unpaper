@@ -382,7 +382,8 @@ uint64_t grayfilter(Image image, GrayfilterParameters params) {
       uint8_t lightness = inverse_lightness_rect(image, area);
       // (lower threshold->more deletion)
       if (lightness < params.abs_threshold) {
-        result += wipe_rectangle(image, area, PIXEL_WHITE);
+        result += count_pixels(area);
+        wipe_rectangle(image, area, PIXEL_WHITE);
       }
     }
 
