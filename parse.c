@@ -269,7 +269,7 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
   s1 = strdup(optarg);
 
   do {
-    char c;
+    char c = '\0';
     char *s2 = NULL;
     int index = -1;
     int components = sscanf(s1, "%d%c%ms", &index, &c, &s2);
