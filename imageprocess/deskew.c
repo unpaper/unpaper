@@ -245,7 +245,7 @@ float detect_rotation(Image image, const Rectangle mask,
  * rotate, and re-paste with copyBuffer.)
  */
 void rotate(Image source, Image target, const float radians,
-            uint8_t abs_black_threshold, Interpolation interpolate_type) {
+            Interpolation interpolate_type) {
   Rectangle source_area = full_image(source);
   RectangleSize source_size = size_of_image(source);
 
@@ -260,6 +260,6 @@ void rotate(Image source, Image target, const float radians,
     const float srcY = midY + (y - midY) * cosval - (x - midX) * sinval;
     const Pixel pxl =
         interpolate(source, (FloatPoint){srcX, srcY}, interpolate_type);
-    set_pixel(target, (Point){x, y}, pxl, abs_black_threshold);
+    set_pixel(target, (Point){x, y}, pxl);
   }
 }

@@ -147,8 +147,7 @@ uint8_t get_pixel_darkness_inverse(Image image, Point coords) {
  * @return true if the pixel has been changed, false if the original color was
  * the one to set
  */
-bool set_pixel(Image image, Point coords, Pixel pixel,
-               uint8_t abs_black_threshold) {
+bool set_pixel(Image image, Point coords, Pixel pixel) {
   uint8_t *pix;
 
   if ((coords.x < 0) || (coords.x >= image.frame->width) || (coords.y < 0) ||
@@ -156,7 +155,7 @@ bool set_pixel(Image image, Point coords, Pixel pixel,
     return false; // nop
   }
 
-  uint8_t pixelbw = pixel_grayscale(pixel) < abs_black_threshold
+  uint8_t pixelbw = pixel_grayscale(pixel) < image.abs_black_threshold
                         ? BLACK_COMPONENT
                         : WHITE_COMPONENT;
 

@@ -12,14 +12,13 @@
  * Wipe a rectangular area of pixels with the defined color.
  * @return The number of pixels actually changed.
  */
-uint64_t wipe_rectangle(Image image, Rectangle input_area, Pixel color,
-                        uint8_t abs_black_threshold) {
+uint64_t wipe_rectangle(Image image, Rectangle input_area, Pixel color) {
   uint64_t count = 0;
 
   Rectangle area = clip_rectangle(image, input_area);
 
   scan_rectangle(area) {
-    if (set_pixel(image, (Point){x, y}, color, abs_black_threshold)) {
+    if (set_pixel(image, (Point){x, y}, color)) {
       count++;
     }
   }
@@ -28,7 +27,7 @@ uint64_t wipe_rectangle(Image image, Rectangle input_area, Pixel color,
 }
 
 void copy_rectangle(Image source, Image target, Rectangle source_area,
-                    Point target_coords, uint8_t abs_black_threshold) {
+                    Point target_coords) {
   Rectangle area = clip_rectangle(source, source_area);
 
   // naive but generic implementation
@@ -36,8 +35,7 @@ void copy_rectangle(Image source, Image target, Rectangle source_area,
        sY <= area.vertex[1].y; sY++, tY++) {
     for (int32_t sX = area.vertex[0].x, tX = target_coords.x;
          sX <= area.vertex[1].x; sX++, tX++) {
-      set_pixel(target, (Point){tX, tY}, get_pixel(source, (Point){sX, sY}),
-                abs_black_threshold);
+      set_pixel(target, (Point){tX, tY}, get_pixel(source, (Point){sX, sY}));
     }
   }
 }
@@ -104,8 +102,7 @@ uint8_t darkness_rect(Image image, Rectangle input_area) {
 
 uint64_t count_pixels_within_brightness(Image image, Rectangle area,
                                         uint8_t min_brightness,
-                                        uint8_t max_brightness, bool clear,
-                                        uint8_t abs_black_threshold) {
+                                        uint8_t max_brightness, bool clear) {
   uint64_t count = 0;
 
   scan_rectangle(area) {
@@ -116,7 +113,7 @@ uint64_t count_pixels_within_brightness(Image image, Rectangle area,
     }
 
     if (clear) {
-      set_pixel(image, p, PIXEL_WHITE, abs_black_threshold);
+      set_pixel(image, p, PIXEL_WHITE);
     }
     count++;
   }
@@ -131,15 +128,14 @@ uint64_t count_pixels_within_brightness(Image image, Rectangle area,
  * at the edges.
  */
 void center_image(Image source, Image target, Point target_origin,
-                  RectangleSize target_size, Pixel sheet_background,
-                  uint8_t abs_black_threshold) {
+                  RectangleSize target_size) {
   Point source_origin = POINT_ORIGIN;
   RectangleSize source_size = size_of_image(source);
 
   if (source_size.width < target_size.width ||
       source_size.height < target_size.height) {
     wipe_rectangle(target, rectangle_from_size(target_origin, target_size),
-                   sheet_background, abs_black_threshold);
+                   target.background);
   }
 
   if (source_size.width <= target_size.width) {
@@ -156,13 +152,12 @@ void center_image(Image source, Image target, Point target_origin,
   }
 
   copy_rectangle(source, target,
-                 rectangle_from_size(source_origin, source_size), target_origin,
-                 abs_black_threshold);
+                 rectangle_from_size(source_origin, source_size),
+                 target_origin);
 }
 
 static void stretch_frame(Image source, Image target,
-                          Interpolation interpolate_type,
-                          uint8_t abs_black_threshold) {
+                          Interpolation interpolate_type) {
   RectangleSize source_size = size_of_image(source),
                 target_size = size_of_image(target);
   const float horizontal_ratio =
@@ -178,26 +173,23 @@ static void stretch_frame(Image source, Image target,
     const Point target_coords = {x, y};
     const FloatPoint source_coords = {x * horizontal_ratio, y * vertical_ratio};
     set_pixel(target, target_coords,
-              interpolate(source, source_coords, interpolate_type),
-              abs_black_threshold);
+              interpolate(source, source_coords, interpolate_type));
   }
 }
 
 void stretch_and_replace(Image *pImage, RectangleSize size,
-                         Interpolation interpolate_type,
-                         uint8_t abs_black_threshold) {
+                         Interpolation interpolate_type) {
   if (compare_sizes(size_of_image(*pImage), size) == 0)
     return;
 
   Image target = create_compatible_image(*pImage, size, false);
 
-  stretch_frame(*pImage, target, interpolate_type, abs_black_threshold);
+  stretch_frame(*pImage, target, interpolate_type);
   replace_image(pImage, &target);
 }
 
 void resize_and_replace(Image *pImage, RectangleSize size,
-                        Interpolation interpolate_type, Pixel sheet_background,
-                        uint8_t abs_black_threshold) {
+                        Interpolation interpolate_type) {
   RectangleSize image_size = size_of_image(*pImage);
   if (compare_sizes(image_size, size) == 0)
     return;
@@ -220,8 +212,7 @@ void resize_and_replace(Image *pImage, RectangleSize size,
   } else { // wRat == hRat
     stretch_size = size;
   }
-  stretch_and_replace(pImage, stretch_size, interpolate_type,
-                      abs_black_threshold);
+  stretch_and_replace(pImage, stretch_size, interpolate_type);
 
   // Check if any centering needs to be done, otherwise make a new
   // copy, center and return that.  Check for the stretched
@@ -233,13 +224,11 @@ void resize_and_replace(Image *pImage, RectangleSize size,
   }
 
   Image resized = create_compatible_image(*pImage, size, true);
-  center_image(*pImage, resized, POINT_ORIGIN, size, sheet_background,
-               abs_black_threshold);
+  center_image(*pImage, resized, POINT_ORIGIN, size);
   replace_image(pImage, &resized);
 }
 
-void flip_rotate_90(Image *pImage, RotationDirection direction,
-                    uint8_t abs_black_threshold) {
+void flip_rotate_90(Image *pImage, RotationDirection direction) {
   RectangleSize image_size = size_of_image(*pImage);
 
   // exchanged width and height
@@ -258,15 +247,13 @@ void flip_rotate_90(Image *pImage, RotationDirection direction,
       Point point1 = {x, y};
       Point point2 = {xx, yy};
 
-      set_pixel(newimage, point2, get_pixel(*pImage, point1),
-                abs_black_threshold);
+      set_pixel(newimage, point2, get_pixel(*pImage, point1));
     }
   }
   replace_image(pImage, &newimage);
 }
 
-void mirror(Image image, bool horizontal, bool vertical,
-            uint8_t abs_black_threshold) {
+void mirror(Image image, bool horizontal, bool vertical) {
   Rectangle source = {{POINT_ORIGIN, POINT_INFINITY}};
   RectangleSize image_size = size_of_image(image);
 
@@ -296,19 +283,18 @@ void mirror(Image image, bool horizontal, bool vertical,
       Point point2 = {xx, yy};
       Pixel pixel1 = get_pixel(image, point1);
       Pixel pixel2 = get_pixel(image, point2);
-      set_pixel(image, point1, pixel2, abs_black_threshold);
-      set_pixel(image, point2, pixel1, abs_black_threshold);
+      set_pixel(image, point1, pixel2);
+      set_pixel(image, point2, pixel1);
     }
   }
 }
 
-void shift_image(Image *pImage, Delta d, Pixel sheet_background,
-                 uint8_t abs_black_threshold) {
+void shift_image(Image *pImage, Delta d) {
   // allocate new buffer's memory
   Image newimage =
       create_compatible_image(*pImage, size_of_image(*pImage), true);
 
   copy_rectangle(*pImage, newimage, full_image(*pImage),
-                 shift_point(POINT_ORIGIN, d), abs_black_threshold);
+                 shift_point(POINT_ORIGIN, d));
   replace_image(pImage, &newimage);
 }

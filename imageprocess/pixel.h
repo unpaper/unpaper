@@ -16,5 +16,4 @@ Pixel get_pixel(Image image, Point coords);
 uint8_t get_pixel_grayscale(Image image, Point coords);
 uint8_t get_pixel_lightness(Image image, Point coords);
 uint8_t get_pixel_darkness_inverse(Image image, Point coords);
-bool set_pixel(Image image, Point coords, Pixel pixel,
-               uint8_t abs_black_threshold);
+bool set_pixel(Image image, Point coords, Pixel pixel);
