@@ -50,7 +50,7 @@ validate_mask_detection_parameters(int scan_directions,
 
 size_t detect_masks(Image image, MaskDetectionParameters params,
                     const Point points[], size_t points_count,
-                    bool mask_valid[], Rectangle masks[]);
+                    Rectangle masks[]);
 
 void center_mask(Image image, const Point center, const Rectangle area);
 

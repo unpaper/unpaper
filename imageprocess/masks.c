@@ -188,14 +188,14 @@ static const Rectangle INVALID_MASK = {{{-1, -1}, {-1, -1}}};
  */
 size_t detect_masks(Image image, MaskDetectionParameters params,
                     const Point points[], size_t points_count,
-                    bool mask_valid[], Rectangle masks[]) {
+                    Rectangle masks[]) {
   size_t masks_count = 0;
   if (!params.scan_horizontal && !params.scan_vertical) {
     return masks_count;
   }
 
   for (size_t i = 0; i < points_count; i++) {
-    mask_valid[i] = detect_mask(image, params, points[i], &masks[i]);
+    bool mask_valid = detect_mask(image, params, points[i], &masks[i]);
 
     // Compare the newly-detected mask with an invalid mask where all the
     // vertex are (-1, -1)
@@ -206,7 +206,7 @@ size_t detect_masks(Image image, MaskDetectionParameters params,
           VERBOSE_NORMAL, "auto-masking (%d,%d): %d,%d,%d,%d%s\n", points[i].x,
           points[i].y, masks[i].vertex[0].x, masks[i].vertex[0].y,
           masks[i].vertex[1].x, masks[i].vertex[1].y,
-          mask_valid[i] ? "" : " (invalid detection, using full page size)");
+          mask_valid ? "" : " (invalid detection, using full page size)");
     } else {
       verboseLog(VERBOSE_NORMAL, "auto-masking (%d,%d): NO MASK FOUND\n",
                  points[i].x, points[i].y);
