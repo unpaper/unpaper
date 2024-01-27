@@ -20,8 +20,7 @@ static inline uint8_t pixel_grayscale(Pixel pixel) {
 static Pixel get_pixel_components(Image image, Point coords) {
   uint8_t *pix;
 
-  if ((coords.x < 0) || (coords.x >= image.frame->width) || (coords.y < 0) ||
-      (coords.y >= image.frame->height)) {
+  if (!point_in_rectangle(coords, full_image(image))) {
     return PIXEL_WHITE;
   }
 
@@ -128,16 +127,12 @@ uint8_t get_pixel_darkness_inverse(Image image, Point coords) {
 
 /**
  * Sets the color/grayscale value of a single pixel.
- *
- * @return true if the pixel has been changed, false if the original color was
- * the one to set
  */
-bool set_pixel(Image image, Point coords, Pixel pixel) {
+void set_pixel(Image image, Point coords, Pixel pixel) {
   uint8_t *pix;
 
-  if ((coords.x < 0) || (coords.x >= image.frame->width) || (coords.y < 0) ||
-      (coords.y >= image.frame->height)) {
-    return false; // nop
+  if (!point_in_rectangle(coords, full_image(image))) {
+    return;
   }
 
   bool pixel_black = pixel_grayscale(pixel) < image.abs_black_threshold;
@@ -175,5 +170,4 @@ bool set_pixel(Image image, Point coords, Pixel pixel) {
   default:
     errOutput("unknown pixel format.");
   }
-  return true;
 }

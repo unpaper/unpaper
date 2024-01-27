@@ -180,17 +180,12 @@ int main(int argc, char *argv[]) {
   Pixel maskColorPixel = PIXEL_WHITE;
   size_t pointCount = 0;
   Point points[MAX_POINTS];
-  size_t maskCount = 0;
-  Rectangle masks[MAX_MASKS];
-  size_t preMaskCount = 0;
-  Rectangle preMasks[MAX_MASKS];
-  size_t wipeCount = 0;
-  Rectangle wipe[MAX_MASKS];
+  Masks masks = create_mask_array(5);
+  Masks preMasks = create_mask_array(5);
+  Masks wipe = create_mask_array(5);
   int middleWipe[2] = {0, 0};
-  size_t preWipeCount = 0;
-  Rectangle preWipe[MAX_MASKS];
-  size_t postWipeCount = 0;
-  Rectangle postWipe[MAX_MASKS];
+  Masks preWipe = create_mask_array(5);
+  Masks postWipe = create_mask_array(5);
   Rectangle outsideBorderscanMask[MAX_PAGES]; // set by --layout
   size_t outsideBorderscanMaskCount = 0;
   int blackfilterScanDirections = (1 << HORIZONTAL) | (1 << VERTICAL);
@@ -198,8 +193,7 @@ int main(int argc, char *argv[]) {
   int blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
   int blackfilterScanStep[DIRECTIONS_COUNT] = {5, 5};
   float blackfilterScanThreshold = 0.95;
-  size_t blackfilterExcludeCount = 0;
-  Rectangle blackfilterExclude[MAX_MASKS];
+  Masks blackfilterExclude = create_mask_array(5);
   int blackfilterIntensity = 20;
   BlackfilterParameters blackfilterParams;
   int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
@@ -422,6 +416,8 @@ int main(int argc, char *argv[]) {
     if (c == -1)
       break;
 
+    Rectangle tmpRectArg;
+
     switch (c) {
     case 'h':
     case '?':
@@ -526,14 +522,13 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_PRE_MASK:
-      if (preMaskCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &preMasks[preMaskCount])) {
-          preMaskCount++;
+      if (parse_rectangle(optarg, &tmpRectArg)) {
+        if (!append_mask(&preMasks, tmpRectArg)) {
+          fprintf(
+              stderr,
+              "maximum number of pre-masks (%d) exceeded, ignoring mask %s\n",
+              MAX_MASKS, optarg);
         }
-      } else {
-        fprintf(stderr,
-                "maximum number of masks (%d) exceeded, ignoring mask %s\n",
-                MAX_MASKS, optarg);
       }
       break;
 
@@ -576,51 +571,44 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'm':
-      if (maskCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &masks[maskCount])) {
-          maskCount++;
+      if (parse_rectangle(optarg, &tmpRectArg)) {
+        if (!append_mask(&masks, tmpRectArg)) {
+          fprintf(stderr,
+                  "maximum number of masks (%d) exceeded, ignoring mask %s\n",
+                  MAX_MASKS, optarg);
         }
-      } else {
-        fprintf(stderr,
-                "maximum number of masks (%d) exceeded, ignoring mask %s\n",
-                MAX_MASKS, optarg);
       }
       break;
 
     case 'W':
-      if (wipeCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &wipe[wipeCount])) {
-          wipeCount++;
+      if (parse_rectangle(optarg, &tmpRectArg)) {
+        if (!append_mask(&wipe, tmpRectArg)) {
+          fprintf(stderr,
+                  "maximum number of wipes (%d) exceeded, ignoring mask %s\n",
+                  MAX_MASKS, optarg);
         }
-      } else {
-        fprintf(stderr,
-                "maximum number of wipes (%d) exceeded, ignoring mask %s\n",
-                MAX_MASKS, optarg);
       }
       break;
 
     case OPT_PRE_WIPE:
-      if (preWipeCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &preWipe[preWipeCount])) {
-          preWipeCount++;
+      if (parse_rectangle(optarg, &tmpRectArg)) {
+        if (!append_mask(&preWipe, tmpRectArg)) {
+          fprintf(
+              stderr,
+              "maximum number of pre-wipes (%d) exceeded, ignoring mask %s\n",
+              MAX_MASKS, optarg);
         }
-      } else {
-        fprintf(stderr,
-                "maximum number of pre-wipes (%d) exceeded, ignoring mask %s\n",
-                MAX_MASKS, optarg);
       }
       break;
 
     case OPT_POST_WIPE:
-      if (postWipeCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &postWipeCount[postWipe])) {
-          postWipeCount++;
+      if (parse_rectangle(optarg, &tmpRectArg)) {
+        if (!append_mask(&postWipe, tmpRectArg)) {
+          fprintf(
+              stderr,
+              "maximum number of post-wipes (%d) exceeded, ignoring mask %s\n",
+              MAX_MASKS, optarg);
         }
-      } else {
-        fprintf(
-            stderr,
-            "maximum number of post-wipes (%d) exceeded, ignoring mask %s\n",
-            MAX_MASKS, optarg);
       }
       break;
 
@@ -668,16 +656,13 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BLACK_FILTER_SCAN_EXCLUDE:
-      if (blackfilterExcludeCount < MAX_MASKS) {
-        if (parse_rectangle(optarg,
-                            &blackfilterExclude[blackfilterExcludeCount])) {
-          blackfilterExcludeCount++;
+      if (parse_rectangle(optarg, &tmpRectArg)) {
+        if (!append_mask(&blackfilterExclude, tmpRectArg)) {
+          fprintf(stderr,
+                  "maximum number of blackfilter exclusion (%d) exceeded, "
+                  "ignoring mask %s\n",
+                  MAX_MASKS, optarg);
         }
-      } else {
-        fprintf(stderr,
-                "maximum number of blackfilter exclusion (%d) exceeded, "
-                "ignoring mask %s\n",
-                MAX_MASKS, optarg);
       }
       break;
 
@@ -992,7 +977,7 @@ int main(int argc, char *argv[]) {
       blackfilterScanStep[HORIZONTAL], blackfilterScanStep[VERTICAL],
       blackfilterScanDepth[HORIZONTAL], blackfilterScanDepth[VERTICAL],
       blackfilterScanDirections, blackfilterScanThreshold, blackfilterIntensity,
-      blackfilterExcludeCount, blackfilterExclude);
+      &blackfilterExclude);
   blurfilterParams = validate_blurfilter_parameters(
       blurfilterScanSize[HORIZONTAL], blurfilterScanSize[VERTICAL],
       blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
@@ -1214,10 +1199,10 @@ int main(int argc, char *argv[]) {
       }
 
       // pre-masking
-      if (preMaskCount > 0) {
+      if (preMasks.count > 0) {
         verboseLog(VERBOSE_NORMAL, "pre-masking\n ");
 
-        apply_masks(sheet, preMasks, preMaskCount, maskColorPixel);
+        apply_masks(sheet, preMasks, maskColorPixel);
       }
 
       // --------------------------------------------------------------
@@ -1250,10 +1235,10 @@ int main(int argc, char *argv[]) {
         if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
           printf("pre-shift: [%d,%d]\n", preShift[WIDTH], preShift[HEIGHT]);
         }
-        if (preWipeCount > 0) {
+        if (preWipe.count > 0) {
           printf("pre-wipe: ");
-          for (int i = 0; i < preWipeCount; i++) {
-            print_rectangle(preWipe[i]);
+          for (int i = 0; i < preWipe.count; i++) {
+            print_rectangle(preWipe.masks[i]);
           }
           printf("\n");
         }
@@ -1261,10 +1246,10 @@ int main(int argc, char *argv[]) {
           printf("pre-border: [%d,%d,%d,%d]\n", preBorder.left, preBorder.top,
                  preBorder.right, preBorder.bottom);
         }
-        if (preMaskCount > 0) {
+        if (preMasks.count > 0) {
           printf("pre-masking: ");
-          for (int i = 0; i < preMaskCount; i++) {
-            print_rectangle(preMasks[i]);
+          for (int i = 0; i < preMasks.count; i++) {
+            print_rectangle(preMasks.masks[i]);
           }
           printf("\n");
         }
@@ -1292,10 +1277,10 @@ int main(int argc, char *argv[]) {
           printf("blackfilter-scan-step: [%d,%d]\n", blackfilterScanStep[0],
                  blackfilterScanStep[1]);
           printf("blackfilter-scan-threshold: %f\n", blackfilterScanThreshold);
-          if (blackfilterExcludeCount > 0) {
+          if (blackfilterExclude.count > 0) {
             printf("blackfilter-scan-exclude: ");
-            for (size_t i = 0; i < blackfilterExcludeCount; i++) {
-              print_rectangle(blackfilterExclude[i]);
+            for (size_t i = 0; i < blackfilterExclude.count; i++) {
+              print_rectangle(blackfilterExclude.masks[i]);
             }
             printf("\n");
           }
@@ -1386,10 +1371,10 @@ int main(int argc, char *argv[]) {
           printf("deskew-scan DISABLED for all sheets.\n");
         }
         if (options.no_wipe_multi_index.count != -1) {
-          if (wipeCount > 0) {
+          if (wipe.count > 0) {
             printf("wipe areas: ");
-            for (int i = 0; i < wipeCount; i++) {
-              print_rectangle(wipe[i]);
+            for (size_t i = 0; i < wipe.count; i++) {
+              print_rectangle(wipe.masks[i]);
             }
             printf("\n");
           }
@@ -1427,10 +1412,10 @@ int main(int argc, char *argv[]) {
         } else {
           printf("border-scan DISABLED for all sheets.\n");
         }
-        if (postWipeCount > 0) {
+        if (postWipe.count > 0) {
           printf("post-wipe: ");
-          for (int i = 0; i < postWipeCount; i++) {
-            print_rectangle(postWipe[i]);
+          for (int i = 0; i < postWipe.count; i++) {
+            print_rectangle(postWipe.masks[i]);
           }
           printf("\n");
         }
@@ -1541,13 +1526,14 @@ int main(int argc, char *argv[]) {
           maskScanMaximum[HEIGHT] = sheet.frame->height;
         }
         // avoid inner half of the sheet to be blackfilter-detectable
-        if (blackfilterExcludeCount ==
+        if (blackfilterExclude.count ==
             0) { // no manual settings, use auto-values
           RectangleSize sheetSize = size_of_image(sheet);
-          blackfilterExclude[blackfilterExcludeCount++] = rectangle_from_size(
-              (Point){sheetSize.width / 4, sheetSize.height / 4},
-              (RectangleSize){.width = sheetSize.width / 2,
-                              .height = sheetSize.height / 2});
+          append_mask(&blackfilterExclude,
+                      rectangle_from_size(
+                          (Point){sheetSize.width / 4, sheetSize.height / 4},
+                          (RectangleSize){.width = sheetSize.width / 2,
+                                          .height = sheetSize.height / 2}));
         }
         // set single outside border to start scanning for final border-scan
         if (outsideBorderscanMaskCount ==
@@ -1574,13 +1560,14 @@ int main(int argc, char *argv[]) {
           maskScanMaximum[HEIGHT] = sheet.frame->height;
         }
         if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
-          wipe[wipeCount++] = (Rectangle){{
-              {sheet.frame->width / 2 - middleWipe[0], 0},
-              {sheet.frame->width / 2 + middleWipe[1], sheet.frame->height - 1},
-          }};
+          append_mask(&wipe, (Rectangle){{
+                                 {sheet.frame->width / 2 - middleWipe[0], 0},
+                                 {sheet.frame->width / 2 + middleWipe[1],
+                                  sheet.frame->height - 1},
+                             }});
         }
         // avoid inner half of each page to be blackfilter-detectable
-        if (blackfilterExcludeCount ==
+        if (blackfilterExclude.count ==
             0) { // no manual settings, use auto-values
           RectangleSize sheetSize = size_of_image(sheet);
           RectangleSize filterSize = {
@@ -1591,10 +1578,10 @@ int main(int argc, char *argv[]) {
           Point secondFilterOrigin =
               shift_point(firstFilterOrigin, (Delta){sheet.frame->width / 2});
 
-          blackfilterExclude[blackfilterExcludeCount++] =
-              rectangle_from_size(firstFilterOrigin, filterSize);
-          blackfilterExclude[blackfilterExcludeCount++] =
-              rectangle_from_size(secondFilterOrigin, filterSize);
+          append_mask(&blackfilterExclude,
+                      rectangle_from_size(firstFilterOrigin, filterSize));
+          append_mask(&blackfilterExclude,
+                      rectangle_from_size(secondFilterOrigin, filterSize));
         }
         // set two outside borders to start scanning for final border-scan
         if (outsideBorderscanMaskCount ==
@@ -1619,7 +1606,7 @@ int main(int argc, char *argv[]) {
       // pre-wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, preWipe, preWipeCount, maskColorPixel);
+        apply_wipes(sheet, preWipe, maskColorPixel);
       }
 
       // pre-border
@@ -1673,15 +1660,16 @@ int main(int argc, char *argv[]) {
       // mask-detection
       if (!isExcluded(nr, options.no_mask_scan_multi_index,
                       options.ignore_multi_index)) {
-        detect_masks(sheet, maskDetectionParams, points, pointCount, masks);
+        free_mask_array(&masks);
+        masks = detect_masks(sheet, maskDetectionParams, points, pointCount);
       } else {
         verboseLog(VERBOSE_MORE, "+ mask-scan DISABLED for sheet %d\n", nr);
       }
 
       // permanently apply masks
-      if (maskCount > 0) {
+      if (masks.count > 0) {
         saveDebug("_before-masking%d.pnm", nr, sheet);
-        apply_masks(sheet, masks, maskCount, maskColorPixel);
+        apply_masks(sheet, masks, maskColorPixel);
         saveDebug("_after-masking%d.pnm", nr, sheet);
       }
 
@@ -1708,38 +1696,39 @@ int main(int argc, char *argv[]) {
         // masking and grayfilter
         if (!isExcluded(nr, options.no_mask_scan_multi_index,
                         options.ignore_multi_index)) {
-          maskCount = detect_masks(sheet, maskDetectionParams, points,
-                                   pointCount, masks);
+          free_mask_array(&masks);
+          masks = detect_masks(sheet, maskDetectionParams, points, pointCount);
         } else {
           verboseLog(VERBOSE_MORE, "(mask-scan before deskewing disabled)\n");
         }
 
         // auto-deskew each mask
-        for (int i = 0; i < maskCount; i++) {
-          saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
-          float rotation = detect_rotation(sheet, masks[i], deskewParams);
-          saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
+        for (size_t i = 0; i < masks.count; i++) {
+          saveDebug("_before-deskew-detect%d.pnm", nr * masks.count + i, sheet);
+          float rotation = detect_rotation(sheet, masks.masks[i], deskewParams);
+          saveDebug("_after-deskew-detect%d.pnm", nr * masks.count + i, sheet);
 
           verboseLog(VERBOSE_NORMAL, "rotate (%d,%d): %f\n", points[i].x,
                      points[i].y, rotation);
 
           if (rotation != 0.0) {
             Image rect = create_compatible_image(
-                sheet, size_of_rectangle(masks[i]), false);
+                sheet, size_of_rectangle(masks.masks[i]), false);
             Image rectTarget = create_compatible_image(
-                sheet, size_of_rectangle(masks[i]), true);
+                sheet, size_of_rectangle(masks.masks[i]), true);
 
             // copy area to rotate into rSource
-            copy_rectangle(sheet, rect,
-                           (Rectangle){{masks[i].vertex[0], POINT_INFINITY}},
-                           POINT_ORIGIN);
+            copy_rectangle(
+                sheet, rect,
+                (Rectangle){{masks.masks[i].vertex[0], POINT_INFINITY}},
+                POINT_ORIGIN);
 
             // rotate
             rotate(rect, rectTarget, -rotation, interpolateType);
 
             // copy result back into whole image
             copy_rectangle(rectTarget, sheet, full_image(rectTarget),
-                           masks[i].vertex[0]);
+                           masks.masks[i].vertex[0]);
 
             free_image(&rect);
             free_image(&rectTarget);
@@ -1760,16 +1749,16 @@ int main(int argc, char *argv[]) {
         // perform auto-masking again to get more precise masks after rotation
         if (!isExcluded(nr, options.no_mask_scan_multi_index,
                         options.ignore_multi_index)) {
-          maskCount = detect_masks(sheet, maskDetectionParams, points,
-                                   pointCount, masks);
+          free_mask_array(&masks);
+          masks = detect_masks(sheet, maskDetectionParams, points, pointCount);
         } else {
           verboseLog(VERBOSE_MORE, "(mask-scan before centering disabled)\n");
         }
 
         saveDebug("_before-centering%d.pnm", nr, sheet);
         // center masks on the sheet, according to their page position
-        for (int i = 0; i < maskCount; i++) {
-          center_mask(sheet, points[i], masks[i]);
+        for (size_t i = 0; i < masks.count; i++) {
+          center_mask(sheet, points[i], masks.masks[i]);
         }
         saveDebug("_after-centering%d.pnm", nr, sheet);
       } else {
@@ -1780,7 +1769,7 @@ int main(int argc, char *argv[]) {
       // explicit wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, wipe, wipeCount, maskColorPixel);
+        apply_wipes(sheet, wipe, maskColorPixel);
       } else {
         verboseLog(VERBOSE_MORE, "+ wipe DISABLED for sheet %d\n", nr);
       }
@@ -1796,26 +1785,29 @@ int main(int argc, char *argv[]) {
       // border-detection
       if (!isExcluded(nr, options.no_border_scan_multi_index,
                       options.ignore_multi_index)) {
-        Rectangle autoborderMask[outsideBorderscanMaskCount];
+        Masks autoborderMasks = create_mask_array(outsideBorderscanMaskCount);
         saveDebug("_before-border%d.pnm", nr, sheet);
-        for (int i = 0; i < outsideBorderscanMaskCount; i++) {
-          autoborderMask[i] =
+        for (size_t i = 0; i < outsideBorderscanMaskCount; i++) {
+          // No need to check for result, since the outsideBorderscanMaskCount
+          // is already limited.
+          append_mask(
+              &autoborderMasks,
               border_to_mask(sheet, detect_border(sheet, borderScanParams,
-                                                  outsideBorderscanMask[i]));
+                                                  outsideBorderscanMask[i])));
         }
-        apply_masks(sheet, autoborderMask, outsideBorderscanMaskCount,
-                    maskColorPixel);
+        apply_masks(sheet, autoborderMasks, maskColorPixel);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
           // border-centering
           if (!isExcluded(nr, options.no_border_align_multi_index,
                           options.ignore_multi_index)) {
-            align_mask(sheet, autoborderMask[i], outsideBorderscanMask[i],
-                       maskAlignmentParams);
+            align_mask(sheet, autoborderMasks.masks[i],
+                       outsideBorderscanMask[i], maskAlignmentParams);
           } else {
             verboseLog(VERBOSE_MORE,
                        "+ border-centering DISABLED for sheet %d\n", nr);
           }
         }
+        free_mask_array(&autoborderMasks);
         saveDebug("_after-border%d.pnm", nr, sheet);
       } else {
         verboseLog(VERBOSE_MORE, "+ border-scan DISABLED for sheet %d\n", nr);
@@ -1824,7 +1816,7 @@ int main(int argc, char *argv[]) {
       // post-wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, postWipe, postWipeCount, maskColorPixel);
+        apply_wipes(sheet, postWipe, maskColorPixel);
       }
 
       // post-border

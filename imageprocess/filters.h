@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "imageprocess/image.h"
+#include "imageprocess/masks.h"
 #include "imageprocess/primitives.h"
 
 typedef struct {
@@ -28,17 +29,17 @@ typedef struct {
   uint8_t abs_threshold;
   int32_t intensity;
 
-  size_t exclusions_count;
-  Rectangle *exclusions;
+  const Masks *exclusions;
 } BlackfilterParameters;
 
 void blackfilter(Image image, BlackfilterParameters params);
 
-BlackfilterParameters validate_blackfilter_parameters(
-    uint32_t scan_size_h, uint32_t scan_size_v, uint32_t scan_step_h,
-    uint32_t scan_step_v, uint32_t scan_depth_h, uint32_t scan_depth_v,
-    int8_t scan_directions, float threshold, int32_t intensity,
-    size_t exclusions_count, Rectangle *exclusions);
+BlackfilterParameters
+validate_blackfilter_parameters(uint32_t scan_size_h, uint32_t scan_size_v,
+                                uint32_t scan_step_h, uint32_t scan_step_v,
+                                uint32_t scan_depth_h, uint32_t scan_depth_v,
+                                int8_t scan_directions, float threshold,
+                                int32_t intensity, const Masks *exclusions);
 
 typedef struct {
   RectangleSize scan_size;

@@ -12,6 +12,16 @@
 #include "imageprocess/primitives.h"
 
 typedef struct {
+  size_t count;
+  size_t allocated;
+  Rectangle *masks;
+} Masks;
+
+Masks create_mask_array(size_t starting_members);
+bool append_mask(Masks *mask_array, Rectangle new_mask);
+void free_mask_array(Masks *mask_array);
+
+typedef struct {
   RectangleSize scan_size;
 
   struct {
@@ -48,9 +58,8 @@ validate_mask_detection_parameters(int scan_directions,
                                    const int scan_mininum[DIMENSIONS_COUNT],
                                    const int scan_maximum[DIMENSIONS_COUNT]);
 
-size_t detect_masks(Image image, MaskDetectionParameters params,
-                    const Point points[], size_t points_count,
-                    Rectangle masks[]);
+Masks detect_masks(Image image, MaskDetectionParameters params,
+                   const Point points[], size_t points_count);
 
 void center_mask(Image image, const Point center, const Rectangle area);
 
@@ -75,11 +84,9 @@ validate_mask_alignment_parameters(int border_align,
 void align_mask(Image image, const Rectangle inside_area,
                 const Rectangle outside, MaskAlignmentParameters params);
 
-void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
-                 Pixel color);
+void apply_masks(Image image, Masks masks, Pixel color);
 
-void apply_wipes(Image image, Rectangle wipes[], size_t wipes_count,
-                 Pixel color);
+void apply_wipes(Image image, Masks wipes, Pixel color);
 
 typedef struct {
   int32_t left;

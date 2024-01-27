@@ -17,11 +17,12 @@
  * Blackfilter *
  ***************/
 
-BlackfilterParameters validate_blackfilter_parameters(
-    uint32_t scan_size_h, uint32_t scan_size_v, uint32_t scan_step_h,
-    uint32_t scan_step_v, uint32_t scan_depth_h, uint32_t scan_depth_v,
-    int8_t scan_directions, float threshold, int32_t intensity,
-    size_t exclusions_count, Rectangle *exclusions) {
+BlackfilterParameters
+validate_blackfilter_parameters(uint32_t scan_size_h, uint32_t scan_size_v,
+                                uint32_t scan_step_h, uint32_t scan_step_v,
+                                uint32_t scan_depth_h, uint32_t scan_depth_v,
+                                int8_t scan_directions, float threshold,
+                                int32_t intensity, const Masks *exclusions) {
   return (BlackfilterParameters){
       .scan_size =
           {
@@ -45,7 +46,6 @@ BlackfilterParameters validate_blackfilter_parameters(
       .abs_threshold = UINT8_MAX * threshold,
       .intensity = intensity,
 
-      .exclusions_count = exclusions_count,
       .exclusions = exclusions,
   };
 }
@@ -78,8 +78,8 @@ static void blackfilter_scan(Image image, BlackfilterParameters params,
 
       // If we find a solidly black area.
       if (blackness >= params.abs_threshold) {
-        if (!rectangle_overlap_any(area, params.exclusions_count,
-                                   params.exclusions)) {
+        if (!rectangle_overlap_any(area, params.exclusions->count,
+                                   params.exclusions->masks)) {
           verboseLog(VERBOSE_NORMAL, "black-area flood-fill: [%d,%d,%d,%d]\n",
                      area.vertex[0].x, area.vertex[0].y, area.vertex[1].x,
                      area.vertex[1].y);
@@ -382,7 +382,8 @@ uint64_t grayfilter(Image image, GrayfilterParameters params) {
       uint8_t lightness = inverse_lightness_rect(image, area);
       // (lower threshold->more deletion)
       if (lightness < params.abs_threshold) {
-        result += wipe_rectangle(image, area, PIXEL_WHITE);
+        result += count_pixels(area);
+        wipe_rectangle(image, area, PIXEL_WHITE);
       }
     }
 

@@ -12,18 +12,10 @@
  * Wipe a rectangular area of pixels with the defined color.
  * @return The number of pixels actually changed.
  */
-uint64_t wipe_rectangle(Image image, Rectangle input_area, Pixel color) {
-  uint64_t count = 0;
-
+void wipe_rectangle(Image image, Rectangle input_area, Pixel color) {
   Rectangle area = clip_rectangle(image, input_area);
 
-  scan_rectangle(area) {
-    if (set_pixel(image, (Point){x, y}, color)) {
-      count++;
-    }
-  }
-
-  return count;
+  scan_rectangle(area) { set_pixel(image, (Point){x, y}, color); }
 }
 
 void copy_rectangle(Image source, Image target, Rectangle source_area,
