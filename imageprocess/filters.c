@@ -51,8 +51,8 @@ BlackfilterParameters validate_blackfilter_parameters(
 }
 
 static void blackfilter_scan(Image image, BlackfilterParameters params,
-                             Delta step, RectangleSize stripe_size, Delta shift,
-                             uint8_t abs_black_threshold) {
+                             Delta step, RectangleSize stripe_size,
+                             Delta shift) {
   if (step.horizontal != 0 && step.vertical != 0) {
     errOutput("blackfilter_scan() called with diagonal steps, impossible! "
               "(%" PRId32 ", %" PRId32 ")",
@@ -89,8 +89,7 @@ static void blackfilter_scan(Image image, BlackfilterParameters params,
           // delete all other black pixels in the area already)
           scan_rectangle(area) {
             flood_fill(image, (Point){x, y}, PIXEL_WHITE, 0,
-                       abs_black_threshold, params.intensity,
-                       abs_black_threshold);
+                       image.abs_black_threshold, params.intensity);
           }
         } else if (!already_excluded_logged) {
           verboseLog(VERBOSE_NORMAL, "black-area EXCLUDED: [%d,%d,%d,%d]\n",
@@ -113,14 +112,13 @@ static void blackfilter_scan(Image image, BlackfilterParameters params,
  * A virtual bar of width 'size' and height 'depth' is horizontally moved
  * above the middle of the sheet (or the full sheet, if depth ==-1).
  */
-void blackfilter(Image image, BlackfilterParameters params,
-                 uint8_t abs_black_threshold) {
+void blackfilter(Image image, BlackfilterParameters params) {
   // Left-to-Right scan.
   if (params.scan_horizontal) {
     blackfilter_scan(
         image, params, (Delta){params.scan_step.horizontal, 0},
         (RectangleSize){params.scan_size.width, params.scan_depth.vertical},
-        (Delta){0, params.scan_depth.vertical}, abs_black_threshold);
+        (Delta){0, params.scan_depth.vertical});
   }
 
   // To-to-Bottom scan.
@@ -128,7 +126,7 @@ void blackfilter(Image image, BlackfilterParameters params,
     blackfilter_scan(
         image, params, (Delta){0, params.scan_step.vertical},
         (RectangleSize){params.scan_depth.horizontal, params.scan_size.height},
-        (Delta){params.scan_depth.horizontal, 0}, abs_black_threshold);
+        (Delta){params.scan_depth.horizontal, 0});
   }
 }
 
@@ -157,7 +155,7 @@ BlurfilterParameters validate_blurfilter_parameters(uint32_t scan_size_h,
 }
 
 uint64_t blurfilter(Image image, BlurfilterParameters params,
-                    uint8_t abs_white_threshold, uint8_t abs_black_threshold) {
+                    uint8_t abs_white_threshold) {
   RectangleSize image_size = size_of_image(image);
   const uint32_t blocks_per_row = image_size.width / params.scan_size.width;
   const uint64_t total_pixels_in_block =
@@ -185,7 +183,7 @@ uint64_t blurfilter(Image image, BlurfilterParameters params,
        left += params.scan_size.width) {
     curCounts[block++] = count_pixels_within_brightness(
         image, rectangle_from_size((Point){left, 0}, params.scan_size), 0,
-        abs_white_threshold, false, abs_black_threshold);
+        abs_white_threshold, false);
   }
 
   // Loop through all blocks. For a block calculate the number of dark pixels in
@@ -199,7 +197,7 @@ uint64_t blurfilter(Image image, BlurfilterParameters params,
         image,
         rectangle_from_size((Point){0, top + params.scan_step.vertical},
                             params.scan_size),
-        0, abs_white_threshold, false, abs_black_threshold);
+        0, abs_white_threshold, false);
 
     for (int32_t left = 0, block = 1; left <= max_left;
          left += params.scan_size.width) {
@@ -210,7 +208,7 @@ uint64_t blurfilter(Image image, BlurfilterParameters params,
           rectangle_from_size((Point){left + params.scan_size.width,
                                       top + params.scan_step.vertical},
                               params.scan_size),
-          0, abs_white_threshold, false, abs_black_threshold);
+          0, abs_white_threshold, false);
 
       uint64_t max = max3(
           nextCounts[block - 1], nextCounts[block + 1],
@@ -220,7 +218,7 @@ uint64_t blurfilter(Image image, BlurfilterParameters params,
       if ((((float)max) / total_pixels_in_block) <= params.intensity) {
         wipe_rectangle(
             image, rectangle_from_size((Point){left, top}, params.scan_size),
-            PIXEL_WHITE, abs_black_threshold);
+            PIXEL_WHITE);
         result += curCounts[block];
         curCounts[block] = total_pixels_in_block; // Update information
       }
@@ -243,35 +241,31 @@ uint64_t blurfilter(Image image, BlurfilterParameters params,
  ***************/
 
 static bool noisefilter_compare_and_clear(Image image, Point p, bool clear,
-                                          uint8_t min_white_level,
-                                          uint8_t abs_black_threshold) {
+                                          uint8_t min_white_level) {
   uint8_t lightness = get_pixel_lightness(image, p);
   if (lightness >= min_white_level) {
     return false;
   }
 
   if (clear) {
-    set_pixel(image, p, PIXEL_WHITE, abs_black_threshold);
+    set_pixel(image, p, PIXEL_WHITE);
   }
   return true;
 }
 
 static uint64_t
 noisefilter_count_pixel_neighbors_level(Image image, Point p, uint32_t level,
-                                        bool clear, uint8_t min_white_level,
-                                        uint8_t abs_black_threshold) {
+                                        bool clear, uint8_t min_white_level) {
   uint64_t count = 0;
 
   // upper and lower rows
   for (int32_t xx = p.x - level; xx <= p.x + level; xx++) {
     Point upper = {xx, p.y - level}, lower = {xx, p.y + level};
 
-    count += noisefilter_compare_and_clear(image, upper, clear, min_white_level,
-                                           abs_black_threshold)
+    count += noisefilter_compare_and_clear(image, upper, clear, min_white_level)
                  ? 1
                  : 0;
-    count += noisefilter_compare_and_clear(image, lower, clear, min_white_level,
-                                           abs_black_threshold)
+    count += noisefilter_compare_and_clear(image, lower, clear, min_white_level)
                  ? 1
                  : 0;
   }
@@ -279,12 +273,10 @@ noisefilter_count_pixel_neighbors_level(Image image, Point p, uint32_t level,
   // middle rows
   for (int32_t yy = p.y - (level - 1); yy <= p.y + (level - 1); yy++) {
     Point first = {p.x - level, yy}, last = {p.x + level, yy};
-    count += noisefilter_compare_and_clear(image, first, clear, min_white_level,
-                                           abs_black_threshold)
+    count += noisefilter_compare_and_clear(image, first, clear, min_white_level)
                  ? 1
                  : 0;
-    count += noisefilter_compare_and_clear(image, last, clear, min_white_level,
-                                           abs_black_threshold)
+    count += noisefilter_compare_and_clear(image, last, clear, min_white_level)
                  ? 1
                  : 0;
   }
@@ -294,15 +286,14 @@ noisefilter_count_pixel_neighbors_level(Image image, Point p, uint32_t level,
 
 static uint64_t noisefilter_count_pixel_neighbors(Image image, Point p,
                                                   uint64_t intensity,
-                                                  uint8_t min_white_level,
-                                                  uint8_t abs_black_threshold) {
+                                                  uint8_t min_white_level) {
   // can finish when one level is completely zero
   uint64_t count = 1; // assume self as set
   uint64_t lCount;
   uint32_t level = 1;
   do {
-    lCount = noisefilter_count_pixel_neighbors_level(
-        image, p, level, false, min_white_level, abs_black_threshold);
+    lCount = noisefilter_count_pixel_neighbors_level(image, p, level, false,
+                                                     min_white_level);
     count += lCount;
     level++;
   } while (lCount != 0 && (level <= intensity));
@@ -311,17 +302,16 @@ static uint64_t noisefilter_count_pixel_neighbors(Image image, Point p,
 }
 
 static void noisefilter_clear_pixel_neighbors(Image image, Point p,
-                                              uint8_t min_white_level,
-                                              uint8_t abs_black_threshold) {
-  set_pixel(image, p, PIXEL_WHITE, abs_black_threshold);
+                                              uint8_t min_white_level) {
+  set_pixel(image, p, PIXEL_WHITE);
 
   // lCount will become 0, otherwise countPixelNeighbors() would previously have
   // delivered a bigger value (and this here would not have been called)
   uint64_t lCount;
   uint32_t level = 1;
   do {
-    lCount = noisefilter_count_pixel_neighbors_level(
-        image, p, level, true, min_white_level, abs_black_threshold);
+    lCount = noisefilter_count_pixel_neighbors_level(image, p, level, true,
+                                                     min_white_level);
     level++;
   } while (lCount != 0);
 }
@@ -331,8 +321,7 @@ static void noisefilter_clear_pixel_neighbors(Image image, Point p,
  *
  * @param intensity maximum cluster size to delete
  */
-uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level,
-                     uint8_t abs_black_threshold) {
+uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level) {
   uint64_t count = 0;
   Rectangle area = full_image(image);
 
@@ -343,12 +332,11 @@ uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level,
     if (darkness < min_white_level) { // one dark pixel found
       // get number of non-light pixels in neighborhood
       uint64_t neighbors = noisefilter_count_pixel_neighbors(
-          image, p, intensity, min_white_level, abs_black_threshold);
+          image, p, intensity, min_white_level);
 
       // If not more than 'intensity', delete area.
       if (neighbors <= intensity) {
-        noisefilter_clear_pixel_neighbors(image, p, min_white_level,
-                                          abs_black_threshold);
+        noisefilter_clear_pixel_neighbors(image, p, min_white_level);
         count++;
       }
     }
@@ -380,8 +368,7 @@ GrayfilterParameters validate_grayfilter_parameters(uint32_t scan_size_h,
   };
 }
 
-uint64_t grayfilter(Image image, GrayfilterParameters params,
-                    uint8_t abs_black_threshold) {
+uint64_t grayfilter(Image image, GrayfilterParameters params) {
   RectangleSize image_size = size_of_image(image);
   Point filter_origin = POINT_ORIGIN;
   uint64_t result = 0;
@@ -389,13 +376,13 @@ uint64_t grayfilter(Image image, GrayfilterParameters params,
   do {
     Rectangle area = rectangle_from_size(filter_origin, params.scan_size);
     uint64_t count = count_pixels_within_brightness(
-        image, area, 0, abs_black_threshold, false, abs_black_threshold);
+        image, area, 0, image.abs_black_threshold, false);
 
     if (count == 0) {
       uint8_t lightness = inverse_lightness_rect(image, area);
       // (lower threshold->more deletion)
       if (lightness < params.abs_threshold) {
-        result += wipe_rectangle(image, area, PIXEL_WHITE, abs_black_threshold);
+        result += wipe_rectangle(image, area, PIXEL_WHITE);
       }
     }
 

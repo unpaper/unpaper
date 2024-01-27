@@ -220,8 +220,7 @@ size_t detect_masks(Image image, MaskDetectionParameters params,
  * Moves a rectangular area of pixels to be centered above the centerX, centerY
  * coordinates.
  */
-void center_mask(Image image, const Point center, const Rectangle area,
-                 Pixel sheet_background, uint8_t abs_black_threshold) {
+void center_mask(Image image, const Point center, const Rectangle area) {
   const RectangleSize size = size_of_rectangle(area);
   const Rectangle image_area = full_image(image);
 
@@ -236,10 +235,9 @@ void center_mask(Image image, const Point center, const Rectangle area,
                area.vertex[1].y, center.x, center.y,
                target.x - area.vertex[0].x, target.y - area.vertex[0].y);
     Image newimage = create_compatible_image(image, size, false);
-    copy_rectangle(image, newimage, area, POINT_ORIGIN, abs_black_threshold);
-    wipe_rectangle(image, area, sheet_background, abs_black_threshold);
-    copy_rectangle(newimage, image, full_image(newimage), target,
-                   abs_black_threshold);
+    copy_rectangle(image, newimage, area, POINT_ORIGIN);
+    wipe_rectangle(image, area, image.background);
+    copy_rectangle(newimage, image, full_image(newimage), target);
     free_image(&newimage);
   } else {
     verboseLog(VERBOSE_NORMAL,
@@ -275,8 +273,7 @@ validate_mask_alignment_parameters(int border_align,
  * coordinates.
  */
 void align_mask(Image image, const Rectangle inside_area,
-                const Rectangle outside, MaskAlignmentParameters params,
-                Pixel sheet_background, uint8_t abs_black_threshold) {
+                const Rectangle outside, MaskAlignmentParameters params) {
   const RectangleSize inside_size = size_of_rectangle(inside_area);
 
   Point target;
@@ -306,11 +303,9 @@ void align_mask(Image image, const Rectangle inside_area,
              target.y - inside_area.vertex[0].y);
 
   Image newimage = create_compatible_image(image, inside_size, true);
-  copy_rectangle(image, newimage, inside_area, POINT_ORIGIN,
-                 abs_black_threshold);
-  wipe_rectangle(image, inside_area, sheet_background, abs_black_threshold);
-  copy_rectangle(newimage, image, full_image(newimage), target,
-                 abs_black_threshold);
+  copy_rectangle(image, newimage, inside_area, POINT_ORIGIN);
+  wipe_rectangle(image, inside_area, image.background);
+  copy_rectangle(newimage, image, full_image(newimage), target);
   free_image(&newimage);
 }
 
@@ -319,7 +314,7 @@ void align_mask(Image image, const Rectangle inside_area,
  * one mask is set to maskColor.
  */
 void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
-                 Pixel color, uint8_t abs_black_threshold) {
+                 Pixel color) {
   if (masks_count <= 0) {
     return;
   }
@@ -329,7 +324,7 @@ void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
   scan_rectangle(image_area) {
     Point p = {x, y};
     if (!point_in_rectangles_any(p, masks_count, masks)) {
-      set_pixel(image, p, color, abs_black_threshold);
+      set_pixel(image, p, color);
     }
   }
 }
@@ -339,12 +334,12 @@ void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
  * is set to wipeColor.
  */
 void apply_wipes(Image image, Rectangle wipes[], size_t wipes_count,
-                 Pixel color, uint8_t abs_black_threshold) {
+                 Pixel color) {
   for (size_t i = 0; i < wipes_count; i++) {
     uint64_t count = 0;
 
     scan_rectangle(wipes[i]) {
-      if (set_pixel(image, (Point){x, y}, color, abs_black_threshold)) {
+      if (set_pixel(image, (Point){x, y}, color)) {
         count++;
       }
     }
@@ -375,8 +370,7 @@ Rectangle border_to_mask(Image image, const Border border) {
  * Applies a border to the whole image. All pixels in the border range at the
  * edges of the sheet will be cleared.
  */
-void apply_border(Image image, const Border border, Pixel color,
-                  uint8_t abs_black_threshold) {
+void apply_border(Image image, const Border border, Pixel color) {
   if (memcmp(&border, &BORDER_NULL, sizeof(BORDER_NULL)) == 0) {
     return;
   }
@@ -386,7 +380,7 @@ void apply_border(Image image, const Border border, Pixel color,
              border.left, border.top, border.right, border.bottom,
              mask.vertex[0].x, mask.vertex[0].y, mask.vertex[1].x,
              mask.vertex[1].y);
-  apply_masks(image, &mask, 1, color, abs_black_threshold);
+  apply_masks(image, &mask, 1, color);
 }
 
 BorderScanParameters
@@ -420,8 +414,8 @@ validate_border_scan_parameters(int scan_directions,
  * Find the size of one border edge.
  */
 static uint32_t detect_border_edge(Image image, const Rectangle outside_mask,
-                                   Delta step, int32_t size, int32_t threshold,
-                                   uint8_t abs_black_threshold) {
+                                   Delta step, int32_t size,
+                                   int32_t threshold) {
   Rectangle area = outside_mask;
   RectangleSize mask_size = size_of_rectangle(outside_mask);
   int32_t max_step;
@@ -445,7 +439,7 @@ static uint32_t detect_border_edge(Image image, const Rectangle outside_mask,
   uint32_t result = 0;
   while (result < max_step) {
     uint32_t cnt = count_pixels_within_brightness(
-        image, area, 0, abs_black_threshold, false, abs_black_threshold);
+        image, area, 0, image.abs_black_threshold, false);
     if (cnt >= threshold) {
       return result; // border has been found: regular exit here
     }
@@ -464,8 +458,7 @@ static uint32_t detect_border_edge(Image image, const Rectangle outside_mask,
  * outsideBorder.
  */
 Border detect_border(Image image, BorderScanParameters params,
-                     const Rectangle outside_mask,
-                     uint8_t abs_black_threshold) {
+                     const Rectangle outside_mask) {
   RectangleSize image_size = size_of_image(image);
 
   Border border = {
@@ -478,22 +471,18 @@ Border detect_border(Image image, BorderScanParameters params,
   if (params.scan_horizontal) {
     border.left += detect_border_edge(
         image, outside_mask, (Delta){params.scan_step.horizontal, 0},
-        params.scan_size.width, params.scan_threshold.horizontal,
-        abs_black_threshold);
+        params.scan_size.width, params.scan_threshold.horizontal);
     border.right += detect_border_edge(
         image, outside_mask, (Delta){-params.scan_step.horizontal, 0},
-        params.scan_size.width, params.scan_threshold.horizontal,
-        abs_black_threshold);
+        params.scan_size.width, params.scan_threshold.horizontal);
   }
   if (params.scan_vertical) {
     border.top += detect_border_edge(
         image, outside_mask, (Delta){0, params.scan_step.vertical},
-        params.scan_size.height, params.scan_threshold.vertical,
-        abs_black_threshold);
+        params.scan_size.height, params.scan_threshold.vertical);
     border.bottom += detect_border_edge(
         image, outside_mask, (Delta){0, -params.scan_step.vertical},
-        params.scan_size.height, params.scan_threshold.vertical,
-        abs_black_threshold);
+        params.scan_size.height, params.scan_threshold.vertical);
   }
   verboseLog(VERBOSE_NORMAL,
              "border detected: (%d,%d,%d,%d) in [%d,%d,%d,%d]\n", border.left,

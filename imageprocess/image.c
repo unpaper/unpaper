@@ -34,8 +34,7 @@ Image create_image(RectangleSize size, int pixel_format, bool fill,
   }
 
   if (fill) {
-    wipe_rectangle(image, full_image(image), sheet_background,
-                   abs_black_threshold);
+    wipe_rectangle(image, full_image(image), image.background);
   }
 
   return image;

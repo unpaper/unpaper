@@ -31,4 +31,4 @@ float detect_rotation(Image image, Rectangle mask,
                       const DeskewParameters params);
 
 void rotate(Image source, Image target, const float radians,
-            uint8_t abs_black_threshold, Interpolation interpolate_type);
+            Interpolation interpolate_type);
