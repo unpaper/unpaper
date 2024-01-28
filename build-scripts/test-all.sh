@@ -12,8 +12,10 @@ else
   exit 1
 fi
 
+SUBENV="${1:-.}"
+
 cd "$ROOT"
-for file in meson-environments/*.ini; do
+for file in meson-environments/${SUBENV}/*.ini; do
   environment=$(basename "${file}" .ini)
 
   meson test -C "builddir/${environment}" || exit $?
