@@ -249,9 +249,8 @@ void center_mask(Image image, const Point center, const Rectangle area) {
   }
 }
 
-MaskAlignmentParameters
-validate_mask_alignment_parameters(int border_align,
-                                   const int margin[DIRECTIONS_COUNT]) {
+MaskAlignmentParameters validate_mask_alignment_parameters(int border_align,
+                                                           Delta margin) {
   return (MaskAlignmentParameters){
       .alignment =
           {
@@ -260,11 +259,7 @@ validate_mask_alignment_parameters(int border_align,
               .right = !!(border_align & (1 << RIGHT)),
               .bottom = !!(border_align & (1 << BOTTOM)),
           },
-      .margin =
-          {
-              .horizontal = margin[HORIZONTAL],
-              .vertical = margin[VERTICAL],
-          },
+      .margin = margin,
   };
 }
 

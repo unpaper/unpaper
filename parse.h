@@ -20,7 +20,9 @@ void printEdges(int d);
 
 void parseInts(char *s, int i[2]);
 
-void parseSize(char *s, int i[2], int dpi);
+RectangleSize parseSize(char *s, int dpi);
+
+Delta parseDelta(char *s, int dpi);
 
 void parseFloats(char *s, float f[2]);
 

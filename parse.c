@@ -177,7 +177,7 @@ static int parseSizeSingle(const char *s, int dpi) {
  * Values may be suffixed by MEASUREMENTS such as 'cm', 'in', in that case
  * conversion to pixels is performed based on the dpi-value.
  */
-void parseSize(char *s, int i[2], int dpi) {
+RectangleSize parseSize(char *s, int dpi) {
   char str[255];
   char *comma;
   int pos;
@@ -185,9 +185,10 @@ void parseSize(char *s, int i[2], int dpi) {
   // is s a papersize name?
   for (int j = 0; j < PAPERSIZES_COUNT; j++) {
     if (strcmp(s, PAPERSIZES[j].name) == 0) {
-      i[0] = PAPERSIZES[j].width * dpi;
-      i[1] = PAPERSIZES[j].height * dpi;
-      return;
+      return (RectangleSize){
+          .width = PAPERSIZES[j].width * dpi,
+          .height = PAPERSIZES[j].height * dpi,
+      };
     }
   }
 
@@ -195,18 +196,28 @@ void parseSize(char *s, int i[2], int dpi) {
   comma = strchr(s, ',');
 
   if (comma == NULL) {
-    i[0] = i[1] = parseSizeSingle(s, dpi);
-    return;
+    int single_side = parseSizeSingle(s, dpi);
+    return (RectangleSize){single_side, single_side};
   }
 
   pos = comma - s;
   strncpy(str, s, pos);
   str[pos] = 0; // (according to spec of strncpy, no terminating 0 is written)
 
-  i[0] = parseSizeSingle(str, dpi);
+  RectangleSize size = {-1, -1};
+  size.width = parseSizeSingle(str, dpi);
 
   strcpy(str, &s[pos + 1]); // copy rest after ','
-  i[1] = parseSizeSingle(str, dpi);
+  size.height = parseSizeSingle(str, dpi);
+
+  return size;
+}
+
+Delta parseDelta(char *s, int dpi) {
+  // This is cheating but allows us to retain semantic values.
+  RectangleSize size = parseSize(s, dpi);
+
+  return (Delta){size.width, size.height};
 }
 
 /**
