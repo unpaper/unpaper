@@ -175,8 +175,8 @@ int main(int argc, char *argv[]) {
   int borderScanStep[DIRECTIONS_COUNT] = {5, 5};
   int borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
   BorderScanParameters borderScanParams;
-  int borderAlign = 0;                              // center
-  int borderAlignMargin[DIRECTIONS_COUNT] = {0, 0}; // center
+  int borderAlign = 0;              // center
+  Delta borderAlignMargin = {0, 0}; // center
   Pixel maskColorPixel = PIXEL_WHITE;
   size_t pointCount = 0;
   Point points[MAX_POINTS];
@@ -218,17 +218,17 @@ int main(int argc, char *argv[]) {
   unsigned int absBlackThreshold;
   unsigned int absWhiteThreshold;
 
-  int sheetSize[DIMENSIONS_COUNT] = {-1, -1};
+  RectangleSize sheetSize = {-1, -1};
   int preRotate = 0;
   int postRotate = 0;
   int preMirror = 0;
   int postMirror = 0;
-  int preShift[DIRECTIONS_COUNT] = {0, 0};
-  int postShift[DIRECTIONS_COUNT] = {0, 0};
-  int size[DIRECTIONS_COUNT] = {-1, -1};
-  int postSize[DIRECTIONS_COUNT] = {-1, -1};
-  int stretchSize[DIRECTIONS_COUNT] = {-1, -1};
-  int postStretchSize[DIRECTIONS_COUNT] = {-1, -1};
+  Delta preShift = {0, 0};
+  Delta postShift = {0, 0};
+  RectangleSize size = {-1, -1};
+  RectangleSize postSize = {-1, -1};
+  RectangleSize stretchSize = {-1, -1};
+  RectangleSize postStretchSize = {-1, -1};
   float zoomFactor = 1.0;
   float postZoomFactor = 1.0;
   Border preBorder = {0, 0, 0, 0};
@@ -469,7 +469,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'S':
-      parseSize(optarg, sheetSize, dpi);
+      sheetSize = parseSize(optarg, dpi);
       break;
 
     case OPT_SHEET_BACKGROUND:
@@ -518,11 +518,11 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_PRE_SHIFT:
-      parseSize(optarg, preShift, dpi);
+      preShift = parseDelta(optarg, dpi);
       break;
 
     case OPT_POST_SHIFT:
-      parseSize(optarg, postShift, dpi);
+      postShift = parseDelta(optarg, dpi);
       break;
 
     case OPT_PRE_MASK:
@@ -538,19 +538,19 @@ int main(int argc, char *argv[]) {
       break;
 
     case 's':
-      parseSize(optarg, size, dpi);
+      size = parseSize(optarg, dpi);
       break;
 
     case OPT_POST_SIZE:
-      parseSize(optarg, postSize, dpi);
+      postSize = parseSize(optarg, dpi);
       break;
 
     case OPT_STRETCH:
-      parseSize(optarg, stretchSize, dpi);
+      stretchSize = parseSize(optarg, dpi);
       break;
 
     case OPT_POST_STRETCH:
-      parseSize(optarg, postStretchSize, dpi);
+      postStretchSize = parseSize(optarg, dpi);
       break;
 
     case 'z':
@@ -822,7 +822,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BORDER_MARGIN:
-      parseSize(optarg, borderAlignMargin, dpi);
+      borderAlignMargin = parseDelta(optarg, dpi);
       break;
 
     case OPT_NO_BORDER_ALIGN:
@@ -1138,15 +1138,15 @@ int main(int argc, char *argv[]) {
           // if sheet-size is not known yet (and not forced by --sheet-size),
           // set now based on size of (first) input image
           if (w == -1) {
-            if (sheetSize[WIDTH] != -1) {
-              w = sheetSize[WIDTH];
+            if (sheetSize.width != -1) {
+              w = sheetSize.width;
             } else {
               w = page.frame->width * options.input_count;
             }
           }
           if (h == -1) {
-            if (sheetSize[HEIGHT] != -1) {
-              h = sheetSize[HEIGHT];
+            if (sheetSize.height != -1) {
+              h = sheetSize.height;
             } else {
               h = page.frame->height;
             }
@@ -1206,11 +1206,11 @@ int main(int argc, char *argv[]) {
       }
 
       // pre-shifting
-      if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
-        verboseLog(VERBOSE_NORMAL, "pre-shifting [%d,%d]\n", preShift[WIDTH],
-                   preShift[HEIGHT]);
+      if ((preShift.horizontal != 0) || ((preShift.vertical != 0))) {
+        verboseLog(VERBOSE_NORMAL, "pre-shifting [%d,%d]\n",
+                   preShift.horizontal, preShift.vertical);
 
-        shift_image(&sheet, (Delta){preShift[WIDTH], preShift[HEIGHT]});
+        shift_image(&sheet, preShift);
       }
 
       // pre-masking
@@ -1247,8 +1247,9 @@ int main(int argc, char *argv[]) {
         if (preMirror != 0) {
           printf("pre-mirror: %s\n", getDirections(preMirror));
         }
-        if ((preShift[WIDTH] != 0) || ((preShift[HEIGHT] != 0))) {
-          printf("pre-shift: [%d,%d]\n", preShift[WIDTH], preShift[HEIGHT]);
+        if ((preShift.horizontal != 0) || ((preShift.vertical != 0))) {
+          printf("pre-shift: [%d,%d]\n", preShift.horizontal,
+                 preShift.vertical);
         }
         if (preWipeCount > 0) {
           printf("pre-wipe: ");
@@ -1268,13 +1269,12 @@ int main(int argc, char *argv[]) {
           }
           printf("\n");
         }
-        if ((stretchSize[WIDTH] != -1) || (stretchSize[HEIGHT] != -1)) {
-          printf("stretch to: %dx%d\n", stretchSize[WIDTH],
-                 stretchSize[HEIGHT]);
+        if ((stretchSize.width != -1) || (stretchSize.height != -1)) {
+          printf("stretch to: %dx%d\n", stretchSize.width, stretchSize.height);
         }
-        if ((postStretchSize[WIDTH] != -1) || (postStretchSize[HEIGHT] != -1)) {
-          printf("post-stretch to: %dx%d\n", postStretchSize[WIDTH],
-                 postStretchSize[HEIGHT]);
+        if ((postStretchSize.width != -1) || (postStretchSize.height != -1)) {
+          printf("post-stretch to: %dx%d\n", postStretchSize.width,
+                 postStretchSize.height);
         }
         if (zoomFactor != 1.0) {
           printf("zoom: %f\n", zoomFactor);
@@ -1422,8 +1422,8 @@ int main(int argc, char *argv[]) {
           }
           printf("border-align: ");
           printEdges(borderAlign);
-          printf("border-margin: [%d,%d]\n", borderAlignMargin[0],
-                 borderAlignMargin[1]);
+          printf("border-margin: [%d,%d]\n", borderAlignMargin.horizontal,
+                 borderAlignMargin.vertical);
         } else {
           printf("border-scan DISABLED for all sheets.\n");
         }
@@ -1441,8 +1441,9 @@ int main(int argc, char *argv[]) {
         if (postMirror != 0) {
           printf("post-mirror: %s\n", getDirections(postMirror));
         }
-        if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
-          printf("post-shift: [%d,%d]\n", postShift[WIDTH], postShift[HEIGHT]);
+        if ((postShift.horizontal != 0) || ((postShift.vertical != 0))) {
+          printf("post-shift: [%d,%d]\n", postShift.horizontal,
+                 postShift.vertical);
         }
         if (postRotate != 0) {
           printf("post-rotate: %d\n", postRotate);
@@ -1459,9 +1460,9 @@ int main(int argc, char *argv[]) {
         printf("dpi: %d\n", dpi);
         printf("input-files per sheet: %d\n", options.input_count);
         printf("output-files per sheet: %d\n", options.output_count);
-        if ((sheetSize[WIDTH] != -1) || (sheetSize[HEIGHT] != -1)) {
-          printf("sheet size forced to: %d x %d pixels\n", sheetSize[WIDTH],
-                 sheetSize[HEIGHT]);
+        if ((sheetSize.width != -1) || (sheetSize.height != -1)) {
+          printf("sheet size forced to: %d x %d pixels\n", sheetSize.width,
+                 sheetSize.height);
         }
         printf("input-file-sequence:  %s\n",
                implode(s1, (const char **)inputFileNames, options.input_count));
@@ -1490,13 +1491,13 @@ int main(int argc, char *argv[]) {
       // -------------------------------------------------------
 
       // stretch
-      if (stretchSize[WIDTH] != -1) {
-        w = stretchSize[WIDTH];
+      if (stretchSize.width != -1) {
+        w = stretchSize.width;
       } else {
         w = sheet.frame->width;
       }
-      if (stretchSize[HEIGHT] != -1) {
-        h = stretchSize[HEIGHT];
+      if (stretchSize.height != -1) {
+        h = stretchSize.height;
       } else {
         h = sheet.frame->height;
       }
@@ -1509,14 +1510,14 @@ int main(int argc, char *argv[]) {
       saveDebug("_after-stretch%d.pnm", nr, sheet);
 
       // size
-      if ((size[WIDTH] != -1) || (size[HEIGHT] != -1)) {
-        if (size[WIDTH] != -1) {
-          w = size[WIDTH];
+      if ((size.width != -1) || (size.height != -1)) {
+        if (size.width != -1) {
+          w = size.width;
         } else {
           w = sheet.frame->width;
         }
-        if (size[HEIGHT] != -1) {
-          h = size[HEIGHT];
+        if (size.height != -1) {
+          h = size.height;
         } else {
           h = sheet.frame->height;
         }
@@ -1842,11 +1843,11 @@ int main(int argc, char *argv[]) {
       }
 
       // post-shifting
-      if ((postShift[WIDTH] != 0) || ((postShift[HEIGHT] != 0))) {
-        verboseLog(VERBOSE_NORMAL, "post-shifting [%d,%d]\n", postShift[WIDTH],
-                   postShift[HEIGHT]);
+      if ((postShift.horizontal != 0) || ((postShift.vertical != 0))) {
+        verboseLog(VERBOSE_NORMAL, "post-shifting [%d,%d]\n",
+                   postShift.horizontal, postShift.vertical);
 
-        shift_image(&sheet, (Delta){postShift[WIDTH], postShift[HEIGHT]});
+        shift_image(&sheet, postShift);
       }
 
       // post-rotating
@@ -1856,13 +1857,13 @@ int main(int argc, char *argv[]) {
       }
 
       // post-stretch
-      if (postStretchSize[WIDTH] != -1) {
-        w = postStretchSize[WIDTH];
+      if (postStretchSize.width != -1) {
+        w = postStretchSize.width;
       } else {
         w = sheet.frame->width;
       }
-      if (postStretchSize[HEIGHT] != -1) {
-        h = postStretchSize[HEIGHT];
+      if (postStretchSize.height != -1) {
+        h = postStretchSize.height;
       } else {
         h = sheet.frame->height;
       }
@@ -1873,14 +1874,14 @@ int main(int argc, char *argv[]) {
       stretch_and_replace(&sheet, (RectangleSize){w, h}, interpolateType);
 
       // post-size
-      if ((postSize[WIDTH] != -1) || (postSize[HEIGHT] != -1)) {
-        if (postSize[WIDTH] != -1) {
-          w = postSize[WIDTH];
+      if ((postSize.width != -1) || (postSize.height != -1)) {
+        if (postSize.width != -1) {
+          w = postSize.width;
         } else {
           w = sheet.frame->width;
         }
-        if (postSize[HEIGHT] != -1) {
-          h = postSize[HEIGHT];
+        if (postSize.height != -1) {
+          h = postSize.height;
         } else {
           h = sheet.frame->height;
         }

@@ -62,15 +62,11 @@ typedef struct {
     bool bottom;
   } alignment;
 
-  struct {
-    int32_t horizontal;
-    int32_t vertical;
-  } margin;
+  Delta margin;
 } MaskAlignmentParameters;
 
-MaskAlignmentParameters
-validate_mask_alignment_parameters(int border_align,
-                                   const int margin[DIRECTIONS_COUNT]);
+MaskAlignmentParameters validate_mask_alignment_parameters(int border_align,
+                                                           Delta margin);
 
 void align_mask(Image image, const Rectangle inside_area,
                 const Rectangle outside, MaskAlignmentParameters params);
