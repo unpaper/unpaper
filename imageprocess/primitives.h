@@ -67,6 +67,7 @@ Rectangle normalize_rectangle(Rectangle input);
 Rectangle shift_rectangle(Rectangle rect, Delta d);
 
 int compare_sizes(RectangleSize a, RectangleSize b);
+RectangleSize coerce_size(RectangleSize size, RectangleSize default_size);
 
 uint64_t count_pixels(Rectangle area);
 

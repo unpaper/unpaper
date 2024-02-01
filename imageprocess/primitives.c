@@ -78,6 +78,13 @@ int compare_sizes(RectangleSize a, RectangleSize b) {
   }
 }
 
+RectangleSize coerce_size(RectangleSize size, RectangleSize default_size) {
+  return (RectangleSize){
+      .width = size.width == -1 ? default_size.width : size.width,
+      .height = size.height == -1 ? default_size.height : size.height,
+  };
+}
+
 uint64_t count_pixels(Rectangle area) {
   RectangleSize size = size_of_rectangle(area);
 

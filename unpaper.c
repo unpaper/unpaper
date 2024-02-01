@@ -998,10 +998,8 @@ int main(int argc, char *argv[]) {
       blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
       blurfilterIntensity);
 
-  int w = -1;
-  int h = -1;
-  int previousWidth = -1;
-  int previousHeight = -1;
+  RectangleSize inputSize = {-1, -1};
+  RectangleSize previousSize = {-1, -1};
   Image sheet = EMPTY_IMAGE;
   Image page = EMPTY_IMAGE;
 
@@ -1137,28 +1135,21 @@ int main(int argc, char *argv[]) {
 
           // if sheet-size is not known yet (and not forced by --sheet-size),
           // set now based on size of (first) input image
-          if (w == -1) {
-            if (sheetSize.width != -1) {
-              w = sheetSize.width;
-            } else {
-              w = page.frame->width * options.input_count;
-            }
-          }
-          if (h == -1) {
-            if (sheetSize.height != -1) {
-              h = sheetSize.height;
-            } else {
-              h = page.frame->height;
-            }
-          }
+          RectangleSize inputSheetSize = {
+              .width = page.frame->width * options.input_count,
+              .height = page.frame->height,
+          };
+          inputSize =
+              coerce_size(inputSize, coerce_size(sheetSize, inputSheetSize));
         } else { // inputFiles[j] == NULL
           page = EMPTY_IMAGE;
         }
 
         // place image into sheet buffer
         // allocate sheet-buffer if not done yet
-        if ((sheet.frame == NULL) && (w != -1) && (h != -1)) {
-          sheet = create_image((RectangleSize){w, h}, AV_PIX_FMT_RGB24, true,
+        if ((sheet.frame == NULL) && (inputSize.width != -1) &&
+            (inputSize.height != -1)) {
+          sheet = create_image(inputSize, AV_PIX_FMT_RGB24, true,
                                sheetBackgroundPixel, absBlackThreshold);
         }
         if (page.frame != NULL) {
@@ -1166,8 +1157,10 @@ int main(int argc, char *argv[]) {
           saveDebug("_before_center_page%d.pnm",
                     inputNr - options.input_count + j, sheet);
 
-          center_image(page, sheet, (Point){(w * j / options.input_count), 0},
-                       (RectangleSize){(w / options.input_count), h});
+          center_image(page, sheet,
+                       (Point){(inputSize.width * j / options.input_count), 0},
+                       (RectangleSize){(inputSize.width / options.input_count),
+                                       inputSize.height});
 
           saveDebug("_after_center_page%d.pnm",
                     inputNr - options.input_count + j, sheet);
@@ -1178,23 +1171,21 @@ int main(int argc, char *argv[]) {
       // have been inserted
       if (sheet.frame == NULL) {
         // last chance: try to get previous (unstretched/not zoomed) sheet size
-        w = previousWidth;
-        h = previousHeight;
+        inputSize = previousSize;
         verboseLog(VERBOSE_NORMAL,
-                   "need to guess sheet size from previous sheet: %dx%d\n", w,
-                   h);
+                   "need to guess sheet size from previous sheet: %dx%d\n",
+                   inputSize.width, inputSize.height);
 
-        if ((w == -1) || (h == -1)) {
+        if ((inputSize.width == -1) || (inputSize.height == -1)) {
           errOutput("sheet size unknown, use at least one input file per "
                     "sheet, or force using --sheet-size.");
         } else {
-          sheet = create_image((RectangleSize){w, h}, AV_PIX_FMT_RGB24, true,
+          sheet = create_image(inputSize, AV_PIX_FMT_RGB24, true,
                                sheetBackgroundPixel, absBlackThreshold);
         }
       }
 
-      previousWidth = w;
-      previousHeight = h;
+      previousSize = inputSize;
 
       // pre-mirroring
       if (preMirror != 0) {
@@ -1491,38 +1482,20 @@ int main(int argc, char *argv[]) {
       // -------------------------------------------------------
 
       // stretch
-      if (stretchSize.width != -1) {
-        w = stretchSize.width;
-      } else {
-        w = sheet.frame->width;
-      }
-      if (stretchSize.height != -1) {
-        h = stretchSize.height;
-      } else {
-        h = sheet.frame->height;
-      }
+      inputSize = coerce_size(stretchSize, size_of_image(sheet));
 
-      w *= zoomFactor;
-      h *= zoomFactor;
+      inputSize.width *= zoomFactor;
+      inputSize.height *= zoomFactor;
 
       saveDebug("_before-stretch%d.pnm", nr, sheet);
-      stretch_and_replace(&sheet, (RectangleSize){w, h}, interpolateType);
+      stretch_and_replace(&sheet, inputSize, interpolateType);
       saveDebug("_after-stretch%d.pnm", nr, sheet);
 
       // size
       if ((size.width != -1) || (size.height != -1)) {
-        if (size.width != -1) {
-          w = size.width;
-        } else {
-          w = sheet.frame->width;
-        }
-        if (size.height != -1) {
-          h = size.height;
-        } else {
-          h = sheet.frame->height;
-        }
+        inputSize = coerce_size(size, size_of_image(sheet));
         saveDebug("_before-resize%d.pnm", nr, sheet);
-        resize_and_replace(&sheet, (RectangleSize){w, h}, interpolateType);
+        resize_and_replace(&sheet, inputSize, interpolateType);
         saveDebug("_after-resize%d.pnm", nr, sheet);
       }
 
@@ -1857,35 +1830,17 @@ int main(int argc, char *argv[]) {
       }
 
       // post-stretch
-      if (postStretchSize.width != -1) {
-        w = postStretchSize.width;
-      } else {
-        w = sheet.frame->width;
-      }
-      if (postStretchSize.height != -1) {
-        h = postStretchSize.height;
-      } else {
-        h = sheet.frame->height;
-      }
+      inputSize = coerce_size(postStretchSize, size_of_image(sheet));
 
-      w *= postZoomFactor;
-      h *= postZoomFactor;
+      inputSize.width *= postZoomFactor;
+      inputSize.height *= postZoomFactor;
 
-      stretch_and_replace(&sheet, (RectangleSize){w, h}, interpolateType);
+      stretch_and_replace(&sheet, inputSize, interpolateType);
 
       // post-size
       if ((postSize.width != -1) || (postSize.height != -1)) {
-        if (postSize.width != -1) {
-          w = postSize.width;
-        } else {
-          w = sheet.frame->width;
-        }
-        if (postSize.height != -1) {
-          h = postSize.height;
-        } else {
-          h = sheet.frame->height;
-        }
-        resize_and_replace(&sheet, (RectangleSize){w, h}, interpolateType);
+        inputSize = coerce_size(postSize, size_of_image(sheet));
+        resize_and_replace(&sheet, inputSize, interpolateType);
       }
 
       // --- write output file ---
