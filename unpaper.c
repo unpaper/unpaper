@@ -1002,19 +1002,19 @@ int main(int argc, char *argv[]) {
   if (!multisheets && options.end_sheet == -1)
     options.end_sheet = options.start_sheet;
 
-  // Expand any physical size to their pixel equivalents.
-  RectangleSize sheetSize = mils_size_to_pixels(sheetSizePhysical, ppi);
-  Delta preShift = mils_delta_to_pixels(preShiftPhysical, ppi);
-  Delta postShift = mils_delta_to_pixels(postShiftPhysical, ppi);
-  RectangleSize size = mils_size_to_pixels(sizePhysical, ppi);
-  RectangleSize postSize = mils_size_to_pixels(postSizePhysical, ppi);
-  RectangleSize stretchSize = mils_size_to_pixels(stretchSizePhysical, ppi);
-  RectangleSize postStretchSize =
-      mils_size_to_pixels(postStretchSizePhysical, ppi);
+  // Expand any pre_shiftl size to their pixel equivalents.
+  options.pre_shift = mils_delta_to_pixels(preShiftPhysical, ppi);
+  options.post_shift = mils_delta_to_pixels(postShiftPhysical, ppi);
+
+  options.sheet_size = mils_size_to_pixels(sheetSizePhysical, ppi);
+  options.page_size = mils_size_to_pixels(sizePhysical, ppi);
+  options.post_page_size = mils_size_to_pixels(postSizePhysical, ppi);
+  options.stretch_size = mils_size_to_pixels(stretchSizePhysical, ppi);
+  options.post_stretch_size = mils_size_to_pixels(postStretchSizePhysical, ppi);
 
   // Calculate the constant absolute values based on the relative parameters.
-  uint8_t absBlackThreshold = WHITE * (1.0 - blackThreshold);
-  uint8_t absWhiteThreshold = WHITE * (whiteThreshold);
+  options.abs_black_threshold = WHITE * (1.0 - blackThreshold);
+  options.abs_white_threshold = WHITE * (whiteThreshold);
 
   DeskewParameters deskewParams = validate_deskew_parameters(
       deskewScanRange, deskewScanStep, deskewScanDeviation, deskewScanSize,
@@ -1162,7 +1162,7 @@ int main(int argc, char *argv[]) {
           verboseLog(VERBOSE_MORE, "loading file %s.\n", inputFileNames[j]);
 
           loadImage(inputFileNames[j], &page, sheetBackgroundPixel,
-                    absBlackThreshold);
+                    options.abs_black_threshold);
           saveDebug("_loaded_%d.pnm", inputNr - options.input_count + j, page);
 
           if (outputPixFmt == -1 && page.frame != NULL) {
@@ -1182,8 +1182,8 @@ int main(int argc, char *argv[]) {
               .width = page.frame->width * options.input_count,
               .height = page.frame->height,
           };
-          inputSize =
-              coerce_size(inputSize, coerce_size(sheetSize, inputSheetSize));
+          inputSize = coerce_size(
+              inputSize, coerce_size(options.sheet_size, inputSheetSize));
         } else { // inputFiles[j] == NULL
           page = EMPTY_IMAGE;
         }
@@ -1192,8 +1192,9 @@ int main(int argc, char *argv[]) {
         // allocate sheet-buffer if not done yet
         if ((sheet.frame == NULL) && (inputSize.width != -1) &&
             (inputSize.height != -1)) {
-          sheet = create_image(inputSize, AV_PIX_FMT_RGB24, true,
-                               sheetBackgroundPixel, absBlackThreshold);
+          sheet =
+              create_image(inputSize, AV_PIX_FMT_RGB24, true,
+                           sheetBackgroundPixel, options.abs_black_threshold);
         }
         if (page.frame != NULL) {
           saveDebug("_page%d.pnm", inputNr - options.input_count + j, page);
@@ -1223,8 +1224,9 @@ int main(int argc, char *argv[]) {
           errOutput("sheet size unknown, use at least one input file per "
                     "sheet, or force using --sheet-size.");
         } else {
-          sheet = create_image(inputSize, AV_PIX_FMT_RGB24, true,
-                               sheetBackgroundPixel, absBlackThreshold);
+          sheet =
+              create_image(inputSize, AV_PIX_FMT_RGB24, true,
+                           sheetBackgroundPixel, options.abs_black_threshold);
         }
       }
 
@@ -1240,11 +1242,12 @@ int main(int argc, char *argv[]) {
       }
 
       // pre-shifting
-      if ((preShift.horizontal != 0) || ((preShift.vertical != 0))) {
-        verboseLog(VERBOSE_NORMAL, "pre-shifting [%d,%d]\n",
-                   preShift.horizontal, preShift.vertical);
+      if (options.pre_shift.horizontal != 0 ||
+          options.pre_shift.vertical != 0) {
+        verboseLog(VERBOSE_NORMAL, "pre-shifting [%" PRId32 ",%" PRId32 "]\n",
+                   options.pre_shift.horizontal, options.pre_shift.vertical);
 
-        shift_image(&sheet, preShift);
+        shift_image(&sheet, options.pre_shift);
       }
 
       // pre-masking
@@ -1281,9 +1284,10 @@ int main(int argc, char *argv[]) {
         if (preMirror != 0) {
           printf("pre-mirror: %s\n", getDirections(preMirror));
         }
-        if ((preShift.horizontal != 0) || ((preShift.vertical != 0))) {
-          printf("pre-shift: [%d,%d]\n", preShift.horizontal,
-                 preShift.vertical);
+        if (options.pre_shift.horizontal != 0 ||
+            options.pre_shift.vertical != 0) {
+          printf("pre-shift: [%" PRId32 ",%" PRId32 "]\n",
+                 options.pre_shift.horizontal, options.pre_shift.vertical);
         }
         if (preWipeCount > 0) {
           printf("pre-wipe: ");
@@ -1304,12 +1308,16 @@ int main(int argc, char *argv[]) {
           }
           printf("\n");
         }
-        if ((stretchSize.width != -1) || (stretchSize.height != -1)) {
-          printf("stretch to: %dx%d\n", stretchSize.width, stretchSize.height);
+        if (options.stretch_size.width != -1 ||
+            options.stretch_size.height != -1) {
+          printf("stretch to: %" PRId32 "x%" PRId32 "\n",
+                 options.stretch_size.width, options.stretch_size.height);
         }
-        if ((postStretchSize.width != -1) || (postStretchSize.height != -1)) {
-          printf("post-stretch to: %dx%d\n", postStretchSize.width,
-                 postStretchSize.height);
+        if (options.post_stretch_size.width != -1 ||
+            options.post_stretch_size.height != -1) {
+          printf("post-stretch to: %" PRId32 "x%" PRId32 "d\n",
+                 options.post_stretch_size.width,
+                 options.post_stretch_size.height);
         }
         if (zoomFactor != 1.0) {
           printf("zoom: %f\n", zoomFactor);
@@ -1482,9 +1490,10 @@ int main(int argc, char *argv[]) {
         if (postMirror != 0) {
           printf("post-mirror: %s\n", getDirections(postMirror));
         }
-        if ((postShift.horizontal != 0) || ((postShift.vertical != 0))) {
-          printf("post-shift: [%d,%d]\n", postShift.horizontal,
-                 postShift.vertical);
+        if (options.post_shift.horizontal != 0 ||
+            options.post_shift.vertical != 0) {
+          printf("post-shift: [%" PRId32 ",%" PRId32 "]\n",
+                 options.post_shift.horizontal, options.post_shift.vertical);
         }
         if (postRotate != 0) {
           printf("post-rotate: %d\n", postRotate);
@@ -1501,9 +1510,9 @@ int main(int argc, char *argv[]) {
         printf("ppi: %d\n", ppi);
         printf("input-files per sheet: %d\n", options.input_count);
         printf("output-files per sheet: %d\n", options.output_count);
-        if ((sheetSize.width != -1) || (sheetSize.height != -1)) {
-          printf("sheet size forced to: %d x %d pixels\n", sheetSize.width,
-                 sheetSize.height);
+        if (options.sheet_size.width != -1 || options.sheet_size.height != -1) {
+          printf("sheet size forced to: %" PRId32 " x %" PRId32 " pixels\n",
+                 options.sheet_size.width, options.sheet_size.height);
         }
         printf("input-file-sequence:  %s\n",
                implode(s1, (const char **)inputFileNames, options.input_count));
@@ -1532,7 +1541,7 @@ int main(int argc, char *argv[]) {
       // -------------------------------------------------------
 
       // stretch
-      inputSize = coerce_size(stretchSize, size_of_image(sheet));
+      inputSize = coerce_size(options.stretch_size, size_of_image(sheet));
 
       inputSize.width *= zoomFactor;
       inputSize.height *= zoomFactor;
@@ -1542,8 +1551,8 @@ int main(int argc, char *argv[]) {
       saveDebug("_after-stretch%d.pnm", nr, sheet);
 
       // size
-      if ((size.width != -1) || (size.height != -1)) {
-        inputSize = coerce_size(size, size_of_image(sheet));
+      if (options.page_size.width != -1 || options.page_size.height != -1) {
+        inputSize = coerce_size(options.page_size, size_of_image(sheet));
         saveDebug("_before-resize%d.pnm", nr, sheet);
         resize_and_replace(&sheet, inputSize, interpolateType);
         saveDebug("_after-resize%d.pnm", nr, sheet);
@@ -1668,8 +1677,8 @@ int main(int argc, char *argv[]) {
         verboseLog(VERBOSE_NORMAL, "noise-filter ...");
 
         saveDebug("_before-noisefilter%d.pnm", nr, sheet);
-        uint64_t filterResult =
-            noisefilter(sheet, noisefilterIntensity, absWhiteThreshold);
+        uint64_t filterResult = noisefilter(sheet, noisefilterIntensity,
+                                            options.abs_white_threshold);
         saveDebug("_after-noisefilter%d.pnm", nr, sheet);
         verboseLog(VERBOSE_NORMAL, " deleted %" PRId64 " clusters.\n",
                    filterResult);
@@ -1685,7 +1694,7 @@ int main(int argc, char *argv[]) {
 
         saveDebug("_before-blurfilter%d.pnm", nr, sheet);
         uint64_t filterResult =
-            blurfilter(sheet, blurfilterParams, absWhiteThreshold);
+            blurfilter(sheet, blurfilterParams, options.abs_white_threshold);
         saveDebug("_after-blurfilter%d.pnm", nr, sheet);
         verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
                    filterResult);
@@ -1866,11 +1875,12 @@ int main(int argc, char *argv[]) {
       }
 
       // post-shifting
-      if ((postShift.horizontal != 0) || ((postShift.vertical != 0))) {
-        verboseLog(VERBOSE_NORMAL, "post-shifting [%d,%d]\n",
-                   postShift.horizontal, postShift.vertical);
+      if ((options.post_shift.horizontal != 0) ||
+          ((options.post_shift.vertical != 0))) {
+        verboseLog(VERBOSE_NORMAL, "post-shifting [%" PRId32 ",%" PRId32 "]\n",
+                   options.post_shift.horizontal, options.post_shift.vertical);
 
-        shift_image(&sheet, postShift);
+        shift_image(&sheet, options.post_shift);
       }
 
       // post-rotating
@@ -1880,7 +1890,7 @@ int main(int argc, char *argv[]) {
       }
 
       // post-stretch
-      inputSize = coerce_size(postStretchSize, size_of_image(sheet));
+      inputSize = coerce_size(options.post_stretch_size, size_of_image(sheet));
 
       inputSize.width *= postZoomFactor;
       inputSize.height *= postZoomFactor;
@@ -1888,8 +1898,9 @@ int main(int argc, char *argv[]) {
       stretch_and_replace(&sheet, inputSize, interpolateType);
 
       // post-size
-      if ((postSize.width != -1) || (postSize.height != -1)) {
-        inputSize = coerce_size(postSize, size_of_image(sheet));
+      if (options.post_page_size.width != -1 ||
+          options.post_page_size.height != -1) {
+        inputSize = coerce_size(options.post_page_size, size_of_image(sheet));
         resize_and_replace(&sheet, inputSize, interpolateType);
       }
 

@@ -38,6 +38,18 @@ typedef struct {
   struct MultiIndex no_border_multi_index;
   struct MultiIndex no_border_scan_multi_index;
   struct MultiIndex no_border_align_multi_index;
+
+  Delta pre_shift;
+  Delta post_shift;
+
+  RectangleSize sheet_size;
+  RectangleSize page_size;
+  RectangleSize post_page_size;
+  RectangleSize stretch_size;
+  RectangleSize post_stretch_size;
+
+  uint8_t abs_black_threshold;
+  uint8_t abs_white_threshold;
 } Options;
 
 void options_init(Options *o);
