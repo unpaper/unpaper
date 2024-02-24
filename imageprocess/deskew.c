@@ -9,9 +9,9 @@
 #include "constants.h"
 #include "imageprocess/deskew.h"
 #include "imageprocess/interpolate.h"
-#include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
 #include "lib/logging.h"
+#include "lib/math_util.h"
 
 static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
 
