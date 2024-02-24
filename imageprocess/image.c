@@ -6,9 +6,9 @@
 
 #include "imageprocess/blit.h"
 #include "imageprocess/image.h"
-#include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
 #include "lib/logging.h"
+#include "lib/math_util.h"
 
 /**
  * Allocates a memory block for storing image data and fills the AVFrame-struct

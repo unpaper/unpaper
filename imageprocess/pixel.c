@@ -9,9 +9,9 @@
 #include <libavutil/frame.h>
 #include <libavutil/pixfmt.h>
 
-#include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
 #include "lib/logging.h"
+#include "lib/math_util.h"
 
 static inline uint8_t pixel_grayscale(Pixel pixel) {
   return (pixel.r + pixel.g + pixel.b) / 3;

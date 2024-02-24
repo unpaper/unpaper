@@ -9,9 +9,9 @@
 #include "imageprocess/blit.h"
 #include "imageprocess/fill.h"
 #include "imageprocess/filters.h"
-#include "imageprocess/math_util.h"
 #include "imageprocess/pixel.h"
 #include "lib/logging.h"
+#include "lib/math_util.h"
 
 /***************
  * Blackfilter *
