@@ -43,6 +43,7 @@ unpaper = executable(
     'imageprocess/primitives.c',
     'lib/logging.c',
     'lib/options.c',
+    'lib/physical.c',
     dependencies : unpaper_deps,
     install : true,
 )

@@ -18,34 +18,6 @@
 
 /* --- constants ---------------------------------------------------------- */
 
-// factors for conversion to inches
-#define CM2IN 0.393700787
-#define MM2IN CM2IN / 10.0
-
-#define MEASUREMENTS_COUNT 3
-static const struct {
-  char unit[4];
-  float factor;
-} MEASUREMENTS[MEASUREMENTS_COUNT] = {
-    {"in", 1.0}, {"cm", CM2IN}, {"mm", MM2IN}};
-
-// papersize alias names
-#define PAPERSIZES_COUNT 10
-static const struct {
-  char name[24];
-  float width;
-  float height;
-} PAPERSIZES[PAPERSIZES_COUNT] = {{"a5", 14.8 * CM2IN, 21.0 * CM2IN},
-                                  {"a5-landscape", 21.0 * CM2IN, 14.8 * CM2IN},
-                                  {"a4", 21.0 * CM2IN, 29.7 * CM2IN},
-                                  {"a4-landscape", 29.7 * CM2IN, 21.0 * CM2IN},
-                                  {"a3", 29.7 * CM2IN, 42.0 * CM2IN},
-                                  {"a3-landscape", 42.0 * CM2IN, 29.7 * CM2IN},
-                                  {"letter", 8.5, 11.0},
-                                  {"letter-landscape", 11.0, 8.5},
-                                  {"legal", 8.5, 14.0},
-                                  {"legal-landscape", 14.0, 8.5}};
-
 /**
  * Parses a parameter string on occurrences of 'vertical', 'horizontal' or both.
  */
@@ -152,72 +124,6 @@ void parseInts(char *s, int i[2]) {
   if (i[1] == -1) {
     i[1] = i[0]; // if second value is unset, copy first one into
   }
-}
-
-static int parseSizeSingle(const char *s, int dpi) {
-  char *valueEnd;
-  float value;
-
-  value = strtof(s, &valueEnd);
-
-  if (fabs(value) == HUGE_VAL || s == valueEnd)
-    errOutput("invalid size %s", s);
-
-  for (int j = 0; j < MEASUREMENTS_COUNT; j++)
-    if (strcmp(valueEnd, MEASUREMENTS[j].unit) == 0)
-      return (int)(value * MEASUREMENTS[j].factor * dpi);
-
-  /* if no unit is found, then we have a direct pixel value, do not
-     multiply for dpi. */
-  return (int)value;
-}
-
-/**
- * Parses a pair of size-values and returns it in pixels.
- * Values may be suffixed by MEASUREMENTS such as 'cm', 'in', in that case
- * conversion to pixels is performed based on the dpi-value.
- */
-RectangleSize parseSize(char *s, int dpi) {
-  char str[255];
-  char *comma;
-  int pos;
-
-  // is s a papersize name?
-  for (int j = 0; j < PAPERSIZES_COUNT; j++) {
-    if (strcmp(s, PAPERSIZES[j].name) == 0) {
-      return (RectangleSize){
-          .width = PAPERSIZES[j].width * dpi,
-          .height = PAPERSIZES[j].height * dpi,
-      };
-    }
-  }
-
-  // find comma in size string, if there
-  comma = strchr(s, ',');
-
-  if (comma == NULL) {
-    int single_side = parseSizeSingle(s, dpi);
-    return (RectangleSize){single_side, single_side};
-  }
-
-  pos = comma - s;
-  strncpy(str, s, pos);
-  str[pos] = 0; // (according to spec of strncpy, no terminating 0 is written)
-
-  RectangleSize size = {-1, -1};
-  size.width = parseSizeSingle(str, dpi);
-
-  strcpy(str, &s[pos + 1]); // copy rest after ','
-  size.height = parseSizeSingle(str, dpi);
-
-  return size;
-}
-
-Delta parseDelta(char *s, int dpi) {
-  // This is cheating but allows us to retain semantic values.
-  RectangleSize size = parseSize(s, dpi);
-
-  return (Delta){size.width, size.height};
 }
 
 /**
