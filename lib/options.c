@@ -46,6 +46,15 @@ void options_init(Options *o) {
   o->no_border_multi_index = multi_index_empty();
   o->no_border_scan_multi_index = multi_index_empty();
   o->no_border_align_multi_index = multi_index_empty();
+
+  o->pre_shift = (Delta){0, 0};
+  o->post_shift = (Delta){0, 0};
+
+  o->sheet_size = (RectangleSize){-1, -1};
+  o->page_size = (RectangleSize){-1, -1};
+  o->post_page_size = (RectangleSize){-1, -1};
+  o->stretch_size = (RectangleSize){-1, -1};
+  o->post_stretch_size = (RectangleSize){-1, -1};
 }
 
 bool parse_rectangle(const char *str, Rectangle *rect) {
