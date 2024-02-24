@@ -13,29 +13,20 @@
 #include "lib/logging.h"
 
 MaskDetectionParameters
-validate_mask_detection_parameters(int scan_directions,
-                                   const int scan_size[DIRECTIONS_COUNT],
+validate_mask_detection_parameters(int scan_directions, RectangleSize scan_size,
                                    const int scan_depth[DIRECTIONS_COUNT],
-                                   const int scan_step[DIRECTIONS_COUNT],
+                                   Delta scan_step,
                                    const float scan_threshold[DIRECTIONS_COUNT],
                                    const int scan_mininum[DIMENSIONS_COUNT],
                                    const int scan_maximum[DIMENSIONS_COUNT]) {
   return (MaskDetectionParameters){
-      .scan_size =
-          {
-              .width = scan_size[HORIZONTAL],
-              .height = scan_size[VERTICAL],
-          },
-      .scan_step =
-          {
-              .horizontal = scan_step[HORIZONTAL],
-              .vertical = scan_step[VERTICAL],
-          },
+      .scan_size = scan_size,
       .scan_depth =
           {
               .horizontal = scan_depth[HORIZONTAL],
               .vertical = scan_depth[VERTICAL],
           },
+      .scan_step = scan_step,
       .scan_threshold =
           {
               .horizontal = scan_threshold[HORIZONTAL],
@@ -373,21 +364,12 @@ void apply_border(Image image, const Border border, Pixel color) {
 }
 
 BorderScanParameters
-validate_border_scan_parameters(int scan_directions,
-                                const int scan_size[DIRECTIONS_COUNT],
-                                const int scan_step[DIRECTIONS_COUNT],
+validate_border_scan_parameters(int scan_directions, RectangleSize scan_size,
+                                Delta scan_step,
                                 const int scan_threshold[DIRECTIONS_COUNT]) {
   return (BorderScanParameters){
-      .scan_size =
-          {
-              .width = scan_size[HORIZONTAL],
-              .height = scan_size[VERTICAL],
-          },
-      .scan_step =
-          {
-              .horizontal = scan_step[HORIZONTAL],
-              .vertical = scan_step[VERTICAL],
-          },
+      .scan_size = scan_size,
+      .scan_step = scan_step,
       .scan_threshold =
           {
               .horizontal = scan_threshold[HORIZONTAL],

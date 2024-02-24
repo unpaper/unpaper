@@ -7,6 +7,7 @@
 #include <stdbool.h>
 
 #include "constants.h"
+#include "imageprocess/masks.h"
 #include "imageprocess/primitives.h"
 #include "parse.h"
 
@@ -41,8 +42,22 @@ typedef struct {
 
 void options_init(Options *o);
 
+bool parse_symmetric_integers(const char *str, int32_t *value_1,
+                              int32_t *value_2);
+bool parse_symmetric_floats(const char *str, float *value_1, float *value_2);
+
 bool parse_rectangle(const char *str, Rectangle *rect);
 int print_rectangle(Rectangle rect);
+
+bool parse_rectangle_size(const char *str, RectangleSize *size);
+int print_rectangle_size(RectangleSize size);
+
+bool parse_delta(const char *str, Delta *delta);
+bool parse_scan_step(const char *str, Delta *delta);
+int print_delta(Delta delta);
+
+bool parse_border(const char *str, Border *rect);
+int print_border(Border rect);
 
 bool parse_color(const char *str, Pixel *color);
 int print_color(Pixel color);

@@ -18,10 +18,6 @@ int parseEdges(char *s);
 
 void printEdges(int d);
 
-void parseInts(char *s, int i[2]);
-
-void parseFloats(char *s, float f[2]);
-
 char *implode(char *buf, const char *s[], int cnt);
 
 struct MultiIndex {
