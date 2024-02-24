@@ -26,6 +26,7 @@
 #include "imageprocess/masks.h"
 #include "imageprocess/pixel.h"
 #include "lib/options.h"
+#include "lib/physical.h"
 #include "parse.h"
 #include "unpaper.h"
 #include "version.h"
@@ -131,7 +132,7 @@ enum LONG_OPTION_VALUES {
   OPT_INSERT_BLANK,
   OPT_REPLACE_BLANK,
   OPT_NO_MULTI_PAGES,
-  OPT_DPI,
+  OPT_PPI,
   OPT_OVERWRITE,
   OPT_VERBOSE_MORE,
   OPT_DEBUG,
@@ -175,8 +176,8 @@ int main(int argc, char *argv[]) {
   int borderScanStep[DIRECTIONS_COUNT] = {5, 5};
   int borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
   BorderScanParameters borderScanParams;
-  int borderAlign = 0;              // center
-  Delta borderAlignMargin = {0, 0}; // center
+  int borderAlign = 0;                                 // center
+  MilsDelta borderAlignMarginPhysical = {0, 0, false}; // center
   Pixel maskColorPixel = PIXEL_WHITE;
   size_t pointCount = 0;
   Point points[MAX_POINTS];
@@ -218,17 +219,17 @@ int main(int argc, char *argv[]) {
   unsigned int absBlackThreshold;
   unsigned int absWhiteThreshold;
 
-  RectangleSize sheetSize = {-1, -1};
+  MilsSize sheetSizePhysical = {-1, -1, false};
   int preRotate = 0;
   int postRotate = 0;
   int preMirror = 0;
   int postMirror = 0;
-  Delta preShift = {0, 0};
-  Delta postShift = {0, 0};
-  RectangleSize size = {-1, -1};
-  RectangleSize postSize = {-1, -1};
-  RectangleSize stretchSize = {-1, -1};
-  RectangleSize postStretchSize = {-1, -1};
+  MilsDelta preShiftPhysical = {0, 0, false};
+  MilsDelta postShiftPhysical = {0, 0, false};
+  MilsSize sizePhysical = {-1, -1, false};
+  MilsSize postSizePhysical = {-1, -1, false};
+  MilsSize stretchSizePhysical = {-1, -1, false};
+  MilsSize postStretchSizePhysical = {-1, -1, false};
   float zoomFactor = 1.0;
   float postZoomFactor = 1.0;
   Border preBorder = {0, 0, 0, 0};
@@ -240,7 +241,9 @@ int main(int argc, char *argv[]) {
   bool multisheets = true;
 
   bool overwrite = false;
-  int dpi = 300;
+
+  // Command line argument is improperly called DPI. These are pixels per inch.
+  int16_t ppi = 300;
 
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
@@ -404,7 +407,8 @@ int main(int argc, char *argv[]) {
         {"replace-blank", required_argument, NULL, OPT_REPLACE_BLANK},
         {"test-only", no_argument, NULL, 'T'},
         {"no-multi-pages", no_argument, NULL, OPT_NO_MULTI_PAGES},
-        {"dpi", required_argument, NULL, OPT_DPI},
+        {"dpi", required_argument, NULL, OPT_PPI},
+        {"ppi", required_argument, NULL, OPT_PPI},
         {"type", required_argument, NULL, 't'},
         {"quiet", no_argument, NULL, 'q'},
         {"overwrite", no_argument, NULL, OPT_OVERWRITE},
@@ -469,7 +473,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'S':
-      sheetSize = parseSize(optarg, dpi);
+      parse_physical_size(optarg, &sheetSizePhysical);
       break;
 
     case OPT_SHEET_BACKGROUND:
@@ -518,11 +522,11 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_PRE_SHIFT:
-      preShift = parseDelta(optarg, dpi);
+      parse_physical_delta(optarg, &preShiftPhysical);
       break;
 
     case OPT_POST_SHIFT:
-      postShift = parseDelta(optarg, dpi);
+      parse_physical_delta(optarg, &postShiftPhysical);
       break;
 
     case OPT_PRE_MASK:
@@ -538,19 +542,19 @@ int main(int argc, char *argv[]) {
       break;
 
     case 's':
-      size = parseSize(optarg, dpi);
+      parse_physical_size(optarg, &sizePhysical);
       break;
 
     case OPT_POST_SIZE:
-      postSize = parseSize(optarg, dpi);
+      parse_physical_size(optarg, &postSizePhysical);
       break;
 
     case OPT_STRETCH:
-      stretchSize = parseSize(optarg, dpi);
+      parse_physical_size(optarg, &stretchSizePhysical);
       break;
 
     case OPT_POST_STRETCH:
-      postStretchSize = parseSize(optarg, dpi);
+      parse_physical_size(optarg, &postStretchSizePhysical);
       break;
 
     case 'z':
@@ -822,7 +826,7 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BORDER_MARGIN:
-      borderAlignMargin = parseDelta(optarg, dpi);
+      parse_physical_delta(optarg, &borderAlignMarginPhysical);
       break;
 
     case OPT_NO_BORDER_ALIGN:
@@ -891,8 +895,8 @@ int main(int argc, char *argv[]) {
       multisheets = false;
       break;
 
-    case OPT_DPI:
-      sscanf(optarg, "%d", &dpi);
+    case OPT_PPI:
+      sscanf(optarg, "%hd", &ppi);
       break;
 
     case 't':
@@ -966,6 +970,16 @@ int main(int argc, char *argv[]) {
   if (!multisheets && options.end_sheet == -1)
     options.end_sheet = options.start_sheet;
 
+  // Expand any physical size to their pixel equivalents.
+  RectangleSize sheetSize = mils_size_to_pixels(sheetSizePhysical, ppi);
+  Delta preShift = mils_delta_to_pixels(preShiftPhysical, ppi);
+  Delta postShift = mils_delta_to_pixels(postShiftPhysical, ppi);
+  RectangleSize size = mils_size_to_pixels(sizePhysical, ppi);
+  RectangleSize postSize = mils_size_to_pixels(postSizePhysical, ppi);
+  RectangleSize stretchSize = mils_size_to_pixels(stretchSizePhysical, ppi);
+  RectangleSize postStretchSize =
+      mils_size_to_pixels(postStretchSizePhysical, ppi);
+
   // Calculate the constant absolute values based on the relative parameters.
   absBlackThreshold = WHITE * (1.0 - blackThreshold);
   absWhiteThreshold = WHITE * (whiteThreshold);
@@ -976,8 +990,8 @@ int main(int argc, char *argv[]) {
   maskDetectionParams = validate_mask_detection_parameters(
       maskScanDirections, maskScanSize, maskScanDepth, maskScanStep,
       maskScanThreshold, maskScanMinimum, maskScanMaximum);
-  maskAlignmentParams =
-      validate_mask_alignment_parameters(borderAlign, borderAlignMargin);
+  maskAlignmentParams = validate_mask_alignment_parameters(
+      borderAlign, mils_delta_to_pixels(borderAlignMarginPhysical, ppi));
   borderScanParams =
       validate_border_scan_parameters(borderScanDirections, borderScanSize,
                                       borderScanStep, borderScanThreshold);
@@ -1413,8 +1427,9 @@ int main(int argc, char *argv[]) {
           }
           printf("border-align: ");
           printEdges(borderAlign);
-          printf("border-margin: [%d,%d]\n", borderAlignMargin.horizontal,
-                 borderAlignMargin.vertical);
+          printf("border-margin: [%d,%d]\n",
+                 maskAlignmentParams.margin.horizontal,
+                 maskAlignmentParams.margin.vertical);
         } else {
           printf("border-scan DISABLED for all sheets.\n");
         }
@@ -1448,7 +1463,7 @@ int main(int argc, char *argv[]) {
         printf("sheet-background: ");
         print_color(sheetBackgroundPixel);
         printf("\n");
-        printf("dpi: %d\n", dpi);
+        printf("ppi: %d\n", ppi);
         printf("input-files per sheet: %d\n", options.input_count);
         printf("output-files per sheet: %d\n", options.output_count);
         if ((sheetSize.width != -1) || (sheetSize.height != -1)) {

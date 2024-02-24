@@ -1,4 +1,4 @@
-.. SPDX-FileCopyrightText: 2005 The unpaper Authors
+ SPDX-FileCopyrightText: 2005 The unpaper Authors
 ..
 .. SPDX-License-Identifier: GPL-2.0-only
 
@@ -131,10 +131,14 @@ Options
    Shift the image before further processing. Values for h (horizontal
    shift) and v (vertical shift) can either be positive or negative.
 
+   Accepts physical dimensions, see `Physical Dimensions And Paper Sizes`_.
+
 .. option:: --post-shift h , v
 
    Shift the image after other processing. Values for h (horizontal
    shift) and v (vertical shift) can either be positive or negative.
+
+   Accepts physical dimensions, see `Physical Dimensions And Paper Sizes`_.
 
 .. option:: --pre-wipe left, top, right, bottom
 
@@ -174,15 +178,14 @@ Options
    ratio is preserved. Instead, if the sheet's aspect ratio changes, the
    zoomed content gets centered on the sheet.
 
-   Possible values for size-name are: ``a5``, ``a4``, ``a3``,
-   ``letter``, ``legal``. All size names can also be applied in rotated
-   landscape orientation, use ``a4-landscape``, ``letter-landscape``
-   etc.
+   See `Physical Dimensions And Paper Sizes`_ for valid values of size-name.
 
 .. option:: --post-size { width, height | size-name }
 
    Change the sheet size preserving the content's aspect ratio after
    other processing steps are applied.
+
+   See `Physical Dimensions And Paper Sizes`_ for valid values of size-name.
 
 .. option:: --stretch { width, height | size-name }
 
@@ -190,11 +193,15 @@ Options
    the sheet gets stretched to the specified size, possibly changing the
    aspect ratio.
 
+   See `Physical Dimensions And Paper Sizes`_ for valid values of size-name.
+
 .. option:: --post-stretch { width, height | size-name }
 
    Change the sheet size after other processing is applied. Content on
    the sheet gets stretched to the specified size, possibly changing the
    aspect ratio.
+
+   See `Physical Dimensions And Paper Sizes`_ for valid values of size-name.
 
 .. option:: -z factor ; --zoom factor
 
@@ -474,16 +481,20 @@ Options
 
 .. option:: -S { width, height \| size-name }; --sheet-size { width, height \| size-name }
 
-   Force a fix sheet size. Usually, the sheet size is determined by the
-   input image size (if ``input-pages=1``), or by the double size of the
-   first page in a two-page input set (if ``input-pages=2``). If the
-   input image is smaller than the size specified here, it will appear
-   centered and surrounded with a white border on the sheet. If the
-   input image is bigger, it will be centered and the edges will be
-   cropped. This option may also be helpful to get regular sized output
-   images if the input image sizes differ. Standard size-names like
-   ``a4-landscape``, ``letter``, etc. may be used (see ``--size``).
-   (default: as in input file)
+   Force a fix sheet size. (default: as in input file)
+
+   Usually, the sheet size is determined by the input image size
+   (if ``input-pages=1``), or by the double size of the first page in
+   a two-page input set (if ``input-pages=2``). If the input image is
+   smaller than the size specified here, it will appear centered and
+   surrounded with a white border on the sheet. If the input image is
+   bigger, it will be centered and the edges will be cropped.
+
+   This option may also be helpful to get regular sized output images
+   if the input image sizes differ.
+
+
+   See `Physical Dimensions And Paper Sizes`_ for valid values of size-name.
 
 .. option:: --sheet-background { black \| white }
 
@@ -561,11 +572,12 @@ Options
    ``%`` (usually indicating the start of a placeholder for the page
    counter).
 
-.. option:: --dpi dpi
+.. option:: --ppi ppi; --dpi ppi
 
-   Dots per inch used for conversion of measured size values, like e.g.
-   ``21cm,27.9cm``. Mind that this parameter should occur before
-   specifying any size value with measurement suffix. (default: ``300``)
+   Pixels per inch used for conversion of measured size values, like e.g.
+   ``21cm,27.9cm``. (default: ``300``)
+
+   The `--dpi` option is accepted for compatibility, but it is a misnomer.
 
 .. option:: -t { pbm \| pgm \| ppm }; --type { pbm \| pgm> \| ppm }
 
@@ -632,3 +644,18 @@ Options
 .. option:: -V ; --version
 
    Output version and build information.
+
+
+.. _Physical Dimensions And Paper Sizes:
+Physical Dimensions And Paper Sizes
+-----------------------------------
+
+Many options accept physical dimensions in both SI (`cm`, `mm`) and imperial
+(`in`, `mils`) units.
+
+Where the size of a sheet or page is involved, unpaper accepts ISO 216
+A-series size names (e.g. `A4`), or the values `letter` and `legal`.
+
+If not otherwise specified, these represent the size in portrait orientation.
+To choose the landscape orientation, append `-landscape` to the chosen size
+(e.g. `A5-landscape`, `letter-landscape`).

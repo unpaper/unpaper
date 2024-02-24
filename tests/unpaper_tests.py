@@ -77,6 +77,19 @@ def test_a1(imgsrc_path, goldendir_path, tmp_path):
     assert compare_images(golden=golden_path, result=result_path) < 0.05
 
 
+def test_a2(imgsrc_path, goldendir_path, tmp_path):
+    """[A2] Single-Page Template Layout, Black+White, Full Processing, PPI scaling."""
+    source_path = imgsrc_path / "imgsrc001.png"
+    result_path = tmp_path / "result.pbm"
+    golden_path = goldendir_path / "goldenA2.pbm"
+
+    # Default processing is at 300 PPI, so by using 600 PPI and *two* A sizes lower
+    # (A4 → A6) we should have an almost idential file as goldenA1.
+    run_unpaper(str(source_path), str(result_path), "--ppi", "600", "--post-size", "a6")
+
+    assert compare_images(golden=golden_path, result=result_path) < 0.05
+
+
 def test_b1(imgsrc_path, goldendir_path, tmp_path):
     """[B1] Combined Color/Gray, No Processing."""
 
