@@ -7,6 +7,7 @@ import logging
 import os
 import pathlib
 import re
+import shlex
 import subprocess
 import sys
 from typing import Sequence
@@ -45,7 +46,7 @@ def run_unpaper(
     unpaper_path = os.getenv("TEST_UNPAPER_BINARY", "unpaper")
 
     full_cmdline = [unpaper_path, "-vvv"] + list(cmdline)
-    print(f"Running {full_cmdline!r}")
+    print(f"Running {shlex.join(full_cmdline)}")
 
     return subprocess.run(
         full_cmdline,
