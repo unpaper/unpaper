@@ -114,32 +114,6 @@ void printEdges(int d) {
 }
 
 /**
- * Parses either a single integer string, of a pair of two integers separated
- * by a comma.
- */
-void parseInts(char *s, int i[2]) {
-  i[0] = -1;
-  i[1] = -1;
-  sscanf(s, "%d,%d", &i[0], &i[1]);
-  if (i[1] == -1) {
-    i[1] = i[0]; // if second value is unset, copy first one into
-  }
-}
-
-/**
- * Parses either a single float string, of a pair of two floats separated
- * by a comma.
- */
-void parseFloats(char *s, float f[2]) {
-  f[0] = -1.0;
-  f[1] = -1.0;
-  sscanf(s, "%f,%f", &f[0], &f[1]);
-  if (f[1] == -1.0) {
-    f[1] = f[0]; // if second value is unset, copy first one into
-  }
-}
-
-/**
  * Combines an array of strings to a comma-separated string.
  */
 char *implode(char *buf, const char *s[], int cnt) {

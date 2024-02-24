@@ -162,16 +162,16 @@ int main(int argc, char *argv[]) {
   float deskewScanStep = 0.1;
   float deskewScanDeviation = 1.0;
   int maskScanDirections = (1 << HORIZONTAL);
-  int maskScanSize[DIRECTIONS_COUNT] = {50, 50};
-  int maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
-  int maskScanStep[DIRECTIONS_COUNT] = {5, 5};
+  RectangleSize maskScanSize = {50, 50};
+  int32_t maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
+  Delta maskScanStep = {5, 5};
   float maskScanThreshold[DIRECTIONS_COUNT] = {0.1, 0.1};
   int maskScanMinimum[DIMENSIONS_COUNT] = {100, 100};
   int maskScanMaximum[DIMENSIONS_COUNT] = {-1, -1}; // set default later
   int borderScanDirections = (1 << VERTICAL);
-  int borderScanSize[DIRECTIONS_COUNT] = {5, 5};
-  int borderScanStep[DIRECTIONS_COUNT] = {5, 5};
-  int borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
+  RectangleSize borderScanSize = {5, 5};
+  Delta borderScanStep = {5, 5};
+  int32_t borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
   int borderAlign = 0;                                 // center
   MilsDelta borderAlignMarginPhysical = {0, 0, false}; // center
   Pixel maskColorPixel = PIXEL_WHITE;
@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
   Rectangle preMasks[MAX_MASKS];
   size_t wipeCount = 0;
   Rectangle wipe[MAX_MASKS];
-  int middleWipe[2] = {0, 0};
+  int32_t middleWipe[2] = {0, 0};
   size_t preWipeCount = 0;
   Rectangle preWipe[MAX_MASKS];
   size_t postWipeCount = 0;
@@ -191,18 +191,18 @@ int main(int argc, char *argv[]) {
   Rectangle outsideBorderscanMask[MAX_PAGES]; // set by --layout
   size_t outsideBorderscanMaskCount = 0;
   int blackfilterScanDirections = (1 << HORIZONTAL) | (1 << VERTICAL);
-  int blackfilterScanSize[DIRECTIONS_COUNT] = {20, 20};
-  int blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
-  int blackfilterScanStep[DIRECTIONS_COUNT] = {5, 5};
+  RectangleSize blackfilterScanSize = {20, 20};
+  int32_t blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
+  Delta blackfilterScanStep = {5, 5};
   float blackfilterScanThreshold = 0.95;
   size_t blackfilterExcludeCount = 0;
   Rectangle blackfilterExclude[MAX_MASKS];
   int blackfilterIntensity = 20;
-  int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
-  int blurfilterScanStep[DIRECTIONS_COUNT] = {50, 50};
+  RectangleSize blurfilterScanSize = {100, 100};
+  Delta blurfilterScanStep = {50, 50};
   float blurfilterIntensity = 0.01;
-  int grayfilterScanSize[DIRECTIONS_COUNT] = {50, 50};
-  int grayfilterScanStep[DIRECTIONS_COUNT] = {20, 20};
+  RectangleSize grayfilterScanSize = {50, 50};
+  Delta grayfilterScanStep = {20, 20};
   float grayfilterThreshold = 0.5;
   int noisefilterIntensity = 4;
 
@@ -620,22 +620,27 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_MIDDLE_WIPE:
-      parseInts(optarg, middleWipe);
+      if (!parse_symmetric_integers(optarg, &middleWipe[0], &middleWipe[1])) {
+        errOutput("unable to parse middle-wipe: %s", optarg);
+      }
       break;
 
     case 'B':
-      sscanf(optarg, "%d,%d,%d,%d", &border.left, &border.top, &border.right,
-             &border.bottom);
+      if (!parse_border(optarg, &border)) {
+        errOutput("unable to parse border: %s", optarg);
+      }
       break;
 
     case OPT_PRE_BORDER:
-      sscanf(optarg, "%d,%d,%d,%d", &preBorder.left, &preBorder.top,
-             &preBorder.right, &preBorder.bottom);
+      if (!parse_border(optarg, &preBorder)) {
+        errOutput("unable to parse pre-border: %s", optarg);
+      }
       break;
 
     case OPT_POST_BORDER:
-      sscanf(optarg, "%d,%d,%d,%d", &postBorder.left, &postBorder.top,
-             &postBorder.right, &postBorder.bottom);
+      if (!parse_border(optarg, &postBorder)) {
+        errOutput("unable to parse post-border: %s", optarg);
+      }
       break;
 
     case OPT_NO_BLACK_FILTER:
@@ -647,15 +652,23 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BLACK_FILTER_SCAN_SIZE:
-      parseInts(optarg, blackfilterScanSize);
+      if (!parse_rectangle_size(optarg, &blackfilterScanSize)) {
+        errOutput("unable to parse blackfilter-scan-size: %s", optarg);
+      }
       break;
 
     case OPT_BLACK_FILTER_SCAN_DEPTH:
-      parseInts(optarg, blackfilterScanDepth);
+      if (!parse_symmetric_integers(optarg, &blackfilterScanDepth[0],
+                                    &blackfilterScanDepth[1]) ||
+          blackfilterScanDepth[0] <= 0 || blackfilterScanDepth[1] <= 0) {
+        errOutput("unable to parse blackfilter-scan-depth: %s", optarg);
+      }
       break;
 
     case OPT_BLACK_FILTER_SCAN_STEP:
-      parseInts(optarg, blackfilterScanStep);
+      if (!parse_scan_step(optarg, &blackfilterScanStep)) {
+        errOutput("unable to parse blackfilter-scan-step: %s", optarg);
+      }
       break;
 
     case OPT_BLACK_FILTER_SCAN_THRESHOLD:
@@ -693,11 +706,15 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BLUR_FILTER_SIZE:
-      parseInts(optarg, blurfilterScanSize);
+      if (!parse_rectangle_size(optarg, &blurfilterScanSize)) {
+        errOutput("unable to parse blurfilter-scan-size: %s", optarg);
+      }
       break;
 
     case OPT_BLUR_FILTER_STEP:
-      parseInts(optarg, blurfilterScanStep);
+      if (!parse_scan_step(optarg, &blurfilterScanStep)) {
+        errOutput("unable to parse blurfilter-scan-step: %s", optarg);
+      }
       break;
 
     case OPT_BLUR_FILTER_INTENSITY:
@@ -709,11 +726,15 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_GRAY_FILTER_SIZE:
-      parseInts(optarg, grayfilterScanSize);
+      if (!parse_rectangle_size(optarg, &grayfilterScanSize)) {
+        errOutput("unable to parse grayfilter-scan-size: %s", optarg);
+      }
       break;
 
     case OPT_GRAY_FILTER_STEP:
-      parseInts(optarg, grayfilterScanStep);
+      if (!parse_scan_step(optarg, &grayfilterScanStep)) {
+        errOutput("unable to parse grayfilter-scan-step: %s", optarg);
+      }
       break;
 
     case OPT_GRAY_FILTER_THRESHOLD:
@@ -729,19 +750,31 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_MASK_SCAN_SIZE:
-      parseInts(optarg, maskScanSize);
+      if (!parse_rectangle_size(optarg, &maskScanSize)) {
+        errOutput("unable to parse mask-scan-size: %s", optarg);
+      }
       break;
 
     case OPT_MASK_SCAN_DEPTH:
-      parseInts(optarg, maskScanDepth);
+      if (!parse_symmetric_integers(optarg, &maskScanDepth[0],
+                                    &maskScanDepth[1]) ||
+          maskScanDepth[0] <= 0 || maskScanDepth[1] <= 0) {
+        errOutput("unable to parse mask-scan-depth: %s", optarg);
+      }
       break;
 
     case OPT_MASK_SCAN_STEP:
-      parseInts(optarg, maskScanStep);
+      if (!parse_scan_step(optarg, &maskScanStep)) {
+        errOutput("unable to parse mask-scan-step");
+      }
       break;
 
     case OPT_MASK_SCAN_THRESHOLD:
-      parseFloats(optarg, maskScanThreshold);
+      if (!parse_symmetric_floats(optarg, &maskScanThreshold[0],
+                                  &maskScanThreshold[1]) ||
+          maskScanThreshold[0] <= 0 || maskScanThreshold[1] <= 0) {
+        errOutput("unable to parse mask-scan-threshold: %s", optarg);
+      }
       break;
 
     case OPT_MASK_SCAN_MINIMUM:
@@ -801,15 +834,23 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BORDER_SCAN_SIZE:
-      parseInts(optarg, borderScanSize);
+      if (!parse_rectangle_size(optarg, &borderScanSize)) {
+        errOutput("unable to parse border-scan-size: %s", optarg);
+      }
       break;
 
     case OPT_BORDER_SCAN_STEP:
-      parseInts(optarg, borderScanStep);
+      if (!parse_scan_step(optarg, &borderScanStep)) {
+        errOutput("unable to parse border-scan-step: %s", optarg);
+      }
       break;
 
     case OPT_BORDER_SCAN_THRESHOLD:
-      parseInts(optarg, borderScanThreshold);
+      if (!parse_symmetric_integers(optarg, &borderScanThreshold[0],
+                                    &borderScanThreshold[1]) ||
+          borderScanThreshold[0] <= 0 || borderScanThreshold <= 0) {
+        errOutput("unable to parse border-scan-threshold: %s", optarg);
+      }
       break;
 
     case OPT_BORDER_ALIGN:
@@ -989,21 +1030,16 @@ int main(int argc, char *argv[]) {
       validate_border_scan_parameters(borderScanDirections, borderScanSize,
                                       borderScanStep, borderScanThreshold);
   GrayfilterParameters grayfilterParams = validate_grayfilter_parameters(
-      grayfilterScanSize[HORIZONTAL], grayfilterScanSize[VERTICAL],
-      grayfilterScanStep[HORIZONTAL], grayfilterScanStep[VERTICAL],
-      grayfilterThreshold);
+      grayfilterScanSize, grayfilterScanStep, grayfilterThreshold);
   // This will be reachable memory at the end of the program, we don't need to
   // free it.
   BlackfilterParameters blackfilterParams = validate_blackfilter_parameters(
-      blackfilterScanSize[HORIZONTAL], blackfilterScanSize[VERTICAL],
-      blackfilterScanStep[HORIZONTAL], blackfilterScanStep[VERTICAL],
+      blackfilterScanSize, blackfilterScanStep,
       blackfilterScanDepth[HORIZONTAL], blackfilterScanDepth[VERTICAL],
       blackfilterScanDirections, blackfilterScanThreshold, blackfilterIntensity,
       blackfilterExcludeCount, blackfilterExclude);
   BlurfilterParameters blurfilterParams = validate_blurfilter_parameters(
-      blurfilterScanSize[HORIZONTAL], blurfilterScanSize[VERTICAL],
-      blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
-      blurfilterIntensity);
+      blurfilterScanSize, blurfilterScanStep, blurfilterIntensity);
 
   RectangleSize inputSize = {-1, -1};
   RectangleSize previousSize = {-1, -1};
@@ -1257,8 +1293,9 @@ int main(int argc, char *argv[]) {
           printf("\n");
         }
         if (memcmp(&preBorder, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
-          printf("pre-border: [%d,%d,%d,%d]\n", preBorder.left, preBorder.top,
-                 preBorder.right, preBorder.bottom);
+          printf("pre-border: ");
+          print_border(preBorder);
+          printf("\n");
         }
         if (preMaskCount > 0) {
           printf("pre-masking: ");
@@ -1283,13 +1320,14 @@ int main(int argc, char *argv[]) {
         if (options.no_blackfilter_multi_index.count != -1) {
           printf("blackfilter-scan-direction: %s\n",
                  getDirections(blackfilterScanDirections));
-          printf("blackfilter-scan-size: [%d,%d]\n", blackfilterScanSize[0],
-                 blackfilterScanSize[1]);
-          printf("blackfilter-scan-depth: [%d,%d]\n", blackfilterScanDepth[0],
+          printf("blackfilter-scan-size: ");
+          print_rectangle_size(blackfilterScanSize);
+          printf("\nblackfilter-scan-depth: [%d,%d]\n", blackfilterScanDepth[0],
                  blackfilterScanDepth[1]);
-          printf("blackfilter-scan-step: [%d,%d]\n", blackfilterScanStep[0],
-                 blackfilterScanStep[1]);
-          printf("blackfilter-scan-threshold: %f\n", blackfilterScanThreshold);
+          printf("blackfilter-scan-step: ");
+          print_delta(blackfilterScanStep);
+          printf("\nblackfilter-scan-threshold: %f\n",
+                 blackfilterScanThreshold);
           if (blackfilterExcludeCount > 0) {
             printf("blackfilter-scan-exclude: ");
             for (size_t i = 0; i < blackfilterExcludeCount; i++) {
@@ -1315,11 +1353,11 @@ int main(int argc, char *argv[]) {
           printf("noisefilter DISABLED for all sheets.\n");
         }
         if (options.no_blurfilter_multi_index.count != -1) {
-          printf("blurfilter-size: [%d,%d]\n", blurfilterScanSize[0],
-                 blurfilterScanSize[1]);
-          printf("blurfilter-step: [%d,%d]\n", blurfilterScanStep[0],
-                 blurfilterScanStep[1]);
-          printf("blurfilter-intensity: %f\n", blurfilterIntensity);
+          printf("blurfilter-size: ");
+          print_rectangle_size(blurfilterScanSize);
+          printf("\nblurfilter-step: ");
+          print_delta(blurfilterScanStep);
+          printf("\nblurfilter-intensity: %f\n", blurfilterIntensity);
           if (options.no_blurfilter_multi_index.count > 0) {
             printf("blurfilter DISABLED for sheets: ");
             printMultiIndex(options.no_blurfilter_multi_index);
@@ -1328,11 +1366,11 @@ int main(int argc, char *argv[]) {
           printf("blurfilter DISABLED for all sheets.\n");
         }
         if (options.no_grayfilter_multi_index.count != -1) {
-          printf("grayfilter-size: [%d,%d]\n", grayfilterScanSize[0],
-                 grayfilterScanSize[1]);
-          printf("grayfilter-step: [%d,%d]\n", grayfilterScanStep[0],
-                 grayfilterScanStep[1]);
-          printf("grayfilter-threshold: %f\n", grayfilterThreshold);
+          printf("grayfilter-size: ");
+          print_rectangle_size(grayfilterScanSize);
+          printf("\ngrayfilter-step: ");
+          print_delta(grayfilterScanStep);
+          printf("\ngrayfilter-threshold: %f\n", grayfilterThreshold);
           if (options.no_grayfilter_multi_index.count > 0) {
             printf("grayfilter DISABLED for sheets: ");
             printMultiIndex(options.no_grayfilter_multi_index);
@@ -1348,11 +1386,13 @@ int main(int argc, char *argv[]) {
           printf("\n");
           printf("mask-scan-direction: %s\n",
                  getDirections(maskScanDirections));
-          printf("mask-scan-size: [%d,%d]\n", maskScanSize[0], maskScanSize[1]);
-          printf("mask-scan-depth: [%d,%d]\n", maskScanDepth[0],
+          printf("mask-scan-size: ");
+          print_rectangle_size(maskScanSize);
+          printf("\nmask-scan-depth: [%d,%d]\n", maskScanDepth[0],
                  maskScanDepth[1]);
-          printf("mask-scan-step: [%d,%d]\n", maskScanStep[0], maskScanStep[1]);
-          printf("mask-scan-threshold: [%f,%f]\n", maskScanThreshold[0],
+          printf("mask-scan-step: ");
+          print_delta(maskScanStep);
+          printf("\nmask-scan-threshold: [%f,%f]\n", maskScanThreshold[0],
                  maskScanThreshold[1]);
           printf("mask-scan-minimum: [%d,%d]\n", maskScanMinimum[0],
                  maskScanMinimum[1]);
@@ -1399,8 +1439,9 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_border_multi_index.count != -1) {
           if (memcmp(&border, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
-            printf("explicit border: [%d,%d,%d,%d]\n", border.left, border.top,
-                   border.right, border.bottom);
+            printf("explicit border: ");
+            print_border(border);
+            printf("\n");
           }
         } else {
           printf("border DISABLED for all sheets.\n");
@@ -1408,11 +1449,11 @@ int main(int argc, char *argv[]) {
         if (options.no_border_scan_multi_index.count != -1) {
           printf("border-scan-direction: %s\n",
                  getDirections(borderScanDirections));
-          printf("border-scan-size: [%d,%d]\n", borderScanSize[0],
-                 borderScanSize[1]);
-          printf("border-scan-step: [%d,%d]\n", borderScanStep[0],
-                 borderScanStep[1]);
-          printf("border-scan-threshold: [%d,%d]\n", borderScanThreshold[0],
+          printf("border-scan-size: ");
+          print_rectangle_size(borderScanSize);
+          printf("\nborder-scan-step: ");
+          print_delta(borderScanStep);
+          printf("\nborder-scan-threshold: [%d,%d]\n", borderScanThreshold[0],
                  borderScanThreshold[1]);
           if (options.no_border_scan_multi_index.count > 0) {
             printf("border-scan DISABLED for sheets: ");
@@ -1434,8 +1475,9 @@ int main(int argc, char *argv[]) {
           printf("\n");
         }
         if (memcmp(&postBorder, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
-          printf("post-border: [%d,%d,%d,%d]\n", postBorder.left,
-                 postBorder.top, postBorder.right, postBorder.bottom);
+          printf("post-border: ");
+          print_border(postBorder);
+          printf("\n");
         }
         if (postMirror != 0) {
           printf("post-mirror: %s\n", getDirections(postMirror));

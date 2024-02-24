@@ -49,15 +49,107 @@ void options_init(Options *o) {
 }
 
 bool parse_rectangle(const char *str, Rectangle *rect) {
-  return sscanf(str, "%" SCNd32 ",%" SCNd32 ",%" SCNd32 ",%" SCNd32 "",
-                &rect->vertex[0].x, &rect->vertex[0].y, &rect->vertex[1].x,
-                &rect->vertex[1].y) == 4;
+  if (sscanf(str, "%" SCNd32 ",%" SCNd32 ",%" SCNd32 ",%" SCNd32 "",
+             &rect->vertex[0].x, &rect->vertex[0].y, &rect->vertex[1].x,
+             &rect->vertex[1].y) != 4) {
+    return false;
+  }
+
+  // only return true if the rectangle is valid!
+  return count_pixels(*rect) > 0;
 }
 
 int print_rectangle(Rectangle rect) {
   return printf("[%" PRId32 ",%" PRId32 ",%" PRId32 ",%" PRId32 "] ",
                 rect.vertex[0].x, rect.vertex[0].y, rect.vertex[1].x,
                 rect.vertex[1].y);
+}
+
+/**
+ * Parses either a single integer as a size in pixel, or a pair of two
+ * integers, separated by a comma. If the second integer is missing,
+ * use the one integer for both width and height.
+ */
+bool parse_symmetric_integers(const char *str, int32_t *value_1,
+                              int32_t *value_2) {
+  switch (sscanf(str, "%" SCNd32 ",%" SCNd32 "", value_1, value_2)) {
+  case 1:
+    // only one value, copy over to the second.
+    *value_2 = *value_1;
+    // intentional fall-through.
+  case 2:
+    // both values provided (or fall-through.)
+    return true;
+  default:
+    // not enough / unparseable.
+    return false;
+  }
+}
+
+/**
+ * As above, but with floats.
+ */
+bool parse_symmetric_floats(const char *str, float *value_1, float *value_2) {
+  switch (sscanf(str, "%f,%f", value_1, value_2)) {
+  case 1:
+    // only one value, copy over to the second.
+    *value_2 = *value_1;
+    // intentional fall-through.
+  case 2:
+    // both values provided (or fall-through.)
+    return true;
+  default:
+    // not enough / unparseable.
+    return false;
+  }
+}
+bool parse_rectangle_size(const char *str, RectangleSize *size) {
+  if (!parse_symmetric_integers(str, &size->width, &size->height)) {
+    return false;
+  }
+
+  // only return true if the size is non-negative!
+  return size->width >= 0 && size->height >= 0;
+}
+
+int print_rectangle_size(RectangleSize size) {
+  return printf("[%" PRId32 ",%" PRId32 "] ", size.width, size.height);
+}
+
+bool parse_delta(const char *str, Delta *delta) {
+  return parse_symmetric_integers(str, &delta->horizontal, &delta->vertical);
+}
+
+/**
+ * Special case of parse_delta that validates the delta is positive.
+ */
+bool parse_scan_step(const char *str, Delta *delta) {
+  if (!parse_delta(str, delta)) {
+    return false;
+  }
+
+  return delta->horizontal > 0 && delta->vertical > 0;
+}
+
+int print_delta(Delta delta) {
+  return printf("[%" PRId32 ",%" PRId32 "] ", delta.horizontal, delta.vertical);
+}
+
+bool parse_border(const char *str, Border *border) {
+  if (sscanf(str, "%" SCNd32 ",%" SCNd32 ",%" SCNd32 ",%" SCNd32 "",
+             &border->left, &border->top, &border->right,
+             &border->bottom) != 4) {
+    return false;
+  }
+
+  // only return true if the border is valid!
+  return (border->left >= 0 && border->top >= 0 && border->right >= 0 &&
+          border->bottom >= 0);
+}
+
+int print_border(Border border) {
+  return printf("[%" PRId32 ",%" PRId32 ",%" PRId32 ",%" PRId32 "] ",
+                border.left, border.top, border.right, border.bottom);
 }
 
 bool parse_color(const char *str, Pixel *color) {
