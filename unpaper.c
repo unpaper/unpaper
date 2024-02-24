@@ -161,7 +161,6 @@ int main(int argc, char *argv[]) {
   float deskewScanRange = 5.0;
   float deskewScanStep = 0.1;
   float deskewScanDeviation = 1.0;
-  DeskewParameters deskewParams;
   int maskScanDirections = (1 << HORIZONTAL);
   int maskScanSize[DIRECTIONS_COUNT] = {50, 50};
   int maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
@@ -169,13 +168,10 @@ int main(int argc, char *argv[]) {
   float maskScanThreshold[DIRECTIONS_COUNT] = {0.1, 0.1};
   int maskScanMinimum[DIMENSIONS_COUNT] = {100, 100};
   int maskScanMaximum[DIMENSIONS_COUNT] = {-1, -1}; // set default later
-  MaskDetectionParameters maskDetectionParams;
-  MaskAlignmentParameters maskAlignmentParams;
   int borderScanDirections = (1 << VERTICAL);
   int borderScanSize[DIRECTIONS_COUNT] = {5, 5};
   int borderScanStep[DIRECTIONS_COUNT] = {5, 5};
   int borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
-  BorderScanParameters borderScanParams;
   int borderAlign = 0;                                 // center
   MilsDelta borderAlignMarginPhysical = {0, 0, false}; // center
   Pixel maskColorPixel = PIXEL_WHITE;
@@ -202,22 +198,17 @@ int main(int argc, char *argv[]) {
   size_t blackfilterExcludeCount = 0;
   Rectangle blackfilterExclude[MAX_MASKS];
   int blackfilterIntensity = 20;
-  BlackfilterParameters blackfilterParams;
   int blurfilterScanSize[DIRECTIONS_COUNT] = {100, 100};
   int blurfilterScanStep[DIRECTIONS_COUNT] = {50, 50};
   float blurfilterIntensity = 0.01;
-  BlurfilterParameters blurfilterParams;
   int grayfilterScanSize[DIRECTIONS_COUNT] = {50, 50};
   int grayfilterScanStep[DIRECTIONS_COUNT] = {20, 20};
   float grayfilterThreshold = 0.5;
-  GrayfilterParameters grayfilterParams;
   int noisefilterIntensity = 4;
 
   Interpolation interpolateType = INTERP_CUBIC;
 
   Pixel sheetBackgroundPixel = PIXEL_WHITE;
-  unsigned int absBlackThreshold;
-  unsigned int absWhiteThreshold;
 
   MilsSize sheetSizePhysical = {-1, -1, false};
   int preRotate = 0;
@@ -981,33 +972,35 @@ int main(int argc, char *argv[]) {
       mils_size_to_pixels(postStretchSizePhysical, ppi);
 
   // Calculate the constant absolute values based on the relative parameters.
-  absBlackThreshold = WHITE * (1.0 - blackThreshold);
-  absWhiteThreshold = WHITE * (whiteThreshold);
+  uint8_t absBlackThreshold = WHITE * (1.0 - blackThreshold);
+  uint8_t absWhiteThreshold = WHITE * (whiteThreshold);
 
-  deskewParams = validate_deskew_parameters(deskewScanRange, deskewScanStep,
-                                            deskewScanDeviation, deskewScanSize,
-                                            deskewScanDepth, deskewScanEdges);
-  maskDetectionParams = validate_mask_detection_parameters(
-      maskScanDirections, maskScanSize, maskScanDepth, maskScanStep,
-      maskScanThreshold, maskScanMinimum, maskScanMaximum);
-  maskAlignmentParams = validate_mask_alignment_parameters(
-      borderAlign, mils_delta_to_pixels(borderAlignMarginPhysical, ppi));
-  borderScanParams =
+  DeskewParameters deskewParams = validate_deskew_parameters(
+      deskewScanRange, deskewScanStep, deskewScanDeviation, deskewScanSize,
+      deskewScanDepth, deskewScanEdges);
+  MaskDetectionParameters maskDetectionParams =
+      validate_mask_detection_parameters(
+          maskScanDirections, maskScanSize, maskScanDepth, maskScanStep,
+          maskScanThreshold, maskScanMinimum, maskScanMaximum);
+  MaskAlignmentParameters maskAlignmentParams =
+      validate_mask_alignment_parameters(
+          borderAlign, mils_delta_to_pixels(borderAlignMarginPhysical, ppi));
+  BorderScanParameters borderScanParams =
       validate_border_scan_parameters(borderScanDirections, borderScanSize,
                                       borderScanStep, borderScanThreshold);
-  grayfilterParams = validate_grayfilter_parameters(
+  GrayfilterParameters grayfilterParams = validate_grayfilter_parameters(
       grayfilterScanSize[HORIZONTAL], grayfilterScanSize[VERTICAL],
       grayfilterScanStep[HORIZONTAL], grayfilterScanStep[VERTICAL],
       grayfilterThreshold);
   // This will be reachable memory at the end of the program, we don't need to
   // free it.
-  blackfilterParams = validate_blackfilter_parameters(
+  BlackfilterParameters blackfilterParams = validate_blackfilter_parameters(
       blackfilterScanSize[HORIZONTAL], blackfilterScanSize[VERTICAL],
       blackfilterScanStep[HORIZONTAL], blackfilterScanStep[VERTICAL],
       blackfilterScanDepth[HORIZONTAL], blackfilterScanDepth[VERTICAL],
       blackfilterScanDirections, blackfilterScanThreshold, blackfilterIntensity,
       blackfilterExcludeCount, blackfilterExclude);
-  blurfilterParams = validate_blurfilter_parameters(
+  BlurfilterParameters blurfilterParams = validate_blurfilter_parameters(
       blurfilterScanSize[HORIZONTAL], blurfilterScanSize[VERTICAL],
       blurfilterScanStep[HORIZONTAL], blurfilterScanStep[VERTICAL],
       blurfilterIntensity);
