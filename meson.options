@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: 2024 The unpaper authors
+#
+# SPDX-License-Identifier: MIT
+
+option('openmp', type : 'feature', value : 'disabled')

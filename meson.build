@@ -22,7 +22,8 @@ endif
 
 unpaper_deps = [
     dependency('libavformat'), dependency('libavcodec'), dependency('libavutil'),
-    cc.find_library('m', required : false)
+    cc.find_library('m', required : false),
+    dependency('openmp', required : get_option('openmp'))
 ]
 
 conf_data = configuration_data()
