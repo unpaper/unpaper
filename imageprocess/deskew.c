@@ -13,6 +13,9 @@
 #include "lib/logging.h"
 #include "lib/math_util.h"
 
+// maximum pixel count of virtual line to detect rotation with
+#define MAX_ROTATION_SCAN_SIZE 10000
+
 static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
 
 DeskewParameters
