@@ -19,41 +19,6 @@
 /* --- constants ---------------------------------------------------------- */
 
 /**
- * Parses a parameter string on occurrences of 'vertical', 'horizontal' or both.
- */
-int parseDirections(char *s) {
-  int dir = 0;
-  if (strchr(s, 'h') != 0) { // (there is no 'h' in 'vertical'...)
-    dir = 1 << HORIZONTAL;
-  }
-  if (strchr(s, 'v') != 0) { // (there is no 'v' in 'horizontal'...)
-    dir |= 1 << VERTICAL;
-  }
-  if (dir == 0)
-    errOutput(
-        "unknown direction name '%s', expected 'h[orizontal]' or 'v[ertical]'.",
-        s);
-
-  return dir;
-}
-
-/**
- * Prints whether directions are vertical, horizontal, or both.
- */
-const char *getDirections(int d) {
-  switch (d) {
-  case (1 << VERTICAL) | (1 << HORIZONTAL):
-    return "[vertical,horizontal]";
-  case (1 << VERTICAL):
-    return "[vertical]";
-  case (1 << HORIZONTAL):
-    return "[horizontal]";
-  }
-
-  return "[none]";
-}
-
-/**
  * Parses a parameter string on occurrences of 'left', 'top', 'right', 'bottom'
  * or combinations.
  */

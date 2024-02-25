@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 
 #include "imageprocess/pixel.h"
 #include "lib/options.h"
@@ -208,4 +209,28 @@ int print_color(Pixel color) {
   }
 
   return printf("#%02x%02x%02x", color.r, color.g, color.b);
+}
+
+bool parse_direction(const char *str, Direction *direction) {
+  // This is a bit of a hack, but since there's no 'h' in "vertical", and
+  // no "v" in "horizontal", we can assume that if we find either of the
+  // two characters, the corresponding direction is selected.
+  direction->horizontal = !!(strchr(str, 'h') || strchr(str, 'H'));
+  direction->vertical = !!(strchr(str, 'v') || strchr(str, 'V'));
+
+  // if neither direction was selected, the only valid input is "none".
+  return direction->horizontal || direction->vertical ||
+         strcasecmp(str, "none") == 0;
+}
+
+const char *direction_to_string(Direction direction) {
+  if (direction.horizontal && direction.vertical) {
+    return "[horizontal,vertical]";
+  } else if (direction.horizontal) {
+    return "[horizontal]";
+  } else if (direction.vertical) {
+    return "[vertical]";
+  } else {
+    return "[none]";
+  }
 }

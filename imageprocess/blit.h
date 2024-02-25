@@ -37,7 +37,7 @@ void resize_and_replace(Image *pImage, RectangleSize size,
 void flip_rotate_90(Image *pImage, RotationDirection direction);
 
 // Mirrors an image either horizontally, vertically, or both.
-void mirror(Image image, bool horizontal, bool vertical);
+void mirror(Image image, Direction direction);
 
 // Shifts the image.
 void shift_image(Image *pImage, Delta d);

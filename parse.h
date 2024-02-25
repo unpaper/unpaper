@@ -10,10 +10,6 @@
 
 /* --- tool functions for parameter parsing and verbose output ------------ */
 
-int parseDirections(char *s);
-
-const char *getDirections(int d);
-
 int parseEdges(char *s);
 
 void printEdges(int d);

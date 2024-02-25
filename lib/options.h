@@ -75,3 +75,6 @@ int print_border(Border rect);
 
 bool parse_color(const char *str, Pixel *color);
 int print_color(Pixel color);
+
+bool parse_direction(const char *str, Direction *direction);
+const char *direction_to_string(Direction direction);

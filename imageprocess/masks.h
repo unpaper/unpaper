@@ -21,8 +21,7 @@ typedef struct {
     int32_t vertical;
   } scan_depth;
 
-  bool scan_horizontal;
-  bool scan_vertical;
+  Direction scan_direction;
 
   struct {
     float horizontal;
@@ -36,13 +35,12 @@ typedef struct {
   int32_t maximum_height;
 } MaskDetectionParameters;
 
-MaskDetectionParameters
-validate_mask_detection_parameters(int scan_directions, RectangleSize scan_size,
-                                   const int32_t scan_depth[DIRECTIONS_COUNT],
-                                   Delta scan_step,
-                                   const float scan_threshold[DIRECTIONS_COUNT],
-                                   const int scan_mininum[DIMENSIONS_COUNT],
-                                   const int scan_maximum[DIMENSIONS_COUNT]);
+MaskDetectionParameters validate_mask_detection_parameters(
+    Direction scan_direction, RectangleSize scan_size,
+    const int32_t scan_depth[DIRECTIONS_COUNT], Delta scan_step,
+    const float scan_threshold[DIRECTIONS_COUNT],
+    const int scan_mininum[DIMENSIONS_COUNT],
+    const int scan_maximum[DIMENSIONS_COUNT]);
 
 size_t detect_masks(Image image, MaskDetectionParameters params,
                     const Point points[], size_t points_count,
@@ -100,13 +98,12 @@ typedef struct {
     int32_t vertical;
   } scan_threshold;
 
-  bool scan_horizontal;
-  bool scan_vertical;
+  Direction scan_direction;
 } BorderScanParameters;
 
 BorderScanParameters
-validate_border_scan_parameters(int scan_directions, RectangleSize scan_size,
-                                Delta scan_step,
+validate_border_scan_parameters(Direction scan_direction,
+                                RectangleSize scan_size, Delta scan_step,
                                 const int32_t scan_threshold[DIRECTIONS_COUNT]);
 
 Border detect_border(Image image, BorderScanParameters params,
