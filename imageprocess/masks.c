@@ -12,13 +12,12 @@
 #include "imageprocess/primitives.h"
 #include "lib/logging.h"
 
-MaskDetectionParameters
-validate_mask_detection_parameters(int scan_directions, RectangleSize scan_size,
-                                   const int scan_depth[DIRECTIONS_COUNT],
-                                   Delta scan_step,
-                                   const float scan_threshold[DIRECTIONS_COUNT],
-                                   const int scan_mininum[DIMENSIONS_COUNT],
-                                   const int scan_maximum[DIMENSIONS_COUNT]) {
+MaskDetectionParameters validate_mask_detection_parameters(
+    Direction scan_direction, RectangleSize scan_size,
+    const int scan_depth[DIRECTIONS_COUNT], Delta scan_step,
+    const float scan_threshold[DIRECTIONS_COUNT],
+    const int scan_mininum[DIMENSIONS_COUNT],
+    const int scan_maximum[DIMENSIONS_COUNT]) {
   return (MaskDetectionParameters){
       .scan_size = scan_size,
       .scan_depth =
@@ -33,8 +32,7 @@ validate_mask_detection_parameters(int scan_directions, RectangleSize scan_size,
               .vertical = scan_threshold[VERTICAL],
           },
 
-      .scan_horizontal = !!(scan_directions & 1 << HORIZONTAL),
-      .scan_vertical = !!(scan_directions & 1 << VERTICAL),
+      .scan_direction = scan_direction,
 
       .minimum_width = scan_mininum[HORIZONTAL],
       .maximum_width = scan_maximum[HORIZONTAL],
@@ -107,7 +105,7 @@ static bool detect_mask(Image image, MaskDetectionParameters params,
                         Point origin, Rectangle *mask) {
   RectangleSize image_size = size_of_image(image);
 
-  if (params.scan_horizontal) {
+  if (params.scan_direction.horizontal) {
     int32_t left_edge =
         detect_edge(image, origin, (Delta){-params.scan_step.horizontal, 0},
                     params.scan_size.width, params.scan_depth.horizontal,
@@ -126,7 +124,7 @@ static bool detect_mask(Image image, MaskDetectionParameters params,
     mask->vertex[1].x = image_size.width - 1;
   }
 
-  if (params.scan_vertical) {
+  if (params.scan_direction.vertical) {
     int32_t top_edge =
         detect_edge(image, origin, (Delta){0, -params.scan_step.vertical},
                     params.scan_size.height, params.scan_depth.vertical,
@@ -181,7 +179,7 @@ size_t detect_masks(Image image, MaskDetectionParameters params,
                     const Point points[], size_t points_count,
                     Rectangle masks[]) {
   size_t masks_count = 0;
-  if (!params.scan_horizontal && !params.scan_vertical) {
+  if (!params.scan_direction.horizontal && !params.scan_direction.vertical) {
     return masks_count;
   }
 
@@ -364,8 +362,8 @@ void apply_border(Image image, const Border border, Pixel color) {
 }
 
 BorderScanParameters
-validate_border_scan_parameters(int scan_directions, RectangleSize scan_size,
-                                Delta scan_step,
+validate_border_scan_parameters(Direction scan_direction,
+                                RectangleSize scan_size, Delta scan_step,
                                 const int scan_threshold[DIRECTIONS_COUNT]) {
   return (BorderScanParameters){
       .scan_size = scan_size,
@@ -376,8 +374,7 @@ validate_border_scan_parameters(int scan_directions, RectangleSize scan_size,
               .vertical = scan_threshold[VERTICAL],
           },
 
-      .scan_horizontal = !!(scan_directions & 1 << HORIZONTAL),
-      .scan_vertical = !!(scan_directions & 1 << VERTICAL),
+      .scan_direction = scan_direction,
   };
 }
 
@@ -439,7 +436,7 @@ Border detect_border(Image image, BorderScanParameters params,
       .bottom = image_size.height - outside_mask.vertex[1].y,
   };
 
-  if (params.scan_horizontal) {
+  if (params.scan_direction.horizontal) {
     border.left += detect_border_edge(
         image, outside_mask, (Delta){params.scan_step.horizontal, 0},
         params.scan_size.width, params.scan_threshold.horizontal);
@@ -447,7 +444,7 @@ Border detect_border(Image image, BorderScanParameters params,
         image, outside_mask, (Delta){-params.scan_step.horizontal, 0},
         params.scan_size.width, params.scan_threshold.horizontal);
   }
-  if (params.scan_vertical) {
+  if (params.scan_direction.vertical) {
     border.top += detect_border_edge(
         image, outside_mask, (Delta){0, params.scan_step.vertical},
         params.scan_size.height, params.scan_threshold.vertical);

@@ -19,8 +19,7 @@ typedef struct {
     uint32_t vertical;
   } scan_depth;
 
-  bool scan_horizontal;
-  bool scan_vertical;
+  Direction scan_direction;
 
   uint8_t abs_threshold;
   int32_t intensity;
@@ -33,7 +32,7 @@ void blackfilter(Image image, BlackfilterParameters params);
 
 BlackfilterParameters validate_blackfilter_parameters(
     RectangleSize scan_size, Delta scan_step, uint32_t scan_depth_h,
-    uint32_t scan_depth_v, int8_t scan_directions, float threshold,
+    uint32_t scan_depth_v, Direction scan_direction, float threshold,
     int32_t intensity, size_t exclusions_count, Rectangle *exclusions);
 
 typedef struct {

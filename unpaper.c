@@ -161,14 +161,14 @@ int main(int argc, char *argv[]) {
   float deskewScanRange = 5.0;
   float deskewScanStep = 0.1;
   float deskewScanDeviation = 1.0;
-  int maskScanDirections = (1 << HORIZONTAL);
+  Direction maskScanDirections = DIRECTION_HORIZONTAL;
   RectangleSize maskScanSize = {50, 50};
   int32_t maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
   Delta maskScanStep = {5, 5};
   float maskScanThreshold[DIRECTIONS_COUNT] = {0.1, 0.1};
   int maskScanMinimum[DIMENSIONS_COUNT] = {100, 100};
   int maskScanMaximum[DIMENSIONS_COUNT] = {-1, -1}; // set default later
-  int borderScanDirections = (1 << VERTICAL);
+  Direction borderScanDirections = DIRECTION_VERTICAL;
   RectangleSize borderScanSize = {5, 5};
   Delta borderScanStep = {5, 5};
   int32_t borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
   Wipes postWipes = {.count = 0};
   Rectangle outsideBorderscanMask[MAX_PAGES]; // set by --layout
   size_t outsideBorderscanMaskCount = 0;
-  int blackfilterScanDirections = (1 << HORIZONTAL) | (1 << VERTICAL);
+  Direction blackfilterScanDirections = DIRECTION_BOTH;
   RectangleSize blackfilterScanSize = {20, 20};
   int32_t blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
   Delta blackfilterScanStep = {5, 5};
@@ -210,8 +210,8 @@ int main(int argc, char *argv[]) {
   MilsSize sheetSizePhysical = {-1, -1, false};
   int preRotate = 0;
   int postRotate = 0;
-  int preMirror = 0;
-  int postMirror = 0;
+  Direction preMirror = DIRECTION_NONE;
+  Direction postMirror = DIRECTION_NONE;
   MilsDelta preShiftPhysical = {0, 0, false};
   MilsDelta postShiftPhysical = {0, 0, false};
   MilsSize sizePhysical = {-1, -1, false};
@@ -466,7 +466,7 @@ int main(int argc, char *argv[]) {
 
     case OPT_SHEET_BACKGROUND:
       if (!parse_color(optarg, &sheetBackgroundPixel)) {
-        errOutput("invalid value for sheet-background: %s", optarg);
+        errOutput("invalid value for sheet-background: '%s'", optarg);
       }
       break;
 
@@ -501,12 +501,15 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'M':
-      preMirror =
-          parseDirections(optarg); // s = "v", "v,h", "vertical,horizontal", ...
+      if (!parse_direction(optarg, &preMirror)) {
+        errOutput("unable to parse pre-mirror directions: '%s'", optarg);
+      };
       break;
 
     case OPT_POST_MIRROR:
-      postMirror = parseDirections(optarg);
+      if (!parse_direction(optarg, &postMirror)) {
+        errOutput("unable to parse post-mirror directions: '%s'", optarg);
+      }
       break;
 
     case OPT_PRE_SHIFT:
@@ -593,25 +596,25 @@ int main(int argc, char *argv[]) {
 
     case OPT_MIDDLE_WIPE:
       if (!parse_symmetric_integers(optarg, &middleWipe[0], &middleWipe[1])) {
-        errOutput("unable to parse middle-wipe: %s", optarg);
+        errOutput("unable to parse middle-wipe: '%s'", optarg);
       }
       break;
 
     case 'B':
       if (!parse_border(optarg, &border)) {
-        errOutput("unable to parse border: %s", optarg);
+        errOutput("unable to parse border: '%s'", optarg);
       }
       break;
 
     case OPT_PRE_BORDER:
       if (!parse_border(optarg, &preBorder)) {
-        errOutput("unable to parse pre-border: %s", optarg);
+        errOutput("unable to parse pre-border: '%s'", optarg);
       }
       break;
 
     case OPT_POST_BORDER:
       if (!parse_border(optarg, &postBorder)) {
-        errOutput("unable to parse post-border: %s", optarg);
+        errOutput("unable to parse post-border: '%s'", optarg);
       }
       break;
 
@@ -620,12 +623,14 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BLACK_FILTER_SCAN_DIRECTION:
-      blackfilterScanDirections = parseDirections(optarg);
+      if (!parse_direction(optarg, &blackfilterScanDirections)) {
+        errOutput("unable to parse blackfilter-scan-direction: '%s'", optarg);
+      }
       break;
 
     case OPT_BLACK_FILTER_SCAN_SIZE:
       if (!parse_rectangle_size(optarg, &blackfilterScanSize)) {
-        errOutput("unable to parse blackfilter-scan-size: %s", optarg);
+        errOutput("unable to parse blackfilter-scan-size: '%s'", optarg);
       }
       break;
 
@@ -633,13 +638,13 @@ int main(int argc, char *argv[]) {
       if (!parse_symmetric_integers(optarg, &blackfilterScanDepth[0],
                                     &blackfilterScanDepth[1]) ||
           blackfilterScanDepth[0] <= 0 || blackfilterScanDepth[1] <= 0) {
-        errOutput("unable to parse blackfilter-scan-depth: %s", optarg);
+        errOutput("unable to parse blackfilter-scan-depth: '%s'", optarg);
       }
       break;
 
     case OPT_BLACK_FILTER_SCAN_STEP:
       if (!parse_scan_step(optarg, &blackfilterScanStep)) {
-        errOutput("unable to parse blackfilter-scan-step: %s", optarg);
+        errOutput("unable to parse blackfilter-scan-step: '%s'", optarg);
       }
       break;
 
@@ -679,13 +684,13 @@ int main(int argc, char *argv[]) {
 
     case OPT_BLUR_FILTER_SIZE:
       if (!parse_rectangle_size(optarg, &blurfilterScanSize)) {
-        errOutput("unable to parse blurfilter-scan-size: %s", optarg);
+        errOutput("unable to parse blurfilter-scan-size: '%s'", optarg);
       }
       break;
 
     case OPT_BLUR_FILTER_STEP:
       if (!parse_scan_step(optarg, &blurfilterScanStep)) {
-        errOutput("unable to parse blurfilter-scan-step: %s", optarg);
+        errOutput("unable to parse blurfilter-scan-step: '%s'", optarg);
       }
       break;
 
@@ -699,13 +704,13 @@ int main(int argc, char *argv[]) {
 
     case OPT_GRAY_FILTER_SIZE:
       if (!parse_rectangle_size(optarg, &grayfilterScanSize)) {
-        errOutput("unable to parse grayfilter-scan-size: %s", optarg);
+        errOutput("unable to parse grayfilter-scan-size: '%s'", optarg);
       }
       break;
 
     case OPT_GRAY_FILTER_STEP:
       if (!parse_scan_step(optarg, &grayfilterScanStep)) {
-        errOutput("unable to parse grayfilter-scan-step: %s", optarg);
+        errOutput("unable to parse grayfilter-scan-step: '%s'", optarg);
       }
       break;
 
@@ -718,12 +723,14 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_MASK_SCAN_DIRECTION:
-      maskScanDirections = parseDirections(optarg);
+      if (!parse_direction(optarg, &maskScanDirections)) {
+        errOutput("unable to parse mask-scan-direction: '%s'", optarg);
+      }
       break;
 
     case OPT_MASK_SCAN_SIZE:
       if (!parse_rectangle_size(optarg, &maskScanSize)) {
-        errOutput("unable to parse mask-scan-size: %s", optarg);
+        errOutput("unable to parse mask-scan-size: '%s'", optarg);
       }
       break;
 
@@ -731,7 +738,7 @@ int main(int argc, char *argv[]) {
       if (!parse_symmetric_integers(optarg, &maskScanDepth[0],
                                     &maskScanDepth[1]) ||
           maskScanDepth[0] <= 0 || maskScanDepth[1] <= 0) {
-        errOutput("unable to parse mask-scan-depth: %s", optarg);
+        errOutput("unable to parse mask-scan-depth: '%s'", optarg);
       }
       break;
 
@@ -745,7 +752,7 @@ int main(int argc, char *argv[]) {
       if (!parse_symmetric_floats(optarg, &maskScanThreshold[0],
                                   &maskScanThreshold[1]) ||
           maskScanThreshold[0] <= 0 || maskScanThreshold[1] <= 0) {
-        errOutput("unable to parse mask-scan-threshold: %s", optarg);
+        errOutput("unable to parse mask-scan-threshold: '%s'", optarg);
       }
       break;
 
@@ -761,7 +768,7 @@ int main(int argc, char *argv[]) {
 
     case OPT_MASK_COLOR:
       if (!parse_color(optarg, &maskColorPixel)) {
-        errOutput("invalid value for mask-color: %s", optarg);
+        errOutput("invalid value for mask-color: '%s'", optarg);
       }
       break;
 
@@ -802,18 +809,20 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BORDER_SCAN_DIRECTION:
-      borderScanDirections = parseDirections(optarg);
+      if (!parse_direction(optarg, &borderScanDirections)) {
+        errOutput("unable to parse border-scan-direction: '%s'", optarg);
+      }
       break;
 
     case OPT_BORDER_SCAN_SIZE:
       if (!parse_rectangle_size(optarg, &borderScanSize)) {
-        errOutput("unable to parse border-scan-size: %s", optarg);
+        errOutput("unable to parse border-scan-size: '%s'", optarg);
       }
       break;
 
     case OPT_BORDER_SCAN_STEP:
       if (!parse_scan_step(optarg, &borderScanStep)) {
-        errOutput("unable to parse border-scan-step: %s", optarg);
+        errOutput("unable to parse border-scan-step: '%s'", optarg);
       }
       break;
 
@@ -821,7 +830,7 @@ int main(int argc, char *argv[]) {
       if (!parse_symmetric_integers(optarg, &borderScanThreshold[0],
                                     &borderScanThreshold[1]) ||
           borderScanThreshold[0] <= 0 || borderScanThreshold <= 0) {
-        errOutput("unable to parse border-scan-threshold: %s", optarg);
+        errOutput("unable to parse border-scan-threshold: '%s'", optarg);
       }
       break;
 
@@ -1205,12 +1214,11 @@ int main(int argc, char *argv[]) {
       previousSize = inputSize;
 
       // pre-mirroring
-      if (preMirror != 0) {
+      if (preMirror.horizontal || preMirror.vertical) {
         verboseLog(VERBOSE_NORMAL, "pre-mirroring %s\n",
-                   getDirections(preMirror));
+                   direction_to_string(preMirror));
 
-        mirror(sheet, !!(preMirror & (1 << HORIZONTAL)),
-               !!(preMirror & (1 << VERTICAL)));
+        mirror(sheet, preMirror);
       }
 
       // pre-shifting
@@ -1253,9 +1261,7 @@ int main(int argc, char *argv[]) {
         if (preRotate != 0) {
           printf("pre-rotate: %d\n", preRotate);
         }
-        if (preMirror != 0) {
-          printf("pre-mirror: %s\n", getDirections(preMirror));
-        }
+        printf("pre-mirror: %s\n", direction_to_string(preMirror));
         if (options.pre_shift.horizontal != 0 ||
             options.pre_shift.vertical != 0) {
           printf("pre-shift: [%" PRId32 ",%" PRId32 "]\n",
@@ -1299,7 +1305,7 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_blackfilter_multi_index.count != -1) {
           printf("blackfilter-scan-direction: %s\n",
-                 getDirections(blackfilterScanDirections));
+                 direction_to_string(blackfilterScanDirections));
           printf("blackfilter-scan-size: ");
           print_rectangle_size(blackfilterScanSize);
           printf("\nblackfilter-scan-depth: [%d,%d]\n", blackfilterScanDepth[0],
@@ -1365,7 +1371,7 @@ int main(int argc, char *argv[]) {
           }
           printf("\n");
           printf("mask-scan-direction: %s\n",
-                 getDirections(maskScanDirections));
+                 direction_to_string(maskScanDirections));
           printf("mask-scan-size: ");
           print_rectangle_size(maskScanSize);
           printf("\nmask-scan-depth: [%d,%d]\n", maskScanDepth[0],
@@ -1428,7 +1434,7 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_border_scan_multi_index.count != -1) {
           printf("border-scan-direction: %s\n",
-                 getDirections(borderScanDirections));
+                 direction_to_string(borderScanDirections));
           printf("border-scan-size: ");
           print_rectangle_size(borderScanSize);
           printf("\nborder-scan-step: ");
@@ -1459,9 +1465,7 @@ int main(int argc, char *argv[]) {
           print_border(postBorder);
           printf("\n");
         }
-        if (postMirror != 0) {
-          printf("post-mirror: %s\n", getDirections(postMirror));
-        }
+        printf("post-mirror: %s\n", direction_to_string(postMirror));
         if (options.post_shift.horizontal != 0 ||
             options.post_shift.vertical != 0) {
           printf("post-shift: [%" PRId32 ",%" PRId32 "]\n",
@@ -1839,11 +1843,10 @@ int main(int argc, char *argv[]) {
       }
 
       // post-mirroring
-      if (postMirror != 0) {
+      if (postMirror.horizontal || postMirror.vertical) {
         verboseLog(VERBOSE_NORMAL, "post-mirroring %s\n",
-                   getDirections(postMirror));
-        mirror(sheet, !!(postMirror & (1 << HORIZONTAL)),
-               !!(postMirror & (1 << VERTICAL)));
+                   direction_to_string(postMirror));
+        mirror(sheet, postMirror);
       }
 
       // post-shifting

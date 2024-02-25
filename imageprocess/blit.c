@@ -245,15 +245,15 @@ void flip_rotate_90(Image *pImage, RotationDirection direction) {
   replace_image(pImage, &newimage);
 }
 
-void mirror(Image image, bool horizontal, bool vertical) {
+void mirror(Image image, Direction direction) {
   Rectangle source = {{POINT_ORIGIN, POINT_INFINITY}};
   RectangleSize image_size = size_of_image(image);
 
-  if (horizontal && !vertical) {
+  if (direction.horizontal && !direction.vertical) {
     source.vertex[1].x = (image_size.width - 1) / 2;
   }
 
-  if (vertical) {
+  if (direction.vertical) {
     source.vertex[1].y = (image_size.height - 1) / 2;
   }
 
@@ -261,15 +261,15 @@ void mirror(Image image, bool horizontal, bool vertical) {
 
   // Cannot use scan_rectangle() because of the midpoint turn.
   for (int32_t y = source.vertex[0].y; y <= source.vertex[1].y; y++) {
-    int32_t yy = vertical ? image_size.height - y - 1 : y;
+    int32_t yy = direction.vertical ? image_size.height - y - 1 : y;
     // Special case: the last middle line in odd-lined images that are
     // to be mirrored both horizontally and vertically.
-    if (vertical && horizontal && y == yy) {
+    if (direction.vertical && direction.horizontal && y == yy) {
       source.vertex[1].x = (image_size.width - 1) / 2;
     }
 
     for (int32_t x = 0; x <= source.vertex[1].x; x++) {
-      int32_t xx = horizontal ? image_size.width - x - 1 : x;
+      int32_t xx = direction.horizontal ? image_size.width - x - 1 : x;
 
       Point point1 = {x, y};
       Point point2 = {xx, yy};

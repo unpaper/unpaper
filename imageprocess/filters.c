@@ -19,7 +19,7 @@
 
 BlackfilterParameters validate_blackfilter_parameters(
     RectangleSize scan_size, Delta scan_step, uint32_t scan_depth_h,
-    uint32_t scan_depth_v, int8_t scan_directions, float threshold,
+    uint32_t scan_depth_v, Direction scan_direction, float threshold,
     int32_t intensity, size_t exclusions_count, Rectangle *exclusions) {
   return (BlackfilterParameters){
       .scan_size = scan_size,
@@ -30,8 +30,7 @@ BlackfilterParameters validate_blackfilter_parameters(
               .vertical = scan_depth_v,
           },
 
-      .scan_horizontal = !!(scan_directions & 1 << HORIZONTAL),
-      .scan_vertical = !!(scan_directions & 1 << VERTICAL),
+      .scan_direction = scan_direction,
 
       .abs_threshold = UINT8_MAX * threshold,
       .intensity = intensity,
@@ -105,7 +104,7 @@ static void blackfilter_scan(Image image, BlackfilterParameters params,
  */
 void blackfilter(Image image, BlackfilterParameters params) {
   // Left-to-Right scan.
-  if (params.scan_horizontal) {
+  if (params.scan_direction.horizontal) {
     blackfilter_scan(
         image, params, (Delta){params.scan_step.horizontal, 0},
         (RectangleSize){params.scan_size.width, params.scan_depth.vertical},
@@ -113,7 +112,7 @@ void blackfilter(Image image, BlackfilterParameters params) {
   }
 
   // To-to-Bottom scan.
-  if (params.scan_vertical) {
+  if (params.scan_direction.vertical) {
     blackfilter_scan(
         image, params, (Delta){0, params.scan_step.vertical},
         (RectangleSize){params.scan_depth.horizontal, params.scan_size.height},

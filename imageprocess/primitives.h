@@ -38,6 +38,20 @@ Point shift_point(Point p, Delta d);
   (Delta) { 1, 0 }
 
 typedef struct {
+  bool horizontal;
+  bool vertical;
+} Direction;
+
+#define DIRECTION_NONE                                                         \
+  (Direction) { .horizontal = false, .vertical = false }
+#define DIRECTION_HORIZONTAL                                                   \
+  (Direction) { .horizontal = true, .vertical = false }
+#define DIRECTION_VERTICAL                                                     \
+  (Direction) { .horizontal = false, .vertical = true }
+#define DIRECTION_BOTH                                                         \
+  (Direction) { .horizontal = true, .vertical = true }
+
+typedef struct {
   uint8_t r;
   uint8_t g;
   uint8_t b;
