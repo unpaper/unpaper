@@ -13,7 +13,7 @@
 #include "parse.h"
 
 typedef struct {
-  LAYOUTS layout;
+  Layout layout;
   int start_sheet;
   int end_sheet;
   int start_input;
@@ -82,5 +82,7 @@ const char *direction_to_string(Direction direction);
 
 bool parse_edges(const char *str, Edges *edges);
 int print_edges(Edges edges);
+
+bool parse_layout(const char *str, Layout *layout);
 
 bool parse_interpolate(const char *str, Interpolation *interpolation);

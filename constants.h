@@ -35,4 +35,4 @@ typedef enum {
   LAYOUT_SINGLE,
   LAYOUT_DOUBLE,
   LAYOUTS_COUNT
-} LAYOUTS;
+} Layout;
