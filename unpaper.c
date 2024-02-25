@@ -953,16 +953,8 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_INTERPOLATE:
-      if (strcmp(optarg, "nearest") == 0) {
-        interpolateType = INTERP_NN;
-      } else if (strcmp(optarg, "linear") == 0) {
-        interpolateType = INTERP_LINEAR;
-      } else if (strcmp(optarg, "cubic") == 0) {
-        interpolateType = INTERP_CUBIC;
-      } else {
-        fprintf(stderr,
-                "Could not parse --interpolate, using cubic as default.\n");
-        interpolateType = INTERP_CUBIC;
+      if (!parse_interpolate(optarg, &interpolateType)) {
+        errOutput("unable to parse interpolate: '%s'", optarg);
       }
       break;
     }

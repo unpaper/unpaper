@@ -326,3 +326,24 @@ int print_edges(Edges edges) {
       edges.right ? "right" : "", (edges.right && edges.bottom) ? "," : "",
       edges.bottom ? "bottom" : "");
 }
+
+static const struct {
+  const char name[8];
+  Interpolation interpolation;
+} INTERPOLATIONS[] = {
+    {"nearest", INTERP_NN},
+    {"linear", INTERP_LINEAR},
+    {"cubic", INTERP_CUBIC},
+};
+
+bool parse_interpolate(const char *str, Interpolation *interpolation) {
+  for (size_t j = 0; j < sizeof(INTERPOLATIONS) / sizeof(INTERPOLATIONS[0]);
+       j++) {
+    if (strcasecmp(str, INTERPOLATIONS[j].name) == 0) {
+      *interpolation = INTERPOLATIONS[j].interpolation;
+      return true;
+    }
+  }
+
+  return false;
+}

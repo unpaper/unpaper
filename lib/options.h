@@ -7,6 +7,7 @@
 #include <stdbool.h>
 
 #include "constants.h"
+#include "imageprocess/interpolate.h"
 #include "imageprocess/masks.h"
 #include "imageprocess/primitives.h"
 #include "parse.h"
@@ -81,3 +82,5 @@ const char *direction_to_string(Direction direction);
 
 bool parse_edges(const char *str, Edges *edges);
 int print_edges(Edges edges);
+
+bool parse_interpolate(const char *str, Interpolation *interpolation);
