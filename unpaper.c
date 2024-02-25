@@ -1551,20 +1551,23 @@ int main(int argc, char *argv[]) {
           points[pointCount++] =
               (Point){sheet.frame->width / 2, sheet.frame->height / 2};
         }
-        if (maskScanMaximum[WIDTH] == -1) {
-          maskScanMaximum[WIDTH] = sheet.frame->width;
+        if (options.mask_detection_parameters.maximum_width == -1) {
+          options.mask_detection_parameters.maximum_width = sheet.frame->width;
         }
-        if (maskScanMaximum[HEIGHT] == -1) {
-          maskScanMaximum[HEIGHT] = sheet.frame->height;
+        if (options.mask_detection_parameters.maximum_height == -1) {
+          options.mask_detection_parameters.maximum_height =
+              sheet.frame->height;
         }
         // avoid inner half of the sheet to be blackfilter-detectable
-        if (blackfilterExcludeCount ==
-            0) { // no manual settings, use auto-values
+        if (options.blackfilter_parameters.exclusions_count == 0) {
+          // no manual settings, use auto-values
           RectangleSize sheetSize = size_of_image(sheet);
-          blackfilterExclude[blackfilterExcludeCount++] = rectangle_from_size(
-              (Point){sheetSize.width / 4, sheetSize.height / 4},
-              (RectangleSize){.width = sheetSize.width / 2,
-                              .height = sheetSize.height / 2});
+          options.blackfilter_parameters
+              .exclusions[options.blackfilter_parameters.exclusions_count++] =
+              rectangle_from_size(
+                  (Point){sheetSize.width / 4, sheetSize.height / 4},
+                  (RectangleSize){.width = sheetSize.width / 2,
+                                  .height = sheetSize.height / 2});
         }
         // set single outside border to start scanning for final border-scan
         if (outsideBorderscanMaskCount ==
@@ -1584,11 +1587,13 @@ int main(int argc, char *argv[]) {
               (Point){sheet.frame->width - sheet.frame->width / 4,
                       sheet.frame->height / 2};
         }
-        if (maskScanMaximum[WIDTH] == -1) {
-          maskScanMaximum[WIDTH] = sheet.frame->width / 2;
+        if (options.mask_detection_parameters.maximum_width == -1) {
+          options.mask_detection_parameters.maximum_width =
+              sheet.frame->width / 2;
         }
-        if (maskScanMaximum[HEIGHT] == -1) {
-          maskScanMaximum[HEIGHT] = sheet.frame->height;
+        if (options.mask_detection_parameters.maximum_height == -1) {
+          options.mask_detection_parameters.maximum_height =
+              sheet.frame->height;
         }
         if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
           wipes.areas[wipes.count++] = (Rectangle){{
@@ -1597,8 +1602,8 @@ int main(int argc, char *argv[]) {
           }};
         }
         // avoid inner half of each page to be blackfilter-detectable
-        if (blackfilterExcludeCount ==
-            0) { // no manual settings, use auto-values
+        if (options.blackfilter_parameters.exclusions_count == 0) {
+          // no manual settings, use auto-values
           RectangleSize sheetSize = size_of_image(sheet);
           RectangleSize filterSize = {
               .width = sheetSize.width / 4,
@@ -1608,9 +1613,11 @@ int main(int argc, char *argv[]) {
           Point secondFilterOrigin =
               shift_point(firstFilterOrigin, (Delta){sheet.frame->width / 2});
 
-          blackfilterExclude[blackfilterExcludeCount++] =
+          options.blackfilter_parameters
+              .exclusions[options.blackfilter_parameters.exclusions_count++] =
               rectangle_from_size(firstFilterOrigin, filterSize);
-          blackfilterExclude[blackfilterExcludeCount++] =
+          options.blackfilter_parameters
+              .exclusions[options.blackfilter_parameters.exclusions_count++] =
               rectangle_from_size(secondFilterOrigin, filterSize);
         }
         // set two outside borders to start scanning for final border-scan
@@ -1626,11 +1633,11 @@ int main(int argc, char *argv[]) {
       }
       // if maskScanMaximum still unset (no --layout specified), set to full
       // sheet size now
-      if (maskScanMinimum[WIDTH] == -1) {
-        maskScanMaximum[WIDTH] = sheet.frame->width;
+      if (options.mask_detection_parameters.maximum_width == -1) {
+        options.mask_detection_parameters.maximum_width = sheet.frame->width;
       }
-      if (maskScanMinimum[HEIGHT] == -1) {
-        maskScanMaximum[HEIGHT] = sheet.frame->height;
+      if (options.mask_detection_parameters.maximum_height == -1) {
+        options.mask_detection_parameters.maximum_height = sheet.frame->height;
       }
 
       // pre-wipe
