@@ -70,8 +70,14 @@ void align_mask(Image image, const Rectangle inside_area,
 void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
                  Pixel color);
 
-void apply_wipes(Image image, Rectangle wipes[], size_t wipes_count,
-                 Pixel color);
+#define MAX_WIPES MAX_MASKS
+
+typedef struct {
+  size_t count;
+  Rectangle areas[MAX_WIPES];
+} Wipes;
+
+void apply_wipes(Image image, Wipes wipes, Pixel color);
 
 typedef struct {
   int32_t left;

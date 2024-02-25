@@ -144,6 +144,25 @@ int print_delta(Delta delta) {
   return printf("[%" PRId32 ",%" PRId32 "] ", delta.horizontal, delta.vertical);
 }
 
+/**
+ * Parse, if space is available, a wipe definition into a list of wipes.
+ */
+bool parse_wipe(const char *optname, const char *str, Wipes *wipes) {
+  if (wipes->count >= (sizeof(wipes->areas) / sizeof(wipes->areas[0]))) {
+    fprintf(stderr, "%s: maximum number of wipes (%zd) exceeded, ignoring '%s'",
+            optname, (sizeof(wipes->areas) / sizeof(wipes->areas[0])), str);
+    return false;
+  }
+
+  if (!parse_rectangle(str, &wipes->areas[wipes->count])) {
+    fprintf(stderr, "%s: invalid wipe definition, ignoring '%s'", optname, str);
+    return false;
+  }
+
+  wipes->count++;
+  return true;
+}
+
 bool parse_border(const char *str, Border *border) {
   if (sscanf(str, "%" SCNd32 ",%" SCNd32 ",%" SCNd32 ",%" SCNd32 "",
              &border->left, &border->top, &border->right,

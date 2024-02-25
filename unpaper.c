@@ -181,13 +181,10 @@ int main(int argc, char *argv[]) {
   Rectangle masks[MAX_MASKS];
   size_t preMaskCount = 0;
   Rectangle preMasks[MAX_MASKS];
-  size_t wipeCount = 0;
-  Rectangle wipe[MAX_MASKS];
   int32_t middleWipe[2] = {0, 0};
-  size_t preWipeCount = 0;
-  Rectangle preWipe[MAX_MASKS];
-  size_t postWipeCount = 0;
-  Rectangle postWipe[MAX_MASKS];
+  Wipes wipes = {.count = 0};
+  Wipes preWipes = {.count = 0};
+  Wipes postWipes = {.count = 0};
   Rectangle outsideBorderscanMask[MAX_PAGES]; // set by --layout
   size_t outsideBorderscanMaskCount = 0;
   int blackfilterScanDirections = (1 << HORIZONTAL) | (1 << VERTICAL);
@@ -583,40 +580,15 @@ int main(int argc, char *argv[]) {
       break;
 
     case 'W':
-      if (wipeCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &wipe[wipeCount])) {
-          wipeCount++;
-        }
-      } else {
-        fprintf(stderr,
-                "maximum number of wipes (%d) exceeded, ignoring mask %s\n",
-                MAX_MASKS, optarg);
-      }
+      parse_wipe("wipe", optarg, &wipes);
       break;
 
     case OPT_PRE_WIPE:
-      if (preWipeCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &preWipe[preWipeCount])) {
-          preWipeCount++;
-        }
-      } else {
-        fprintf(stderr,
-                "maximum number of pre-wipes (%d) exceeded, ignoring mask %s\n",
-                MAX_MASKS, optarg);
-      }
+      parse_wipe("pre-wipe", optarg, &preWipes);
       break;
 
     case OPT_POST_WIPE:
-      if (postWipeCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &postWipeCount[postWipe])) {
-          postWipeCount++;
-        }
-      } else {
-        fprintf(
-            stderr,
-            "maximum number of post-wipes (%d) exceeded, ignoring mask %s\n",
-            MAX_MASKS, optarg);
-      }
+      parse_wipe("post-wipe", optarg, &postWipes);
       break;
 
     case OPT_MIDDLE_WIPE:
@@ -1289,10 +1261,10 @@ int main(int argc, char *argv[]) {
           printf("pre-shift: [%" PRId32 ",%" PRId32 "]\n",
                  options.pre_shift.horizontal, options.pre_shift.vertical);
         }
-        if (preWipeCount > 0) {
+        if (preWipes.count > 0) {
           printf("pre-wipe: ");
-          for (int i = 0; i < preWipeCount; i++) {
-            print_rectangle(preWipe[i]);
+          for (size_t i = 0; i < preWipes.count; i++) {
+            print_rectangle(preWipes.areas[i]);
           }
           printf("\n");
         }
@@ -1432,10 +1404,10 @@ int main(int argc, char *argv[]) {
           printf("deskew-scan DISABLED for all sheets.\n");
         }
         if (options.no_wipe_multi_index.count != -1) {
-          if (wipeCount > 0) {
+          if (wipes.count > 0) {
             printf("wipe areas: ");
-            for (int i = 0; i < wipeCount; i++) {
-              print_rectangle(wipe[i]);
+            for (size_t i = 0; i < wipes.count; i++) {
+              print_rectangle(wipes.areas[i]);
             }
             printf("\n");
           }
@@ -1475,10 +1447,10 @@ int main(int argc, char *argv[]) {
         } else {
           printf("border-scan DISABLED for all sheets.\n");
         }
-        if (postWipeCount > 0) {
+        if (postWipes.count > 0) {
           printf("post-wipe: ");
-          for (int i = 0; i < postWipeCount; i++) {
-            print_rectangle(postWipe[i]);
+          for (size_t i = 0; i < postWipes.count; i++) {
+            print_rectangle(postWipes.areas[i]);
           }
           printf("\n");
         }
@@ -1607,7 +1579,7 @@ int main(int argc, char *argv[]) {
           maskScanMaximum[HEIGHT] = sheet.frame->height;
         }
         if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
-          wipe[wipeCount++] = (Rectangle){{
+          wipes.areas[wipes.count++] = (Rectangle){{
               {sheet.frame->width / 2 - middleWipe[0], 0},
               {sheet.frame->width / 2 + middleWipe[1], sheet.frame->height - 1},
           }};
@@ -1652,7 +1624,7 @@ int main(int argc, char *argv[]) {
       // pre-wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, preWipe, preWipeCount, maskColorPixel);
+        apply_wipes(sheet, preWipes, maskColorPixel);
       }
 
       // pre-border
@@ -1813,7 +1785,7 @@ int main(int argc, char *argv[]) {
       // explicit wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, wipe, wipeCount, maskColorPixel);
+        apply_wipes(sheet, wipes, maskColorPixel);
       } else {
         verboseLog(VERBOSE_MORE, "+ wipe DISABLED for sheet %d\n", nr);
       }
@@ -1857,7 +1829,7 @@ int main(int argc, char *argv[]) {
       // post-wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, postWipe, postWipeCount, maskColorPixel);
+        apply_wipes(sheet, postWipes, maskColorPixel);
       }
 
       // post-border
