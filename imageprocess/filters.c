@@ -17,11 +17,14 @@
  * Blackfilter *
  ***************/
 
-BlackfilterParameters validate_blackfilter_parameters(
-    RectangleSize scan_size, Delta scan_step, uint32_t scan_depth_h,
-    uint32_t scan_depth_v, Direction scan_direction, float threshold,
-    int32_t intensity, size_t exclusions_count, Rectangle *exclusions) {
-  return (BlackfilterParameters){
+bool validate_blackfilter_parameters(BlackfilterParameters *params,
+                                     RectangleSize scan_size, Delta scan_step,
+                                     uint32_t scan_depth_h,
+                                     uint32_t scan_depth_v,
+                                     Direction scan_direction, float threshold,
+                                     int32_t intensity, size_t exclusions_count,
+                                     Rectangle *exclusions) {
+  *params = (BlackfilterParameters){
       .scan_size = scan_size,
       .scan_step = scan_step,
       .scan_depth =
@@ -38,6 +41,8 @@ BlackfilterParameters validate_blackfilter_parameters(
       .exclusions_count = exclusions_count,
       .exclusions = exclusions,
   };
+
+  return true;
 }
 
 static void blackfilter_scan(Image image, BlackfilterParameters params,
@@ -124,14 +129,16 @@ void blackfilter(Image image, BlackfilterParameters params) {
  * Blurfilter *
  **************/
 
-BlurfilterParameters validate_blurfilter_parameters(RectangleSize scan_size,
-                                                    Delta scan_step,
-                                                    float intensity) {
-  return (BlurfilterParameters){
+bool validate_blurfilter_parameters(BlurfilterParameters *params,
+                                    RectangleSize scan_size, Delta scan_step,
+                                    float intensity) {
+  *params = (BlurfilterParameters){
       .scan_size = scan_size,
       .scan_step = scan_step,
       .intensity = intensity,
   };
+
+  return true;
 }
 
 uint64_t blurfilter(Image image, BlurfilterParameters params,
@@ -328,14 +335,16 @@ uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level) {
  * Grayfilter *
  ***************/
 
-GrayfilterParameters validate_grayfilter_parameters(RectangleSize scan_size,
-                                                    Delta scan_step,
-                                                    float threshold) {
-  return (GrayfilterParameters){
+bool validate_grayfilter_parameters(GrayfilterParameters *params,
+                                    RectangleSize scan_size, Delta scan_step,
+                                    float threshold) {
+  *params = (GrayfilterParameters){
       .scan_size = scan_size,
       .scan_step = scan_step,
       .abs_threshold = UINT8_MAX * threshold,
   };
+
+  return true;
 }
 
 uint64_t grayfilter(Image image, GrayfilterParameters params) {

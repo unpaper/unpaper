@@ -989,30 +989,46 @@ int main(int argc, char *argv[]) {
   options.abs_black_threshold = WHITE * (1.0 - blackThreshold);
   options.abs_white_threshold = WHITE * (whiteThreshold);
 
-  DeskewParameters deskewParams = validate_deskew_parameters(
-      deskewScanRange, deskewScanStep, deskewScanDeviation, deskewScanSize,
-      deskewScanDepth, deskewScanEdges);
-  MaskDetectionParameters maskDetectionParams =
-      validate_mask_detection_parameters(
-          maskScanDirections, maskScanSize, maskScanDepth, maskScanStep,
-          maskScanThreshold, maskScanMinimum, maskScanMaximum);
-  MaskAlignmentParameters maskAlignmentParams =
-      validate_mask_alignment_parameters(
-          borderAlign, mils_delta_to_pixels(borderAlignMarginPhysical, ppi));
-  BorderScanParameters borderScanParams =
-      validate_border_scan_parameters(borderScanDirections, borderScanSize,
-                                      borderScanStep, borderScanThreshold);
-  GrayfilterParameters grayfilterParams = validate_grayfilter_parameters(
-      grayfilterScanSize, grayfilterScanStep, grayfilterThreshold);
-  // This will be reachable memory at the end of the program, we don't need to
-  // free it.
-  BlackfilterParameters blackfilterParams = validate_blackfilter_parameters(
-      blackfilterScanSize, blackfilterScanStep,
-      blackfilterScanDepth[HORIZONTAL], blackfilterScanDepth[VERTICAL],
-      blackfilterScanDirections, blackfilterScanThreshold, blackfilterIntensity,
-      blackfilterExcludeCount, blackfilterExclude);
-  BlurfilterParameters blurfilterParams = validate_blurfilter_parameters(
-      blurfilterScanSize, blurfilterScanStep, blurfilterIntensity);
+  if (!validate_deskew_parameters(&options.deskew_parameters, deskewScanRange,
+                                  deskewScanStep, deskewScanDeviation,
+                                  deskewScanSize, deskewScanDepth,
+                                  deskewScanEdges)) {
+    errOutput("deskew parameters are not valid.");
+  }
+  if (!validate_mask_detection_parameters(
+          &options.mask_detection_parameters, maskScanDirections, maskScanSize,
+          maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum,
+          maskScanMaximum)) {
+    errOutput("mask detection parameters are not valid.");
+  }
+  if (!validate_mask_alignment_parameters(
+          &options.mask_alignment_parameters, borderAlign,
+          mils_delta_to_pixels(borderAlignMarginPhysical, ppi))) {
+    errOutput("mask alignment parameters are not valid.");
+  };
+  if (!validate_border_scan_parameters(&options.border_scan_parameters,
+                                       borderScanDirections, borderScanSize,
+                                       borderScanStep, borderScanThreshold)) {
+    errOutput("border scan parameters are not valid.");
+  };
+  if (!validate_grayfilter_parameters(&options.grayfilter_parameters,
+                                      grayfilterScanSize, grayfilterScanStep,
+                                      grayfilterThreshold)) {
+    errOutput("grayfilter parameters are not valid.");
+  }
+  if (!validate_blackfilter_parameters(
+          &options.blackfilter_parameters, blackfilterScanSize,
+          blackfilterScanStep, blackfilterScanDepth[HORIZONTAL],
+          blackfilterScanDepth[VERTICAL], blackfilterScanDirections,
+          blackfilterScanThreshold, blackfilterIntensity,
+          blackfilterExcludeCount, blackfilterExclude)) {
+    errOutput("blackfilter parameters are not valid.");
+  }
+  if (!validate_blurfilter_parameters(&options.blurfilter_parameters,
+                                      blurfilterScanSize, blurfilterScanStep,
+                                      blurfilterIntensity)) {
+    errOutput("blurfilter parameters are not valid.");
+  }
 
   RectangleSize inputSize = {-1, -1};
   RectangleSize previousSize = {-1, -1};
@@ -1440,8 +1456,8 @@ int main(int argc, char *argv[]) {
           printf("border-align: ");
           print_edges(borderAlign);
           printf("border-margin: [%d,%d]\n",
-                 maskAlignmentParams.margin.horizontal,
-                 maskAlignmentParams.margin.vertical);
+                 options.mask_alignment_parameters.margin.horizontal,
+                 options.mask_alignment_parameters.margin.vertical);
         } else {
           printf("border-scan DISABLED for all sheets.\n");
         }
@@ -1633,7 +1649,7 @@ int main(int argc, char *argv[]) {
       if (!isExcluded(nr, options.no_blackfilter_multi_index,
                       options.ignore_multi_index)) {
         saveDebug("_before-blackfilter%d.pnm", nr, sheet);
-        blackfilter(sheet, blackfilterParams);
+        blackfilter(sheet, options.blackfilter_parameters);
         saveDebug("_after-blackfilter%d.pnm", nr, sheet);
       } else {
         verboseLog(VERBOSE_MORE, "+ blackfilter DISABLED for sheet %d\n", nr);
@@ -1661,8 +1677,8 @@ int main(int argc, char *argv[]) {
         verboseLog(VERBOSE_NORMAL, "blur-filter...");
 
         saveDebug("_before-blurfilter%d.pnm", nr, sheet);
-        uint64_t filterResult =
-            blurfilter(sheet, blurfilterParams, options.abs_white_threshold);
+        uint64_t filterResult = blurfilter(sheet, options.blurfilter_parameters,
+                                           options.abs_white_threshold);
         saveDebug("_after-blurfilter%d.pnm", nr, sheet);
         verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
                    filterResult);
@@ -1674,7 +1690,8 @@ int main(int argc, char *argv[]) {
       // mask-detection
       if (!isExcluded(nr, options.no_mask_scan_multi_index,
                       options.ignore_multi_index)) {
-        detect_masks(sheet, maskDetectionParams, points, pointCount, masks);
+        detect_masks(sheet, options.mask_detection_parameters, points,
+                     pointCount, masks);
       } else {
         verboseLog(VERBOSE_MORE, "+ mask-scan DISABLED for sheet %d\n", nr);
       }
@@ -1692,7 +1709,8 @@ int main(int argc, char *argv[]) {
         verboseLog(VERBOSE_NORMAL, "gray-filter...");
 
         saveDebug("_before-grayfilter%d.pnm", nr, sheet);
-        uint64_t filterResult = grayfilter(sheet, grayfilterParams);
+        uint64_t filterResult =
+            grayfilter(sheet, options.grayfilter_parameters);
         saveDebug("_after-grayfilter%d.pnm", nr, sheet);
         verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
                    filterResult);
@@ -1709,8 +1727,8 @@ int main(int argc, char *argv[]) {
         // masking and grayfilter
         if (!isExcluded(nr, options.no_mask_scan_multi_index,
                         options.ignore_multi_index)) {
-          maskCount = detect_masks(sheet, maskDetectionParams, points,
-                                   pointCount, masks);
+          maskCount = detect_masks(sheet, options.mask_detection_parameters,
+                                   points, pointCount, masks);
         } else {
           verboseLog(VERBOSE_MORE, "(mask-scan before deskewing disabled)\n");
         }
@@ -1718,7 +1736,8 @@ int main(int argc, char *argv[]) {
         // auto-deskew each mask
         for (int i = 0; i < maskCount; i++) {
           saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
-          float rotation = detect_rotation(sheet, masks[i], deskewParams);
+          float rotation =
+              detect_rotation(sheet, masks[i], options.deskew_parameters);
           saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
 
           verboseLog(VERBOSE_NORMAL, "rotate (%d,%d): %f\n", points[i].x,
@@ -1761,8 +1780,8 @@ int main(int argc, char *argv[]) {
         // perform auto-masking again to get more precise masks after rotation
         if (!isExcluded(nr, options.no_mask_scan_multi_index,
                         options.ignore_multi_index)) {
-          maskCount = detect_masks(sheet, maskDetectionParams, points,
-                                   pointCount, masks);
+          maskCount = detect_masks(sheet, options.mask_detection_parameters,
+                                   points, pointCount, masks);
         } else {
           verboseLog(VERBOSE_MORE, "(mask-scan before centering disabled)\n");
         }
@@ -1800,9 +1819,9 @@ int main(int argc, char *argv[]) {
         Rectangle autoborderMask[outsideBorderscanMaskCount];
         saveDebug("_before-border%d.pnm", nr, sheet);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
-          autoborderMask[i] =
-              border_to_mask(sheet, detect_border(sheet, borderScanParams,
-                                                  outsideBorderscanMask[i]));
+          autoborderMask[i] = border_to_mask(
+              sheet, detect_border(sheet, options.border_scan_parameters,
+                                   outsideBorderscanMask[i]));
         }
         apply_masks(sheet, autoborderMask, outsideBorderscanMaskCount,
                     maskColorPixel);
@@ -1811,7 +1830,7 @@ int main(int argc, char *argv[]) {
           if (!isExcluded(nr, options.no_border_align_multi_index,
                           options.ignore_multi_index)) {
             align_mask(sheet, autoborderMask[i], outsideBorderscanMask[i],
-                       maskAlignmentParams);
+                       options.mask_alignment_parameters);
           } else {
             verboseLog(VERBOSE_MORE,
                        "+ border-centering DISABLED for sheet %d\n", nr);

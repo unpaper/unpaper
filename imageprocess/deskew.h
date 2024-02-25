@@ -19,10 +19,10 @@ typedef struct {
   Edges scan_edges;
 } DeskewParameters;
 
-DeskewParameters
-validate_deskew_parameters(float deskewScanRange, float deskewScanStep,
-                           float deskewScanDeviation, int deskewScanSize,
-                           float deskewScanDepth, Edges deskewScanEdges);
+bool validate_deskew_parameters(DeskewParameters *params, float deskewScanRange,
+                                float deskewScanStep, float deskewScanDeviation,
+                                int deskewScanSize, float deskewScanDepth,
+                                Edges deskewScanEdges);
 
 float detect_rotation(Image image, Rectangle mask,
                       const DeskewParameters params);

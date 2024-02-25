@@ -12,13 +12,13 @@
 #include "imageprocess/primitives.h"
 #include "lib/logging.h"
 
-MaskDetectionParameters validate_mask_detection_parameters(
-    Direction scan_direction, RectangleSize scan_size,
-    const int scan_depth[DIRECTIONS_COUNT], Delta scan_step,
-    const float scan_threshold[DIRECTIONS_COUNT],
+bool validate_mask_detection_parameters(
+    MaskDetectionParameters *params, Direction scan_direction,
+    RectangleSize scan_size, const int scan_depth[DIRECTIONS_COUNT],
+    Delta scan_step, const float scan_threshold[DIRECTIONS_COUNT],
     const int scan_mininum[DIMENSIONS_COUNT],
     const int scan_maximum[DIMENSIONS_COUNT]) {
-  return (MaskDetectionParameters){
+  *params = (MaskDetectionParameters){
       .scan_size = scan_size,
       .scan_depth =
           {
@@ -40,6 +40,8 @@ MaskDetectionParameters validate_mask_detection_parameters(
       .minimum_height = scan_mininum[VERTICAL],
       .maximum_height = scan_maximum[VERTICAL],
   };
+
+  return true;
 }
 
 /**
@@ -238,12 +240,14 @@ void center_mask(Image image, const Point center, const Rectangle area) {
   }
 }
 
-MaskAlignmentParameters validate_mask_alignment_parameters(Edges alignment,
-                                                           Delta margin) {
-  return (MaskAlignmentParameters){
+bool validate_mask_alignment_parameters(MaskAlignmentParameters *params,
+                                        Edges alignment, Delta margin) {
+  *params = (MaskAlignmentParameters){
       .alignment = alignment,
       .margin = margin,
   };
+
+  return true;
 }
 
 /**
@@ -355,11 +359,11 @@ void apply_border(Image image, const Border border, Pixel color) {
   apply_masks(image, &mask, 1, color);
 }
 
-BorderScanParameters
-validate_border_scan_parameters(Direction scan_direction,
-                                RectangleSize scan_size, Delta scan_step,
-                                const int scan_threshold[DIRECTIONS_COUNT]) {
-  return (BorderScanParameters){
+bool validate_border_scan_parameters(
+    BorderScanParameters *params, Direction scan_direction,
+    RectangleSize scan_size, Delta scan_step,
+    const int scan_threshold[DIRECTIONS_COUNT]) {
+  *params = (BorderScanParameters){
       .scan_size = scan_size,
       .scan_step = scan_step,
       .scan_threshold =
@@ -370,6 +374,8 @@ validate_border_scan_parameters(Direction scan_direction,
 
       .scan_direction = scan_direction,
   };
+
+  return true;
 }
 
 /**

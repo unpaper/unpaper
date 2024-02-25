@@ -35,10 +35,10 @@ typedef struct {
   int32_t maximum_height;
 } MaskDetectionParameters;
 
-MaskDetectionParameters validate_mask_detection_parameters(
-    Direction scan_direction, RectangleSize scan_size,
-    const int32_t scan_depth[DIRECTIONS_COUNT], Delta scan_step,
-    const float scan_threshold[DIRECTIONS_COUNT],
+bool validate_mask_detection_parameters(
+    MaskDetectionParameters *params, Direction scan_direction,
+    RectangleSize scan_size, const int32_t scan_depth[DIRECTIONS_COUNT],
+    Delta scan_step, const float scan_threshold[DIRECTIONS_COUNT],
     const int scan_mininum[DIMENSIONS_COUNT],
     const int scan_maximum[DIMENSIONS_COUNT]);
 
@@ -53,8 +53,8 @@ typedef struct {
   Delta margin;
 } MaskAlignmentParameters;
 
-MaskAlignmentParameters validate_mask_alignment_parameters(Edges alignment,
-                                                           Delta margin);
+bool validate_mask_alignment_parameters(MaskAlignmentParameters *params,
+                                        Edges alignment, Delta margin);
 
 void align_mask(Image image, const Rectangle inside_area,
                 const Rectangle outside, MaskAlignmentParameters params);
@@ -95,10 +95,10 @@ typedef struct {
   Direction scan_direction;
 } BorderScanParameters;
 
-BorderScanParameters
-validate_border_scan_parameters(Direction scan_direction,
-                                RectangleSize scan_size, Delta scan_step,
-                                const int32_t scan_threshold[DIRECTIONS_COUNT]);
+bool validate_border_scan_parameters(
+    BorderScanParameters *params, Direction scan_direction,
+    RectangleSize scan_size, Delta scan_step,
+    const int32_t scan_threshold[DIRECTIONS_COUNT]);
 
 Border detect_border(Image image, BorderScanParameters params,
                      const Rectangle outside_mask);
