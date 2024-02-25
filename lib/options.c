@@ -2,9 +2,11 @@
 //
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <ctype.h>
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 
@@ -233,4 +235,94 @@ const char *direction_to_string(Direction direction) {
   } else {
     return "[none]";
   }
+}
+
+static bool parse_edge_character(char token, Edges *edges) {
+  token = tolower(token);
+
+  if (token == 'l') {
+    edges->left = true;
+  } else if (token == 't') {
+    edges->top = true;
+  } else if (token == 'r') {
+    edges->right = true;
+  } else if (token == 'b') {
+    edges->bottom = true;
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+static bool parse_edge_token(const char *token, Edges *edges) {
+  // We accept single letter selections (l t r b)
+  if (strlen(token) == 1) {
+    return parse_edge_character(token[0], edges);
+  }
+
+  if (strcasecmp(token, "left") == 0) {
+    edges->left = true;
+  } else if (strcasecmp(token, "top") == 0) {
+    edges->top = true;
+  } else if (strcasecmp(token, "right") == 0) {
+    edges->right = true;
+  } else if (strcasecmp(token, "bottom") == 0) {
+    edges->bottom = true;
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+bool parse_edges(const char *str, Edges *edges) {
+  // We accept options in two ways: either a single string of
+  // up to four characters from the set "ltrb", or comma-separated
+  // tokens, which are either the words "left", "top", "right", "bottom"
+  // or the "ltrb" characters.
+
+  // First attempt, if there is no comma, parse the single token.
+  if (strstr(str, ",") == NULL) {
+    // A single edge.
+    if (parse_edge_token(str, edges)) {
+      return true;
+    }
+
+    // Not a single edge, try instead to parse it as a set of
+    // characters.
+    while (*str && parse_edge_character(*str++, edges))
+      ;
+
+    // Return true if we scanned the full string successfully.
+    return *str == '\0';
+  }
+
+  // Otherwise go ahead and do the tokenization of the string instead.
+  char *buffer = strdup(str); // strtok_r writes to the string.
+  char *tmp = NULL;
+
+  char *next_token = strtok_r(buffer, ",", &tmp);
+  while (next_token != NULL && parse_edge_token(next_token, edges)) {
+    next_token = strtok_r(NULL, ",", &tmp);
+  }
+
+  free(buffer);
+
+  // return true only if we interrupted because we ran out of tokens.
+  return next_token == NULL;
+}
+
+int print_edges(Edges edges) {
+  if (!edges.left && !edges.top && !edges.right && !edges.bottom) {
+    return printf("[none]");
+  }
+
+  return printf(
+      "[%s%s%s%s%s%s%s]", edges.left ? "left" : "",
+      (edges.left && (edges.top || edges.right || edges.bottom)) ? "," : "",
+      edges.top ? "top" : "",
+      (edges.top && (edges.right || edges.bottom)) ? "," : "",
+      edges.right ? "right" : "", (edges.right && edges.bottom) ? "," : "",
+      edges.bottom ? "bottom" : "");
 }

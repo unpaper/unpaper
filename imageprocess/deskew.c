@@ -18,18 +18,14 @@ static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
 DeskewParameters
 validate_deskew_parameters(float deskewScanRange, float deskewScanStep,
                            float deskewScanDeviation, int deskewScanSize,
-                           float deskewScanDepth, int deskewScanEdges) {
+                           float deskewScanDepth, Edges deskewScanEdges) {
   DeskewParameters params = {
       .deskewScanRangeRad = degreesToRadians(deskewScanRange),
       .deskewScanStepRad = degreesToRadians(deskewScanStep),
       .deskewScanDeviationRad = degreesToRadians(deskewScanDeviation),
       .deskewScanSize = deskewScanSize,
       .deskewScanDepth = deskewScanDepth,
-      .deskewEdgeLeft = deskewScanEdges & 1 << LEFT,
-      .deskewEdgeTop = deskewScanEdges & 1 << TOP,
-      .deskewEdgeRight = deskewScanEdges & 1 << RIGHT,
-      .deskewEdgeBottom = deskewScanEdges & 1 << BOTTOM,
-  };
+      .scan_edges = deskewScanEdges};
 
   return params;
 }
@@ -180,7 +176,7 @@ float detect_rotation(Image image, const Rectangle mask,
   float average;
   float deviation;
 
-  if (params.deskewEdgeLeft) {
+  if (params.scan_edges.left) {
     // left
     rotation[count] =
         detect_edge_rotation(image, mask, params, DELTA_RIGHTWARD);
@@ -189,7 +185,7 @@ float detect_rotation(Image image, const Rectangle mask,
                mask.vertex[1].y, rotation[count]);
     count++;
   }
-  if (params.deskewEdgeTop) {
+  if (params.scan_edges.top) {
     // top
     rotation[count] =
         -detect_edge_rotation(image, mask, params, DELTA_DOWNWARD);
@@ -198,7 +194,7 @@ float detect_rotation(Image image, const Rectangle mask,
                mask.vertex[1].y, rotation[count]);
     count++;
   }
-  if (params.deskewEdgeRight) {
+  if (params.scan_edges.right) {
     // right
     rotation[count] = detect_edge_rotation(image, mask, params, DELTA_LEFTWARD);
     verboseLog(VERBOSE_NORMAL, "detected rotation right: [%d,%d,%d,%d]: %f\n",
@@ -206,7 +202,7 @@ float detect_rotation(Image image, const Rectangle mask,
                mask.vertex[1].y, rotation[count]);
     count++;
   }
-  if (params.deskewEdgeBottom) {
+  if (params.scan_edges.bottom) {
     // bottom
     rotation[count] = -detect_edge_rotation(image, mask, params, DELTA_UPWARD);
     verboseLog(VERBOSE_NORMAL, "detected rotation bottom: [%d,%d,%d,%d]: %f\n",

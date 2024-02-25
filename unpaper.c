@@ -155,7 +155,8 @@ int main(int argc, char *argv[]) {
   int outputPixFmt = -1;
   Options options;
 
-  int deskewScanEdges = (1 << LEFT) | (1 << RIGHT);
+  Edges deskewScanEdges = {
+      .left = true, .top = false, .right = true, .bottom = false};
   int deskewScanSize = 1500;
   float deskewScanDepth = 0.5;
   float deskewScanRange = 5.0;
@@ -172,8 +173,9 @@ int main(int argc, char *argv[]) {
   RectangleSize borderScanSize = {5, 5};
   Delta borderScanStep = {5, 5};
   int32_t borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
-  int borderAlign = 0;                                 // center
-  MilsDelta borderAlignMarginPhysical = {0, 0, false}; // center
+  Edges borderAlign = {
+      .left = false, .top = false, .right = false, .bottom = false}; // center
+  MilsDelta borderAlignMarginPhysical = {0, 0, false};               // center
   Pixel maskColorPixel = PIXEL_WHITE;
   size_t pointCount = 0;
   Point points[MAX_POINTS];
@@ -781,7 +783,9 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_DESKEW_SCAN_DIRECTION:
-      deskewScanEdges = parseEdges(optarg);
+      if (!parse_edges(optarg, &deskewScanEdges)) {
+        errOutput("uanble to parse deskew-scan-direction: '%s'", optarg);
+      }
       break;
 
     case OPT_DESKEW_SCAN_SIZE:
@@ -835,7 +839,9 @@ int main(int argc, char *argv[]) {
       break;
 
     case OPT_BORDER_ALIGN:
-      borderAlign = parseEdges(optarg);
+      if (!parse_edges(optarg, &borderAlign)) {
+        errOutput("unable to parse border-align: '%s'", optarg);
+      }
       break;
 
     case OPT_BORDER_MARGIN:
@@ -1396,7 +1402,7 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_deskew_multi_index.count != -1) {
           printf("deskew-scan-direction: ");
-          printEdges(deskewScanEdges);
+          print_edges(deskewScanEdges);
           printf("deskew-scan-size: %d\n", deskewScanSize);
           printf("deskew-scan-depth: %f\n", deskewScanDepth);
           printf("deskew-scan-range: %f\n", deskewScanRange);
@@ -1446,7 +1452,7 @@ int main(int argc, char *argv[]) {
             printMultiIndex(options.no_border_scan_multi_index);
           }
           printf("border-align: ");
-          printEdges(borderAlign);
+          print_edges(borderAlign);
           printf("border-margin: [%d,%d]\n",
                  maskAlignmentParams.margin.horizontal,
                  maskAlignmentParams.margin.vertical);
