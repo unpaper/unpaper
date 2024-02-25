@@ -283,7 +283,7 @@ bool parse_edges(const char *str, Edges *edges) {
   // or the "ltrb" characters.
 
   // First attempt, if there is no comma, parse the single token.
-  if (strstr(str, ",") == NULL) {
+  if (strchr(str, ',') == NULL) {
     // A single edge.
     if (parse_edge_token(str, edges)) {
       return true;
