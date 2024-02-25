@@ -4,31 +4,16 @@
 
 #pragma once
 
-#define MAX_MULTI_INDEX                                                        \
-  10000 // maximum pixel count of virtual line to detect rotation with
-#define MAX_ROTATION_SCAN_SIZE                                                 \
-  10000 // maximum pixel count of virtual line to detect rotation with
+#define MAX_MULTI_INDEX 10000
 #define MAX_MASKS 100
 #define MAX_POINTS 100
-#define MAX_FILES 100
 #define MAX_PAGES 2
 #define WHITE 0xFF
-#define GRAY 0x1F
-#define BLACK 0x00
-#define WHITE24 0xFFFFFF
-#define GRAY24 0x1F1F1F
-#define BLACK24 0x000000
 #define BLANK_TEXT "<blank>"
-
-typedef enum { X, Y, COORDINATES_COUNT } COORDINATES;
 
 typedef enum { WIDTH, HEIGHT, DIMENSIONS_COUNT } DIMENSIONS;
 
 typedef enum { HORIZONTAL, VERTICAL, DIRECTIONS_COUNT } DIRECTIONS;
-
-typedef enum { LEFT, TOP, RIGHT, BOTTOM, EDGES_COUNT } EDGES;
-
-typedef int Mask[EDGES_COUNT];
 
 typedef enum {
   LAYOUT_NONE,
