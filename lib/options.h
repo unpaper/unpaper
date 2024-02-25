@@ -68,6 +68,8 @@ bool parse_delta(const char *str, Delta *delta);
 bool parse_scan_step(const char *str, Delta *delta);
 int print_delta(Delta delta);
 
+bool parse_wipe(const char *optname, const char *str, Wipes *wipes);
+
 bool parse_border(const char *str, Border *rect);
 int print_border(Border rect);
 

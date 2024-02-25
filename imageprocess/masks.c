@@ -319,14 +319,14 @@ void apply_masks(Image image, const Rectangle masks[], size_t masks_count,
  * Permanently wipes out areas of an images. Each pixel covered by a wipe-area
  * is set to wipeColor.
  */
-void apply_wipes(Image image, Rectangle wipes[], size_t wipes_count,
-                 Pixel color) {
-  for (size_t i = 0; i < wipes_count; i++) {
-    scan_rectangle(wipes[i]) { set_pixel(image, (Point){x, y}, color); }
+void apply_wipes(Image image, Wipes wipes, Pixel color) {
+  for (size_t i = 0; i < wipes.count; i++) {
+    scan_rectangle(wipes.areas[i]) { set_pixel(image, (Point){x, y}, color); }
 
-    verboseLog(VERBOSE_MORE, "wipe [%d,%d,%d,%d]\n", wipes[i].vertex[0].x,
-               wipes[i].vertex[0].y, wipes[i].vertex[1].x,
-               wipes[i].vertex[1].y);
+    verboseLog(VERBOSE_MORE,
+               "wipe [%" PRId32 ",%" PRId32 ",%" PRId32 ",%" PRId32 "]\n",
+               wipes.areas[i].vertex[0].x, wipes.areas[i].vertex[0].y,
+               wipes.areas[i].vertex[1].x, wipes.areas[i].vertex[1].y);
   }
 }
 
