@@ -52,6 +52,13 @@ typedef struct {
   (Direction) { .horizontal = true, .vertical = true }
 
 typedef struct {
+  bool left;
+  bool top;
+  bool right;
+  bool bottom;
+} Edges;
+
+typedef struct {
   uint8_t r;
   uint8_t g;
   uint8_t b;

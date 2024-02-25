@@ -10,10 +10,6 @@
 
 /* --- tool functions for parameter parsing and verbose output ------------ */
 
-int parseEdges(char *s);
-
-void printEdges(int d);
-
 char *implode(char *buf, const char *s[], int cnt);
 
 struct MultiIndex {

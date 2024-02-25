@@ -49,17 +49,11 @@ size_t detect_masks(Image image, MaskDetectionParameters params,
 void center_mask(Image image, const Point center, const Rectangle area);
 
 typedef struct {
-  struct {
-    bool left;
-    bool top;
-    bool right;
-    bool bottom;
-  } alignment;
-
+  Edges alignment;
   Delta margin;
 } MaskAlignmentParameters;
 
-MaskAlignmentParameters validate_mask_alignment_parameters(int border_align,
+MaskAlignmentParameters validate_mask_alignment_parameters(Edges alignment,
                                                            Delta margin);
 
 void align_mask(Image image, const Rectangle inside_area,

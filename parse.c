@@ -19,66 +19,6 @@
 /* --- constants ---------------------------------------------------------- */
 
 /**
- * Parses a parameter string on occurrences of 'left', 'top', 'right', 'bottom'
- * or combinations.
- */
-int parseEdges(char *s) {
-  int dir = 0;
-  if (strstr(s, "left") != 0) {
-    dir = 1 << LEFT;
-  }
-  if (strstr(s, "top") != 0) {
-    dir |= 1 << TOP;
-  }
-  if (strstr(s, "right") != 0) {
-    dir |= 1 << RIGHT;
-  }
-  if (strstr(s, "bottom") != 0) {
-    dir |= 1 << BOTTOM;
-  }
-  if (dir == 0)
-    errOutput(
-        "unknown edge name '%s', expected 'left', 'top', 'right' or 'bottom'.",
-        s);
-
-  return dir;
-}
-
-/**
- * Prints whether edges are left, top, right, bottom or combinations.
- */
-void printEdges(int d) {
-  bool comma = false;
-
-  printf("[");
-  if ((d & 1 << LEFT) != 0) {
-    printf("left");
-    comma = true;
-  }
-  if ((d & 1 << TOP) != 0) {
-    if (comma == true) {
-      printf(",");
-    }
-    printf("top");
-    comma = true;
-  }
-  if ((d & 1 << RIGHT) != 0) {
-    if (comma == true) {
-      printf(",");
-    }
-    printf("right");
-    comma = true;
-  }
-  if ((d & 1 << BOTTOM) != 0) {
-    if (comma == true) {
-      printf(",");
-    }
-    printf("bottom");
-  }
-  printf("]\n");
-}
-
-/**
  * Combines an array of strings to a comma-separated string.
  */
 char *implode(char *buf, const char *s[], int cnt) {

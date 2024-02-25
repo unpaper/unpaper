@@ -78,3 +78,6 @@ int print_color(Pixel color);
 
 bool parse_direction(const char *str, Direction *direction);
 const char *direction_to_string(Direction direction);
+
+bool parse_edges(const char *str, Edges *edges);
+int print_edges(Edges edges);
