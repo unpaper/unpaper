@@ -18,11 +18,11 @@
 
 static inline float degreesToRadians(float d) { return d * M_PI / 180.0; }
 
-DeskewParameters
-validate_deskew_parameters(float deskewScanRange, float deskewScanStep,
-                           float deskewScanDeviation, int deskewScanSize,
-                           float deskewScanDepth, Edges deskewScanEdges) {
-  DeskewParameters params = {
+bool validate_deskew_parameters(DeskewParameters *params, float deskewScanRange,
+                                float deskewScanStep, float deskewScanDeviation,
+                                int deskewScanSize, float deskewScanDepth,
+                                Edges deskewScanEdges) {
+  *params = (DeskewParameters){
       .deskewScanRangeRad = degreesToRadians(deskewScanRange),
       .deskewScanStepRad = degreesToRadians(deskewScanStep),
       .deskewScanDeviationRad = degreesToRadians(deskewScanDeviation),
@@ -30,7 +30,7 @@ validate_deskew_parameters(float deskewScanRange, float deskewScanStep,
       .deskewScanDepth = deskewScanDepth,
       .scan_edges = deskewScanEdges};
 
-  return params;
+  return true;
 }
 
 /**

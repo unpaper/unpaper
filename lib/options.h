@@ -7,6 +7,8 @@
 #include <stdbool.h>
 
 #include "constants.h"
+#include "imageprocess/deskew.h"
+#include "imageprocess/filters.h"
 #include "imageprocess/interpolate.h"
 #include "imageprocess/masks.h"
 #include "imageprocess/primitives.h"
@@ -51,6 +53,15 @@ typedef struct {
 
   uint8_t abs_black_threshold;
   uint8_t abs_white_threshold;
+
+  DeskewParameters deskew_parameters;
+  MaskDetectionParameters mask_detection_parameters;
+  MaskAlignmentParameters mask_alignment_parameters;
+  BorderScanParameters border_scan_parameters;
+
+  GrayfilterParameters grayfilter_parameters;
+  BlackfilterParameters blackfilter_parameters;
+  BlurfilterParameters blurfilter_parameters;
 } Options;
 
 void options_init(Options *o);

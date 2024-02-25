@@ -30,10 +30,13 @@ typedef struct {
 
 void blackfilter(Image image, BlackfilterParameters params);
 
-BlackfilterParameters validate_blackfilter_parameters(
-    RectangleSize scan_size, Delta scan_step, uint32_t scan_depth_h,
-    uint32_t scan_depth_v, Direction scan_direction, float threshold,
-    int32_t intensity, size_t exclusions_count, Rectangle *exclusions);
+bool validate_blackfilter_parameters(BlackfilterParameters *params,
+                                     RectangleSize scan_size, Delta scan_step,
+                                     uint32_t scan_depth_h,
+                                     uint32_t scan_depth_v,
+                                     Direction scan_direction, float threshold,
+                                     int32_t intensity, size_t exclusions_count,
+                                     Rectangle *exclusions);
 
 typedef struct {
   RectangleSize scan_size;
@@ -43,9 +46,9 @@ typedef struct {
   float intensity;
 } BlurfilterParameters;
 
-BlurfilterParameters validate_blurfilter_parameters(RectangleSize scan_size,
-                                                    Delta scan_step,
-                                                    float intensity);
+bool validate_blurfilter_parameters(BlurfilterParameters *params,
+                                    RectangleSize scan_size, Delta scan_step,
+                                    float intensity);
 
 uint64_t blurfilter(Image image, BlurfilterParameters params,
                     uint8_t abs_white_threshold);
@@ -60,8 +63,8 @@ typedef struct {
   uint8_t abs_threshold;
 } GrayfilterParameters;
 
-GrayfilterParameters validate_grayfilter_parameters(RectangleSize scan_size,
-                                                    Delta scan_step,
-                                                    float threshold);
+bool validate_grayfilter_parameters(GrayfilterParameters *params,
+                                    RectangleSize scan_size, Delta scan_step,
+                                    float threshold);
 
 uint64_t grayfilter(Image image, GrayfilterParameters params);
