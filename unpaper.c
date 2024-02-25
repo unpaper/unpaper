@@ -427,14 +427,8 @@ int main(int argc, char *argv[]) {
       return 0;
 
     case 'l':
-      if (strcmp(optarg, "single") == 0) {
-        options.layout = LAYOUT_SINGLE;
-      } else if (strcmp(optarg, "double") == 0) {
-        options.layout = LAYOUT_DOUBLE;
-      } else if (strcmp(optarg, "none") == 0) {
-        options.layout = LAYOUT_NONE;
-      } else {
-        errOutput("unknown layout mode '%s'.", optarg);
+      if (!parse_layout(optarg, &options.layout)) {
+        errOutput("unable to parse layout: '%s'", optarg);
       }
       break;
 

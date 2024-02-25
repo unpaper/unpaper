@@ -329,6 +329,26 @@ int print_edges(Edges edges) {
 
 static const struct {
   const char name[8];
+  Layout layout;
+} LAYOUTS[] = {
+    {"single", LAYOUT_SINGLE},
+    {"double", LAYOUT_DOUBLE},
+    {"none", LAYOUT_NONE},
+};
+
+bool parse_layout(const char *str, Layout *layout) {
+  for (size_t j = 0; j < sizeof(LAYOUTS) / sizeof(LAYOUTS[0]); j++) {
+    if (strcasecmp(str, LAYOUTS[j].name) == 0) {
+      *layout = LAYOUTS[j].layout;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static const struct {
+  const char name[8];
   Interpolation interpolation;
 } INTERPOLATIONS[] = {
     {"nearest", INTERP_NN},
