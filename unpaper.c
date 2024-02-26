@@ -1313,23 +1313,27 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_blackfilter_multi_index.count != -1) {
           printf("blackfilter-scan-direction: %s\n",
-                 direction_to_string(blackfilterScanDirections));
+                 direction_to_string(
+                     options.blackfilter_parameters.scan_direction));
           printf("blackfilter-scan-size: ");
-          print_rectangle_size(blackfilterScanSize);
-          printf("\nblackfilter-scan-depth: [%d,%d]\n", blackfilterScanDepth[0],
-                 blackfilterScanDepth[1]);
+          print_rectangle_size(options.blackfilter_parameters.scan_size);
+          printf("\nblackfilter-scan-depth: [%d,%d]\n",
+                 options.blackfilter_parameters.scan_depth.horizontal,
+                 options.blackfilter_parameters.scan_depth.vertical);
           printf("blackfilter-scan-step: ");
-          print_delta(blackfilterScanStep);
-          printf("\nblackfilter-scan-threshold: %f\n",
-                 blackfilterScanThreshold);
-          if (blackfilterExcludeCount > 0) {
+          print_delta(options.blackfilter_parameters.scan_step);
+          printf("\nblackfilter-scan-threshold: %d\n",
+                 options.blackfilter_parameters.abs_threshold);
+          if (options.blackfilter_parameters.exclusions_count > 0) {
             printf("blackfilter-scan-exclude: ");
-            for (size_t i = 0; i < blackfilterExcludeCount; i++) {
-              print_rectangle(blackfilterExclude[i]);
+            for (size_t i = 0;
+                 i < options.blackfilter_parameters.exclusions_count; i++) {
+              print_rectangle(options.blackfilter_parameters.exclusions[i]);
             }
             printf("\n");
           }
-          printf("blackfilter-intensity: %d\n", blackfilterIntensity);
+          printf("blackfilter-intensity: %d\n",
+                 options.blackfilter_parameters.intensity);
           if (options.no_blackfilter_multi_index.count > 0) {
             printf("blackfilter DISABLED for sheets: ");
             printMultiIndex(options.no_blackfilter_multi_index);
@@ -1348,10 +1352,11 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_blurfilter_multi_index.count != -1) {
           printf("blurfilter-size: ");
-          print_rectangle_size(blurfilterScanSize);
+          print_rectangle_size(options.blurfilter_parameters.scan_size);
           printf("\nblurfilter-step: ");
-          print_delta(blurfilterScanStep);
-          printf("\nblurfilter-intensity: %f\n", blurfilterIntensity);
+          print_delta(options.blurfilter_parameters.scan_step);
+          printf("\nblurfilter-intensity: %f\n",
+                 options.blurfilter_parameters.intensity);
           if (options.no_blurfilter_multi_index.count > 0) {
             printf("blurfilter DISABLED for sheets: ");
             printMultiIndex(options.no_blurfilter_multi_index);
@@ -1361,10 +1366,11 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_grayfilter_multi_index.count != -1) {
           printf("grayfilter-size: ");
-          print_rectangle_size(grayfilterScanSize);
+          print_rectangle_size(options.grayfilter_parameters.scan_size);
           printf("\ngrayfilter-step: ");
-          print_delta(grayfilterScanStep);
-          printf("\ngrayfilter-threshold: %f\n", grayfilterThreshold);
+          print_delta(options.grayfilter_parameters.scan_step);
+          printf("\ngrayfilter-threshold: %d\n",
+                 options.grayfilter_parameters.abs_threshold);
           if (options.no_grayfilter_multi_index.count > 0) {
             printf("grayfilter DISABLED for sheets: ");
             printMultiIndex(options.no_grayfilter_multi_index);
@@ -1379,19 +1385,24 @@ int main(int argc, char *argv[]) {
           }
           printf("\n");
           printf("mask-scan-direction: %s\n",
-                 direction_to_string(maskScanDirections));
+                 direction_to_string(
+                     options.mask_detection_parameters.scan_direction));
           printf("mask-scan-size: ");
-          print_rectangle_size(maskScanSize);
-          printf("\nmask-scan-depth: [%d,%d]\n", maskScanDepth[0],
-                 maskScanDepth[1]);
+          print_rectangle_size(options.mask_detection_parameters.scan_size);
+          printf("\nmask-scan-depth: [%d,%d]\n",
+                 options.mask_detection_parameters.scan_depth.horizontal,
+                 options.mask_detection_parameters.scan_depth.vertical);
           printf("mask-scan-step: ");
-          print_delta(maskScanStep);
-          printf("\nmask-scan-threshold: [%f,%f]\n", maskScanThreshold[0],
-                 maskScanThreshold[1]);
-          printf("mask-scan-minimum: [%d,%d]\n", maskScanMinimum[0],
-                 maskScanMinimum[1]);
-          printf("mask-scan-maximum: [%d,%d]\n", maskScanMaximum[0],
-                 maskScanMaximum[1]);
+          print_delta(options.mask_detection_parameters.scan_step);
+          printf("\nmask-scan-threshold: [%f,%f]\n",
+                 options.mask_detection_parameters.scan_threshold.horizontal,
+                 options.mask_detection_parameters.scan_threshold.vertical);
+          printf("mask-scan-minimum: [%d,%d]\n",
+                 options.mask_detection_parameters.minimum_width,
+                 options.mask_detection_parameters.minimum_height);
+          printf("mask-scan-maximum: [%d,%d]\n",
+                 options.mask_detection_parameters.maximum_width,
+                 options.mask_detection_parameters.maximum_height);
           printf("mask-color: ");
           print_color(maskColorPixel);
           printf("\n");
@@ -1404,12 +1415,17 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_deskew_multi_index.count != -1) {
           printf("deskew-scan-direction: ");
-          print_edges(deskewScanEdges);
-          printf("deskew-scan-size: %d\n", deskewScanSize);
-          printf("deskew-scan-depth: %f\n", deskewScanDepth);
-          printf("deskew-scan-range: %f\n", deskewScanRange);
-          printf("deskew-scan-step: %f\n", deskewScanStep);
-          printf("deskew-scan-deviation: %f\n", deskewScanDeviation);
+          print_edges(options.deskew_parameters.scan_edges);
+          printf("deskew-scan-size: %d\n",
+                 options.deskew_parameters.deskewScanSize);
+          printf("deskew-scan-depth: %f\n",
+                 options.deskew_parameters.deskewScanDepth);
+          printf("deskew-scan-range: %f\n",
+                 options.deskew_parameters.deskewScanRangeRad);
+          printf("deskew-scan-step: %f\n",
+                 options.deskew_parameters.deskewScanStepRad);
+          printf("deskew-scan-deviation: %f\n",
+                 options.deskew_parameters.deskewScanDeviationRad);
           if (options.no_deskew_multi_index.count > 0) {
             printf("deskew-scan DISABLED for sheets: ");
             printMultiIndex(options.no_deskew_multi_index);
@@ -1442,13 +1458,15 @@ int main(int argc, char *argv[]) {
         }
         if (options.no_border_scan_multi_index.count != -1) {
           printf("border-scan-direction: %s\n",
-                 direction_to_string(borderScanDirections));
+                 direction_to_string(
+                     options.border_scan_parameters.scan_direction));
           printf("border-scan-size: ");
-          print_rectangle_size(borderScanSize);
+          print_rectangle_size(options.border_scan_parameters.scan_size);
           printf("\nborder-scan-step: ");
-          print_delta(borderScanStep);
-          printf("\nborder-scan-threshold: [%d,%d]\n", borderScanThreshold[0],
-                 borderScanThreshold[1]);
+          print_delta(options.border_scan_parameters.scan_step);
+          printf("\nborder-scan-threshold: [%d,%d]\n",
+                 options.border_scan_parameters.scan_threshold.horizontal,
+                 options.border_scan_parameters.scan_threshold.vertical);
           if (options.no_border_scan_multi_index.count > 0) {
             printf("border-scan DISABLED for sheets: ");
             printMultiIndex(options.no_border_scan_multi_index);
@@ -1486,12 +1504,11 @@ int main(int argc, char *argv[]) {
         //    printf("EXCLUDE sheets: ");
         //    printMultiIndex(options.ignoreMultiIndex);
         //}
-        printf("white-threshold: %f\n", whiteThreshold);
-        printf("black-threshold: %f\n", blackThreshold);
+        printf("white-threshold: %d\n", options.abs_white_threshold);
+        printf("black-threshold: %d\n", options.abs_black_threshold);
         printf("sheet-background: ");
         print_color(sheetBackgroundPixel);
         printf("\n");
-        printf("ppi: %d\n", ppi);
         printf("input-files per sheet: %d\n", options.input_count);
         printf("output-files per sheet: %d\n", options.output_count);
         if (options.sheet_size.width != -1 || options.sheet_size.height != -1) {
