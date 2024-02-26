@@ -149,30 +149,9 @@ enum LONG_OPTION_VALUES {
  */
 int main(int argc, char *argv[]) {
   // --- local variables ---
-  int inputNr;
-  int outputNr;
-  int option_index = 0;
   int outputPixFmt = -1;
   Options options;
 
-  Edges deskewScanEdges = {
-      .left = true, .top = false, .right = true, .bottom = false};
-  int deskewScanSize = 1500;
-  float deskewScanDepth = 0.5;
-  float deskewScanRange = 5.0;
-  float deskewScanStep = 0.1;
-  float deskewScanDeviation = 1.0;
-  Direction maskScanDirections = DIRECTION_HORIZONTAL;
-  RectangleSize maskScanSize = {50, 50};
-  int32_t maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
-  Delta maskScanStep = {5, 5};
-  float maskScanThreshold[DIRECTIONS_COUNT] = {0.1, 0.1};
-  int maskScanMinimum[DIMENSIONS_COUNT] = {100, 100};
-  int maskScanMaximum[DIMENSIONS_COUNT] = {-1, -1}; // set default later
-  Direction borderScanDirections = DIRECTION_VERTICAL;
-  RectangleSize borderScanSize = {5, 5};
-  Delta borderScanStep = {5, 5};
-  int32_t borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
   Edges borderAlign = {
       .left = false, .top = false, .right = false, .bottom = false}; // center
   MilsDelta borderAlignMarginPhysical = {0, 0, false};               // center
@@ -189,769 +168,858 @@ int main(int argc, char *argv[]) {
   Wipes postWipes = {.count = 0};
   Rectangle outsideBorderscanMask[MAX_PAGES]; // set by --layout
   size_t outsideBorderscanMaskCount = 0;
-  Direction blackfilterScanDirections = DIRECTION_BOTH;
-  RectangleSize blackfilterScanSize = {20, 20};
-  int32_t blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
-  Delta blackfilterScanStep = {5, 5};
-  float blackfilterScanThreshold = 0.95;
-  size_t blackfilterExcludeCount = 0;
-  Rectangle blackfilterExclude[MAX_MASKS];
-  int blackfilterIntensity = 20;
-  RectangleSize blurfilterScanSize = {100, 100};
-  Delta blurfilterScanStep = {50, 50};
-  float blurfilterIntensity = 0.01;
-  RectangleSize grayfilterScanSize = {50, 50};
-  Delta grayfilterScanStep = {20, 20};
-  float grayfilterThreshold = 0.5;
+  Rectangle blackfilterExclude[MAX_MASKS]; // Required to stay allocated!
   int noisefilterIntensity = 4;
 
   Interpolation interpolateType = INTERP_CUBIC;
 
   Pixel sheetBackgroundPixel = PIXEL_WHITE;
 
-  MilsSize sheetSizePhysical = {-1, -1, false};
   int preRotate = 0;
   int postRotate = 0;
   Direction preMirror = DIRECTION_NONE;
   Direction postMirror = DIRECTION_NONE;
-  MilsDelta preShiftPhysical = {0, 0, false};
-  MilsDelta postShiftPhysical = {0, 0, false};
-  MilsSize sizePhysical = {-1, -1, false};
-  MilsSize postSizePhysical = {-1, -1, false};
-  MilsSize stretchSizePhysical = {-1, -1, false};
-  MilsSize postStretchSizePhysical = {-1, -1, false};
   float zoomFactor = 1.0;
   float postZoomFactor = 1.0;
   Border preBorder = {0, 0, 0, 0};
   Border postBorder = {0, 0, 0, 0};
   Border border = {0, 0, 0, 0};
-  float whiteThreshold = 0.9;
-  float blackThreshold = 0.33;
   bool writeoutput = true;
   bool multisheets = true;
 
   bool overwrite = false;
 
-  // Command line argument is improperly called DPI. These are pixels per inch.
-  int16_t ppi = 300;
-
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
   // -------------------------------------------------------------------
 
-  options_init(&options);
+  {
+    // The following variables are no longer visible after argument parsing
+    // is complete.
+    float whiteThreshold = 0.9;
+    float blackThreshold = 0.33;
 
-  while (true) {
-    int c;
+    Edges deskewScanEdges = {
+        .left = true, .top = false, .right = true, .bottom = false};
+    int deskewScanSize = 1500;
+    float deskewScanDepth = 0.5;
+    float deskewScanRange = 5.0;
+    float deskewScanStep = 0.1;
+    float deskewScanDeviation = 1.0;
+    Direction maskScanDirections = DIRECTION_HORIZONTAL;
+    RectangleSize maskScanSize = {50, 50};
+    int32_t maskScanDepth[DIRECTIONS_COUNT] = {-1, -1};
+    Delta maskScanStep = {5, 5};
+    float maskScanThreshold[DIRECTIONS_COUNT] = {0.1, 0.1};
+    int maskScanMinimum[DIMENSIONS_COUNT] = {100, 100};
+    int maskScanMaximum[DIMENSIONS_COUNT] = {-1, -1}; // set default later
+    Direction borderScanDirections = DIRECTION_VERTICAL;
+    RectangleSize borderScanSize = {5, 5};
+    Delta borderScanStep = {5, 5};
+    int32_t borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
 
-    static const struct option long_options[] = {
-        {"help", no_argument, NULL, 'h'},
-        {"?", no_argument, NULL, 'h'},
-        {"version", no_argument, NULL, 'V'},
-        {"layout", required_argument, NULL, 'l'},
-        {"#", required_argument, NULL, '#'},
-        {"sheet", required_argument, NULL, '#'},
-        {"start", required_argument, NULL, OPT_START_SHEET},
-        {"start-sheet", required_argument, NULL, OPT_START_SHEET},
-        {"end", required_argument, NULL, OPT_END_SHEET},
-        {"end-sheet", required_argument, NULL, OPT_END_SHEET},
-        {"start-input", required_argument, NULL, OPT_START_INPUT},
-        {"si", required_argument, NULL, OPT_START_INPUT},
-        {"start-output", required_argument, NULL, OPT_START_OUTPUT},
-        {"so", required_argument, NULL, OPT_START_OUTPUT},
-        {"sheet-size", required_argument, NULL, 'S'},
-        {"sheet-background", required_argument, NULL, OPT_SHEET_BACKGROUND},
-        {"exclude", optional_argument, NULL, 'x'},
-        {"no-processing", required_argument, NULL, 'n'},
-        {"pre-rotate", required_argument, NULL, OPT_PRE_ROTATE},
-        {"post-rotate", required_argument, NULL, OPT_POST_ROTATE},
-        {"pre-mirror", required_argument, NULL, 'M'},
-        {"post-mirror", required_argument, NULL, OPT_POST_MIRROR},
-        {"pre-shift", required_argument, NULL, OPT_PRE_SHIFT},
-        {"post-shift", required_argument, NULL, OPT_POST_SHIFT},
-        {"pre-mask", required_argument, NULL, OPT_PRE_MASK},
-        {"size", required_argument, NULL, 's'},
-        {"post-size", required_argument, NULL, OPT_POST_SIZE},
-        {"stretch", required_argument, NULL, OPT_STRETCH},
-        {"post-stretch", required_argument, NULL, OPT_POST_STRETCH},
-        {"zoom", required_argument, NULL, 'z'},
-        {"post-zoom", required_argument, NULL, OPT_POST_ZOOM},
-        {"mask-scan-point", required_argument, NULL, 'p'},
-        {"mask", required_argument, NULL, 'm'},
-        {"wipe", required_argument, NULL, 'W'},
-        {"pre-wipe", required_argument, NULL, OPT_PRE_WIPE},
-        {"post-wipe", required_argument, NULL, OPT_POST_WIPE},
-        {"middle-wipe", required_argument, NULL, OPT_MIDDLE_WIPE},
-        {"mw", required_argument, NULL, OPT_MIDDLE_WIPE},
-        {"border", required_argument, NULL, 'B'},
-        {"pre-border", required_argument, NULL, OPT_PRE_BORDER},
-        {"post-border", required_argument, NULL, OPT_POST_BORDER},
-        {"no-blackfilter", optional_argument, NULL, OPT_NO_BLACK_FILTER},
-        {"blackfilter-scan-direction", required_argument, NULL,
-         OPT_BLACK_FILTER_SCAN_DIRECTION},
-        {"bn", required_argument, NULL, OPT_BLACK_FILTER_SCAN_DIRECTION},
-        {"blackfilter-scan-size", required_argument, NULL,
-         OPT_BLACK_FILTER_SCAN_SIZE},
-        {"bs", required_argument, NULL, OPT_BLACK_FILTER_SCAN_SIZE},
-        {"blackfilter-scan-depth", required_argument, NULL,
-         OPT_BLACK_FILTER_SCAN_DEPTH},
-        {"bd", required_argument, NULL, OPT_BLACK_FILTER_SCAN_DEPTH},
-        {"blackfilter-scan-step", required_argument, NULL,
-         OPT_BLACK_FILTER_SCAN_STEP},
-        {"bp", required_argument, NULL, OPT_BLACK_FILTER_SCAN_STEP},
-        {"blackfilter-scan-threshold", required_argument, NULL,
-         OPT_BLACK_FILTER_SCAN_THRESHOLD},
-        {"bt", required_argument, NULL, OPT_BLACK_FILTER_SCAN_THRESHOLD},
-        {"blackfilter-scan-exclude", required_argument, NULL,
-         OPT_BLACK_FILTER_SCAN_EXCLUDE},
-        {"bx", required_argument, NULL, OPT_BLACK_FILTER_SCAN_EXCLUDE},
-        {"blackfilter-intensity", required_argument, NULL,
-         OPT_BLACK_FILTER_INTENSITY},
-        {"bi", required_argument, NULL, OPT_BLACK_FILTER_INTENSITY},
-        {"no-noisefilter", optional_argument, NULL, OPT_NO_NOISE_FILTER},
-        {"noisefilter-intensity", required_argument, NULL,
-         OPT_NOISE_FILTER_INTENSITY},
-        {"ni", required_argument, NULL, OPT_NOISE_FILTER_INTENSITY},
-        {"no-blurfilter", optional_argument, NULL, OPT_NO_BLUR_FILTER},
-        {"blurfilter-size", required_argument, NULL, OPT_BLUR_FILTER_SIZE},
-        {"ls", required_argument, NULL, OPT_BLUR_FILTER_SIZE},
-        {"blurfilter-step", required_argument, NULL, OPT_BLUR_FILTER_STEP},
-        {"lp", required_argument, NULL, OPT_BLUR_FILTER_STEP},
-        {"blurfilter-intensity", required_argument, NULL,
-         OPT_BLUR_FILTER_INTENSITY},
-        {"li", required_argument, NULL, OPT_BLUR_FILTER_INTENSITY},
-        {"no-grayfilter", optional_argument, NULL, OPT_NO_GRAY_FILTER},
-        {"grayfilter-size", required_argument, NULL, OPT_GRAY_FILTER_SIZE},
-        {"gs", required_argument, NULL, OPT_GRAY_FILTER_SIZE},
-        {"grayfilter-step", required_argument, NULL, OPT_GRAY_FILTER_STEP},
-        {"gp", required_argument, NULL, OPT_GRAY_FILTER_STEP},
-        {"grayfilter-threshold", required_argument, NULL,
-         OPT_GRAY_FILTER_THRESHOLD},
-        {"gt", required_argument, NULL, OPT_GRAY_FILTER_THRESHOLD},
-        {"no-mask-scan", optional_argument, NULL, OPT_NO_MASK_SCAN},
-        {"mask-scan-direction", required_argument, NULL,
-         OPT_MASK_SCAN_DIRECTION},
-        {"mn", required_argument, NULL, OPT_MASK_SCAN_DIRECTION},
-        {"mask-scan-size", required_argument, NULL, OPT_MASK_SCAN_SIZE},
-        {"ms", required_argument, NULL, OPT_MASK_SCAN_SIZE},
-        {"mask-scan-depth", required_argument, NULL, OPT_MASK_SCAN_DEPTH},
-        {"md", required_argument, NULL, OPT_MASK_SCAN_DEPTH},
-        {"mask-scan-step", required_argument, NULL, OPT_MASK_SCAN_STEP},
-        {"mp", required_argument, NULL, OPT_MASK_SCAN_STEP},
-        {"mask-scan-threshold", required_argument, NULL,
-         OPT_MASK_SCAN_THRESHOLD},
-        {"mt", required_argument, NULL, OPT_MASK_SCAN_THRESHOLD},
-        {"mask-scan-minimum", required_argument, NULL, OPT_MASK_SCAN_MINIMUM},
-        {"mm", required_argument, NULL, OPT_MASK_SCAN_MINIMUM},
-        {"mask-scan-maximum", required_argument, NULL, OPT_MASK_SCAN_MAXIMUM},
-        {"mM", required_argument, NULL, OPT_MASK_SCAN_MAXIMUM},
-        {"mask-color", required_argument, NULL, OPT_MASK_COLOR},
-        {"mc", required_argument, NULL, OPT_MASK_COLOR},
-        {"no-mask-center", optional_argument, NULL, OPT_NO_MASK_CENTER},
-        {"no-deskew", optional_argument, NULL, OPT_NO_DESKEW},
-        {"deskew-scan-direction", required_argument, NULL,
-         OPT_DESKEW_SCAN_DIRECTION},
-        {"dn", required_argument, NULL, OPT_DESKEW_SCAN_DIRECTION},
-        {"deskew-scan-size", required_argument, NULL, OPT_DESKEW_SCAN_SIZE},
-        {"ds", required_argument, NULL, OPT_DESKEW_SCAN_SIZE},
-        {"deskew-scan-depth", required_argument, NULL, OPT_DESKEW_SCAN_DEPTH},
-        {"dd", required_argument, NULL, OPT_DESKEW_SCAN_DEPTH},
-        {"deskew-scan-range", required_argument, NULL, OPT_DESKEW_SCAN_RANGE},
-        {"dr", required_argument, NULL, OPT_DESKEW_SCAN_RANGE},
-        {"deskew-scan-step", required_argument, NULL, OPT_DESKEW_SCAN_STEP},
-        {"dp", required_argument, NULL, OPT_DESKEW_SCAN_STEP},
-        {"deskew-scan-deviation", required_argument, NULL,
-         OPT_DESKEW_SCAN_DEVIATION},
-        {"dv", required_argument, NULL, OPT_DESKEW_SCAN_DEVIATION},
-        {"no-border-scan", optional_argument, NULL, OPT_NO_BORDER_SCAN},
-        {"border-scan-direction", required_argument, NULL,
-         OPT_BORDER_SCAN_DIRECTION},
-        {"Bn", required_argument, NULL, OPT_BORDER_SCAN_DIRECTION},
-        {"border-scan-size", required_argument, NULL, OPT_BORDER_SCAN_SIZE},
-        {"Bs", required_argument, NULL, OPT_BORDER_SCAN_SIZE},
-        {"border-scan-step", required_argument, NULL, OPT_BORDER_SCAN_STEP},
-        {"Bp", required_argument, NULL, OPT_BORDER_SCAN_STEP},
-        {"border-scan-threshold", required_argument, NULL,
-         OPT_BORDER_SCAN_THRESHOLD},
-        {"Bt", required_argument, NULL, OPT_BORDER_SCAN_THRESHOLD},
-        {"border-align", required_argument, NULL, OPT_BORDER_ALIGN},
-        {"Ba", required_argument, NULL, OPT_BORDER_ALIGN},
-        {"border-margin", required_argument, NULL, OPT_BORDER_MARGIN},
-        {"Bm", required_argument, NULL, OPT_BORDER_MARGIN},
-        {"no-border-align", optional_argument, NULL, OPT_NO_BORDER_ALIGN},
-        {"no-wipe", optional_argument, NULL, OPT_NO_WIPE},
-        {"no-border", optional_argument, NULL, OPT_NO_BORDER},
-        {"white-threshold", required_argument, NULL, 'w'},
-        {"black-threshold", required_argument, NULL, 'b'},
-        {"input-pages", required_argument, NULL, OPT_INPUT_PAGES},
-        {"ip", required_argument, NULL, OPT_INPUT_PAGES},
-        {"output-pages", required_argument, NULL, OPT_OUTPUT_PAGES},
-        {"op", required_argument, NULL, OPT_OUTPUT_PAGES},
-        {"input-file-sequence", required_argument, NULL,
-         OPT_INPUT_FILE_SEQUENCE},
-        {"if", required_argument, NULL, OPT_INPUT_FILE_SEQUENCE},
-        {"output-file-sequence", required_argument, NULL,
-         OPT_OUTPUT_FILE_SEQUENCE},
-        {"of", required_argument, NULL, OPT_OUTPUT_FILE_SEQUENCE},
-        {"insert-blank", required_argument, NULL, OPT_INSERT_BLANK},
-        {"replace-blank", required_argument, NULL, OPT_REPLACE_BLANK},
-        {"test-only", no_argument, NULL, 'T'},
-        {"no-multi-pages", no_argument, NULL, OPT_NO_MULTI_PAGES},
-        {"dpi", required_argument, NULL, OPT_PPI},
-        {"ppi", required_argument, NULL, OPT_PPI},
-        {"type", required_argument, NULL, 't'},
-        {"quiet", no_argument, NULL, 'q'},
-        {"overwrite", no_argument, NULL, OPT_OVERWRITE},
-        {"verbose", no_argument, NULL, 'v'},
-        {"vv", no_argument, NULL, OPT_VERBOSE_MORE},
-        {"debug", no_argument, NULL, OPT_DEBUG},
-        {"vvv", no_argument, NULL, OPT_DEBUG},
-        {"debug-save", no_argument, NULL, OPT_DEBUG_SAVE},
-        {"vvvv", no_argument, NULL, OPT_DEBUG_SAVE},
-        {"interpolate", required_argument, NULL, OPT_INTERPOLATE},
-        {NULL, no_argument, NULL, 0}};
+    int16_t ppi = 300;
+    MilsSize sheetSizePhysical = {-1, -1, false};
+    MilsDelta preShiftPhysical = {0, 0, false};
+    MilsDelta postShiftPhysical = {0, 0, false};
+    MilsSize sizePhysical = {-1, -1, false};
+    MilsSize postSizePhysical = {-1, -1, false};
+    MilsSize stretchSizePhysical = {-1, -1, false};
+    MilsSize postStretchSizePhysical = {-1, -1, false};
 
-    c = getopt_long_only(argc, argv, "hVl:S:x::n::M:s:z:p:m:W:B:w:b:Tt:qv",
-                         long_options, &option_index);
-    if (c == -1)
-      break;
+    Direction blackfilterScanDirections = DIRECTION_BOTH;
+    RectangleSize blackfilterScanSize = {20, 20};
+    int32_t blackfilterScanDepth[DIRECTIONS_COUNT] = {500, 500};
+    Delta blackfilterScanStep = {5, 5};
+    float blackfilterScanThreshold = 0.95;
+    size_t blackfilterExcludeCount = 0;
+    int blackfilterIntensity = 20;
+    RectangleSize blurfilterScanSize = {100, 100};
+    Delta blurfilterScanStep = {50, 50};
+    float blurfilterIntensity = 0.01;
+    RectangleSize grayfilterScanSize = {50, 50};
+    Delta grayfilterScanStep = {20, 20};
+    float grayfilterThreshold = 0.5;
 
-    switch (c) {
-    case 'h':
-    case '?':
-      puts(USAGE);
-      return c == '?' ? 1 : 0;
+    options_init(&options);
 
-    case 'V':
-      puts(VERSION_STR);
-      return 0;
+    int option_index = 0;
+    while (true) {
+      int c;
 
-    case 'l':
-      if (!parse_layout(optarg, &options.layout)) {
-        errOutput("unable to parse layout: '%s'", optarg);
-      }
-      break;
+      static const struct option long_options[] = {
+          {"help", no_argument, NULL, 'h'},
+          {"?", no_argument, NULL, 'h'},
+          {"version", no_argument, NULL, 'V'},
+          {"layout", required_argument, NULL, 'l'},
+          {"#", required_argument, NULL, '#'},
+          {"sheet", required_argument, NULL, '#'},
+          {"start", required_argument, NULL, OPT_START_SHEET},
+          {"start-sheet", required_argument, NULL, OPT_START_SHEET},
+          {"end", required_argument, NULL, OPT_END_SHEET},
+          {"end-sheet", required_argument, NULL, OPT_END_SHEET},
+          {"start-input", required_argument, NULL, OPT_START_INPUT},
+          {"si", required_argument, NULL, OPT_START_INPUT},
+          {"start-output", required_argument, NULL, OPT_START_OUTPUT},
+          {"so", required_argument, NULL, OPT_START_OUTPUT},
+          {"sheet-size", required_argument, NULL, 'S'},
+          {"sheet-background", required_argument, NULL, OPT_SHEET_BACKGROUND},
+          {"exclude", optional_argument, NULL, 'x'},
+          {"no-processing", required_argument, NULL, 'n'},
+          {"pre-rotate", required_argument, NULL, OPT_PRE_ROTATE},
+          {"post-rotate", required_argument, NULL, OPT_POST_ROTATE},
+          {"pre-mirror", required_argument, NULL, 'M'},
+          {"post-mirror", required_argument, NULL, OPT_POST_MIRROR},
+          {"pre-shift", required_argument, NULL, OPT_PRE_SHIFT},
+          {"post-shift", required_argument, NULL, OPT_POST_SHIFT},
+          {"pre-mask", required_argument, NULL, OPT_PRE_MASK},
+          {"size", required_argument, NULL, 's'},
+          {"post-size", required_argument, NULL, OPT_POST_SIZE},
+          {"stretch", required_argument, NULL, OPT_STRETCH},
+          {"post-stretch", required_argument, NULL, OPT_POST_STRETCH},
+          {"zoom", required_argument, NULL, 'z'},
+          {"post-zoom", required_argument, NULL, OPT_POST_ZOOM},
+          {"mask-scan-point", required_argument, NULL, 'p'},
+          {"mask", required_argument, NULL, 'm'},
+          {"wipe", required_argument, NULL, 'W'},
+          {"pre-wipe", required_argument, NULL, OPT_PRE_WIPE},
+          {"post-wipe", required_argument, NULL, OPT_POST_WIPE},
+          {"middle-wipe", required_argument, NULL, OPT_MIDDLE_WIPE},
+          {"mw", required_argument, NULL, OPT_MIDDLE_WIPE},
+          {"border", required_argument, NULL, 'B'},
+          {"pre-border", required_argument, NULL, OPT_PRE_BORDER},
+          {"post-border", required_argument, NULL, OPT_POST_BORDER},
+          {"no-blackfilter", optional_argument, NULL, OPT_NO_BLACK_FILTER},
+          {"blackfilter-scan-direction", required_argument, NULL,
+           OPT_BLACK_FILTER_SCAN_DIRECTION},
+          {"bn", required_argument, NULL, OPT_BLACK_FILTER_SCAN_DIRECTION},
+          {"blackfilter-scan-size", required_argument, NULL,
+           OPT_BLACK_FILTER_SCAN_SIZE},
+          {"bs", required_argument, NULL, OPT_BLACK_FILTER_SCAN_SIZE},
+          {"blackfilter-scan-depth", required_argument, NULL,
+           OPT_BLACK_FILTER_SCAN_DEPTH},
+          {"bd", required_argument, NULL, OPT_BLACK_FILTER_SCAN_DEPTH},
+          {"blackfilter-scan-step", required_argument, NULL,
+           OPT_BLACK_FILTER_SCAN_STEP},
+          {"bp", required_argument, NULL, OPT_BLACK_FILTER_SCAN_STEP},
+          {"blackfilter-scan-threshold", required_argument, NULL,
+           OPT_BLACK_FILTER_SCAN_THRESHOLD},
+          {"bt", required_argument, NULL, OPT_BLACK_FILTER_SCAN_THRESHOLD},
+          {"blackfilter-scan-exclude", required_argument, NULL,
+           OPT_BLACK_FILTER_SCAN_EXCLUDE},
+          {"bx", required_argument, NULL, OPT_BLACK_FILTER_SCAN_EXCLUDE},
+          {"blackfilter-intensity", required_argument, NULL,
+           OPT_BLACK_FILTER_INTENSITY},
+          {"bi", required_argument, NULL, OPT_BLACK_FILTER_INTENSITY},
+          {"no-noisefilter", optional_argument, NULL, OPT_NO_NOISE_FILTER},
+          {"noisefilter-intensity", required_argument, NULL,
+           OPT_NOISE_FILTER_INTENSITY},
+          {"ni", required_argument, NULL, OPT_NOISE_FILTER_INTENSITY},
+          {"no-blurfilter", optional_argument, NULL, OPT_NO_BLUR_FILTER},
+          {"blurfilter-size", required_argument, NULL, OPT_BLUR_FILTER_SIZE},
+          {"ls", required_argument, NULL, OPT_BLUR_FILTER_SIZE},
+          {"blurfilter-step", required_argument, NULL, OPT_BLUR_FILTER_STEP},
+          {"lp", required_argument, NULL, OPT_BLUR_FILTER_STEP},
+          {"blurfilter-intensity", required_argument, NULL,
+           OPT_BLUR_FILTER_INTENSITY},
+          {"li", required_argument, NULL, OPT_BLUR_FILTER_INTENSITY},
+          {"no-grayfilter", optional_argument, NULL, OPT_NO_GRAY_FILTER},
+          {"grayfilter-size", required_argument, NULL, OPT_GRAY_FILTER_SIZE},
+          {"gs", required_argument, NULL, OPT_GRAY_FILTER_SIZE},
+          {"grayfilter-step", required_argument, NULL, OPT_GRAY_FILTER_STEP},
+          {"gp", required_argument, NULL, OPT_GRAY_FILTER_STEP},
+          {"grayfilter-threshold", required_argument, NULL,
+           OPT_GRAY_FILTER_THRESHOLD},
+          {"gt", required_argument, NULL, OPT_GRAY_FILTER_THRESHOLD},
+          {"no-mask-scan", optional_argument, NULL, OPT_NO_MASK_SCAN},
+          {"mask-scan-direction", required_argument, NULL,
+           OPT_MASK_SCAN_DIRECTION},
+          {"mn", required_argument, NULL, OPT_MASK_SCAN_DIRECTION},
+          {"mask-scan-size", required_argument, NULL, OPT_MASK_SCAN_SIZE},
+          {"ms", required_argument, NULL, OPT_MASK_SCAN_SIZE},
+          {"mask-scan-depth", required_argument, NULL, OPT_MASK_SCAN_DEPTH},
+          {"md", required_argument, NULL, OPT_MASK_SCAN_DEPTH},
+          {"mask-scan-step", required_argument, NULL, OPT_MASK_SCAN_STEP},
+          {"mp", required_argument, NULL, OPT_MASK_SCAN_STEP},
+          {"mask-scan-threshold", required_argument, NULL,
+           OPT_MASK_SCAN_THRESHOLD},
+          {"mt", required_argument, NULL, OPT_MASK_SCAN_THRESHOLD},
+          {"mask-scan-minimum", required_argument, NULL, OPT_MASK_SCAN_MINIMUM},
+          {"mm", required_argument, NULL, OPT_MASK_SCAN_MINIMUM},
+          {"mask-scan-maximum", required_argument, NULL, OPT_MASK_SCAN_MAXIMUM},
+          {"mM", required_argument, NULL, OPT_MASK_SCAN_MAXIMUM},
+          {"mask-color", required_argument, NULL, OPT_MASK_COLOR},
+          {"mc", required_argument, NULL, OPT_MASK_COLOR},
+          {"no-mask-center", optional_argument, NULL, OPT_NO_MASK_CENTER},
+          {"no-deskew", optional_argument, NULL, OPT_NO_DESKEW},
+          {"deskew-scan-direction", required_argument, NULL,
+           OPT_DESKEW_SCAN_DIRECTION},
+          {"dn", required_argument, NULL, OPT_DESKEW_SCAN_DIRECTION},
+          {"deskew-scan-size", required_argument, NULL, OPT_DESKEW_SCAN_SIZE},
+          {"ds", required_argument, NULL, OPT_DESKEW_SCAN_SIZE},
+          {"deskew-scan-depth", required_argument, NULL, OPT_DESKEW_SCAN_DEPTH},
+          {"dd", required_argument, NULL, OPT_DESKEW_SCAN_DEPTH},
+          {"deskew-scan-range", required_argument, NULL, OPT_DESKEW_SCAN_RANGE},
+          {"dr", required_argument, NULL, OPT_DESKEW_SCAN_RANGE},
+          {"deskew-scan-step", required_argument, NULL, OPT_DESKEW_SCAN_STEP},
+          {"dp", required_argument, NULL, OPT_DESKEW_SCAN_STEP},
+          {"deskew-scan-deviation", required_argument, NULL,
+           OPT_DESKEW_SCAN_DEVIATION},
+          {"dv", required_argument, NULL, OPT_DESKEW_SCAN_DEVIATION},
+          {"no-border-scan", optional_argument, NULL, OPT_NO_BORDER_SCAN},
+          {"border-scan-direction", required_argument, NULL,
+           OPT_BORDER_SCAN_DIRECTION},
+          {"Bn", required_argument, NULL, OPT_BORDER_SCAN_DIRECTION},
+          {"border-scan-size", required_argument, NULL, OPT_BORDER_SCAN_SIZE},
+          {"Bs", required_argument, NULL, OPT_BORDER_SCAN_SIZE},
+          {"border-scan-step", required_argument, NULL, OPT_BORDER_SCAN_STEP},
+          {"Bp", required_argument, NULL, OPT_BORDER_SCAN_STEP},
+          {"border-scan-threshold", required_argument, NULL,
+           OPT_BORDER_SCAN_THRESHOLD},
+          {"Bt", required_argument, NULL, OPT_BORDER_SCAN_THRESHOLD},
+          {"border-align", required_argument, NULL, OPT_BORDER_ALIGN},
+          {"Ba", required_argument, NULL, OPT_BORDER_ALIGN},
+          {"border-margin", required_argument, NULL, OPT_BORDER_MARGIN},
+          {"Bm", required_argument, NULL, OPT_BORDER_MARGIN},
+          {"no-border-align", optional_argument, NULL, OPT_NO_BORDER_ALIGN},
+          {"no-wipe", optional_argument, NULL, OPT_NO_WIPE},
+          {"no-border", optional_argument, NULL, OPT_NO_BORDER},
+          {"white-threshold", required_argument, NULL, 'w'},
+          {"black-threshold", required_argument, NULL, 'b'},
+          {"input-pages", required_argument, NULL, OPT_INPUT_PAGES},
+          {"ip", required_argument, NULL, OPT_INPUT_PAGES},
+          {"output-pages", required_argument, NULL, OPT_OUTPUT_PAGES},
+          {"op", required_argument, NULL, OPT_OUTPUT_PAGES},
+          {"input-file-sequence", required_argument, NULL,
+           OPT_INPUT_FILE_SEQUENCE},
+          {"if", required_argument, NULL, OPT_INPUT_FILE_SEQUENCE},
+          {"output-file-sequence", required_argument, NULL,
+           OPT_OUTPUT_FILE_SEQUENCE},
+          {"of", required_argument, NULL, OPT_OUTPUT_FILE_SEQUENCE},
+          {"insert-blank", required_argument, NULL, OPT_INSERT_BLANK},
+          {"replace-blank", required_argument, NULL, OPT_REPLACE_BLANK},
+          {"test-only", no_argument, NULL, 'T'},
+          {"no-multi-pages", no_argument, NULL, OPT_NO_MULTI_PAGES},
+          {"dpi", required_argument, NULL, OPT_PPI},
+          {"ppi", required_argument, NULL, OPT_PPI},
+          {"type", required_argument, NULL, 't'},
+          {"quiet", no_argument, NULL, 'q'},
+          {"overwrite", no_argument, NULL, OPT_OVERWRITE},
+          {"verbose", no_argument, NULL, 'v'},
+          {"vv", no_argument, NULL, OPT_VERBOSE_MORE},
+          {"debug", no_argument, NULL, OPT_DEBUG},
+          {"vvv", no_argument, NULL, OPT_DEBUG},
+          {"debug-save", no_argument, NULL, OPT_DEBUG_SAVE},
+          {"vvvv", no_argument, NULL, OPT_DEBUG_SAVE},
+          {"interpolate", required_argument, NULL, OPT_INTERPOLATE},
+          {NULL, no_argument, NULL, 0}};
 
-    case '#':
-      parseMultiIndex(optarg, &options.sheet_multi_index);
-      // allow 0 as start sheet, might be overwritten by --start-sheet again
-      if (options.sheet_multi_index.count > 0 &&
-          options.start_sheet > options.sheet_multi_index.indexes[0])
-        options.start_sheet = options.sheet_multi_index.indexes[0];
-      break;
+      c = getopt_long_only(argc, argv, "hVl:S:x::n::M:s:z:p:m:W:B:w:b:Tt:qv",
+                           long_options, &option_index);
+      if (c == -1)
+        break;
 
-    case OPT_START_SHEET:
-      sscanf(optarg, "%d", &options.start_sheet);
-      break;
+      switch (c) {
+      case 'h':
+      case '?':
+        puts(USAGE);
+        return c == '?' ? 1 : 0;
 
-    case OPT_END_SHEET:
-      sscanf(optarg, "%d", &options.end_sheet);
-      break;
+      case 'V':
+        puts(VERSION_STR);
+        return 0;
 
-    case OPT_START_INPUT:
-      sscanf(optarg, "%d", &options.start_input);
-      break;
-
-    case OPT_START_OUTPUT:
-      sscanf(optarg, "%d", &options.start_output);
-      break;
-
-    case 'S':
-      parse_physical_size(optarg, &sheetSizePhysical);
-      break;
-
-    case OPT_SHEET_BACKGROUND:
-      if (!parse_color(optarg, &sheetBackgroundPixel)) {
-        errOutput("invalid value for sheet-background: '%s'", optarg);
-      }
-      break;
-
-    case 'x':
-      parseMultiIndex(optarg, &options.exclude_multi_index);
-      if (options.exclude_multi_index.count == -1)
-        options.exclude_multi_index.count = 0; // 'exclude all' makes no sense
-      break;
-
-    case 'n':
-      parseMultiIndex(optarg, &options.ignore_multi_index);
-      break;
-
-    case OPT_PRE_ROTATE:
-      sscanf(optarg, "%d", &preRotate);
-      if ((preRotate != 0) && (abs(preRotate) != 90)) {
-        fprintf(
-            stderr,
-            "cannot set --pre-rotate value other than -90 or 90, ignoring.\n");
-        preRotate = 0;
-      }
-      break;
-
-    case OPT_POST_ROTATE:
-      sscanf(optarg, "%d", &postRotate);
-      if ((postRotate != 0) && (abs(postRotate) != 90)) {
-        fprintf(
-            stderr,
-            "cannot set --post-rotate value other than -90 or 90, ignoring.\n");
-        postRotate = 0;
-      }
-      break;
-
-    case 'M':
-      if (!parse_direction(optarg, &preMirror)) {
-        errOutput("unable to parse pre-mirror directions: '%s'", optarg);
-      };
-      break;
-
-    case OPT_POST_MIRROR:
-      if (!parse_direction(optarg, &postMirror)) {
-        errOutput("unable to parse post-mirror directions: '%s'", optarg);
-      }
-      break;
-
-    case OPT_PRE_SHIFT:
-      parse_physical_delta(optarg, &preShiftPhysical);
-      break;
-
-    case OPT_POST_SHIFT:
-      parse_physical_delta(optarg, &postShiftPhysical);
-      break;
-
-    case OPT_PRE_MASK:
-      if (preMaskCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &preMasks[preMaskCount])) {
-          preMaskCount++;
+      case 'l':
+        if (!parse_layout(optarg, &options.layout)) {
+          errOutput("unable to parse layout: '%s'", optarg);
         }
-      } else {
-        fprintf(stderr,
-                "maximum number of masks (%d) exceeded, ignoring mask %s\n",
-                MAX_MASKS, optarg);
-      }
-      break;
+        break;
 
-    case 's':
-      parse_physical_size(optarg, &sizePhysical);
-      break;
+      case '#':
+        parseMultiIndex(optarg, &options.sheet_multi_index);
+        // allow 0 as start sheet, might be overwritten by --start-sheet again
+        if (options.sheet_multi_index.count > 0 &&
+            options.start_sheet > options.sheet_multi_index.indexes[0])
+          options.start_sheet = options.sheet_multi_index.indexes[0];
+        break;
 
-    case OPT_POST_SIZE:
-      parse_physical_size(optarg, &postSizePhysical);
-      break;
+      case OPT_START_SHEET:
+        sscanf(optarg, "%d", &options.start_sheet);
+        break;
 
-    case OPT_STRETCH:
-      parse_physical_size(optarg, &stretchSizePhysical);
-      break;
+      case OPT_END_SHEET:
+        sscanf(optarg, "%d", &options.end_sheet);
+        break;
 
-    case OPT_POST_STRETCH:
-      parse_physical_size(optarg, &postStretchSizePhysical);
-      break;
+      case OPT_START_INPUT:
+        sscanf(optarg, "%d", &options.start_input);
+        break;
 
-    case 'z':
-      sscanf(optarg, "%f", &zoomFactor);
-      break;
+      case OPT_START_OUTPUT:
+        sscanf(optarg, "%d", &options.start_output);
+        break;
 
-    case OPT_POST_ZOOM:
-      sscanf(optarg, "%f", &postZoomFactor);
-      break;
+      case 'S':
+        parse_physical_size(optarg, &sheetSizePhysical);
+        break;
 
-    case 'p':
-      if (pointCount < MAX_POINTS) {
-        int x = -1;
-        int y = -1;
-        sscanf(optarg, "%d,%d", &x, &y);
-        points[pointCount++] = (Point){x, y};
-      } else {
-        fprintf(stderr,
-                "maximum number of scan points (%d) exceeded, ignoring scan "
-                "point %s\n",
-                MAX_POINTS, optarg);
-      }
-      break;
-
-    case 'm':
-      if (maskCount < MAX_MASKS) {
-        if (parse_rectangle(optarg, &masks[maskCount])) {
-          maskCount++;
+      case OPT_SHEET_BACKGROUND:
+        if (!parse_color(optarg, &sheetBackgroundPixel)) {
+          errOutput("invalid value for sheet-background: '%s'", optarg);
         }
-      } else {
-        fprintf(stderr,
-                "maximum number of masks (%d) exceeded, ignoring mask %s\n",
-                MAX_MASKS, optarg);
-      }
-      break;
+        break;
 
-    case 'W':
-      parse_wipe("wipe", optarg, &wipes);
-      break;
+      case 'x':
+        parseMultiIndex(optarg, &options.exclude_multi_index);
+        if (options.exclude_multi_index.count == -1)
+          options.exclude_multi_index.count = 0; // 'exclude all' makes no sense
+        break;
 
-    case OPT_PRE_WIPE:
-      parse_wipe("pre-wipe", optarg, &preWipes);
-      break;
+      case 'n':
+        parseMultiIndex(optarg, &options.ignore_multi_index);
+        break;
 
-    case OPT_POST_WIPE:
-      parse_wipe("post-wipe", optarg, &postWipes);
-      break;
-
-    case OPT_MIDDLE_WIPE:
-      if (!parse_symmetric_integers(optarg, &middleWipe[0], &middleWipe[1])) {
-        errOutput("unable to parse middle-wipe: '%s'", optarg);
-      }
-      break;
-
-    case 'B':
-      if (!parse_border(optarg, &border)) {
-        errOutput("unable to parse border: '%s'", optarg);
-      }
-      break;
-
-    case OPT_PRE_BORDER:
-      if (!parse_border(optarg, &preBorder)) {
-        errOutput("unable to parse pre-border: '%s'", optarg);
-      }
-      break;
-
-    case OPT_POST_BORDER:
-      if (!parse_border(optarg, &postBorder)) {
-        errOutput("unable to parse post-border: '%s'", optarg);
-      }
-      break;
-
-    case OPT_NO_BLACK_FILTER:
-      parseMultiIndex(optarg, &options.no_blackfilter_multi_index);
-      break;
-
-    case OPT_BLACK_FILTER_SCAN_DIRECTION:
-      if (!parse_direction(optarg, &blackfilterScanDirections)) {
-        errOutput("unable to parse blackfilter-scan-direction: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BLACK_FILTER_SCAN_SIZE:
-      if (!parse_rectangle_size(optarg, &blackfilterScanSize)) {
-        errOutput("unable to parse blackfilter-scan-size: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BLACK_FILTER_SCAN_DEPTH:
-      if (!parse_symmetric_integers(optarg, &blackfilterScanDepth[0],
-                                    &blackfilterScanDepth[1]) ||
-          blackfilterScanDepth[0] <= 0 || blackfilterScanDepth[1] <= 0) {
-        errOutput("unable to parse blackfilter-scan-depth: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BLACK_FILTER_SCAN_STEP:
-      if (!parse_scan_step(optarg, &blackfilterScanStep)) {
-        errOutput("unable to parse blackfilter-scan-step: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BLACK_FILTER_SCAN_THRESHOLD:
-      sscanf(optarg, "%f", &blackfilterScanThreshold);
-      break;
-
-    case OPT_BLACK_FILTER_SCAN_EXCLUDE:
-      if (blackfilterExcludeCount < MAX_MASKS) {
-        if (parse_rectangle(optarg,
-                            &blackfilterExclude[blackfilterExcludeCount])) {
-          blackfilterExcludeCount++;
+      case OPT_PRE_ROTATE:
+        sscanf(optarg, "%d", &preRotate);
+        if ((preRotate != 0) && (abs(preRotate) != 90)) {
+          fprintf(stderr, "cannot set --pre-rotate value other than -90 or 90, "
+                          "ignoring.\n");
+          preRotate = 0;
         }
-      } else {
-        fprintf(stderr,
-                "maximum number of blackfilter exclusion (%d) exceeded, "
-                "ignoring mask %s\n",
-                MAX_MASKS, optarg);
+        break;
+
+      case OPT_POST_ROTATE:
+        sscanf(optarg, "%d", &postRotate);
+        if ((postRotate != 0) && (abs(postRotate) != 90)) {
+          fprintf(stderr, "cannot set --post-rotate value other than -90 or "
+                          "90, ignoring.\n");
+          postRotate = 0;
+        }
+        break;
+
+      case 'M':
+        if (!parse_direction(optarg, &preMirror)) {
+          errOutput("unable to parse pre-mirror directions: '%s'", optarg);
+        };
+        break;
+
+      case OPT_POST_MIRROR:
+        if (!parse_direction(optarg, &postMirror)) {
+          errOutput("unable to parse post-mirror directions: '%s'", optarg);
+        }
+        break;
+
+      case OPT_PRE_SHIFT:
+        parse_physical_delta(optarg, &preShiftPhysical);
+        break;
+
+      case OPT_POST_SHIFT:
+        parse_physical_delta(optarg, &postShiftPhysical);
+        break;
+
+      case OPT_PRE_MASK:
+        if (preMaskCount < MAX_MASKS) {
+          if (parse_rectangle(optarg, &preMasks[preMaskCount])) {
+            preMaskCount++;
+          }
+        } else {
+          fprintf(stderr,
+                  "maximum number of masks (%d) exceeded, ignoring mask %s\n",
+                  MAX_MASKS, optarg);
+        }
+        break;
+
+      case 's':
+        parse_physical_size(optarg, &sizePhysical);
+        break;
+
+      case OPT_POST_SIZE:
+        parse_physical_size(optarg, &postSizePhysical);
+        break;
+
+      case OPT_STRETCH:
+        parse_physical_size(optarg, &stretchSizePhysical);
+        break;
+
+      case OPT_POST_STRETCH:
+        parse_physical_size(optarg, &postStretchSizePhysical);
+        break;
+
+      case 'z':
+        sscanf(optarg, "%f", &zoomFactor);
+        break;
+
+      case OPT_POST_ZOOM:
+        sscanf(optarg, "%f", &postZoomFactor);
+        break;
+
+      case 'p':
+        if (pointCount < MAX_POINTS) {
+          int x = -1;
+          int y = -1;
+          sscanf(optarg, "%d,%d", &x, &y);
+          points[pointCount++] = (Point){x, y};
+        } else {
+          fprintf(stderr,
+                  "maximum number of scan points (%d) exceeded, ignoring scan "
+                  "point %s\n",
+                  MAX_POINTS, optarg);
+        }
+        break;
+
+      case 'm':
+        if (maskCount < MAX_MASKS) {
+          if (parse_rectangle(optarg, &masks[maskCount])) {
+            maskCount++;
+          }
+        } else {
+          fprintf(stderr,
+                  "maximum number of masks (%d) exceeded, ignoring mask %s\n",
+                  MAX_MASKS, optarg);
+        }
+        break;
+
+      case 'W':
+        parse_wipe("wipe", optarg, &wipes);
+        break;
+
+      case OPT_PRE_WIPE:
+        parse_wipe("pre-wipe", optarg, &preWipes);
+        break;
+
+      case OPT_POST_WIPE:
+        parse_wipe("post-wipe", optarg, &postWipes);
+        break;
+
+      case OPT_MIDDLE_WIPE:
+        if (!parse_symmetric_integers(optarg, &middleWipe[0], &middleWipe[1])) {
+          errOutput("unable to parse middle-wipe: '%s'", optarg);
+        }
+        break;
+
+      case 'B':
+        if (!parse_border(optarg, &border)) {
+          errOutput("unable to parse border: '%s'", optarg);
+        }
+        break;
+
+      case OPT_PRE_BORDER:
+        if (!parse_border(optarg, &preBorder)) {
+          errOutput("unable to parse pre-border: '%s'", optarg);
+        }
+        break;
+
+      case OPT_POST_BORDER:
+        if (!parse_border(optarg, &postBorder)) {
+          errOutput("unable to parse post-border: '%s'", optarg);
+        }
+        break;
+
+      case OPT_NO_BLACK_FILTER:
+        parseMultiIndex(optarg, &options.no_blackfilter_multi_index);
+        break;
+
+      case OPT_BLACK_FILTER_SCAN_DIRECTION:
+        if (!parse_direction(optarg, &blackfilterScanDirections)) {
+          errOutput("unable to parse blackfilter-scan-direction: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BLACK_FILTER_SCAN_SIZE:
+        if (!parse_rectangle_size(optarg, &blackfilterScanSize)) {
+          errOutput("unable to parse blackfilter-scan-size: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BLACK_FILTER_SCAN_DEPTH:
+        if (!parse_symmetric_integers(optarg, &blackfilterScanDepth[0],
+                                      &blackfilterScanDepth[1]) ||
+            blackfilterScanDepth[0] <= 0 || blackfilterScanDepth[1] <= 0) {
+          errOutput("unable to parse blackfilter-scan-depth: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BLACK_FILTER_SCAN_STEP:
+        if (!parse_scan_step(optarg, &blackfilterScanStep)) {
+          errOutput("unable to parse blackfilter-scan-step: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BLACK_FILTER_SCAN_THRESHOLD:
+        sscanf(optarg, "%f", &blackfilterScanThreshold);
+        break;
+
+      case OPT_BLACK_FILTER_SCAN_EXCLUDE:
+        if (blackfilterExcludeCount < MAX_MASKS) {
+          if (parse_rectangle(optarg,
+                              &blackfilterExclude[blackfilterExcludeCount])) {
+            blackfilterExcludeCount++;
+          }
+        } else {
+          fprintf(stderr,
+                  "maximum number of blackfilter exclusion (%d) exceeded, "
+                  "ignoring mask %s\n",
+                  MAX_MASKS, optarg);
+        }
+        break;
+
+      case OPT_BLACK_FILTER_INTENSITY:
+        sscanf(optarg, "%d", &blackfilterIntensity);
+        break;
+
+      case OPT_NO_NOISE_FILTER:
+        parseMultiIndex(optarg, &options.no_noisefilter_multi_index);
+        break;
+
+      case OPT_NOISE_FILTER_INTENSITY:
+        sscanf(optarg, "%d", &noisefilterIntensity);
+        break;
+
+      case OPT_NO_BLUR_FILTER:
+        parseMultiIndex(optarg, &options.no_blurfilter_multi_index);
+        break;
+
+      case OPT_BLUR_FILTER_SIZE:
+        if (!parse_rectangle_size(optarg, &blurfilterScanSize)) {
+          errOutput("unable to parse blurfilter-scan-size: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BLUR_FILTER_STEP:
+        if (!parse_scan_step(optarg, &blurfilterScanStep)) {
+          errOutput("unable to parse blurfilter-scan-step: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BLUR_FILTER_INTENSITY:
+        sscanf(optarg, "%f", &blurfilterIntensity);
+        break;
+
+      case OPT_NO_GRAY_FILTER:
+        parseMultiIndex(optarg, &options.no_grayfilter_multi_index);
+        break;
+
+      case OPT_GRAY_FILTER_SIZE:
+        if (!parse_rectangle_size(optarg, &grayfilterScanSize)) {
+          errOutput("unable to parse grayfilter-scan-size: '%s'", optarg);
+        }
+        break;
+
+      case OPT_GRAY_FILTER_STEP:
+        if (!parse_scan_step(optarg, &grayfilterScanStep)) {
+          errOutput("unable to parse grayfilter-scan-step: '%s'", optarg);
+        }
+        break;
+
+      case OPT_GRAY_FILTER_THRESHOLD:
+        sscanf(optarg, "%f", &grayfilterThreshold);
+        break;
+
+      case OPT_NO_MASK_SCAN:
+        parseMultiIndex(optarg, &options.no_mask_scan_multi_index);
+        break;
+
+      case OPT_MASK_SCAN_DIRECTION:
+        if (!parse_direction(optarg, &maskScanDirections)) {
+          errOutput("unable to parse mask-scan-direction: '%s'", optarg);
+        }
+        break;
+
+      case OPT_MASK_SCAN_SIZE:
+        if (!parse_rectangle_size(optarg, &maskScanSize)) {
+          errOutput("unable to parse mask-scan-size: '%s'", optarg);
+        }
+        break;
+
+      case OPT_MASK_SCAN_DEPTH:
+        if (!parse_symmetric_integers(optarg, &maskScanDepth[0],
+                                      &maskScanDepth[1]) ||
+            maskScanDepth[0] <= 0 || maskScanDepth[1] <= 0) {
+          errOutput("unable to parse mask-scan-depth: '%s'", optarg);
+        }
+        break;
+
+      case OPT_MASK_SCAN_STEP:
+        if (!parse_scan_step(optarg, &maskScanStep)) {
+          errOutput("unable to parse mask-scan-step");
+        }
+        break;
+
+      case OPT_MASK_SCAN_THRESHOLD:
+        if (!parse_symmetric_floats(optarg, &maskScanThreshold[0],
+                                    &maskScanThreshold[1]) ||
+            maskScanThreshold[0] <= 0 || maskScanThreshold[1] <= 0) {
+          errOutput("unable to parse mask-scan-threshold: '%s'", optarg);
+        }
+        break;
+
+      case OPT_MASK_SCAN_MINIMUM:
+        sscanf(optarg, "%d,%d", &maskScanMinimum[WIDTH],
+               &maskScanMinimum[HEIGHT]);
+        break;
+
+      case OPT_MASK_SCAN_MAXIMUM:
+        sscanf(optarg, "%d,%d", &maskScanMaximum[WIDTH],
+               &maskScanMaximum[HEIGHT]);
+        break;
+
+      case OPT_MASK_COLOR:
+        if (!parse_color(optarg, &maskColorPixel)) {
+          errOutput("invalid value for mask-color: '%s'", optarg);
+        }
+        break;
+
+      case OPT_NO_MASK_CENTER:
+        parseMultiIndex(optarg, &options.no_mask_center_multi_index);
+        break;
+
+      case OPT_NO_DESKEW:
+        parseMultiIndex(optarg, &options.no_deskew_multi_index);
+        break;
+
+      case OPT_DESKEW_SCAN_DIRECTION:
+        if (!parse_edges(optarg, &deskewScanEdges)) {
+          errOutput("uanble to parse deskew-scan-direction: '%s'", optarg);
+        }
+        break;
+
+      case OPT_DESKEW_SCAN_SIZE:
+        sscanf(optarg, "%d", &deskewScanSize);
+        break;
+
+      case OPT_DESKEW_SCAN_DEPTH:
+        sscanf(optarg, "%f", &deskewScanDepth);
+        break;
+
+      case OPT_DESKEW_SCAN_RANGE:
+        sscanf(optarg, "%f", &deskewScanRange);
+        break;
+
+      case OPT_DESKEW_SCAN_STEP:
+        sscanf(optarg, "%f", &deskewScanStep);
+        break;
+
+      case OPT_DESKEW_SCAN_DEVIATION:
+        sscanf(optarg, "%f", &deskewScanDeviation);
+        break;
+
+      case OPT_NO_BORDER_SCAN:
+        parseMultiIndex(optarg, &options.no_border_scan_multi_index);
+        break;
+
+      case OPT_BORDER_SCAN_DIRECTION:
+        if (!parse_direction(optarg, &borderScanDirections)) {
+          errOutput("unable to parse border-scan-direction: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BORDER_SCAN_SIZE:
+        if (!parse_rectangle_size(optarg, &borderScanSize)) {
+          errOutput("unable to parse border-scan-size: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BORDER_SCAN_STEP:
+        if (!parse_scan_step(optarg, &borderScanStep)) {
+          errOutput("unable to parse border-scan-step: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BORDER_SCAN_THRESHOLD:
+        if (!parse_symmetric_integers(optarg, &borderScanThreshold[0],
+                                      &borderScanThreshold[1]) ||
+            borderScanThreshold[0] <= 0 || borderScanThreshold <= 0) {
+          errOutput("unable to parse border-scan-threshold: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BORDER_ALIGN:
+        if (!parse_edges(optarg, &borderAlign)) {
+          errOutput("unable to parse border-align: '%s'", optarg);
+        }
+        break;
+
+      case OPT_BORDER_MARGIN:
+        parse_physical_delta(optarg, &borderAlignMarginPhysical);
+        break;
+
+      case OPT_NO_BORDER_ALIGN:
+        parseMultiIndex(optarg, &options.no_border_align_multi_index);
+        break;
+
+      case OPT_NO_WIPE:
+        parseMultiIndex(optarg, &options.no_wipe_multi_index);
+        break;
+
+      case OPT_NO_BORDER:
+        parseMultiIndex(optarg, &options.no_border_multi_index);
+        break;
+
+      case 'w':
+        sscanf(optarg, "%f", &whiteThreshold);
+        break;
+
+      case 'b':
+        sscanf(optarg, "%f", &blackThreshold);
+        break;
+
+      case OPT_INPUT_PAGES:
+        sscanf(optarg, "%d", &options.input_count);
+        if (!(options.input_count >= 1 && options.input_count <= 2)) {
+          fprintf(
+              stderr,
+              "cannot set --input-pages value other than 1 or 2, ignoring.\n");
+          options.input_count = 1;
+        }
+
+        break;
+
+      case OPT_OUTPUT_PAGES:
+        sscanf(optarg, "%d", &options.output_count);
+        if (!(options.output_count >= 1 && options.output_count <= 2)) {
+          fprintf(
+              stderr,
+              "cannot set --output-pages value other than 1 or 2, ignoring.\n");
+          options.output_count = 1;
+        }
+
+        break;
+
+      case OPT_INPUT_FILE_SEQUENCE:
+      case OPT_OUTPUT_FILE_SEQUENCE:
+        errOutput(
+            "--input-file-sequence and --output-file-sequence are deprecated "
+            "and "
+            "unimplemented.\n"
+            "Please pass input output pairs as arguments to unpaper instead.");
+        break;
+
+      case OPT_INSERT_BLANK:
+        parseMultiIndex(optarg, &options.insert_blank);
+        break;
+
+      case OPT_REPLACE_BLANK:
+        parseMultiIndex(optarg, &options.replace_blank);
+        break;
+
+      case 'T':
+        writeoutput = false;
+        break;
+
+      case OPT_NO_MULTI_PAGES:
+        multisheets = false;
+        break;
+
+      case OPT_PPI:
+        sscanf(optarg, "%hd", &ppi);
+        break;
+
+      case 't':
+        if (strcmp(optarg, "pbm") == 0) {
+          outputPixFmt = AV_PIX_FMT_MONOWHITE;
+        } else if (strcmp(optarg, "pgm") == 0) {
+          outputPixFmt = AV_PIX_FMT_GRAY8;
+        } else if (strcmp(optarg, "ppm") == 0) {
+          outputPixFmt = AV_PIX_FMT_RGB24;
+        }
+        break;
+
+      case 'q':
+        verbose = VERBOSE_QUIET;
+        break;
+
+      case OPT_OVERWRITE:
+        overwrite = true;
+        break;
+
+      case 'v':
+        verbose = VERBOSE_NORMAL;
+        break;
+
+      case OPT_VERBOSE_MORE:
+        verbose = VERBOSE_MORE;
+        break;
+
+      case OPT_DEBUG:
+        verbose = VERBOSE_DEBUG;
+        break;
+
+      case OPT_DEBUG_SAVE:
+        verbose = VERBOSE_DEBUG_SAVE;
+        break;
+
+      case OPT_INTERPOLATE:
+        if (!parse_interpolate(optarg, &interpolateType)) {
+          errOutput("unable to parse interpolate: '%s'", optarg);
+        }
+        break;
       }
-      break;
-
-    case OPT_BLACK_FILTER_INTENSITY:
-      sscanf(optarg, "%d", &blackfilterIntensity);
-      break;
-
-    case OPT_NO_NOISE_FILTER:
-      parseMultiIndex(optarg, &options.no_noisefilter_multi_index);
-      break;
-
-    case OPT_NOISE_FILTER_INTENSITY:
-      sscanf(optarg, "%d", &noisefilterIntensity);
-      break;
-
-    case OPT_NO_BLUR_FILTER:
-      parseMultiIndex(optarg, &options.no_blurfilter_multi_index);
-      break;
-
-    case OPT_BLUR_FILTER_SIZE:
-      if (!parse_rectangle_size(optarg, &blurfilterScanSize)) {
-        errOutput("unable to parse blurfilter-scan-size: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BLUR_FILTER_STEP:
-      if (!parse_scan_step(optarg, &blurfilterScanStep)) {
-        errOutput("unable to parse blurfilter-scan-step: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BLUR_FILTER_INTENSITY:
-      sscanf(optarg, "%f", &blurfilterIntensity);
-      break;
-
-    case OPT_NO_GRAY_FILTER:
-      parseMultiIndex(optarg, &options.no_grayfilter_multi_index);
-      break;
-
-    case OPT_GRAY_FILTER_SIZE:
-      if (!parse_rectangle_size(optarg, &grayfilterScanSize)) {
-        errOutput("unable to parse grayfilter-scan-size: '%s'", optarg);
-      }
-      break;
-
-    case OPT_GRAY_FILTER_STEP:
-      if (!parse_scan_step(optarg, &grayfilterScanStep)) {
-        errOutput("unable to parse grayfilter-scan-step: '%s'", optarg);
-      }
-      break;
-
-    case OPT_GRAY_FILTER_THRESHOLD:
-      sscanf(optarg, "%f", &grayfilterThreshold);
-      break;
-
-    case OPT_NO_MASK_SCAN:
-      parseMultiIndex(optarg, &options.no_mask_scan_multi_index);
-      break;
-
-    case OPT_MASK_SCAN_DIRECTION:
-      if (!parse_direction(optarg, &maskScanDirections)) {
-        errOutput("unable to parse mask-scan-direction: '%s'", optarg);
-      }
-      break;
-
-    case OPT_MASK_SCAN_SIZE:
-      if (!parse_rectangle_size(optarg, &maskScanSize)) {
-        errOutput("unable to parse mask-scan-size: '%s'", optarg);
-      }
-      break;
-
-    case OPT_MASK_SCAN_DEPTH:
-      if (!parse_symmetric_integers(optarg, &maskScanDepth[0],
-                                    &maskScanDepth[1]) ||
-          maskScanDepth[0] <= 0 || maskScanDepth[1] <= 0) {
-        errOutput("unable to parse mask-scan-depth: '%s'", optarg);
-      }
-      break;
-
-    case OPT_MASK_SCAN_STEP:
-      if (!parse_scan_step(optarg, &maskScanStep)) {
-        errOutput("unable to parse mask-scan-step");
-      }
-      break;
-
-    case OPT_MASK_SCAN_THRESHOLD:
-      if (!parse_symmetric_floats(optarg, &maskScanThreshold[0],
-                                  &maskScanThreshold[1]) ||
-          maskScanThreshold[0] <= 0 || maskScanThreshold[1] <= 0) {
-        errOutput("unable to parse mask-scan-threshold: '%s'", optarg);
-      }
-      break;
-
-    case OPT_MASK_SCAN_MINIMUM:
-      sscanf(optarg, "%d,%d", &maskScanMinimum[WIDTH],
-             &maskScanMinimum[HEIGHT]);
-      break;
-
-    case OPT_MASK_SCAN_MAXIMUM:
-      sscanf(optarg, "%d,%d", &maskScanMaximum[WIDTH],
-             &maskScanMaximum[HEIGHT]);
-      break;
-
-    case OPT_MASK_COLOR:
-      if (!parse_color(optarg, &maskColorPixel)) {
-        errOutput("invalid value for mask-color: '%s'", optarg);
-      }
-      break;
-
-    case OPT_NO_MASK_CENTER:
-      parseMultiIndex(optarg, &options.no_mask_center_multi_index);
-      break;
-
-    case OPT_NO_DESKEW:
-      parseMultiIndex(optarg, &options.no_deskew_multi_index);
-      break;
-
-    case OPT_DESKEW_SCAN_DIRECTION:
-      if (!parse_edges(optarg, &deskewScanEdges)) {
-        errOutput("uanble to parse deskew-scan-direction: '%s'", optarg);
-      }
-      break;
-
-    case OPT_DESKEW_SCAN_SIZE:
-      sscanf(optarg, "%d", &deskewScanSize);
-      break;
-
-    case OPT_DESKEW_SCAN_DEPTH:
-      sscanf(optarg, "%f", &deskewScanDepth);
-      break;
-
-    case OPT_DESKEW_SCAN_RANGE:
-      sscanf(optarg, "%f", &deskewScanRange);
-      break;
-
-    case OPT_DESKEW_SCAN_STEP:
-      sscanf(optarg, "%f", &deskewScanStep);
-      break;
-
-    case OPT_DESKEW_SCAN_DEVIATION:
-      sscanf(optarg, "%f", &deskewScanDeviation);
-      break;
-
-    case OPT_NO_BORDER_SCAN:
-      parseMultiIndex(optarg, &options.no_border_scan_multi_index);
-      break;
-
-    case OPT_BORDER_SCAN_DIRECTION:
-      if (!parse_direction(optarg, &borderScanDirections)) {
-        errOutput("unable to parse border-scan-direction: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BORDER_SCAN_SIZE:
-      if (!parse_rectangle_size(optarg, &borderScanSize)) {
-        errOutput("unable to parse border-scan-size: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BORDER_SCAN_STEP:
-      if (!parse_scan_step(optarg, &borderScanStep)) {
-        errOutput("unable to parse border-scan-step: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BORDER_SCAN_THRESHOLD:
-      if (!parse_symmetric_integers(optarg, &borderScanThreshold[0],
-                                    &borderScanThreshold[1]) ||
-          borderScanThreshold[0] <= 0 || borderScanThreshold <= 0) {
-        errOutput("unable to parse border-scan-threshold: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BORDER_ALIGN:
-      if (!parse_edges(optarg, &borderAlign)) {
-        errOutput("unable to parse border-align: '%s'", optarg);
-      }
-      break;
-
-    case OPT_BORDER_MARGIN:
-      parse_physical_delta(optarg, &borderAlignMarginPhysical);
-      break;
-
-    case OPT_NO_BORDER_ALIGN:
-      parseMultiIndex(optarg, &options.no_border_align_multi_index);
-      break;
-
-    case OPT_NO_WIPE:
-      parseMultiIndex(optarg, &options.no_wipe_multi_index);
-      break;
-
-    case OPT_NO_BORDER:
-      parseMultiIndex(optarg, &options.no_border_multi_index);
-      break;
-
-    case 'w':
-      sscanf(optarg, "%f", &whiteThreshold);
-      break;
-
-    case 'b':
-      sscanf(optarg, "%f", &blackThreshold);
-      break;
-
-    case OPT_INPUT_PAGES:
-      sscanf(optarg, "%d", &options.input_count);
-      if (!(options.input_count >= 1 && options.input_count <= 2)) {
-        fprintf(
-            stderr,
-            "cannot set --input-pages value other than 1 or 2, ignoring.\n");
-        options.input_count = 1;
-      }
-
-      break;
-
-    case OPT_OUTPUT_PAGES:
-      sscanf(optarg, "%d", &options.output_count);
-      if (!(options.output_count >= 1 && options.output_count <= 2)) {
-        fprintf(
-            stderr,
-            "cannot set --output-pages value other than 1 or 2, ignoring.\n");
-        options.output_count = 1;
-      }
-
-      break;
-
-    case OPT_INPUT_FILE_SEQUENCE:
-    case OPT_OUTPUT_FILE_SEQUENCE:
-      errOutput(
-          "--input-file-sequence and --output-file-sequence are deprecated and "
-          "unimplemented.\n"
-          "Please pass input output pairs as arguments to unpaper instead.");
-      break;
-
-    case OPT_INSERT_BLANK:
-      parseMultiIndex(optarg, &options.insert_blank);
-      break;
-
-    case OPT_REPLACE_BLANK:
-      parseMultiIndex(optarg, &options.replace_blank);
-      break;
-
-    case 'T':
-      writeoutput = false;
-      break;
-
-    case OPT_NO_MULTI_PAGES:
-      multisheets = false;
-      break;
-
-    case OPT_PPI:
-      sscanf(optarg, "%hd", &ppi);
-      break;
-
-    case 't':
-      if (strcmp(optarg, "pbm") == 0) {
-        outputPixFmt = AV_PIX_FMT_MONOWHITE;
-      } else if (strcmp(optarg, "pgm") == 0) {
-        outputPixFmt = AV_PIX_FMT_GRAY8;
-      } else if (strcmp(optarg, "ppm") == 0) {
-        outputPixFmt = AV_PIX_FMT_RGB24;
-      }
-      break;
-
-    case 'q':
-      verbose = VERBOSE_QUIET;
-      break;
-
-    case OPT_OVERWRITE:
-      overwrite = true;
-      break;
-
-    case 'v':
-      verbose = VERBOSE_NORMAL;
-      break;
-
-    case OPT_VERBOSE_MORE:
-      verbose = VERBOSE_MORE;
-      break;
-
-    case OPT_DEBUG:
-      verbose = VERBOSE_DEBUG;
-      break;
-
-    case OPT_DEBUG_SAVE:
-      verbose = VERBOSE_DEBUG_SAVE;
-      break;
-
-    case OPT_INTERPOLATE:
-      if (!parse_interpolate(optarg, &interpolateType)) {
-        errOutput("unable to parse interpolate: '%s'", optarg);
-      }
-      break;
     }
+
+    // Expand any physical size to their pixel equivalents.
+    options.pre_shift = mils_delta_to_pixels(preShiftPhysical, ppi);
+    options.post_shift = mils_delta_to_pixels(postShiftPhysical, ppi);
+
+    options.sheet_size = mils_size_to_pixels(sheetSizePhysical, ppi);
+    options.page_size = mils_size_to_pixels(sizePhysical, ppi);
+    options.post_page_size = mils_size_to_pixels(postSizePhysical, ppi);
+    options.stretch_size = mils_size_to_pixels(stretchSizePhysical, ppi);
+    options.post_stretch_size =
+        mils_size_to_pixels(postStretchSizePhysical, ppi);
+
+    // Calculate the constant absolute values based on the relative parameters.
+    options.abs_black_threshold = WHITE * (1.0 - blackThreshold);
+    options.abs_white_threshold = WHITE * (whiteThreshold);
+
+    if (!validate_deskew_parameters(&options.deskew_parameters, deskewScanRange,
+                                    deskewScanStep, deskewScanDeviation,
+                                    deskewScanSize, deskewScanDepth,
+                                    deskewScanEdges)) {
+      errOutput("deskew parameters are not valid.");
+    }
+    if (!validate_mask_detection_parameters(
+            &options.mask_detection_parameters, maskScanDirections,
+            maskScanSize, maskScanDepth, maskScanStep, maskScanThreshold,
+            maskScanMinimum, maskScanMaximum)) {
+      errOutput("mask detection parameters are not valid.");
+    }
+    if (!validate_mask_alignment_parameters(
+            &options.mask_alignment_parameters, borderAlign,
+            mils_delta_to_pixels(borderAlignMarginPhysical, ppi))) {
+      errOutput("mask alignment parameters are not valid.");
+    };
+    if (!validate_border_scan_parameters(&options.border_scan_parameters,
+                                         borderScanDirections, borderScanSize,
+                                         borderScanStep, borderScanThreshold)) {
+      errOutput("border scan parameters are not valid.");
+    };
+    if (!validate_grayfilter_parameters(&options.grayfilter_parameters,
+                                        grayfilterScanSize, grayfilterScanStep,
+                                        grayfilterThreshold)) {
+      errOutput("grayfilter parameters are not valid.");
+    }
+    if (!validate_blackfilter_parameters(
+            &options.blackfilter_parameters, blackfilterScanSize,
+            blackfilterScanStep, blackfilterScanDepth[HORIZONTAL],
+            blackfilterScanDepth[VERTICAL], blackfilterScanDirections,
+            blackfilterScanThreshold, blackfilterIntensity,
+            blackfilterExcludeCount, blackfilterExclude)) {
+      errOutput("blackfilter parameters are not valid.");
+    }
+    if (!validate_blurfilter_parameters(&options.blurfilter_parameters,
+                                        blurfilterScanSize, blurfilterScanStep,
+                                        blurfilterIntensity)) {
+      errOutput("blurfilter parameters are not valid.");
+    }
+
+    if (options.start_input == -1)
+      options.start_input = (options.start_sheet - 1) * options.input_count + 1;
+    if (options.start_output == -1)
+      options.start_output =
+          (options.start_sheet - 1) * options.output_count + 1;
+
+    if (!multisheets && options.end_sheet == -1)
+      options.end_sheet = options.start_sheet;
   }
 
   /* make sure we have at least two arguments after the options, as
@@ -964,71 +1032,8 @@ int main(int argc, char *argv[]) {
 
   verboseLog(VERBOSE_NORMAL, WELCOME); // welcome message
 
-  if (options.start_input == -1)
-    options.start_input = (options.start_sheet - 1) * options.input_count + 1;
-  if (options.start_output == -1)
-    options.start_output = (options.start_sheet - 1) * options.output_count + 1;
-
-  inputNr = options.start_input;
-  outputNr = options.start_output;
-
-  if (!multisheets && options.end_sheet == -1)
-    options.end_sheet = options.start_sheet;
-
-  // Expand any pre_shiftl size to their pixel equivalents.
-  options.pre_shift = mils_delta_to_pixels(preShiftPhysical, ppi);
-  options.post_shift = mils_delta_to_pixels(postShiftPhysical, ppi);
-
-  options.sheet_size = mils_size_to_pixels(sheetSizePhysical, ppi);
-  options.page_size = mils_size_to_pixels(sizePhysical, ppi);
-  options.post_page_size = mils_size_to_pixels(postSizePhysical, ppi);
-  options.stretch_size = mils_size_to_pixels(stretchSizePhysical, ppi);
-  options.post_stretch_size = mils_size_to_pixels(postStretchSizePhysical, ppi);
-
-  // Calculate the constant absolute values based on the relative parameters.
-  options.abs_black_threshold = WHITE * (1.0 - blackThreshold);
-  options.abs_white_threshold = WHITE * (whiteThreshold);
-
-  if (!validate_deskew_parameters(&options.deskew_parameters, deskewScanRange,
-                                  deskewScanStep, deskewScanDeviation,
-                                  deskewScanSize, deskewScanDepth,
-                                  deskewScanEdges)) {
-    errOutput("deskew parameters are not valid.");
-  }
-  if (!validate_mask_detection_parameters(
-          &options.mask_detection_parameters, maskScanDirections, maskScanSize,
-          maskScanDepth, maskScanStep, maskScanThreshold, maskScanMinimum,
-          maskScanMaximum)) {
-    errOutput("mask detection parameters are not valid.");
-  }
-  if (!validate_mask_alignment_parameters(
-          &options.mask_alignment_parameters, borderAlign,
-          mils_delta_to_pixels(borderAlignMarginPhysical, ppi))) {
-    errOutput("mask alignment parameters are not valid.");
-  };
-  if (!validate_border_scan_parameters(&options.border_scan_parameters,
-                                       borderScanDirections, borderScanSize,
-                                       borderScanStep, borderScanThreshold)) {
-    errOutput("border scan parameters are not valid.");
-  };
-  if (!validate_grayfilter_parameters(&options.grayfilter_parameters,
-                                      grayfilterScanSize, grayfilterScanStep,
-                                      grayfilterThreshold)) {
-    errOutput("grayfilter parameters are not valid.");
-  }
-  if (!validate_blackfilter_parameters(
-          &options.blackfilter_parameters, blackfilterScanSize,
-          blackfilterScanStep, blackfilterScanDepth[HORIZONTAL],
-          blackfilterScanDepth[VERTICAL], blackfilterScanDirections,
-          blackfilterScanThreshold, blackfilterIntensity,
-          blackfilterExcludeCount, blackfilterExclude)) {
-    errOutput("blackfilter parameters are not valid.");
-  }
-  if (!validate_blurfilter_parameters(&options.blurfilter_parameters,
-                                      blurfilterScanSize, blurfilterScanStep,
-                                      blurfilterIntensity)) {
-    errOutput("blurfilter parameters are not valid.");
-  }
+  int inputNr = options.start_input;
+  int outputNr = options.start_output;
 
   RectangleSize inputSize = {-1, -1};
   RectangleSize previousSize = {-1, -1};
