@@ -49,6 +49,10 @@ typedef struct {
   struct MultiIndex no_border_scan_multi_index;
   struct MultiIndex no_border_align_multi_index;
 
+  Wipes *pre_wipes;
+  Wipes *wipes;
+  Wipes *post_wipes;
+
   Delta pre_shift;
   Delta post_shift;
 
