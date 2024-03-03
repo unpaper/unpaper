@@ -149,13 +149,9 @@ enum LONG_OPTION_VALUES {
  */
 int main(int argc, char *argv[]) {
   // --- local variables ---
-  int outputPixFmt = -1;
   Options options;
 
-  Edges borderAlign = {
-      .left = false, .top = false, .right = false, .bottom = false}; // center
-  MilsDelta borderAlignMarginPhysical = {0, 0, false};               // center
-  Pixel maskColorPixel = PIXEL_WHITE;
+  // The variables in the following block need to stay allocated becuse the
   size_t pointCount = 0;
   Point points[MAX_POINTS];
   size_t maskCount = 0;
@@ -169,25 +165,6 @@ int main(int argc, char *argv[]) {
   Rectangle outsideBorderscanMask[MAX_PAGES]; // set by --layout
   size_t outsideBorderscanMaskCount = 0;
   Rectangle blackfilterExclude[MAX_MASKS]; // Required to stay allocated!
-  int noisefilterIntensity = 4;
-
-  Interpolation interpolateType = INTERP_CUBIC;
-
-  Pixel sheetBackgroundPixel = PIXEL_WHITE;
-
-  int preRotate = 0;
-  int postRotate = 0;
-  Direction preMirror = DIRECTION_NONE;
-  Direction postMirror = DIRECTION_NONE;
-  float zoomFactor = 1.0;
-  float postZoomFactor = 1.0;
-  Border preBorder = {0, 0, 0, 0};
-  Border postBorder = {0, 0, 0, 0};
-  Border border = {0, 0, 0, 0};
-  bool writeoutput = true;
-  bool multisheets = true;
-
-  bool overwrite = false;
 
   // -------------------------------------------------------------------
   // --- parse parameters                                            ---
@@ -217,6 +194,9 @@ int main(int argc, char *argv[]) {
     RectangleSize borderScanSize = {5, 5};
     Delta borderScanStep = {5, 5};
     int32_t borderScanThreshold[DIRECTIONS_COUNT] = {5, 5};
+    Edges borderAlign = {
+        .left = false, .top = false, .right = false, .bottom = false}; // center
+    MilsDelta borderAlignMarginPhysical = {0, 0, false};               // center
 
     int16_t ppi = 300;
     MilsSize sheetSizePhysical = {-1, -1, false};
@@ -464,7 +444,7 @@ int main(int argc, char *argv[]) {
         break;
 
       case OPT_SHEET_BACKGROUND:
-        if (!parse_color(optarg, &sheetBackgroundPixel)) {
+        if (!parse_color(optarg, &options.sheet_background)) {
           errOutput("invalid value for sheet-background: '%s'", optarg);
         }
         break;
@@ -480,31 +460,31 @@ int main(int argc, char *argv[]) {
         break;
 
       case OPT_PRE_ROTATE:
-        sscanf(optarg, "%d", &preRotate);
-        if ((preRotate != 0) && (abs(preRotate) != 90)) {
+        sscanf(optarg, "%hd", &options.pre_rotate);
+        if ((options.pre_rotate != 0) && (abs(options.pre_rotate) != 90)) {
           fprintf(stderr, "cannot set --pre-rotate value other than -90 or 90, "
                           "ignoring.\n");
-          preRotate = 0;
+          options.pre_rotate = 0;
         }
         break;
 
       case OPT_POST_ROTATE:
-        sscanf(optarg, "%d", &postRotate);
-        if ((postRotate != 0) && (abs(postRotate) != 90)) {
+        sscanf(optarg, "%hd", &options.post_rotate);
+        if ((options.post_rotate != 0) && (abs(options.post_rotate) != 90)) {
           fprintf(stderr, "cannot set --post-rotate value other than -90 or "
                           "90, ignoring.\n");
-          postRotate = 0;
+          options.post_rotate = 0;
         }
         break;
 
       case 'M':
-        if (!parse_direction(optarg, &preMirror)) {
+        if (!parse_direction(optarg, &options.pre_mirror)) {
           errOutput("unable to parse pre-mirror directions: '%s'", optarg);
         };
         break;
 
       case OPT_POST_MIRROR:
-        if (!parse_direction(optarg, &postMirror)) {
+        if (!parse_direction(optarg, &options.post_mirror)) {
           errOutput("unable to parse post-mirror directions: '%s'", optarg);
         }
         break;
@@ -546,11 +526,11 @@ int main(int argc, char *argv[]) {
         break;
 
       case 'z':
-        sscanf(optarg, "%f", &zoomFactor);
+        sscanf(optarg, "%f", &options.pre_zoom_factor);
         break;
 
       case OPT_POST_ZOOM:
-        sscanf(optarg, "%f", &postZoomFactor);
+        sscanf(optarg, "%f", &options.post_zoom_factor);
         break;
 
       case 'p':
@@ -598,19 +578,19 @@ int main(int argc, char *argv[]) {
         break;
 
       case 'B':
-        if (!parse_border(optarg, &border)) {
+        if (!parse_border(optarg, &options.border)) {
           errOutput("unable to parse border: '%s'", optarg);
         }
         break;
 
       case OPT_PRE_BORDER:
-        if (!parse_border(optarg, &preBorder)) {
+        if (!parse_border(optarg, &options.pre_border)) {
           errOutput("unable to parse pre-border: '%s'", optarg);
         }
         break;
 
       case OPT_POST_BORDER:
-        if (!parse_border(optarg, &postBorder)) {
+        if (!parse_border(optarg, &options.post_border)) {
           errOutput("unable to parse post-border: '%s'", optarg);
         }
         break;
@@ -672,7 +652,7 @@ int main(int argc, char *argv[]) {
         break;
 
       case OPT_NOISE_FILTER_INTENSITY:
-        sscanf(optarg, "%d", &noisefilterIntensity);
+        sscanf(optarg, "%" SCNu64, &options.noisefilter_intensity);
         break;
 
       case OPT_NO_BLUR_FILTER:
@@ -764,7 +744,7 @@ int main(int argc, char *argv[]) {
         break;
 
       case OPT_MASK_COLOR:
-        if (!parse_color(optarg, &maskColorPixel)) {
+        if (!parse_color(optarg, &options.mask_color)) {
           errOutput("invalid value for mask-color: '%s'", optarg);
         }
         break;
@@ -903,11 +883,11 @@ int main(int argc, char *argv[]) {
         break;
 
       case 'T':
-        writeoutput = false;
+        options.write_output = false;
         break;
 
       case OPT_NO_MULTI_PAGES:
-        multisheets = false;
+        options.multiple_sheets = false;
         break;
 
       case OPT_PPI:
@@ -916,11 +896,12 @@ int main(int argc, char *argv[]) {
 
       case 't':
         if (strcmp(optarg, "pbm") == 0) {
-          outputPixFmt = AV_PIX_FMT_MONOWHITE;
+
+          options.output_pixel_format = AV_PIX_FMT_MONOWHITE;
         } else if (strcmp(optarg, "pgm") == 0) {
-          outputPixFmt = AV_PIX_FMT_GRAY8;
+          options.output_pixel_format = AV_PIX_FMT_GRAY8;
         } else if (strcmp(optarg, "ppm") == 0) {
-          outputPixFmt = AV_PIX_FMT_RGB24;
+          options.output_pixel_format = AV_PIX_FMT_RGB24;
         }
         break;
 
@@ -929,7 +910,7 @@ int main(int argc, char *argv[]) {
         break;
 
       case OPT_OVERWRITE:
-        overwrite = true;
+        options.overwrite_output = true;
         break;
 
       case 'v':
@@ -949,7 +930,7 @@ int main(int argc, char *argv[]) {
         break;
 
       case OPT_INTERPOLATE:
-        if (!parse_interpolate(optarg, &interpolateType)) {
+        if (!parse_interpolate(optarg, &options.interpolate_type)) {
           errOutput("unable to parse interpolate: '%s'", optarg);
         }
         break;
@@ -1018,7 +999,7 @@ int main(int argc, char *argv[]) {
       options.start_output =
           (options.start_sheet - 1) * options.output_count + 1;
 
-    if (!multisheets && options.end_sheet == -1)
+    if (!options.multiple_sheets && options.end_sheet == -1)
       options.end_sheet = options.start_sheet;
   }
 
@@ -1051,7 +1032,8 @@ int main(int argc, char *argv[]) {
     // --- begin processing                                            ---
     // -------------------------------------------------------------------
 
-    bool inputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
+    bool inputWildcard =
+        options.multiple_sheets && (strchr(argv[optind], '%') != NULL);
     bool outputWildcard = false;
 
     for (int i = 0; i < options.input_count; i++) {
@@ -1101,7 +1083,8 @@ int main(int argc, char *argv[]) {
                           // it over the array boundary
       errOutput("not enough output files given.");
     }
-    outputWildcard = multisheets && (strchr(argv[optind], '%') != NULL);
+    outputWildcard =
+        options.multiple_sheets && (strchr(argv[optind], '%') != NULL);
     for (int i = 0; i < options.output_count; i++) {
       if (outputWildcard) {
         sprintf(outputFilesBuffer[i], argv[optind], outputNr++);
@@ -1113,7 +1096,7 @@ int main(int argc, char *argv[]) {
       }
       verboseLog(VERBOSE_DEBUG, "added output file %s\n", outputFileNames[i]);
 
-      if (!overwrite) {
+      if (!options.overwrite_output) {
         struct stat statbuf;
         if (stat(outputFileNames[i], &statbuf) == 0) {
           errOutput("output file '%s' already present.\n", outputFileNames[i]);
@@ -1137,7 +1120,7 @@ int main(int argc, char *argv[]) {
           "\n-------------------------------------------------------------"
           "------------------\n");
 
-      if (multisheets) {
+      if (options.multiple_sheets) {
         verboseLog(
             VERBOSE_NORMAL, "Processing sheet #%d: %s -> %s\n", nr,
             implode(s1, (const char **)inputFileNames, options.input_count),
@@ -1155,19 +1138,21 @@ int main(int argc, char *argv[]) {
             NULL) { // may be null if --insert-blank or --replace-blank
           verboseLog(VERBOSE_MORE, "loading file %s.\n", inputFileNames[j]);
 
-          loadImage(inputFileNames[j], &page, sheetBackgroundPixel,
+          loadImage(inputFileNames[j], &page, options.sheet_background,
                     options.abs_black_threshold);
           saveDebug("_loaded_%d.pnm", inputNr - options.input_count + j, page);
 
-          if (outputPixFmt == -1 && page.frame != NULL) {
-            outputPixFmt = page.frame->format;
+          if (options.output_pixel_format == AV_PIX_FMT_NONE &&
+              page.frame != NULL) {
+            options.output_pixel_format = page.frame->format;
           }
 
           // pre-rotate
-          if (preRotate != 0) {
-            verboseLog(VERBOSE_NORMAL, "pre-rotating %d degrees.\n", preRotate);
+          if (options.pre_rotate != 0) {
+            verboseLog(VERBOSE_NORMAL, "pre-rotating %hd degrees.\n",
+                       options.pre_rotate);
 
-            flip_rotate_90(&page, preRotate / 90);
+            flip_rotate_90(&page, options.pre_rotate / 90);
           }
 
           // if sheet-size is not known yet (and not forced by --sheet-size),
@@ -1186,9 +1171,9 @@ int main(int argc, char *argv[]) {
         // allocate sheet-buffer if not done yet
         if ((sheet.frame == NULL) && (inputSize.width != -1) &&
             (inputSize.height != -1)) {
-          sheet =
-              create_image(inputSize, AV_PIX_FMT_RGB24, true,
-                           sheetBackgroundPixel, options.abs_black_threshold);
+          sheet = create_image(inputSize, AV_PIX_FMT_RGB24, true,
+                               options.sheet_background,
+                               options.abs_black_threshold);
         }
         if (page.frame != NULL) {
           saveDebug("_page%d.pnm", inputNr - options.input_count + j, page);
@@ -1218,20 +1203,20 @@ int main(int argc, char *argv[]) {
           errOutput("sheet size unknown, use at least one input file per "
                     "sheet, or force using --sheet-size.");
         } else {
-          sheet =
-              create_image(inputSize, AV_PIX_FMT_RGB24, true,
-                           sheetBackgroundPixel, options.abs_black_threshold);
+          sheet = create_image(inputSize, AV_PIX_FMT_RGB24, true,
+                               options.sheet_background,
+                               options.abs_black_threshold);
         }
       }
 
       previousSize = inputSize;
 
       // pre-mirroring
-      if (preMirror.horizontal || preMirror.vertical) {
+      if (options.pre_mirror.horizontal || options.pre_mirror.vertical) {
         verboseLog(VERBOSE_NORMAL, "pre-mirroring %s\n",
-                   direction_to_string(preMirror));
+                   direction_to_string(options.pre_mirror));
 
-        mirror(sheet, preMirror);
+        mirror(sheet, options.pre_mirror);
       }
 
       // pre-shifting
@@ -1247,7 +1232,7 @@ int main(int argc, char *argv[]) {
       if (preMaskCount > 0) {
         verboseLog(VERBOSE_NORMAL, "pre-masking\n ");
 
-        apply_masks(sheet, preMasks, preMaskCount, maskColorPixel);
+        apply_masks(sheet, preMasks, preMaskCount, options.mask_color);
       }
 
       // --------------------------------------------------------------
@@ -1271,10 +1256,10 @@ int main(int argc, char *argv[]) {
           assert(false); // unreachable
         }
 
-        if (preRotate != 0) {
-          printf("pre-rotate: %d\n", preRotate);
+        if (options.pre_rotate != 0) {
+          printf("pre-rotate: %d\n", options.pre_rotate);
         }
-        printf("pre-mirror: %s\n", direction_to_string(preMirror));
+        printf("pre-mirror: %s\n", direction_to_string(options.pre_mirror));
         if (options.pre_shift.horizontal != 0 ||
             options.pre_shift.vertical != 0) {
           printf("pre-shift: [%" PRId32 ",%" PRId32 "]\n",
@@ -1287,9 +1272,10 @@ int main(int argc, char *argv[]) {
           }
           printf("\n");
         }
-        if (memcmp(&preBorder, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
+        if (memcmp(&options.pre_border, &BORDER_NULL, sizeof(BORDER_NULL)) !=
+            0) {
           printf("pre-border: ");
-          print_border(preBorder);
+          print_border(options.pre_border);
           printf("\n");
         }
         if (preMaskCount > 0) {
@@ -1310,11 +1296,11 @@ int main(int argc, char *argv[]) {
                  options.post_stretch_size.width,
                  options.post_stretch_size.height);
         }
-        if (zoomFactor != 1.0) {
-          printf("zoom: %f\n", zoomFactor);
+        if (options.pre_zoom_factor != 1.0) {
+          printf("zoom: %f\n", options.pre_zoom_factor);
         }
-        if (postZoomFactor != 1.0) {
-          printf("post-zoom: %f\n", postZoomFactor);
+        if (options.post_zoom_factor != 1.0) {
+          printf("post-zoom: %f\n", options.post_zoom_factor);
         }
         if (options.no_blackfilter_multi_index.count != -1) {
           printf("blackfilter-scan-direction: %s\n",
@@ -1347,7 +1333,8 @@ int main(int argc, char *argv[]) {
           printf("blackfilter DISABLED for all sheets.\n");
         }
         if (options.no_noisefilter_multi_index.count != -1) {
-          printf("noisefilter-intensity: %d\n", noisefilterIntensity);
+          printf("noisefilter-intensity: %" PRIu64 "\n",
+                 options.noisefilter_intensity);
           if (options.no_noisefilter_multi_index.count > 0) {
             printf("noisefilter DISABLED for sheets: ");
             printMultiIndex(options.no_noisefilter_multi_index);
@@ -1409,7 +1396,7 @@ int main(int argc, char *argv[]) {
                  options.mask_detection_parameters.maximum_width,
                  options.mask_detection_parameters.maximum_height);
           printf("mask-color: ");
-          print_color(maskColorPixel);
+          print_color(options.mask_color);
           printf("\n");
           if (options.no_mask_scan_multi_index.count > 0) {
             printf("mask-scan DISABLED for sheets: ");
@@ -1453,9 +1440,9 @@ int main(int argc, char *argv[]) {
           printf("middle-wipe (l,r): %d,%d\n", middleWipe[0], middleWipe[1]);
         }
         if (options.no_border_multi_index.count != -1) {
-          if (memcmp(&border, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
+          if (memcmp(&options.border, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
             printf("explicit border: ");
-            print_border(border);
+            print_border(options.border);
             printf("\n");
           }
         } else {
@@ -1477,7 +1464,7 @@ int main(int argc, char *argv[]) {
             printMultiIndex(options.no_border_scan_multi_index);
           }
           printf("border-align: ");
-          print_edges(borderAlign);
+          print_edges(options.mask_alignment_parameters.alignment);
           printf("border-margin: [%d,%d]\n",
                  options.mask_alignment_parameters.margin.horizontal,
                  options.mask_alignment_parameters.margin.vertical);
@@ -1491,19 +1478,20 @@ int main(int argc, char *argv[]) {
           }
           printf("\n");
         }
-        if (memcmp(&postBorder, &BORDER_NULL, sizeof(BORDER_NULL)) != 0) {
+        if (memcmp(&options.post_border, &BORDER_NULL, sizeof(BORDER_NULL)) !=
+            0) {
           printf("post-border: ");
-          print_border(postBorder);
+          print_border(options.post_border);
           printf("\n");
         }
-        printf("post-mirror: %s\n", direction_to_string(postMirror));
+        printf("post-mirror: %s\n", direction_to_string(options.post_mirror));
         if (options.post_shift.horizontal != 0 ||
             options.post_shift.vertical != 0) {
           printf("post-shift: [%" PRId32 ",%" PRId32 "]\n",
                  options.post_shift.horizontal, options.post_shift.vertical);
         }
-        if (postRotate != 0) {
-          printf("post-rotate: %d\n", postRotate);
+        if (options.post_rotate != 0) {
+          printf("post-rotate: %d\n", options.post_rotate);
         }
         // if (options.ignoreMultiIndex.count > 0) {
         //    printf("EXCLUDE sheets: ");
@@ -1512,7 +1500,7 @@ int main(int argc, char *argv[]) {
         printf("white-threshold: %d\n", options.abs_white_threshold);
         printf("black-threshold: %d\n", options.abs_black_threshold);
         printf("sheet-background: ");
-        print_color(sheetBackgroundPixel);
+        print_color(options.sheet_background);
         printf("\n");
         printf("input-files per sheet: %d\n", options.input_count);
         printf("output-files per sheet: %d\n", options.output_count);
@@ -1525,7 +1513,7 @@ int main(int argc, char *argv[]) {
         printf(
             "output-file-sequence: %s\n",
             implode(s1, (const char **)outputFileNames, options.output_count));
-        if (overwrite) {
+        if (options.overwrite_output) {
           printf("OVERWRITING EXISTING FILES\n");
         }
         printf("\n");
@@ -1549,18 +1537,18 @@ int main(int argc, char *argv[]) {
       // stretch
       inputSize = coerce_size(options.stretch_size, size_of_image(sheet));
 
-      inputSize.width *= zoomFactor;
-      inputSize.height *= zoomFactor;
+      inputSize.width *= options.pre_zoom_factor;
+      inputSize.height *= options.pre_zoom_factor;
 
       saveDebug("_before-stretch%d.pnm", nr, sheet);
-      stretch_and_replace(&sheet, inputSize, interpolateType);
+      stretch_and_replace(&sheet, inputSize, options.interpolate_type);
       saveDebug("_after-stretch%d.pnm", nr, sheet);
 
       // size
       if (options.page_size.width != -1 || options.page_size.height != -1) {
         inputSize = coerce_size(options.page_size, size_of_image(sheet));
         saveDebug("_before-resize%d.pnm", nr, sheet);
-        resize_and_replace(&sheet, inputSize, interpolateType);
+        resize_and_replace(&sheet, inputSize, options.interpolate_type);
         saveDebug("_after-resize%d.pnm", nr, sheet);
       }
 
@@ -1665,13 +1653,13 @@ int main(int argc, char *argv[]) {
       // pre-wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, preWipes, maskColorPixel);
+        apply_wipes(sheet, preWipes, options.mask_color);
       }
 
       // pre-border
       if (!isExcluded(nr, options.no_border_multi_index,
                       options.ignore_multi_index)) {
-        apply_border(sheet, preBorder, maskColorPixel);
+        apply_border(sheet, options.pre_border, options.mask_color);
       }
 
       // black area filter
@@ -1690,8 +1678,8 @@ int main(int argc, char *argv[]) {
         verboseLog(VERBOSE_NORMAL, "noise-filter ...");
 
         saveDebug("_before-noisefilter%d.pnm", nr, sheet);
-        uint64_t filterResult = noisefilter(sheet, noisefilterIntensity,
-                                            options.abs_white_threshold);
+        uint64_t filterResult = noisefilter(
+            sheet, options.noisefilter_intensity, options.abs_white_threshold);
         saveDebug("_after-noisefilter%d.pnm", nr, sheet);
         verboseLog(VERBOSE_NORMAL, " deleted %" PRId64 " clusters.\n",
                    filterResult);
@@ -1728,7 +1716,7 @@ int main(int argc, char *argv[]) {
       // permanently apply masks
       if (maskCount > 0) {
         saveDebug("_before-masking%d.pnm", nr, sheet);
-        apply_masks(sheet, masks, maskCount, maskColorPixel);
+        apply_masks(sheet, masks, maskCount, options.mask_color);
         saveDebug("_after-masking%d.pnm", nr, sheet);
       }
 
@@ -1784,7 +1772,7 @@ int main(int argc, char *argv[]) {
                            POINT_ORIGIN);
 
             // rotate
-            rotate(rect, rectTarget, -rotation, interpolateType);
+            rotate(rect, rectTarget, -rotation, options.interpolate_type);
 
             // copy result back into whole image
             copy_rectangle(rectTarget, sheet, full_image(rectTarget),
@@ -1829,7 +1817,7 @@ int main(int argc, char *argv[]) {
       // explicit wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, wipes, maskColorPixel);
+        apply_wipes(sheet, wipes, options.mask_color);
       } else {
         verboseLog(VERBOSE_MORE, "+ wipe DISABLED for sheet %d\n", nr);
       }
@@ -1837,7 +1825,7 @@ int main(int argc, char *argv[]) {
       // explicit border
       if (!isExcluded(nr, options.no_border_multi_index,
                       options.ignore_multi_index)) {
-        apply_border(sheet, border, maskColorPixel);
+        apply_border(sheet, options.border, options.mask_color);
       } else {
         verboseLog(VERBOSE_MORE, "+ border DISABLED for sheet %d\n", nr);
       }
@@ -1853,7 +1841,7 @@ int main(int argc, char *argv[]) {
                                    outsideBorderscanMask[i]));
         }
         apply_masks(sheet, autoborderMask, outsideBorderscanMaskCount,
-                    maskColorPixel);
+                    options.mask_color);
         for (int i = 0; i < outsideBorderscanMaskCount; i++) {
           // border-centering
           if (!isExcluded(nr, options.no_border_align_multi_index,
@@ -1873,20 +1861,20 @@ int main(int argc, char *argv[]) {
       // post-wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, postWipes, maskColorPixel);
+        apply_wipes(sheet, postWipes, options.mask_color);
       }
 
       // post-border
       if (!isExcluded(nr, options.no_border_multi_index,
                       options.ignore_multi_index)) {
-        apply_border(sheet, postBorder, maskColorPixel);
+        apply_border(sheet, options.post_border, options.mask_color);
       }
 
       // post-mirroring
-      if (postMirror.horizontal || postMirror.vertical) {
+      if (options.post_mirror.horizontal || options.post_mirror.vertical) {
         verboseLog(VERBOSE_NORMAL, "post-mirroring %s\n",
-                   direction_to_string(postMirror));
-        mirror(sheet, postMirror);
+                   direction_to_string(options.post_mirror));
+        mirror(sheet, options.post_mirror);
       }
 
       // post-shifting
@@ -1899,37 +1887,38 @@ int main(int argc, char *argv[]) {
       }
 
       // post-rotating
-      if (postRotate != 0) {
-        verboseLog(VERBOSE_NORMAL, "post-rotating %d degrees.\n", postRotate);
-        flip_rotate_90(&sheet, postRotate / 90);
+      if (options.post_rotate != 0) {
+        verboseLog(VERBOSE_NORMAL, "post-rotating %d degrees.\n",
+                   options.post_rotate);
+        flip_rotate_90(&sheet, options.post_rotate / 90);
       }
 
       // post-stretch
       inputSize = coerce_size(options.post_stretch_size, size_of_image(sheet));
 
-      inputSize.width *= postZoomFactor;
-      inputSize.height *= postZoomFactor;
+      inputSize.width *= options.post_zoom_factor;
+      inputSize.height *= options.post_zoom_factor;
 
-      stretch_and_replace(&sheet, inputSize, interpolateType);
+      stretch_and_replace(&sheet, inputSize, options.interpolate_type);
 
       // post-size
       if (options.post_page_size.width != -1 ||
           options.post_page_size.height != -1) {
         inputSize = coerce_size(options.post_page_size, size_of_image(sheet));
-        resize_and_replace(&sheet, inputSize, interpolateType);
+        resize_and_replace(&sheet, inputSize, options.interpolate_type);
       }
 
       // --- write output file ---
 
       // write split pages output
 
-      if (writeoutput == true) {
+      if (options.write_output) {
         verboseLog(VERBOSE_NORMAL, "writing output.\n");
         // write files
         saveDebug("_before-save%d.pnm", nr, sheet);
 
-        if (outputPixFmt == -1) {
-          outputPixFmt = sheet.frame->format;
+        if (options.output_pixel_format == AV_PIX_FMT_NONE) {
+          options.output_pixel_format = sheet.frame->format;
         }
 
         for (int j = 0; j < options.output_count; j++) {
@@ -1948,7 +1937,7 @@ int main(int argc, char *argv[]) {
 
           verboseLog(VERBOSE_MORE, "saving file %s.\n", outputFileNames[j]);
 
-          saveImage(outputFileNames[j], page, outputPixFmt);
+          saveImage(outputFileNames[j], page, options.output_pixel_format);
 
           free_image(&page);
         }

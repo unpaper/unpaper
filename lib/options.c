@@ -18,46 +18,70 @@ static struct MultiIndex multi_index_empty(void) {
 }
 
 void options_init(Options *o) {
-  memset(o, 0, sizeof(Options));
+  *o = (Options){
+      .write_output = true,
+      .overwrite_output = false,
+      .multiple_sheets = true,
+      .output_pixel_format = AV_PIX_FMT_NONE,
 
-  o->layout = LAYOUT_SINGLE;
-  o->start_sheet = 1;
-  o->end_sheet = -1;
-  o->start_input = -1;
-  o->start_output = -1;
-  o->input_count = 1;
-  o->output_count = 1;
+      .layout = LAYOUT_SINGLE,
+      .start_sheet = 1,
+      .end_sheet = -1,
+      .start_input = -1,
+      .start_output = -1,
+      .input_count = 1,
+      .output_count = 1,
 
-  // default: process all between start-sheet and end-sheet
-  // this does not use .count = 0 because we use the -1 as a sentinel for "all
-  // sheets".
-  o->sheet_multi_index = (struct MultiIndex){.count = -1, .indexes = NULL};
+      // default: process all between start-sheet and end-sheet
+      // this does not use .count = 0 because we use the -1 as a sentinel for
+      // "all sheets".
+      .sheet_multi_index = (struct MultiIndex){.count = -1, .indexes = NULL},
 
-  o->exclude_multi_index = multi_index_empty();
-  o->ignore_multi_index = multi_index_empty();
-  o->insert_blank = multi_index_empty();
-  o->replace_blank = multi_index_empty();
+      .exclude_multi_index = multi_index_empty(),
+      .ignore_multi_index = multi_index_empty(),
+      .insert_blank = multi_index_empty(),
+      .replace_blank = multi_index_empty(),
 
-  o->no_blackfilter_multi_index = multi_index_empty();
-  o->no_noisefilter_multi_index = multi_index_empty();
-  o->no_blurfilter_multi_index = multi_index_empty();
-  o->no_grayfilter_multi_index = multi_index_empty();
-  o->no_mask_scan_multi_index = multi_index_empty();
-  o->no_mask_center_multi_index = multi_index_empty();
-  o->no_deskew_multi_index = multi_index_empty();
-  o->no_wipe_multi_index = multi_index_empty();
-  o->no_border_multi_index = multi_index_empty();
-  o->no_border_scan_multi_index = multi_index_empty();
-  o->no_border_align_multi_index = multi_index_empty();
+      .no_blackfilter_multi_index = multi_index_empty(),
+      .no_noisefilter_multi_index = multi_index_empty(),
+      .no_blurfilter_multi_index = multi_index_empty(),
+      .no_grayfilter_multi_index = multi_index_empty(),
+      .no_mask_scan_multi_index = multi_index_empty(),
+      .no_mask_center_multi_index = multi_index_empty(),
+      .no_deskew_multi_index = multi_index_empty(),
+      .no_wipe_multi_index = multi_index_empty(),
+      .no_border_multi_index = multi_index_empty(),
+      .no_border_scan_multi_index = multi_index_empty(),
+      .no_border_align_multi_index = multi_index_empty(),
 
-  o->pre_shift = (Delta){0, 0};
-  o->post_shift = (Delta){0, 0};
+      .pre_shift = (Delta){0, 0},
+      .post_shift = (Delta){0, 0},
 
-  o->sheet_size = (RectangleSize){-1, -1};
-  o->page_size = (RectangleSize){-1, -1};
-  o->post_page_size = (RectangleSize){-1, -1};
-  o->stretch_size = (RectangleSize){-1, -1};
-  o->post_stretch_size = (RectangleSize){-1, -1};
+      .pre_rotate = 0,
+      .post_rotate = 0,
+
+      .pre_mirror = DIRECTION_NONE,
+      .post_mirror = DIRECTION_NONE,
+
+      .sheet_size = (RectangleSize){-1, -1},
+      .page_size = (RectangleSize){-1, -1},
+      .post_page_size = (RectangleSize){-1, -1},
+      .stretch_size = (RectangleSize){-1, -1},
+      .post_stretch_size = (RectangleSize){-1, -1},
+
+      .pre_zoom_factor = 1.0,
+      .post_zoom_factor = 1.0,
+
+      .sheet_background = PIXEL_WHITE,
+      .mask_color = PIXEL_WHITE,
+
+      .pre_border = BORDER_NULL,
+      .border = BORDER_NULL,
+      .post_border = BORDER_NULL,
+
+      .interpolate_type = INTERP_CUBIC,
+      .noisefilter_intensity = 4,
+  };
 }
 
 bool parse_rectangle(const char *str, Rectangle *rect) {
