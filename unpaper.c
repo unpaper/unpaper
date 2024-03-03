@@ -1020,8 +1020,8 @@ int main(int argc, char *argv[]) {
 
   for (int nr = options.start_sheet;
        (options.end_sheet == -1) || (nr <= options.end_sheet); nr++) {
-    char inputFilesBuffer[2][255];
-    char outputFilesBuffer[2][255];
+    char inputFilesBuffer[2][PATH_MAX];
+    char outputFilesBuffer[2][PATH_MAX];
     char *inputFileNames[2];
     char *outputFileNames[2];
 
