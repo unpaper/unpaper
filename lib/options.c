@@ -17,6 +17,8 @@ static struct MultiIndex multi_index_empty(void) {
   return (struct MultiIndex){.count = 0, .indexes = NULL};
 }
 
+static Wipes *allocate_wipes() { return calloc(1, sizeof(Wipes)); }
+
 void options_init(Options *o) {
   *o = (Options){
       .write_output = true,
@@ -53,6 +55,10 @@ void options_init(Options *o) {
       .no_border_multi_index = multi_index_empty(),
       .no_border_scan_multi_index = multi_index_empty(),
       .no_border_align_multi_index = multi_index_empty(),
+
+      .pre_wipes = allocate_wipes(),
+      .wipes = allocate_wipes(),
+      .post_wipes = allocate_wipes(),
 
       .pre_shift = (Delta){0, 0},
       .post_shift = (Delta){0, 0},
