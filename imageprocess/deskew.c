@@ -7,6 +7,7 @@
 #include <libavutil/mathematics.h> // for M_PI
 
 #include "constants.h"
+#include "imageprocess/blit.h"
 #include "imageprocess/deskew.h"
 #include "imageprocess/interpolate.h"
 #include "imageprocess/pixel.h"
@@ -243,8 +244,8 @@ float detect_rotation(Image image, const Rectangle mask,
  * middle-point. (To rotate parts of an image, extract the part with copyBuffer,
  * rotate, and re-paste with copyBuffer.)
  */
-void rotate(Image source, Image target, const float radians,
-            Interpolation interpolate_type) {
+static void rotate(Image source, Image target, const float radians,
+                   Interpolation interpolate_type) {
   Rectangle source_area = full_image(source);
   RectangleSize source_size = size_of_image(source);
 
@@ -261,4 +262,25 @@ void rotate(Image source, Image target, const float radians,
         interpolate(source, (FloatPoint){srcX, srcY}, interpolate_type);
     set_pixel(target, (Point){x, y}, pxl);
   }
+}
+
+void deskew(Image source, Rectangle mask, float radians,
+            Interpolation interpolate_type) {
+  Image source_copy =
+      create_compatible_image(source, size_of_rectangle(mask), false);
+  Image rotated =
+      create_compatible_image(source, size_of_rectangle(mask), true);
+
+  // copy area to rotate into source_copy
+  copy_rectangle(source, source_copy,
+                 (Rectangle){{mask.vertex[0], POINT_INFINITY}}, POINT_ORIGIN);
+
+  // rotate
+  rotate(source_copy, rotated, -radians, interpolate_type);
+
+  // copy result back into whole image
+  copy_rectangle(rotated, source, full_image(rotated), mask.vertex[0]);
+
+  free_image(&source_copy);
+  free_image(&rotated);
 }
