@@ -1748,16 +1748,15 @@ int main(int argc, char *argv[]) {
         }
 
         // auto-deskew each mask
-        for (int i = 0; i < maskCount; i++) {
-          saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
+        for (size_t i = 0; i < maskCount; i++) {
           float rotation =
               detect_rotation(sheet, masks[i], options.deskew_parameters);
-          saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
 
           verboseLog(VERBOSE_NORMAL, "rotate (%d,%d): %f\n", points[i].x,
                      points[i].y, rotation);
 
           if (rotation != 0.0) {
+            saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
             Image rect = create_compatible_image(
                 sheet, size_of_rectangle(masks[i]), false);
             Image rectTarget = create_compatible_image(
@@ -1777,6 +1776,8 @@ int main(int argc, char *argv[]) {
 
             free_image(&rect);
             free_image(&rectTarget);
+
+            saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
           }
         }
 
