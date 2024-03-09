@@ -99,3 +99,10 @@ bool rectangle_in_rectangle(Rectangle inner, Rectangle outer);
 bool rectangles_overlap(Rectangle first_input, Rectangle second_input);
 bool rectangle_overlap_any(Rectangle first_input, size_t count,
                            Rectangle *rectangles);
+
+typedef struct {
+  float x;
+  float y;
+} FloatPoint;
+
+FloatPoint center_of_rectangle(Rectangle area);

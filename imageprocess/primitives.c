@@ -132,3 +132,12 @@ bool rectangle_overlap_any(Rectangle first_input, size_t count,
 
   return false;
 }
+
+FloatPoint center_of_rectangle(Rectangle area) {
+  RectangleSize size = size_of_rectangle(area);
+
+  return (FloatPoint){
+      .x = area.vertex[0].x + size.width / 2.0f,
+      .y = area.vertex[0].y + size.height / 2.0f,
+  };
+}
