@@ -247,17 +247,17 @@ float detect_rotation(Image image, const Rectangle mask,
 static void rotate(Image source, Image target, const float radians,
                    Interpolation interpolate_type) {
   Rectangle source_area = full_image(source);
-  RectangleSize source_size = size_of_image(source);
+  FloatPoint source_center = center_of_rectangle(source_area);
 
   // create 2D rotation matrix
   const float sinval = sinf(radians);
   const float cosval = cosf(radians);
-  const float midX = source_size.width / 2.0f;
-  const float midY = source_size.height / 2.0f;
 
   scan_rectangle(source_area) {
-    const float srcX = midX + (x - midX) * cosval + (y - midY) * sinval;
-    const float srcY = midY + (y - midY) * cosval - (x - midX) * sinval;
+    const float srcX = source_center.x + (x - source_center.x) * cosval +
+                       (y - source_center.y) * sinval;
+    const float srcY = source_center.y + (y - source_center.y) * cosval -
+                       (x - source_center.x) * sinval;
     const Pixel pxl =
         interpolate(source, (FloatPoint){srcX, srcY}, interpolate_type);
     set_pixel(target, (Point){x, y}, pxl);

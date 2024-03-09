@@ -7,11 +7,6 @@
 #include "imageprocess/image.h"
 #include "imageprocess/primitives.h"
 
-typedef struct {
-  float x;
-  float y;
-} FloatPoint;
-
 typedef enum {
   INTERP_NN,
   INTERP_LINEAR,
