@@ -134,6 +134,8 @@ bool rectangle_overlap_any(Rectangle first_input, size_t count,
 }
 
 FloatPoint center_of_rectangle(Rectangle area) {
+  area = normalize_rectangle(area);
+
   RectangleSize size = size_of_rectangle(area);
 
   return (FloatPoint){
