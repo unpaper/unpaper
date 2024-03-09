@@ -557,15 +557,15 @@ int main(int argc, char *argv[]) {
         break;
 
       case 'W':
-        parse_wipe("wipe", optarg, options.wipes);
+        parse_wipe("wipe", optarg, &options.wipes);
         break;
 
       case OPT_PRE_WIPE:
-        parse_wipe("pre-wipe", optarg, options.pre_wipes);
+        parse_wipe("pre-wipe", optarg, &options.pre_wipes);
         break;
 
       case OPT_POST_WIPE:
-        parse_wipe("post-wipe", optarg, options.post_wipes);
+        parse_wipe("post-wipe", optarg, &options.post_wipes);
         break;
 
       case OPT_MIDDLE_WIPE:
@@ -1262,10 +1262,10 @@ int main(int argc, char *argv[]) {
           printf("pre-shift: [%" PRId32 ",%" PRId32 "]\n",
                  options.pre_shift.horizontal, options.pre_shift.vertical);
         }
-        if (options.pre_wipes->count > 0) {
+        if (options.pre_wipes.count > 0) {
           printf("pre-wipe: ");
-          for (size_t i = 0; i < options.pre_wipes->count; i++) {
-            print_rectangle(options.pre_wipes->areas[i]);
+          for (size_t i = 0; i < options.pre_wipes.count; i++) {
+            print_rectangle(options.pre_wipes.areas[i]);
           }
           printf("\n");
         }
@@ -1423,10 +1423,10 @@ int main(int argc, char *argv[]) {
           printf("deskew-scan DISABLED for all sheets.\n");
         }
         if (options.no_wipe_multi_index.count != -1) {
-          if (options.wipes->count > 0) {
+          if (options.wipes.count > 0) {
             printf("wipe areas: ");
-            for (size_t i = 0; i < options.wipes->count; i++) {
-              print_rectangle(options.wipes->areas[i]);
+            for (size_t i = 0; i < options.wipes.count; i++) {
+              print_rectangle(options.wipes.areas[i]);
             }
             printf("\n");
           }
@@ -1468,10 +1468,10 @@ int main(int argc, char *argv[]) {
         } else {
           printf("border-scan DISABLED for all sheets.\n");
         }
-        if (options.post_wipes->count > 0) {
+        if (options.post_wipes.count > 0) {
           printf("post-wipe: ");
-          for (size_t i = 0; i < options.post_wipes->count; i++) {
-            print_rectangle(options.post_wipes->areas[i]);
+          for (size_t i = 0; i < options.post_wipes.count; i++) {
+            print_rectangle(options.post_wipes.areas[i]);
           }
           printf("\n");
         }
@@ -1603,7 +1603,7 @@ int main(int argc, char *argv[]) {
               sheet.frame->height;
         }
         if (middleWipe[0] > 0 || middleWipe[1] > 0) { // left, right
-          options.wipes->areas[options.wipes->count++] = (Rectangle){{
+          options.wipes.areas[options.wipes.count++] = (Rectangle){{
               {sheet.frame->width / 2 - middleWipe[0], 0},
               {sheet.frame->width / 2 + middleWipe[1], sheet.frame->height - 1},
           }};
@@ -1650,7 +1650,7 @@ int main(int argc, char *argv[]) {
       // pre-wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, *options.pre_wipes, options.mask_color);
+        apply_wipes(sheet, options.pre_wipes, options.mask_color);
       }
 
       // pre-border
@@ -1781,7 +1781,7 @@ int main(int argc, char *argv[]) {
       // explicit wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, *options.wipes, options.mask_color);
+        apply_wipes(sheet, options.wipes, options.mask_color);
       } else {
         verboseLog(VERBOSE_MORE, "+ wipe DISABLED for sheet %d\n", nr);
       }
@@ -1825,7 +1825,7 @@ int main(int argc, char *argv[]) {
       // post-wipe
       if (!isExcluded(nr, options.no_wipe_multi_index,
                       options.ignore_multi_index)) {
-        apply_wipes(sheet, *options.post_wipes, options.mask_color);
+        apply_wipes(sheet, options.post_wipes, options.mask_color);
       }
 
       // post-border
