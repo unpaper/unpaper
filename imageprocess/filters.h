@@ -50,10 +50,10 @@ bool validate_blurfilter_parameters(BlurfilterParameters *params,
                                     RectangleSize scan_size, Delta scan_step,
                                     float intensity);
 
-uint64_t blurfilter(Image image, BlurfilterParameters params,
-                    uint8_t abs_white_threshold);
+void blurfilter(Image image, BlurfilterParameters params,
+                uint8_t abs_white_threshold);
 
-uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level);
+void noisefilter(Image image, uint64_t intensity, uint8_t min_white_level);
 
 typedef struct {
   RectangleSize scan_size;
@@ -67,4 +67,4 @@ bool validate_grayfilter_parameters(GrayfilterParameters *params,
                                     RectangleSize scan_size, Delta scan_step,
                                     float threshold);
 
-uint64_t grayfilter(Image image, GrayfilterParameters params);
+void grayfilter(Image image, GrayfilterParameters params);
