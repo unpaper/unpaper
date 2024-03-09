@@ -244,20 +244,21 @@ float detect_rotation(Image image, const Rectangle mask,
  * middle-point. (To rotate parts of an image, extract the part with copyBuffer,
  * rotate, and re-paste with copyBuffer.)
  */
-static void rotate(Image source, Image target, const float radians,
-                   Interpolation interpolate_type) {
-  Rectangle source_area = full_image(source);
+static void rotate(Image source, Rectangle source_area, Image target,
+                   const float radians, Interpolation interpolate_type) {
+  Rectangle target_area = full_image(target);
   FloatPoint source_center = center_of_rectangle(source_area);
+  FloatPoint target_center = center_of_rectangle(target_area);
 
   // create 2D rotation matrix
   const float sinval = sinf(radians);
   const float cosval = cosf(radians);
 
-  scan_rectangle(source_area) {
-    const float srcX = source_center.x + (x - source_center.x) * cosval +
-                       (y - source_center.y) * sinval;
-    const float srcY = source_center.y + (y - source_center.y) * cosval -
-                       (x - source_center.x) * sinval;
+  scan_rectangle(target_area) {
+    const float srcX = source_center.x + (x - target_center.x) * cosval +
+                       (y - target_center.y) * sinval;
+    const float srcY = source_center.y + (y - target_center.y) * cosval -
+                       (x - target_center.x) * sinval;
     const Pixel pxl =
         interpolate(source, (FloatPoint){srcX, srcY}, interpolate_type);
     set_pixel(target, (Point){x, y}, pxl);
@@ -266,21 +267,14 @@ static void rotate(Image source, Image target, const float radians,
 
 void deskew(Image source, Rectangle mask, float radians,
             Interpolation interpolate_type) {
-  Image source_copy =
-      create_compatible_image(source, size_of_rectangle(mask), false);
   Image rotated =
       create_compatible_image(source, size_of_rectangle(mask), true);
 
-  // copy area to rotate into source_copy
-  copy_rectangle(source, source_copy,
-                 (Rectangle){{mask.vertex[0], POINT_INFINITY}}, POINT_ORIGIN);
-
   // rotate
-  rotate(source_copy, rotated, -radians, interpolate_type);
+  rotate(source, mask, rotated, -radians, interpolate_type);
 
   // copy result back into whole image
   copy_rectangle(rotated, source, full_image(rotated), mask.vertex[0]);
 
-  free_image(&source_copy);
   free_image(&rotated);
 }
