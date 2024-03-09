@@ -27,5 +27,5 @@ bool validate_deskew_parameters(DeskewParameters *params, float deskewScanRange,
 float detect_rotation(Image image, Rectangle mask,
                       const DeskewParameters params);
 
-void rotate(Image source, Image target, const float radians,
+void deskew(Image source, Rectangle mask, float radians,
             Interpolation interpolate_type);

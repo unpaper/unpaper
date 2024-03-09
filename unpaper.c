@@ -1742,26 +1742,7 @@ int main(int argc, char *argv[]) {
 
           if (rotation != 0.0) {
             saveDebug("_before-deskew-detect%d.pnm", nr * maskCount + i, sheet);
-            Image rect = create_compatible_image(
-                sheet, size_of_rectangle(masks[i]), false);
-            Image rectTarget = create_compatible_image(
-                sheet, size_of_rectangle(masks[i]), true);
-
-            // copy area to rotate into rSource
-            copy_rectangle(sheet, rect,
-                           (Rectangle){{masks[i].vertex[0], POINT_INFINITY}},
-                           POINT_ORIGIN);
-
-            // rotate
-            rotate(rect, rectTarget, -rotation, options.interpolate_type);
-
-            // copy result back into whole image
-            copy_rectangle(rectTarget, sheet, full_image(rectTarget),
-                           masks[i].vertex[0]);
-
-            free_image(&rect);
-            free_image(&rectTarget);
-
+            deskew(sheet, masks[i], rotation, options.interpolate_type);
             saveDebug("_after-deskew-detect%d.pnm", nr * maskCount + i, sheet);
           }
         }
