@@ -141,13 +141,15 @@ bool validate_blurfilter_parameters(BlurfilterParameters *params,
   return true;
 }
 
-uint64_t blurfilter(Image image, BlurfilterParameters params,
-                    uint8_t abs_white_threshold) {
+void blurfilter(Image image, BlurfilterParameters params,
+                uint8_t abs_white_threshold) {
+  verboseLog(VERBOSE_NORMAL, "blur-filter...");
+
   RectangleSize image_size = size_of_image(image);
   const uint32_t blocks_per_row = image_size.width / params.scan_size.width;
   const uint64_t total_pixels_in_block =
       params.scan_size.width * params.scan_size.height;
-  uint64_t result = 0;
+  uint64_t count = 0;
 
   // allocate one extra block left and right
   uint64_t count_buffers[3][blocks_per_row + 2];
@@ -206,7 +208,7 @@ uint64_t blurfilter(Image image, BlurfilterParameters params,
         wipe_rectangle(
             image, rectangle_from_size((Point){left, top}, params.scan_size),
             PIXEL_WHITE);
-        result += curCounts[block];
+        count += curCounts[block];
         curCounts[block] = total_pixels_in_block; // Update information
       }
 
@@ -220,7 +222,8 @@ uint64_t blurfilter(Image image, BlurfilterParameters params,
     curCounts = nextCounts;
     nextCounts = tmpCounts;
   }
-  return result;
+
+  verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n", count);
 }
 
 /***************
@@ -308,9 +311,11 @@ static void noisefilter_clear_pixel_neighbors(Image image, Point p,
  *
  * @param intensity maximum cluster size to delete
  */
-uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level) {
+void noisefilter(Image image, uint64_t intensity, uint8_t min_white_level) {
   uint64_t count = 0;
   Rectangle area = full_image(image);
+
+  verboseLog(VERBOSE_NORMAL, "noise-filter ...");
 
   scan_rectangle(area) {
     Point p = {x, y};
@@ -328,7 +333,8 @@ uint64_t noisefilter(Image image, uint64_t intensity, uint8_t min_white_level) {
       }
     }
   }
-  return count;
+
+  verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " clusters.\n", count);
 }
 
 /***************
@@ -347,10 +353,12 @@ bool validate_grayfilter_parameters(GrayfilterParameters *params,
   return true;
 }
 
-uint64_t grayfilter(Image image, GrayfilterParameters params) {
+void grayfilter(Image image, GrayfilterParameters params) {
   RectangleSize image_size = size_of_image(image);
   Point filter_origin = POINT_ORIGIN;
-  uint64_t result = 0;
+  uint64_t count = 0;
+
+  verboseLog(VERBOSE_NORMAL, "gray-filter...");
 
   do {
     Rectangle area = rectangle_from_size(filter_origin, params.scan_size);
@@ -361,7 +369,7 @@ uint64_t grayfilter(Image image, GrayfilterParameters params) {
       uint8_t lightness = inverse_lightness_rect(image, area);
       // (lower threshold->more deletion)
       if (lightness < params.abs_threshold) {
-        result += count_pixels(area);
+        count += count_pixels(area);
         wipe_rectangle(image, area, PIXEL_WHITE);
       }
     }
@@ -376,5 +384,5 @@ uint64_t grayfilter(Image image, GrayfilterParameters params) {
     }
   } while (filter_origin.y <= image_size.height);
 
-  return result;
+  verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n", count);
 }

@@ -1672,15 +1672,10 @@ int main(int argc, char *argv[]) {
       // noise filter
       if (!isExcluded(nr, options.no_noisefilter_multi_index,
                       options.ignore_multi_index)) {
-        verboseLog(VERBOSE_NORMAL, "noise-filter ...");
-
         saveDebug("_before-noisefilter%d.pnm", nr, sheet);
-        uint64_t filterResult = noisefilter(
-            sheet, options.noisefilter_intensity, options.abs_white_threshold);
+        noisefilter(sheet, options.noisefilter_intensity,
+                    options.abs_white_threshold);
         saveDebug("_after-noisefilter%d.pnm", nr, sheet);
-        verboseLog(VERBOSE_NORMAL, " deleted %" PRId64 " clusters.\n",
-                   filterResult);
-
       } else {
         verboseLog(VERBOSE_MORE, "+ noisefilter DISABLED for sheet %d\n", nr);
       }
@@ -1688,15 +1683,10 @@ int main(int argc, char *argv[]) {
       // blur filter
       if (!isExcluded(nr, options.no_blurfilter_multi_index,
                       options.ignore_multi_index)) {
-        verboseLog(VERBOSE_NORMAL, "blur-filter...");
-
         saveDebug("_before-blurfilter%d.pnm", nr, sheet);
-        uint64_t filterResult = blurfilter(sheet, options.blurfilter_parameters,
-                                           options.abs_white_threshold);
+        blurfilter(sheet, options.blurfilter_parameters,
+                   options.abs_white_threshold);
         saveDebug("_after-blurfilter%d.pnm", nr, sheet);
-        verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
-                   filterResult);
-
       } else {
         verboseLog(VERBOSE_MORE, "+ blurfilter DISABLED for sheet %d\n", nr);
       }
@@ -1720,14 +1710,9 @@ int main(int argc, char *argv[]) {
       // gray filter
       if (!isExcluded(nr, options.no_grayfilter_multi_index,
                       options.ignore_multi_index)) {
-        verboseLog(VERBOSE_NORMAL, "gray-filter...");
-
         saveDebug("_before-grayfilter%d.pnm", nr, sheet);
-        uint64_t filterResult =
-            grayfilter(sheet, options.grayfilter_parameters);
+        grayfilter(sheet, options.grayfilter_parameters);
         saveDebug("_after-grayfilter%d.pnm", nr, sheet);
-        verboseLog(VERBOSE_NORMAL, " deleted %" PRIu64 " pixels.\n",
-                   filterResult);
       } else {
         verboseLog(VERBOSE_MORE, "+ grayfilter DISABLED for sheet %d\n", nr);
       }
