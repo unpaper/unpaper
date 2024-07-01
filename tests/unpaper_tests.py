@@ -461,3 +461,13 @@ def test_invalid_multi_index(imgsrc_path, tmp_path):
         "--no-processing", "1-", str(source_path), str(result_path), check=False
     )
     assert unpaper_result.returncode != 0
+
+
+def test_valid_range_multi_index(imgsrc_path, tmp_path):
+    source_path = imgsrc_path / "imgsrc%03.png"
+    result_path = tmp_path / "result%03.pbm"
+    unpaper_result = run_unpaper(
+        "--no-processing", "1-100", str(source_path), str(result_path), check=False
+    )
+    assert unpaper_result.returncode == 0
+
