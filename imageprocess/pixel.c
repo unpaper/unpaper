@@ -57,7 +57,6 @@ static Pixel get_pixel_components(Image image, Point coords) {
       return PIXEL_BLACK;
   default:
     errOutput("unknown pixel format.");
-    return PIXEL_WHITE; // technically unreachable
   }
 }
 

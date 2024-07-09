@@ -18,5 +18,5 @@ extern VerboseLevel verbose;
 
 void verboseLog(VerboseLevel level, const char *fmt, ...)
     __attribute__((format(printf, 2, 3)));
-void errOutput(const char *fmt, ...) __attribute__((format(printf, 1, 2)))
-__attribute__((noreturn));
+_Noreturn void errOutput(const char *fmt, ...)
+    __attribute__((format(printf, 1, 2))) __attribute__((noreturn));
