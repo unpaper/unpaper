@@ -87,7 +87,8 @@ void parseMultiIndex(const char *optarg, struct MultiIndex *multiIndex) {
         size_t count = index - multiIndex->indexes[(multiIndex->count) - 1];
 
         allocated += count;
-        multiIndex->indexes = realloc(multiIndex->indexes, allocated);
+        multiIndex->indexes = realloc(
+            multiIndex->indexes, allocated * sizeof(multiIndex->indexes[0]));
 
         for (int j = multiIndex->indexes[(multiIndex->count) - 1] + 1;
              j <= index; j++) {
