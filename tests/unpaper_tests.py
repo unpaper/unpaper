@@ -14,6 +14,7 @@ from typing import Sequence
 
 import pytest
 import PIL.Image
+import numpy as np
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,23 +22,24 @@ _LOGGER = logging.getLogger(__name__)
 def compare_images(*, golden: pathlib.Path, result: pathlib.Path) -> float:
     """Compare images loaded from the provided paths, returns ratio of different pixels."""
 
-    golden_image = PIL.Image.open(golden)
-    result_image = PIL.Image.open(result)
+    golden_image = np.array(PIL.Image.open(golden))
+    result_image = np.array(PIL.Image.open(result))
 
-    if golden_image.size != result_image.size:
+    if golden_image.shape != result_image.shape:
         _LOGGER.error(
-            f"image sizes don't match: {golden} {golden_image.size} != {result} {result_image.size}"
+            f"image sizes don't match: {golden} {golden_image.shape} != {result} {result_image.shape}"
         )
         return float("inf")
 
-    total_pixels = golden_image.width * golden_image.height
-    different_pixels = sum(
-        1 if golden_image.getpixel((x, y)) != result_image.getpixel((x, y)) else 0
-        for x in range(golden_image.width)
-        for y in range(golden_image.height)
-    )
+    total_pixels = golden_image.shape[0] * golden_image.shape[1]
+    pixels_differ = np.not_equal(golden_image, result_image)
+    if len(pixels_differ.shape) == 3:
+        # Combine separate comparison for R,G,B component into a single true/false per pixel
+        pixels_differ = np.any(pixels_differ, axis=2)
 
-    return different_pixels / total_pixels
+    summed_difference = np.count_nonzero(pixels_differ)
+
+    return summed_difference / total_pixels
 
 
 def run_unpaper(
@@ -64,6 +66,14 @@ def get_imgsrc_directory() -> pathlib.Path:
 @pytest.fixture(name="goldendir_path")
 def get_golden_directory() -> pathlib.Path:
     return pathlib.Path(os.getenv("TEST_GOLDEN_DIR", "tests/golden_images/"))
+
+
+def test_compare_func(imgsrc_path):
+    """Test comparison function itself, to ensure it can detect a mismatch"""
+    image_0 = imgsrc_path / "black.png"
+    image_1 = imgsrc_path / "white.png"
+
+    assert abs(compare_images(golden=image_0, result=image_1) - 1) < 0.01
 
 
 def test_a1(imgsrc_path, goldendir_path, tmp_path):

@@ -60,10 +60,10 @@ custom_target(
 )
 
 pymod = import('python')
-python = pymod.find_installation(required: false, modules: ['pytest', 'PIL'], disabler: true)
+python = pymod.find_installation(required: false, modules: ['pytest', 'PIL', 'numpy'], disabler: true)
 
 if not python.found()
-    warning('pytest or Pillow not found, tests will not be performed.')
+    warning('pytest, Pillow or numpy not found, tests will not be performed.')
 endif
 
 test(

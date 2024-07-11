@@ -7,3 +7,4 @@ ninja
 sphinx >= 3.4
 pytest
 pillow
+numpy
