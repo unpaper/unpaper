@@ -21,6 +21,8 @@ Image create_image(RectangleSize size, int pixel_format, bool fill,
       .background = sheet_background,
       .abs_black_threshold = abs_black_threshold,
   };
+  if (!image.frame)
+    errOutput("cannot allocate a new frame");
 
   image.frame->width = size.width;
   image.frame->height = size.height;
