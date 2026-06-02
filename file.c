@@ -33,6 +33,8 @@ void loadImage(const char *filename, Image *image, Pixel sheet_background,
   const AVCodec *codec;
   AVPacket pkt;
   AVFrame *frame = av_frame_alloc();
+  if (!frame)
+    errOutput("cannot allocate a new frame");
   char errbuff[1024];
 
   ret = avformat_open_input(&s, filename, NULL, NULL);
