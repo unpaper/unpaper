@@ -104,6 +104,8 @@ void loadImage(const char *filename, Image *image, Pixel sheet_background,
                           sheet_background, abs_black_threshold);
     av_frame_free(&image->frame);
     image->frame = av_frame_clone(frame);
+    if (!image->frame)
+      errOutput("cannot clone frame");
     break;
 
   case AV_PIX_FMT_PAL8: {
